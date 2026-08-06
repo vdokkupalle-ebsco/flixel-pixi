@@ -10,9 +10,7 @@ import {
   FlxInputManager,
   type FlxInputManagerOptions,
 } from '../input/flx-input-manager';
-import {
-  FlxAudioManager,
-} from '../audio/flx-audio-manager';
+import { FlxAudioManager } from '../audio/flx-audio-manager';
 import type { FlxAudioBackend } from '../audio/flx-audio-backend';
 import { NullAudioBackend } from '../audio/null-audio-backend';
 import type { FlxState, FlxStateConstructor } from './flx-state';

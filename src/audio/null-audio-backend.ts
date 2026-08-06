@@ -1,7 +1,4 @@
-import type {
-  FlxAudioBackend,
-  FlxSoundHandle,
-} from './flx-audio-backend';
+import type { FlxAudioBackend, FlxSoundHandle } from './flx-audio-backend';
 
 /** No-op sound handle for headless tests. @public */
 class NullSoundHandle implements FlxSoundHandle {
@@ -26,12 +23,12 @@ class NullSoundHandle implements FlxSoundHandle {
     this.position = 0;
   }
 
-  setVolume(_volume: number): void {
-    // No-op.
+  setVolume(volume: number): void {
+    void volume;
   }
 
-  setPan(_pan: number): void {
-    // No-op.
+  setPan(pan: number): void {
+    void pan;
   }
 
   destroy(): void {
@@ -52,19 +49,18 @@ export class NullAudioBackend implements FlxAudioBackend {
     // Already unlocked.
   }
 
-  createSound(
-    _source: unknown,
-    _streaming: boolean,
-  ): FlxSoundHandle {
+  createSound(source: unknown, streaming: boolean): FlxSoundHandle {
+    void source;
+    void streaming;
     return new NullSoundHandle();
   }
 
-  setGlobalVolume(_volume: number): void {
-    // No-op.
+  setGlobalVolume(volume: number): void {
+    void volume;
   }
 
-  setGlobalMute(_muted: boolean): void {
-    // No-op.
+  setGlobalMute(muted: boolean): void {
+    void muted;
   }
 
   pauseAll(): void {

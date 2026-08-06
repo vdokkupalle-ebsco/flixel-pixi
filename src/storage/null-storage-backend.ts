@@ -1,7 +1,4 @@
-import type {
-  FlxSaveResult,
-  FlxStorageBackend,
-} from './flx-storage-backend';
+import type { FlxSaveResult, FlxStorageBackend } from './flx-storage-backend';
 
 /**
  * In-memory storage backend for headless unit tests.
@@ -25,7 +22,7 @@ export class NullStorageBackend implements FlxStorageBackend {
     return this.#store.delete(key);
   }
 
-  close(_key: string): void {
-    // No-op.
+  close(key: string): void {
+    void key;
   }
 }

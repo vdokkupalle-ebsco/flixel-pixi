@@ -63,10 +63,16 @@ export interface FixedStepAdvanceResult {
 export const FLX_ASSETS_SERVICE: unique symbol;
 
 // @public
+export const FLX_AUDIO_SERVICE: unique symbol;
+
+// @public
 export const FLX_CAMERA_HOST_SERVICE: unique symbol;
 
 // @public
 export const FLX_INPUT_SERVICE: unique symbol;
+
+// @public
+export const FLX_STORAGE_SERVICE: unique symbol;
 
 // @public
 export class FlxAnim {
@@ -208,6 +214,77 @@ export class FlxAssets {
     unload(id: string | string[]): Promise<void>;
     // (undocumented)
     unloadBundle(name: string | string[]): Promise<void>;
+}
+
+// @public
+export interface FlxAudioBackend {
+    createSound(source: unknown, streaming: boolean): FlxSoundHandle;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    pauseAll(): void;
+    // (undocumented)
+    resumeAll(): void;
+    // (undocumented)
+    setGlobalMute(muted: boolean): void;
+    // (undocumented)
+    setGlobalVolume(volume: number): void;
+    // (undocumented)
+    readonly suspended: boolean;
+    unlockAudio(): void;
+    // (undocumented)
+    readonly unlocked: boolean;
+}
+
+// @public
+export class FlxAudioManager implements FlxAudioService {
+    constructor(context: FlxContext, backend: FlxAudioBackend);
+    destroy(): void;
+    destroySounds(forceDestroy: boolean): void;
+    // (undocumented)
+    music: FlxSound | null;
+    // (undocumented)
+    get mute(): boolean;
+    set mute(value: boolean);
+    pauseSounds(): void;
+    play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    playMusic(source: unknown, volume?: number): void;
+    resumeSounds(): void;
+    // (undocumented)
+    readonly sounds: FlxGroup;
+    stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    updateSounds(elapsed: number): void;
+    // (undocumented)
+    get volume(): number;
+    set volume(value: number);
+}
+
+// @public
+export interface FlxAudioService {
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    destroySounds(forceDestroy: boolean): void;
+    // (undocumented)
+    music: FlxSound | null;
+    // (undocumented)
+    mute: boolean;
+    // (undocumented)
+    pauseSounds(): void;
+    // (undocumented)
+    play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    // (undocumented)
+    playMusic(source: unknown, volume?: number): void;
+    // (undocumented)
+    resumeSounds(): void;
+    // (undocumented)
+    readonly sounds: FlxGroup;
+    // (undocumented)
+    stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    // (undocumented)
+    updateSounds(elapsed: number): void;
+    // (undocumented)
+    volume: number;
 }
 
 // @public
@@ -713,13 +790,19 @@ export class FlxG {
     static readonly LIBRARY_NAME = "flixel-pixi";
     // (undocumented)
     static get mouse(): Mouse;
+    static get music(): FlxSound | null;
+    static get mute(): boolean;
+    static set mute(value: boolean);
     // (undocumented)
     static overlap(first?: FlxBasic | null, second?: FlxBasic | null, notify?: FlxOverlapCallback | null, process?: FlxProcessCallback | null): boolean;
     // (undocumented)
     static get paused(): boolean;
     static set paused(value: boolean);
+    static pauseSounds(): void;
     // (undocumented)
     static readonly PINK = 4293926655;
+    static play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    static playMusic(source: unknown, volume?: number): void;
     // (undocumented)
     static get plugins(): readonly FlxBasic[];
     // (undocumented)
@@ -738,6 +821,9 @@ export class FlxG {
     static resetInput(): void;
     // (undocumented)
     static resetState(): void;
+    static resumeSounds(): void;
+    static get save(): FlxSave;
+    static get saves(): FlxSave[];
     // (undocumented)
     static get score(): number;
     static set score(value: number);
@@ -747,8 +833,10 @@ export class FlxG {
     static shake(intensity?: number, duration?: number, onComplete?: FlxCameraEffectCallback | null, force?: boolean, direction?: FlxCameraShakeDirection): void;
     // (undocumented)
     static shuffle<T>(objects: T[], howManyTimes: number): T[];
+    static get sounds(): FlxGroup;
     // (undocumented)
     static get state(): FlxState | null;
+    static stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
     // (undocumented)
     static switchState(state: FlxState): void;
     // (undocumented)
@@ -757,6 +845,8 @@ export class FlxG {
     // (undocumented)
     static get visualDebug(): boolean;
     static set visualDebug(value: boolean);
+    static get volume(): number;
+    static set volume(value: number);
     // (undocumented)
     static readonly WHITE = 4294967295;
     // (undocumented)
@@ -771,8 +861,10 @@ export class FlxG {
 
 // @public
 export class FlxGame implements FlxStateRuntime {
-    constructor(gameSizeX: number, gameSizeY: number, initialState: FlxStateConstructor, zoom?: number, gameFramerate?: number, flashFramerate?: number, useSystemCursor?: boolean, inputOptions?: FlxInputManagerOptions);
+    constructor(gameSizeX: number, gameSizeY: number, initialState: FlxStateConstructor, zoom?: number, gameFramerate?: number, flashFramerate?: number, useSystemCursor?: boolean, inputOptions?: FlxInputManagerOptions, audioBackend?: FlxAudioBackend);
     advance(elapsedSeconds: number): FixedStepAdvanceResult;
+    // (undocumented)
+    readonly audio: FlxAudioManager;
     // (undocumented)
     readonly context: FlxContext;
     // (undocumented)
@@ -1237,6 +1329,88 @@ export interface FlxRenderHandle {
 }
 
 // @public
+export class FlxSave {
+    bind(name: string, options?: FlxSaveBindOptions): boolean;
+    close(): void;
+    data: Record<string, unknown> | null;
+    destroy(): void;
+    erase(): boolean;
+    flush(): FlxSaveResult;
+    name: string | null;
+}
+
+// @public
+export interface FlxSaveBindOptions {
+    backend?: FlxStorageBackend;
+    migrate?: FlxSaveMigration;
+    version?: number;
+}
+
+// @public
+export type FlxSaveMigration = (oldData: Record<string, unknown>, oldVersion: number) => Record<string, unknown>;
+
+// @public
+export type FlxSaveResult = {
+    success: true;
+} | {
+    success: false;
+    error: 'quota' | 'serialization' | 'unknown';
+    message: string;
+};
+
+// @public
+export class FlxSound extends FlxBasic {
+    amplitude: number;
+    amplitudeLeft: number;
+    amplitudeRight: number;
+    artist: string;
+    autoDestroy: boolean;
+    destroy(): void;
+    fadeIn(duration: number): void;
+    fadeOut(duration: number, callback?: (() => void) | null): void;
+    getActualVolume(): number;
+    kill(): void;
+    loadEmbedded(source: unknown, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    loadStream(url: string, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    name: string;
+    pause(): void;
+    play(forceRestart?: boolean): void;
+    proximity(x: number, y: number, target: FlxObject, radius: number, pan?: boolean): FlxSound;
+    resume(): void;
+    stop(): void;
+    survive: boolean;
+    update(): void;
+    get volume(): number;
+    set volume(value: number);
+    x: number;
+    y: number;
+}
+
+// @public
+export interface FlxSoundHandle {
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    readonly duration: number;
+    // (undocumented)
+    pause(): void;
+    // (undocumented)
+    play(startTime?: number, loop?: boolean): void;
+    // (undocumented)
+    readonly playing: boolean;
+    // (undocumented)
+    readonly position: number;
+    // (undocumented)
+    resume(): void;
+    // (undocumented)
+    setPan(pan: number): void;
+    // (undocumented)
+    setVolume(volume: number): void;
+    // (undocumented)
+    stop(): void;
+}
+
+// @public
 export class FlxSprite extends FlxObject {
     constructor(x?: number, y?: number, simpleGraphic?: FlxGraphic | Texture | null);
     // (undocumented)
@@ -1353,6 +1527,14 @@ export interface FlxStateRuntime {
     resetState(): void;
     // (undocumented)
     readonly state: FlxState | null;
+}
+
+// @public
+export interface FlxStorageBackend {
+    close(key: string): void;
+    erase(key: string): boolean;
+    read(key: string): Record<string, unknown> | null;
+    write(key: string, data: Record<string, unknown>): FlxSaveResult;
 }
 
 // @public
@@ -1658,6 +1840,20 @@ export class FlxU {
 }
 
 // @public
+export class IndexedDBBackend implements FlxStorageBackend {
+    // (undocumented)
+    close(key: string): void;
+    closeDatabase(): void;
+    // (undocumented)
+    erase(key: string): boolean;
+    static open(dbName: string): Promise<IndexedDBBackend>;
+    // (undocumented)
+    read(key: string): Record<string, unknown> | null;
+    // (undocumented)
+    write(key: string, data: Record<string, unknown>): FlxSaveResult;
+}
+
+// @public
 export class Input {
     // (undocumented)
     protected addAlias(alias: string, keyName: string): void;
@@ -1888,6 +2084,18 @@ export class Keyboard extends Input {
 export const libraryName = "flixel-pixi";
 
 // @public
+export class LocalStorageBackend implements FlxStorageBackend {
+    // (undocumented)
+    close(key: string): void;
+    // (undocumented)
+    erase(key: string): boolean;
+    // (undocumented)
+    read(key: string): Record<string, unknown> | null;
+    // (undocumented)
+    write(key: string, data: Record<string, unknown>): FlxSaveResult;
+}
+
+// @public
 export function makeGraphicPixels(width: number, height: number, color: number): PixelBuffer;
 
 // @public
@@ -1955,6 +2163,40 @@ export class Mouse extends FlxPoint {
 export function nextFlixelSeed(seed: number): number;
 
 // @public
+export class NullAudioBackend implements FlxAudioBackend {
+    // (undocumented)
+    createSound(source: unknown, streaming: boolean): FlxSoundHandle;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    pauseAll(): void;
+    // (undocumented)
+    resumeAll(): void;
+    // (undocumented)
+    setGlobalMute(muted: boolean): void;
+    // (undocumented)
+    setGlobalVolume(volume: number): void;
+    // (undocumented)
+    readonly suspended = false;
+    // (undocumented)
+    unlockAudio(): void;
+    // (undocumented)
+    readonly unlocked = true;
+}
+
+// @public
+export class NullStorageBackend implements FlxStorageBackend {
+    // (undocumented)
+    close(key: string): void;
+    // (undocumented)
+    erase(key: string): boolean;
+    // (undocumented)
+    read(key: string): Record<string, unknown> | null;
+    // (undocumented)
+    write(key: string, data: Record<string, unknown>): FlxSaveResult;
+}
+
+// @public
 export interface PixelBuffer {
     // (undocumented)
     readonly data: Uint32Array;
@@ -2012,5 +2254,27 @@ export interface UpstreamBaseline {
 
 // @public
 export const upstreamBaseline: Readonly<UpstreamBaseline>;
+
+// @public
+export class WebAudioBackend implements FlxAudioBackend {
+    // (undocumented)
+    createSound(source: unknown, streaming: boolean): FlxSoundHandle;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    pauseAll(): void;
+    // (undocumented)
+    resumeAll(): void;
+    // (undocumented)
+    setGlobalMute(muted: boolean): void;
+    // (undocumented)
+    setGlobalVolume(volume: number): void;
+    // (undocumented)
+    get suspended(): boolean;
+    // (undocumented)
+    unlockAudio(): void;
+    // (undocumented)
+    get unlocked(): boolean;
+}
 
 ```

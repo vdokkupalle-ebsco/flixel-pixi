@@ -1,7 +1,4 @@
-import type {
-  FlxSaveResult,
-  FlxStorageBackend,
-} from './flx-storage-backend';
+import type { FlxSaveResult, FlxStorageBackend } from './flx-storage-backend';
 
 const STORE_NAME = 'flixel_saves';
 
@@ -48,7 +45,10 @@ export class IndexedDBBackend implements FlxStorageBackend {
       request.onsuccess = (): void => {
         const backend = new IndexedDBBackend(request.result);
         // Pre-load all keys into the in-memory cache.
-        backend.#preload().then(() => resolve(backend)).catch(reject);
+        backend
+          .#preload()
+          .then(() => resolve(backend))
+          .catch(reject);
       };
 
       request.onerror = (): void => {
@@ -90,8 +90,8 @@ export class IndexedDBBackend implements FlxStorageBackend {
     return existed;
   }
 
-  close(_key: string): void {
-    // No per-key cleanup needed.
+  close(key: string): void {
+    void key;
   }
 
   /** Close the underlying IDBDatabase connection. */
@@ -113,9 +113,7 @@ export class IndexedDBBackend implements FlxStorageBackend {
       const tx = this.#db.transaction(STORE_NAME, 'readwrite');
       tx.objectStore(STORE_NAME).delete(key);
     } catch {
-      console.warn(
-        `[FlxSave] IndexedDB async delete failed for key "${key}".`,
-      );
+      console.warn(`[FlxSave] IndexedDB async delete failed for key "${key}".`);
     }
   }
 

@@ -47,10 +47,14 @@ function createSynthBuffer(
     for (let i = 0; i < data.length; i++) {
       const t = i / sampleRate;
       const noteIndex = Math.floor(t * 4) % notes.length;
-      const freq = notes[noteIndex]!;
-      const noteTime = (t % 0.5);
+      const freq = notes[noteIndex] ?? 261.63;
+      const noteTime = t % 0.5;
       const env = Math.exp(-noteTime * 5);
-      data[i] = (Math.sin(2 * Math.PI * freq * t) + 0.3 * Math.sin(4 * Math.PI * freq * t)) * env * 0.2;
+      data[i] =
+        (Math.sin(2 * Math.PI * freq * t) +
+          0.3 * Math.sin(4 * Math.PI * freq * t)) *
+        env *
+        0.2;
     }
     return buffer;
   }
@@ -81,8 +85,10 @@ export class PhaseNineState extends FlxState {
     });
 
     this.coins = (this.save.data?.coins as number) ?? 10;
-    this.save.data!.coins = this.coins;
-    this.save.flush();
+    if (this.save.data) {
+      this.save.data.coins = this.coins;
+      this.save.flush();
+    }
 
     // Visual player sprite
     this.playerSprite = new FlxSprite(140, 100);
@@ -192,7 +198,11 @@ export async function createPhaseNineApplication(
       }
     },
     destroy() {
-      if (tempCtx) tempCtx.close().catch(() => {});
+      if (tempCtx) {
+        tempCtx.close().catch(() => {
+          /* No-op */
+        });
+      }
       game.destroy();
     },
     get metrics(): PhaseNineMetrics {

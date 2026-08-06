@@ -1,9 +1,6 @@
 import type { FlxContext } from '../core/flx-context';
 import { FlxGroup } from '../core/flx-group';
-import {
-  FLX_AUDIO_SERVICE,
-  type FlxAudioBackend,
-} from './flx-audio-backend';
+import { FLX_AUDIO_SERVICE, type FlxAudioBackend } from './flx-audio-backend';
 import { FlxSound } from './flx-sound';
 
 /**
@@ -61,9 +58,7 @@ export class FlxAudioManager implements FlxAudioService {
   constructor(context: FlxContext, backend: FlxAudioBackend) {
     const existing = context.getService<FlxAudioService>(FLX_AUDIO_SERVICE);
     if (existing !== undefined) {
-      throw new Error(
-        'An audio service is already installed in this context.',
-      );
+      throw new Error('An audio service is already installed in this context.');
     }
     this.#context = context;
     this.#backend = backend;
@@ -132,12 +127,7 @@ export class FlxAudioManager implements FlxAudioService {
    * @param loop - Whether to loop. Defaults to false.
    * @param autoDestroy - Whether to auto-destroy when done. Defaults to true.
    */
-  stream(
-    url: string,
-    volume = 1,
-    loop = false,
-    autoDestroy = true,
-  ): FlxSound {
+  stream(url: string, volume = 1, loop = false, autoDestroy = true): FlxSound {
     const sound = this.#createSound(url, true, volume, loop, autoDestroy);
     this.sounds.add(sound);
     sound.play();
@@ -220,8 +210,7 @@ export class FlxAudioManager implements FlxAudioService {
     const sound = new FlxSound();
     sound._globalVolume = this.#volume;
     sound._globalMuted = this.#muted;
-    sound._createHandle = () =>
-      this.#backend.createSound(source, streaming);
+    sound._createHandle = () => this.#backend.createSound(source, streaming);
 
     if (streaming) {
       sound.loadStream(source as string, loop, autoDestroy);

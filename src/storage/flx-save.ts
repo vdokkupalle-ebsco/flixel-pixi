@@ -1,7 +1,4 @@
-import type {
-  FlxSaveResult,
-  FlxStorageBackend,
-} from './flx-storage-backend';
+import type { FlxSaveResult, FlxStorageBackend } from './flx-storage-backend';
 
 /** Version field stored alongside user data for schema migration. @internal */
 const VERSION_KEY = '__version';
@@ -58,10 +55,7 @@ export class FlxSave {
    * @param options - Optional version, migration, and backend override.
    * @returns `true` if data was loaded (even if empty), `false` on error.
    */
-  bind(
-    name: string,
-    options: FlxSaveBindOptions = {},
-  ): boolean {
+  bind(name: string, options: FlxSaveBindOptions = {}): boolean {
     if (this.#bound) this.close();
 
     const backend = options.backend ?? null;
@@ -85,8 +79,7 @@ export class FlxSave {
     if (stored === null) {
       this.data = {};
       if (options.version !== undefined) {
-        (this.data as Record<string, unknown>)[VERSION_KEY] =
-          options.version;
+        (this.data as Record<string, unknown>)[VERSION_KEY] = options.version;
         this.flush();
       }
       return true;

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { FlxSound } from '../../src/audio/flx-sound';
-import { FlxAudioManager } from '../../src/audio/flx-audio-manager';
+import { FLX_AUDIO_SERVICE } from '../../src/audio/flx-audio-backend';
+import {
+  FlxAudioManager,
+  type FlxAudioService,
+} from '../../src/audio/flx-audio-manager';
 import { NullAudioBackend } from '../../src/audio/null-audio-backend';
 import { FlxContext } from '../../src/core/flx-context';
 import { FlxG } from '../../src/core/flx-g';
@@ -42,7 +46,8 @@ describe('FlxSound and FlxAudioManager', () => {
 
   it('handles volume fading in and out over update ticks', () => {
     const sound = new FlxSound();
-    sound._createHandle = () => new NullAudioBackend().createSound('test.mp3', false);
+    sound._createHandle = () =>
+      new NullAudioBackend().createSound('test.mp3', false);
     sound.loadEmbedded('test.mp3');
 
     sound.fadeIn(1.0);
@@ -73,7 +78,8 @@ describe('FlxSound and FlxAudioManager', () => {
 
   it('calculates proximity volume and stereo panning', () => {
     const sound = new FlxSound();
-    sound._createHandle = () => new NullAudioBackend().createSound('test.mp3', false);
+    sound._createHandle = () =>
+      new NullAudioBackend().createSound('test.mp3', false);
     sound.loadEmbedded('test.mp3');
 
     const listener = new FlxObject(100, 100, 10, 10);
@@ -91,7 +97,17 @@ describe('FlxSound and FlxAudioManager', () => {
   });
 
   it('integrates with FlxG static facade and FlxGame step loop', () => {
-    const game = new FlxGame(320, 240, TestState, 1, 60, 30, false, {}, new NullAudioBackend());
+    const game = new FlxGame(
+      320,
+      240,
+      TestState,
+      1,
+      60,
+      30,
+      false,
+      {},
+      new NullAudioBackend(),
+    );
 
     FlxG.volume = 0.8;
     expect(FlxG.volume).toBe(0.8);
@@ -100,17 +116,28 @@ describe('FlxSound and FlxAudioManager', () => {
     expect(FlxG.mute).toBe(true);
     FlxG.mute = false;
 
-    const musicTrack = FlxG.playMusic('bgm.mp3', 0.6);
+    FlxG.playMusic('bgm.mp3', 0.6);
     expect(FlxG.music).not.toBeNull();
     expect(FlxG.music?.survive).toBe(true);
+
+    const streamSound = FlxG.stream(
+      'http://example.com/audio.mp3',
+      0.5,
+      true,
+      false,
+    );
+    expect(streamSound.exists).toBe(true);
+    streamSound.kill();
+    expect(streamSound.exists).toBe(false);
 
     const sfx = FlxG.play('sfx.mp3', 1.0, false, true);
     expect(FlxG.sounds.members.includes(sfx)).toBe(true);
 
+    sfx.autoDestroy = true;
+    sfx.update(); // handles autoDestroy tick when handle not playing
+
     FlxG.pauseSounds();
     FlxG.resumeSounds();
-
-    game.step(1 / 60);
 
     // Switch state should clear non-survive sounds but keep music
     class NextState extends FlxState {}
@@ -119,6 +146,12 @@ describe('FlxSound and FlxAudioManager', () => {
 
     expect(FlxG.music).not.toBeNull();
     expect(FlxG.sounds.members.includes(sfx)).toBe(false);
+
+    // Test forceDestroy
+    FlxG.context
+      .getService<FlxAudioService>(FLX_AUDIO_SERVICE)
+      ?.destroySounds(true);
+    expect(FlxG.music).toBeNull();
 
     game.destroy();
   });

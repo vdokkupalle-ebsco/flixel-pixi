@@ -1,7 +1,10 @@
-import type {
-  FlxAudioBackend,
-  FlxSoundHandle,
-} from './flx-audio-backend';
+import type { FlxAudioBackend, FlxSoundHandle } from './flx-audio-backend';
+
+interface PendingSoundRequest {
+  handle: WebSoundHandle;
+  startTime: number;
+  loop: boolean;
+}
 
 /** @internal */
 class WebSoundHandle implements FlxSoundHandle {
@@ -94,7 +97,9 @@ class WebSoundHandle implements FlxSoundHandle {
     if (this.playing || this.#destroyed) return;
 
     if (this.#streaming && this.#source instanceof HTMLAudioElement) {
-      this.#source.play().catch(() => {});
+      this.#source.play().catch(() => {
+        /* No-op */
+      });
       this.playing = true;
     } else if (this.#source instanceof AudioBuffer) {
       this.play(this.#pausedAt, this.#loop);
@@ -158,12 +163,8 @@ export class WebAudioBackend implements FlxAudioBackend {
   #destroyed = false;
   #globalVolume = 1;
   #globalMuted = false;
-  readonly #handles: Set<WebSoundHandle> = new Set();
-  readonly #pendingQueue: Array<{
-    handle: WebSoundHandle;
-    startTime: number;
-    loop: boolean;
-  }> = [];
+  readonly #handles: Set<WebSoundHandle> = new Set<WebSoundHandle>();
+  readonly #pendingQueue: PendingSoundRequest[] = [];
 
   readonly #gestureEvents = ['click', 'keydown', 'touchstart'] as const;
   readonly #boundUnlock = (): void => this.#handleUnlock();
@@ -184,14 +185,16 @@ export class WebAudioBackend implements FlxAudioBackend {
     }
   }
 
-  createSound(
-    source: unknown,
-    streaming: boolean,
-  ): FlxSoundHandle {
+  createSound(source: unknown, streaming: boolean): FlxSoundHandle {
     this.#ensureContext();
+    const ctx = this.#ctx;
+    const masterGain = this.#masterGain;
+    if (ctx === null || masterGain === null) {
+      throw new Error('AudioContext failed to initialize.');
+    }
     const handle = new WebSoundHandle(
-      this.#ctx!,
-      this.#masterGain!,
+      ctx,
+      masterGain,
       source as AudioBuffer | HTMLAudioElement,
       streaming,
     );
@@ -221,7 +224,9 @@ export class WebAudioBackend implements FlxAudioBackend {
 
   resumeAll(): void {
     if (this.#ctx?.state === 'suspended') {
-      this.#ctx.resume().catch(() => {});
+      this.#ctx.resume().catch(() => {
+        /* No-op */
+      });
     }
     for (const handle of this.#handles) {
       handle.resume();
@@ -242,7 +247,9 @@ export class WebAudioBackend implements FlxAudioBackend {
     this.#pendingQueue.length = 0;
 
     if (this.#ctx) {
-      this.#ctx.close().catch(() => {});
+      this.#ctx.close().catch(() => {
+        /* No-op */
+      });
       this.#ctx = null;
     }
   }
@@ -279,9 +286,11 @@ export class WebAudioBackend implements FlxAudioBackend {
   #handleUnlock(): void {
     if (this.#unlocked) return;
     this.#ensureContext();
-
-    if (this.#ctx!.state === 'suspended') {
-      this.#ctx!.resume().catch(() => {});
+    const ctx = this.#ctx;
+    if (ctx !== null && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {
+        /* No-op */
+      });
     }
 
     this.#unlocked = true;
@@ -301,9 +310,13 @@ export class WebAudioBackend implements FlxAudioBackend {
   #handleVisibility(): void {
     if (!this.#ctx || this.#destroyed) return;
     if (document.hidden) {
-      this.#ctx.suspend().catch(() => {});
+      this.#ctx.suspend().catch(() => {
+        /* No-op */
+      });
     } else {
-      this.#ctx.resume().catch(() => {});
+      this.#ctx.resume().catch(() => {
+        /* No-op */
+      });
     }
   }
 }

@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Phase 9 — Audio and save data (C9 gate)', () => {
-  test('initializes Phase 9 audio and save data smoke app', async ({ page }) => {
+  test('initializes Phase 9 audio and save data smoke app', async ({
+    page,
+  }) => {
     await page.goto('/phase9.html');
     const status = page.locator('[data-testid="status"]');
     await expect(status).toHaveAttribute('data-state', 'ready');

@@ -16,9 +16,7 @@ import type { Keyboard } from '../input/keyboard';
 import type { Mouse } from '../input/mouse';
 import { FlxObject } from '../objects/flx-object';
 import type { FlxSave } from '../storage/flx-save';
-import {
-  FLX_STORAGE_SERVICE,
-} from '../storage/flx-storage-backend';
+import { FLX_STORAGE_SERVICE } from '../storage/flx-storage-backend';
 import { FlxTilemap } from '../tilemap/flx-tilemap';
 import type { FlxBasic } from './flx-basic';
 import type {
@@ -490,7 +488,10 @@ export class FlxG {
 
   /** Primary save slot. */
   static get save(): FlxSave {
-    type SaveService = { save: FlxSave; saves: FlxSave[] };
+    interface SaveService {
+      save: FlxSave;
+      saves: FlxSave[];
+    }
     const svc = FlxG.context.getService<SaveService>(FLX_STORAGE_SERVICE);
     if (svc === undefined) {
       throw new Error(
@@ -502,7 +503,10 @@ export class FlxG {
 
   /** All registered save slots. */
   static get saves(): FlxSave[] {
-    type SaveService = { save: FlxSave; saves: FlxSave[] };
+    interface SaveService {
+      save: FlxSave;
+      saves: FlxSave[];
+    }
     const svc = FlxG.context.getService<SaveService>(FLX_STORAGE_SERVICE);
     if (svc === undefined) {
       throw new Error(

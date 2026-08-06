@@ -36,10 +36,7 @@ export interface FlxAudioBackend {
    * @param source - decoded `AudioBuffer`, URL string, or `HTMLAudioElement`.
    * @param streaming - true to use a media-element source node.
    */
-  createSound(
-    source: unknown,
-    streaming: boolean,
-  ): FlxSoundHandle;
+  createSound(source: unknown, streaming: boolean): FlxSoundHandle;
 
   setGlobalVolume(volume: number): void;
   setGlobalMute(muted: boolean): void;

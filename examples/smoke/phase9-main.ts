@@ -29,10 +29,13 @@ const destroyButton = document.querySelector<HTMLButtonElement>(
 
 // Control elements
 const btnCoin = document.querySelector<HTMLButtonElement>('#btn-coin');
-const btnSoundCoin = document.querySelector<HTMLButtonElement>('#btn-sound-coin');
-const btnSoundJump = document.querySelector<HTMLButtonElement>('#btn-sound-jump');
+const btnSoundCoin =
+  document.querySelector<HTMLButtonElement>('#btn-sound-coin');
+const btnSoundJump =
+  document.querySelector<HTMLButtonElement>('#btn-sound-jump');
 const btnMusic = document.querySelector<HTMLButtonElement>('#btn-music');
-const btnResetSave = document.querySelector<HTMLButtonElement>('#btn-reset-save');
+const btnResetSave =
+  document.querySelector<HTMLButtonElement>('#btn-reset-save');
 const volSlider = document.querySelector<HTMLInputElement>('#vol-slider');
 const volDisplay = document.querySelector<HTMLElement>('#vol-display');
 const btnMute = document.querySelector<HTMLButtonElement>('#btn-mute');

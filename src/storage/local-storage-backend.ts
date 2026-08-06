@@ -1,7 +1,4 @@
-import type {
-  FlxSaveResult,
-  FlxStorageBackend,
-} from './flx-storage-backend';
+import type { FlxSaveResult, FlxStorageBackend } from './flx-storage-backend';
 
 const KEY_PREFIX = 'flixel:';
 
@@ -22,7 +19,11 @@ export class LocalStorageBackend implements FlxStorageBackend {
       const raw = localStorage.getItem(KEY_PREFIX + key);
       if (raw === null) return null;
       const parsed: unknown = JSON.parse(raw);
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        Array.isArray(parsed)
+      ) {
         console.warn(
           `[FlxSave] Malformed data for key "${key}": expected a plain object.`,
         );
@@ -30,9 +31,7 @@ export class LocalStorageBackend implements FlxStorageBackend {
       }
       return parsed as Record<string, unknown>;
     } catch {
-      console.warn(
-        `[FlxSave] Failed to parse stored data for key "${key}".`,
-      );
+      console.warn(`[FlxSave] Failed to parse stored data for key "${key}".`);
       return null;
     }
   }
@@ -52,8 +51,7 @@ export class LocalStorageBackend implements FlxStorageBackend {
     } catch (error: unknown) {
       if (
         error instanceof DOMException &&
-        (error.name === 'QuotaExceededError' ||
-          error.code === 22)
+        (error.name === 'QuotaExceededError' || error.code === 22)
       ) {
         return {
           success: false,
@@ -83,7 +81,7 @@ export class LocalStorageBackend implements FlxStorageBackend {
     return existed;
   }
 
-  close(_key: string): void {
-    // localStorage does not require explicit release.
+  close(key: string): void {
+    void key;
   }
 }

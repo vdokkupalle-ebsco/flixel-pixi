@@ -93,11 +93,7 @@ export class FlxSound extends FlxBasic {
    * @param loop - Whether the sound should loop.
    * @param autoDestroy - Whether to auto-destroy when done.
    */
-  loadEmbedded(
-    source: unknown,
-    loop = false,
-    autoDestroy = false,
-  ): FlxSound {
+  loadEmbedded(source: unknown, loop = false, autoDestroy = false): FlxSound {
     this.#looping = loop;
     this.autoDestroy = autoDestroy;
     this.#loaded = true;
@@ -112,11 +108,7 @@ export class FlxSound extends FlxBasic {
    * @param loop - Whether the sound should loop.
    * @param autoDestroy - Whether to auto-destroy when done.
    */
-  loadStream(
-    url: string,
-    loop = false,
-    autoDestroy = false,
-  ): FlxSound {
+  loadStream(url: string, loop = false, autoDestroy = false): FlxSound {
     this.#looping = loop;
     this.autoDestroy = autoDestroy;
     this.#loaded = true;
@@ -246,20 +238,12 @@ export class FlxSound extends FlxBasic {
       const dx = this.x - this.#proximityTarget.x;
       const dy = this.y - this.#proximityTarget.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const proximityVolume = Math.max(
-        0,
-        1 - dist / this.#proximityRadius,
-      );
+      const proximityVolume = Math.max(0, 1 - dist / this.#proximityRadius);
 
-      this.#handle?.setVolume(
-        proximityVolume * this.getActualVolume(),
-      );
+      this.#handle?.setVolume(proximityVolume * this.getActualVolume());
 
       if (this.#proximityPan && this.#handle) {
-        const pan = Math.max(
-          -1,
-          Math.min(1, dx / this.#proximityRadius),
-        );
+        const pan = Math.max(-1, Math.min(1, dx / this.#proximityRadius));
         this.#handle.setPan(pan);
       }
     } else {

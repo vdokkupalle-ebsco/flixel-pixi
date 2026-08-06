@@ -123,10 +123,7 @@ export type {
   FlxStorageBackend,
 } from './storage/flx-storage-backend';
 export { FlxSave } from './storage/flx-save';
-export type {
-  FlxSaveBindOptions,
-  FlxSaveMigration,
-} from './storage/flx-save';
+export type { FlxSaveBindOptions, FlxSaveMigration } from './storage/flx-save';
 export { NullStorageBackend } from './storage/null-storage-backend';
 export { LocalStorageBackend } from './storage/local-storage-backend';
 export { IndexedDBBackend } from './storage/indexed-db-backend';
