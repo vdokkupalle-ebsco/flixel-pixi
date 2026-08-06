@@ -8,3 +8,6 @@ reports/
 .DS_Store
 *.tsbuildinfo
 
+
+.worktrees/
+.superpowers/
