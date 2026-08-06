@@ -454,6 +454,8 @@ Checkpoint C12 — release candidate feature gate:
 
 ### Phase 13 — Performance, browser hardening, and 1.0 release (3–4 weeks)
 
+Status: **hardening pass in progress** (2026-08-06). Atlas sprite FPS baseline + short soak shipped; full C13 (30‑minute soak, hard budgets, 1.0 publish) not closed. See [`docs/phase13-evidence.md`](docs/phase13-evidence.md) and [`docs/superpowers/specs/2026-08-06-phase13-hardening-design.md`](docs/superpowers/specs/2026-08-06-phase13-hardening-design.md).
+
 Work:
 
 - Profile before optimizing; tune batching, atlases, render groups, culling, tile chunks, text choice, resolution, and object pools based on measured bottlenecks.

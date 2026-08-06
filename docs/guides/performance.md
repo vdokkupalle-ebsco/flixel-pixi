@@ -20,3 +20,8 @@ Simulation runs on a fixed accumulator (`FlxGame` / ADR 0002). Display refresh r
 ## Cleanup
 
 Destroy states, unload asset bundles you no longer need, and drop render handles when objects leave the world. Leaked textures and listeners show up in long sessions (Phase 13 soak will gate this harder).
+
+## Benchmarks
+
+- Sprite atlas stress: `examples/games/bench-sprites/` (`npm run dev:games` → Bench Sprites). Report-only FPS via `window.__FLIXEL_PIXI_BENCH__`.
+- Boot/destroy soak: `examples/games/bench-soak/`. See `docs/phase13-evidence.md`.
