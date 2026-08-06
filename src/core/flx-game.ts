@@ -96,14 +96,21 @@ export class FlxGame implements FlxStateRuntime {
     this.#commitStateChange();
 
     if (FlxG.vcr.replaying && FlxG.vcr.replay !== null) {
+      // Always advance the input state machine first so transitions
+      // (justPressed 2→1, justReleased -1→0) work correctly across frames.
+      this.input.updateInput();
       if (FlxG.vcr.cancelKeys.some((k) => FlxG.keys.justPressed(k))) {
         FlxG.stopReplay();
       } else {
         const record = FlxG.vcr.replay.playNextFrame();
-        if (record?.mouse !== null && record?.mouse !== undefined) {
-          this.input.mouse.x = record.mouse.x;
-          this.input.mouse.y = record.mouse.y;
-          this.input.mouse.wheel = record.mouse.wheel;
+        if (record !== null) {
+          // Overlay recorded key/mouse data on top of the freshly-cleared state.
+          if (record.keys !== null && record.keys !== undefined) {
+            this.input.keys.playback(record.keys);
+          }
+          if (record.mouse !== null && record.mouse !== undefined) {
+            this.input.mouse.playback(record.mouse);
+          }
         }
         if (FlxG.vcr.replay.finished) {
           FlxG.stopReplay();
@@ -112,18 +119,19 @@ export class FlxGame implements FlxStateRuntime {
     } else {
       this.input.updateInput();
       if (FlxG.vcr.recording && FlxG.vcr.replay !== null) {
-        const mouseRec = new MouseRecord(
-          this.input.mouse.x,
-          this.input.mouse.y,
-          this.input.mouse.pressed() ? 1 : 0,
-          this.input.mouse.wheel,
+        const keyRec = this.input.keys.record();
+        const mouseRec = this.input.mouse.record();
+        FlxG.vcr.replay.recordFrame(
+          FlxG.vcr.replay.frameCount,
+          keyRec ?? [],
+          mouseRec,
         );
-        FlxG.vcr.replay.recordFrame(FlxG.vcr.replay.frameCount, [], mouseRec);
       }
     }
 
     this.context.elapsed = stepSeconds * this.context.timeScale;
-    if (!this.context.paused) {
+    if (!this.context.paused || FlxG.vcr.stepRequested) {
+      FlxG.vcr.stepRequested = false;
       this.context.updatePlugins();
       this.#state?.update();
       this.audio.updateSounds(this.context.elapsed);

@@ -13,6 +13,19 @@ import {
 
 let activeRenderer: FlxCameraRenderer | null = null;
 
+/** Snapshot of a PlayState at the moment recording begins. */
+interface PlayStateSnapshot {
+  playerX: number;
+  playerY: number;
+  velocityX: number;
+  velocityY: number;
+  markerX: number;
+  markerY: number;
+}
+
+/** Shared mutable snapshot used to restore state at replay start. */
+let recordingSnapshot: PlayStateSnapshot | null = null;
+
 class PlayState extends FlxState {
   player!: FlxSprite;
   pointerMarker!: FlxSprite;
@@ -34,16 +47,19 @@ class PlayState extends FlxState {
       ballPixels.data[i * 40 + 39] = 0xffffffff;
     }
     const ballGraphic = FlxGraphic.fromPixels(ballPixels, 'phase10-ball');
-    this.player = new FlxSprite(300, 220);
+
+    // Restore from snapshot if one exists (set before calling switchState for replay)
+    const snap = recordingSnapshot;
+    this.player = new FlxSprite(snap?.playerX ?? 300, snap?.playerY ?? 220);
     this.player.loadGraphic(ballGraphic);
-    this.player.velocity.x = 180;
-    this.player.velocity.y = 140;
+    this.player.velocity.x = snap?.velocityX ?? 180;
+    this.player.velocity.y = snap?.velocityY ?? 140;
     this.add(this.player);
 
     // Pointer Marker (20x20 magenta square)
     const markerPixels = makeGraphicPixels(20, 20, 0xffec4899);
     const markerGraphic = FlxGraphic.fromPixels(markerPixels, 'phase10-marker');
-    this.pointerMarker = new FlxSprite(-100, -100);
+    this.pointerMarker = new FlxSprite(snap?.markerX ?? -100, snap?.markerY ?? -100);
     this.pointerMarker.loadGraphic(markerGraphic);
     this.add(this.pointerMarker);
 
@@ -69,6 +85,7 @@ class PlayState extends FlxState {
 
     // Register all visual objects with active renderer if available
     if (activeRenderer) {
+      activeRenderer.clearObjects();
       activeRenderer.add(this.player);
       activeRenderer.add(this.pointerMarker);
       activeRenderer.add(this.titleText);
@@ -117,15 +134,31 @@ class PlayState extends FlxState {
       ? 'RECORDING ●'
       : FlxG.vcr.replaying
         ? 'REPLAYING ▶'
-        : 'IDLE';
+        : FlxG.paused
+          ? 'PAUSED ❚❚'
+          : 'IDLE';
     const modeColor = FlxG.vcr.recording
       ? 0xfff87171
       : FlxG.vcr.replaying
         ? 0xff4ade80
-        : 0xff60a5fa;
+        : FlxG.paused
+          ? 0xfffacc15
+          : 0xff60a5fa;
 
     this.statusText.color = modeColor;
     this.statusText.text = `Frame: ${String(this.frameCount).padStart(5, '0')} | Mode: ${mode} | Ball Pos: (${Math.round(this.player.x)}, ${Math.round(this.player.y)})`;
+  }
+
+  /** Capture current state into a snapshot object. */
+  takeSnapshot(): PlayStateSnapshot {
+    return {
+      playerX: this.player.x,
+      playerY: this.player.y,
+      velocityX: this.player.velocity.x,
+      velocityY: this.player.velocity.y,
+      markerX: this.pointerMarker.x,
+      markerY: this.pointerMarker.y,
+    };
   }
 }
 
@@ -166,6 +199,7 @@ export async function bootPhase10Demo(
 
   let app: Application | null = null;
   activeRenderer = null;
+  recordingSnapshot = null;
 
   if (host) {
     app = new Application();
@@ -227,10 +261,24 @@ export async function bootPhase10Demo(
     }
   };
 
+  /** Re-register all state members with the active renderer after a state switch. */
+  const reRegisterRenderer = () => {
+    if (activeRenderer && game.state) {
+      activeRenderer.clearObjects();
+      for (const basic of game.state.members) {
+        if (basic instanceof FlxSprite || basic instanceof FlxText) {
+          activeRenderer.add(basic);
+        }
+      }
+    }
+  };
+
   let tickerFn: (() => void) | null = null;
   if (app) {
     tickerFn = () => {
-      game.advance(app.ticker.deltaMS / 1000);
+      if (!FlxG.paused) {
+        game.advance(app.ticker.deltaMS / 1000);
+      }
       activeRenderer?.render();
       updateReplayInfo();
     };
@@ -239,7 +287,13 @@ export async function bootPhase10Demo(
 
   // Button Listeners
   recordBtn?.addEventListener('click', () => {
-    FlxG.recordReplay();
+    // Capture current ball position BEFORE any state reset
+    const currentState = game.state as PlayState | null;
+    recordingSnapshot = currentState?.takeSnapshot() ?? null;
+
+    // Record without resetting state — preserves current ball position
+    FlxG.recordReplay(false);
+
     if (recordBtn) recordBtn.disabled = true;
     if (stopBtn) stopBtn.disabled = false;
     if (playBtn) playBtn.disabled = true;
@@ -262,20 +316,43 @@ export async function bootPhase10Demo(
 
   playBtn?.addEventListener('click', () => {
     if (FlxG.vcr.replay) {
+      // Create a fresh PlayState; its create() will restore from recordingSnapshot
       FlxG.loadReplay(FlxG.vcr.replay, new PlayState());
+      // After the state switch commits on next step, re-register renderer objects
+      requestAnimationFrame(() => {
+        reRegisterRenderer();
+      });
+      FlxG.paused = false;
       updateReplayInfo();
     }
   });
 
   rewindBtn?.addEventListener('click', () => {
-    FlxG.reloadReplay();
-    updateReplayInfo();
+    if (FlxG.vcr.replay) {
+      FlxG.paused = true;
+      // Rewind replay head and create a fresh state from the snapshot
+      FlxG.vcr.replay.rewind();
+      FlxG.vcr.replaying = true;
+      FlxG.vcr.recording = false;
+      FlxG.globalSeed = FlxG.vcr.replay.seed;
+      FlxG.switchState(new PlayState());
+      // Force one step so the state commits and objects are created
+      game.step(1 / 60);
+      reRegisterRenderer();
+      activeRenderer?.render();
+      updateReplayInfo();
+    }
   });
 
   stepBtn?.addEventListener('click', () => {
-    game.step();
-    activeRenderer?.render();
-    updateReplayInfo();
+    if (FlxG.vcr.replay && !FlxG.vcr.replay.finished) {
+      FlxG.paused = true;
+      FlxG.vcr.stepRequested = true;
+      game.step(1 / 60);
+      reRegisterRenderer();
+      activeRenderer?.render();
+      updateReplayInfo();
+    }
   });
 
   exportBtn?.addEventListener('click', () => {
@@ -305,6 +382,7 @@ export async function bootPhase10Demo(
       }
       activeRenderer?.destroy();
       activeRenderer = null;
+      recordingSnapshot = null;
       game.destroy();
       app?.destroy(true);
     },

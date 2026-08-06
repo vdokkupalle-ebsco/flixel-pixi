@@ -2,7 +2,7 @@ import { MouseRecord } from './mouse-record';
 
 /** Serializable key input state for a single replay frame. @public */
 export interface CodePair {
-  code: string;
+  code: number;
   value: number;
 }
 
@@ -62,7 +62,7 @@ export class FrameRecord {
     this.frame = parsed.frame ?? 0;
     this.keys = Array.isArray(parsed.keys)
       ? parsed.keys.map((k) => ({
-          code: String(k.code),
+          code: Number(k.code),
           value: Number(k.value),
         }))
       : [];

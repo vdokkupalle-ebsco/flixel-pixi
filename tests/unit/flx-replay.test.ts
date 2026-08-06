@@ -20,13 +20,13 @@ describe('Phase 10 — FlxReplay & Determinism', () => {
 
     const frame = new FrameRecord(
       1,
-      [{ code: 'KeyA', value: 1 }],
+      [{ code: 65, value: 1 }],
       mouse,
       'hash123',
     );
     const saved = frame.save();
     expect(saved.frame).toBe(1);
-    expect(saved.keys).toEqual([{ code: 'KeyA', value: 1 }]);
+    expect(saved.keys).toEqual([{ code: 65, value: 1 }]);
     expect(saved.mouse).toEqual({ x: 100, y: 201, button: 1, wheel: -2 });
     expect(saved.checksum).toBe('hash123');
 
@@ -48,7 +48,7 @@ describe('Phase 10 — FlxReplay & Determinism', () => {
     expect(replay.frameCount).toBe(0);
 
     const m1 = new MouseRecord(10, 20, 0, 0);
-    replay.recordFrame(0, [{ code: 'Space', value: 1 }], m1);
+    replay.recordFrame(0, [{ code: 32, value: 1 }], m1);
     replay.recordFrame(1, [], null);
 
     expect(replay.frameCount).toBe(2);
@@ -104,14 +104,23 @@ describe('Phase 10 — FlxReplay & Determinism', () => {
   });
 
   it('integrates VCR controls and FlxG facade statics', () => {
-    class MockState extends FlxState {}
+    let stateCreates = 0;
+    class MockState extends FlxState {
+      override create(): void {
+        super.create();
+        stateCreates++;
+      }
+    }
     const game = new FlxGame(320, 240, MockState);
+    game.step();
+    expect(stateCreates).toBe(1);
 
-    FlxG.recordReplay();
+    FlxG.recordReplay(true);
     expect(FlxG.vcr.recording).toBe(true);
     expect(FlxG.vcr.replaying).toBe(false);
 
     game.step();
+    expect(stateCreates).toBe(2);
     game.step();
 
     const payload = FlxG.stopRecording();

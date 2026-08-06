@@ -521,8 +521,14 @@ export class FlxG {
   /** Global VCR state object. */
   static readonly vcr: FlxVCR = createVCR();
 
-  /** Begins recording deterministic gameplay input to a new replay. */
-  static recordReplay(): void {
+  /**
+   * Begins recording deterministic gameplay input to a new replay.
+   * @param standardMode - If true (default), resets the active state to frame 0 for deterministic replay alignment.
+   */
+  static recordReplay(standardMode = true): void {
+    if (standardMode) {
+      FlxG.resetState();
+    }
     const replay = new FlxReplay();
     replay.create(FlxG.globalSeed);
     FlxG.vcr.replay = replay;

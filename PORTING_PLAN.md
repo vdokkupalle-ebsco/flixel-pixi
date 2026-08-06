@@ -390,6 +390,9 @@ Checkpoint C9 — platform services gate:
 
 ### Phase 10 — Replay and deterministic verification (2–3 weeks)
 
+Status: completed on 2026-08-06; checkpoint C10 passed. See
+[`docs/phase10-evidence.md`](docs/phase10-evidence.md).
+
 Classes: `FlxReplay`, `FrameRecord`, `MouseRecord`; replay-facing `FlxG` APIs.
 
 Work:
