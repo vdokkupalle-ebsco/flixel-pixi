@@ -411,6 +411,9 @@ Checkpoint C10 — replay gate:
 
 ### Phase 11 — Debugger and preloader (3–4 weeks)
 
+Status: completed on 2026-08-06; checkpoint C11 passed. See
+[`docs/phase11-evidence.md`](docs/phase11-evidence.md).
+
 Classes: `FlxDebugger`, `FlxWindow`, `Log`, `Perf`, `Watch`, `WatchEntry`, `VCR`, `Vis`, `FlxPreloader`.
 
 Work:
