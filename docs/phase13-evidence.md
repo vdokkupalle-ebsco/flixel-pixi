@@ -11,16 +11,18 @@
 | --- | --- |
 | Resolution | 640×480 |
 | Atlas | Procedural 4×4 × 16px tiles, one texture |
-| Active sprites | 2000 moving |
-| Inactive pool | 8000 (allocation only, not registered) |
+| Active sprites | 2000 / 5000 / 10000 via `?active=` (buttons 2k/5k/10k, keys 1/2/3) |
+| Inactive pool | 8000 (allocation only, not registered; fixed across presets) |
 | Warmup | 1s |
 | Measure | 4s |
 
 ## FPS baseline (report-only)
 
-| Browser | avgFps | minFps | Notes |
-| --- | --- | --- | --- |
-| Chromium (local/CI) | 239.6 | 24.1 | Playwright log; macOS arm64 (Darwin) |
+| Browser | active | avgFps | minFps | Notes |
+| --- | --- | --- | --- | --- |
+| Chromium (local) | 2000 | 431.8 | 9.6 | Playwright `?active=2000` (varies by run) |
+| Chromium (local) | 5000 | 194.2 | 7.3 | Playwright `?active=5000` |
+| Chromium (local) | 10000 | 65.7 | 5.9 | Playwright `?active=10000` |
 
 ## Soak (10 × ~750ms)
 

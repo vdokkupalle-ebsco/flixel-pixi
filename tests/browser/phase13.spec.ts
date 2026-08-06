@@ -25,38 +25,40 @@ import { expect, test } from '@playwright/test';
 const GAMES = 'http://127.0.0.1:4174';
 
 test.describe('Phase 13 — Sprite stress bench', () => {
-  test('boots, reports finite FPS metrics (report-only), destroys', async ({
-    page,
-  }) => {
-    test.setTimeout(60_000);
-    await page.goto(`${GAMES}/bench-sprites/`);
-    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
-      'data-state',
-      'ready',
-      { timeout: 15_000 },
-    );
+  for (const active of [2000, 5000, 10000] as const) {
+    test(`boots ${active} sprites, reports finite FPS (report-only), destroys`, async ({
+      page,
+    }) => {
+      test.setTimeout(active >= 10000 ? 120_000 : 60_000);
+      await page.goto(`${GAMES}/bench-sprites/?active=${active}`);
+      await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+        'data-state',
+        'ready',
+        { timeout: active >= 10000 ? 45_000 : 15_000 },
+      );
 
-    await page.waitForFunction(
-      () => window.__FLIXEL_PIXI_BENCH__?.measured === true,
-      { timeout: 20_000 },
-    );
+      await page.waitForFunction(
+        () => window.__FLIXEL_PIXI_BENCH__?.measured === true,
+        { timeout: 30_000 },
+      );
 
-    const metrics = await page.evaluate(() => window.__FLIXEL_PIXI_BENCH__);
-    expect(metrics?.ready).toBe(true);
-    expect(metrics?.activeCount).toBe(2000);
-    expect(metrics?.inactiveCount).toBe(8000);
-    expect(Number.isFinite(metrics?.avgFps)).toBe(true);
-    expect(Number.isFinite(metrics?.minFps)).toBe(true);
-    expect(metrics?.avgFps ?? 0).toBeGreaterThan(0);
-    // Report-only: log, do not assert a floor
-    console.log('[phase13 bench]', metrics);
+      const metrics = await page.evaluate(() => window.__FLIXEL_PIXI_BENCH__);
+      expect(metrics?.ready).toBe(true);
+      expect(metrics?.activeCount).toBe(active);
+      expect(metrics?.inactiveCount).toBe(8000);
+      expect(Number.isFinite(metrics?.avgFps)).toBe(true);
+      expect(Number.isFinite(metrics?.minFps)).toBe(true);
+      expect(metrics?.avgFps ?? 0).toBeGreaterThan(0);
+      // Report-only: log, do not assert a floor
+      console.log(`[phase13 bench active=${active}]`, metrics);
 
-    await page.locator('[data-action="destroy"]').click();
-    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
-      'data-state',
-      'destroyed',
-    );
-  });
+      await page.locator('[data-action="destroy"]').click();
+      await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+        'data-state',
+        'destroyed',
+      );
+    });
+  }
 });
 
 test.describe('Phase 13 — Boot/destroy soak', () => {

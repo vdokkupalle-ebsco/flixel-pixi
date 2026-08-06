@@ -23,5 +23,5 @@ Destroy states, unload asset bundles you no longer need, and drop render handles
 
 ## Benchmarks
 
-- Sprite atlas stress: `examples/games/bench-sprites/` (`npm run dev:games` → Bench Sprites). Report-only FPS via `window.__FLIXEL_PIXI_BENCH__`.
+- Sprite atlas stress: `examples/games/bench-sprites/` (`npm run dev:games` → Bench Sprites). Presets **2k / 5k / 10k** via UI buttons, keys `1`/`2`/`3`, or `?active=5000`. Report-only FPS via `window.__FLIXEL_PIXI_BENCH__`.
 - Boot/destroy soak: `examples/games/bench-soak/`. See `docs/phase13-evidence.md`.

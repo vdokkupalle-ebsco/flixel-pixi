@@ -8,11 +8,36 @@ import {
   makeGraphicPixels,
 } from '../../../src';
 
-export const ACTIVE_COUNT = 2000;
+/** Supported active-sprite stress sizes. */
+export const ACTIVE_PRESETS = [2000, 5000, 10000] as const;
+export type ActivePreset = (typeof ACTIVE_PRESETS)[number];
+
+/** Allocation-only pool size (not registered for render). Fixed across presets. */
 export const INACTIVE_COUNT = 8000;
+
 const TILE = 16;
 const ATLAS_COLS = 4;
 const ATLAS_ROWS = 4;
+
+/** Resolved before `bootGame` constructs the state. */
+let configuredActiveCount: ActivePreset = 2000;
+
+export function getConfiguredActiveCount(): ActivePreset {
+  return configuredActiveCount;
+}
+
+export function configureBenchActive(count: number): ActivePreset {
+  const match = ACTIVE_PRESETS.find((n) => n === count);
+  configuredActiveCount = match ?? 2000;
+  return configuredActiveCount;
+}
+
+/** Parse `?active=` from a query string (default 2000). */
+export function parseActiveQuery(search: string): ActivePreset {
+  const raw = new URLSearchParams(search).get('active');
+  if (raw === null || raw === '') return 2000;
+  return configureBenchActive(Number(raw));
+}
 
 /** Build one atlas texture: 4×4 grid of distinct 16×16 solid tiles. */
 export function createAtlasGraphic(): FlxGraphic {
@@ -40,9 +65,10 @@ export function createAtlasGraphic(): FlxGraphic {
 
 export class BenchSpritesState extends FlxState {
   hud!: FlxText;
-  activeSprites = new FlxGroup(ACTIVE_COUNT);
+  activeSprites!: FlxGroup;
   /** Allocation-only; not added to the state → not registered for render. */
   inactivePool: FlxSprite[] = [];
+  activeCount = configuredActiveCount;
   #atlas!: FlxGraphic;
   #sampleElapsed = 0;
   #warmupDone = false;
@@ -56,8 +82,10 @@ export class BenchSpritesState extends FlxState {
     super.create();
     FlxG.camera.bgColor = 0xff0f172a;
     this.#atlas = createAtlasGraphic();
+    this.activeCount = configuredActiveCount;
+    this.activeSprites = new FlxGroup(this.activeCount);
 
-    for (let i = 0; i < ACTIVE_COUNT; i += 1) {
+    for (let i = 0; i < this.activeCount; i += 1) {
       const s = new FlxSprite(
         (i * 17) % (FlxG.width - TILE),
         (i * 31) % (FlxG.height - TILE),
@@ -93,6 +121,7 @@ export class BenchSpritesState extends FlxState {
     const dtMs = now - this.#lastNow;
     this.#lastNow = now;
     this.#sampleElapsed += FlxG.elapsed;
+    const n = this.activeCount;
 
     for (const member of this.activeSprites.members) {
       if (!(member instanceof FlxSprite) || !member.exists) continue;
@@ -112,7 +141,7 @@ export class BenchSpritesState extends FlxState {
         this.#sampleElapsed = 0;
         this.#frameTimes.length = 0;
       }
-      this.hud.text = `BENCH — warmup ${this.#sampleElapsed.toFixed(2)}s · active ${ACTIVE_COUNT}`;
+      this.hud.text = `BENCH — warmup ${this.#sampleElapsed.toFixed(2)}s · active ${n} · keys 1/2/3 presets`;
       return;
     }
 
@@ -128,7 +157,7 @@ export class BenchSpritesState extends FlxState {
     }
 
     this.hud.text = this.measured
-      ? `BENCH — avg ${this.avgFps.toFixed(1)} fps · min ${this.minFps.toFixed(1)} · active ${ACTIVE_COUNT} · inactive ${INACTIVE_COUNT}`
-      : `BENCH — measuring ${this.#sampleElapsed.toFixed(2)}s · active ${ACTIVE_COUNT}`;
+      ? `BENCH — avg ${this.avgFps.toFixed(1)} fps · min ${this.minFps.toFixed(1)} · active ${n} · inactive ${INACTIVE_COUNT}`
+      : `BENCH — measuring ${this.#sampleElapsed.toFixed(2)}s · active ${n}`;
   }
 }
