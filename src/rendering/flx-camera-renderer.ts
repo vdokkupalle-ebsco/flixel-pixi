@@ -174,6 +174,15 @@ export class FlxCameraRenderer implements FlxCameraHost {
     return true;
   }
 
+  clearObjects(): void {
+    this.#assertUsable();
+    for (const entry of this.#entries.values()) {
+      entry.handle.view.removeFromParent();
+      entry.handle.destroy();
+    }
+    this.#entries.clear();
+  }
+
   getCameraView(camera: FlxCamera): FlxCameraView | null {
     return this.#views.get(camera) ?? null;
   }
@@ -233,8 +242,11 @@ export class FlxCameraRenderer implements FlxCameraHost {
     this.#debug.clear();
     this.#pathDebug.clear();
 
-    for (const entry of this.#entries.values()) {
-      const object = entry.object;
+    for (const [object, entry] of [...this.#entries.entries()]) {
+      if (entry.handle.destroyed) {
+        this.#entries.delete(object);
+        continue;
+      }
       entry.handle.sync(camera);
       const routedCameras = object.cameras ?? this.#context.cameras;
       const routed = routedCameras.includes(camera);

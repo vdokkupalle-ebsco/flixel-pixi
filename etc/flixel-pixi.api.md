@@ -530,6 +530,8 @@ export class FlxCameraRenderer implements FlxCameraHost {
     // (undocumented)
     get cameraCount(): number;
     // (undocumented)
+    clearObjects(): void;
+    // (undocumented)
     debugBounds: boolean;
     // (undocumented)
     destroy(): void;

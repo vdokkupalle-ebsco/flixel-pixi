@@ -13,6 +13,9 @@ declare global {
   }
 }
 
+const host = document.querySelector<HTMLElement>(
+  '[data-testid="phase10-canvas-host"]',
+);
 const status = document.querySelector<HTMLElement>('[data-testid="status"]');
 
 window.__FLIXEL_PIXI_PHASE10__ = {
@@ -20,7 +23,7 @@ window.__FLIXEL_PIXI_PHASE10__ = {
   ready: false,
 };
 
-bootPhase10Demo()
+bootPhase10Demo(host)
   .then((app) => {
     window.__FLIXEL_PIXI_PHASE10__ = {
       app,

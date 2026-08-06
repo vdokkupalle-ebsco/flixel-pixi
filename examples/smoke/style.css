@@ -132,6 +132,20 @@ button:disabled {
   height: auto;
 }
 
+.phase-ten-canvas {
+  width: 100%;
+  height: 480px;
+  min-height: 360px;
+  margin-inline: auto;
+  background: #1e293b;
+}
+
+.phase-ten-canvas canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .phase-six {
   width: min(880px, calc(100vw - 32px));
 }
