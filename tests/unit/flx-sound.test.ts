@@ -39,7 +39,11 @@ describe('FlxSound and FlxAudioManager', () => {
     sound.volume = 0.8;
     expect(sound.volume).toBe(0.8);
 
-    sound.destroy();
+    // Auto destroy when handle is set but not playing
+    sound.autoDestroy = true;
+    sound.play();
+    sound.stop();
+    sound.update();
     expect(sound.exists).toBe(false);
     manager.destroy();
   });
@@ -116,9 +120,13 @@ describe('FlxSound and FlxAudioManager', () => {
     expect(FlxG.mute).toBe(true);
     FlxG.mute = false;
 
-    FlxG.playMusic('bgm.mp3', 0.6);
+    FlxG.playMusic('bgm1.mp3', 0.6);
     expect(FlxG.music).not.toBeNull();
     expect(FlxG.music?.survive).toBe(true);
+
+    // Play music again to cover replacing existing music track
+    FlxG.playMusic('bgm2.mp3', 0.8);
+    expect(FlxG.music).not.toBeNull();
 
     const streamSound = FlxG.stream(
       'http://example.com/audio.mp3',
@@ -135,6 +143,9 @@ describe('FlxSound and FlxAudioManager', () => {
 
     sfx.autoDestroy = true;
     sfx.update(); // handles autoDestroy tick when handle not playing
+
+    FlxG.pauseSounds();
+    FlxG.resumeSounds();
 
     FlxG.pauseSounds();
     FlxG.resumeSounds();

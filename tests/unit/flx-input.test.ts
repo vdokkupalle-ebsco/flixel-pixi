@@ -158,6 +158,9 @@ describe('Phase 7 deterministic keyboard input', () => {
     game.input.keys.handleKeyDown({ code: 'KeyB' });
     game.step();
     expect(FlxG.keys.justPressed('B')).toBe(true);
+
+    game.input.resetInput();
+    game.input.mouse.reset();
   });
 });
 

@@ -155,7 +155,18 @@ describe('FlxSave and Storage Backends', () => {
     // Flush when unbound
     expect(save.flush().success).toBe(false);
     expect(save.erase()).toBe(false);
-    save.close(); // No-op
+
+    // Bind without backend parameter
+    save.bind('no_backend');
+    expect(save.data).toEqual({});
+    expect(save.flush().success).toBe(false);
+    expect(save.erase()).toBe(false);
+    save.close();
+
+    // Bind with version but no backend
+    save.bind('no_backend_version', { version: 1 });
+    expect(save.data).toEqual({});
+    save.close();
 
     // Bind with version but no migration callback
     const backend = new NullStorageBackend();
@@ -179,6 +190,7 @@ describe('FlxSave and Storage Backends', () => {
 
     expect(FlxG.save).toBe(saveInstance);
     expect(FlxG.saves.length).toBe(1);
+    expect(FlxG.saves[0]).toBe(saveInstance);
 
     FlxG.clearContext(context);
   });

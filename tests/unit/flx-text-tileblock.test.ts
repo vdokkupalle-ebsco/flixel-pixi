@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  FlxButton,
   FlxContext,
   FlxG,
   FlxGraphic,
@@ -120,5 +121,19 @@ describe('FlxTileblock', () => {
     const wrapper = new FlxGraphic(textureOnly);
     expect(() => block.loadTiles(wrapper, 1, 1)).toThrow('pixel-backed');
     block.destroy();
+  });
+
+  it('handles button without label render handle sync', () => {
+    const button = new FlxButton(10, 10);
+    const handle = button.createRenderHandle();
+    handle.sync();
+
+    button.label = new FlxText(0, 0, 40, 'Ok');
+    handle.sync();
+
+    button.label = null;
+    handle.sync();
+
+    button.destroy();
   });
 });
