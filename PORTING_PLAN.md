@@ -368,6 +368,9 @@ Checkpoint C8 — effects gate:
 
 ### Phase 9 — Audio and save data (2–3 weeks)
 
+Status: completed on 2026-08-06; checkpoint C9 passed. See
+[`docs/phase9-evidence.md`](docs/phase9-evidence.md).
+
 Classes: `FlxSound`, `FlxSave`.
 
 Work:

@@ -103,3 +103,30 @@ export type { FlxPixiTextNode } from './rendering/flx-text-render-handle';
 export { FlxTilemapRenderHandle } from './rendering/flx-tilemap-render-handle';
 export { TimerManager } from './plugin/timer-manager';
 export { DebugPathDisplay } from './plugin/debug-path-display';
+
+// --- Phase 9: Audio ---
+export { FLX_AUDIO_SERVICE } from './audio/flx-audio-backend';
+export type {
+  FlxAudioBackend,
+  FlxSoundHandle,
+} from './audio/flx-audio-backend';
+export { FlxSound } from './audio/flx-sound';
+export { FlxAudioManager } from './audio/flx-audio-manager';
+export type { FlxAudioService } from './audio/flx-audio-manager';
+export { NullAudioBackend } from './audio/null-audio-backend';
+export { WebAudioBackend } from './audio/web-audio-backend';
+
+// --- Phase 9: Save ---
+export { FLX_STORAGE_SERVICE } from './storage/flx-storage-backend';
+export type {
+  FlxSaveResult,
+  FlxStorageBackend,
+} from './storage/flx-storage-backend';
+export { FlxSave } from './storage/flx-save';
+export type {
+  FlxSaveBindOptions,
+  FlxSaveMigration,
+} from './storage/flx-save';
+export { NullStorageBackend } from './storage/null-storage-backend';
+export { LocalStorageBackend } from './storage/local-storage-backend';
+export { IndexedDBBackend } from './storage/indexed-db-backend';

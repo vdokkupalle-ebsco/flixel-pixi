@@ -238,13 +238,13 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 
 - Source: `FlxSave.as`
 - Public API (8): `bind`, `close`, `data`, `destroy`, `erase`, `flush`, `FlxSave`, `name`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 9 status: implemented with versioned save slots, namespaced keys, typed `flush()` error results, and replaceable `FlxStorageBackend` (localStorage, IndexedDB, null).
 
 ### `org.flixel.FlxSound` extends `FlxBasic`
 
 - Source: `FlxSound.as`
 - Public API (24): `amplitude`, `amplitudeLeft`, `amplitudeRight`, `artist`, `autoDestroy`, `destroy`, `fadeIn`, `fadeOut`, `FlxSound`, `getActualVolume`, `kill`, `loadEmbedded`, `loadStream`, `name`, `pause`, `play`, `proximity`, `resume`, `stop`, `survive`, `update`, `volume (get/set)`, `x`, `y`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 9 status: implemented with Web Audio API backend, gesture-unlock queue, stereo panner proximity, fades, global volume/mute scaling, and replaceable `FlxAudioBackend`.
 
 ### `org.flixel.FlxSprite` extends `FlxObject`
 

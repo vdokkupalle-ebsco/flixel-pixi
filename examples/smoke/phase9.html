@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi Phase 9 Audio & Save Data Smoke</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div>
+          <h1>Phase 9: Audio & Save Data</h1>
+          <p id="status" class="status" data-testid="status" data-state="loading">
+            Initializing Phase 9...
+          </p>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="destroy" disabled>Destroy</button>
+        </div>
+      </header>
+      <main class="workbench">
+        <section class="stage">
+          <div data-testid="phase9-canvas-host" class="canvas-host"></div>
+        </section>
+        <section class="meta">
+          <h2>State & Save Storage</h2>
+          <div data-testid="phase9-metrics"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./phase9-main.ts"></script>
+  </body>
+</html>

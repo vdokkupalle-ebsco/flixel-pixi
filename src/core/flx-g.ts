@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-extraneous-class -- AS3 compatibility facade. */
+import { FLX_AUDIO_SERVICE } from '../audio/flx-audio-backend';
+import type { FlxAudioService } from '../audio/flx-audio-manager';
+import type { FlxSound } from '../audio/flx-sound';
 import {
   FlxQuadTree,
   type FlxOverlapCallback,
@@ -12,6 +15,10 @@ import {
 import type { Keyboard } from '../input/keyboard';
 import type { Mouse } from '../input/mouse';
 import { FlxObject } from '../objects/flx-object';
+import type { FlxSave } from '../storage/flx-save';
+import {
+  FLX_STORAGE_SERVICE,
+} from '../storage/flx-storage-backend';
 import { FlxTilemap } from '../tilemap/flx-tilemap';
 import type { FlxBasic } from './flx-basic';
 import type {
@@ -20,6 +27,7 @@ import type {
   FlxCameraShakeDirection,
 } from './flx-camera';
 import type { FlxContext } from './flx-context';
+import type { FlxGroup } from './flx-group';
 import type { FlxState } from './flx-state';
 
 /** Constructor used by the plugin compatibility facade. @public */
@@ -210,6 +218,16 @@ export class FlxG {
     return input;
   }
 
+  static get #audio(): FlxAudioService {
+    const audio = FlxG.context.getService<FlxAudioService>(FLX_AUDIO_SERVICE);
+    if (audio === undefined) {
+      throw new Error(
+        'No audio service is installed in the active FlxContext.',
+      );
+    }
+    return audio;
+  }
+
   static random(): number {
     return FlxG.context.randomSource.next();
   }
@@ -385,6 +403,113 @@ export class FlxG {
 
   static getLibraryName(): string {
     return `${FlxG.LIBRARY_NAME} v${FlxG.LIBRARY_MAJOR_VERSION}.${FlxG.LIBRARY_MINOR_VERSION}`;
+  }
+
+  // ── Audio facade ──────────────────────────────────────────────────────
+
+  /** The currently playing music track, or `null`. */
+  static get music(): FlxSound | null {
+    return FlxG.#audio.music;
+  }
+
+  /** The active sound-effects group. */
+  static get sounds(): FlxGroup {
+    return FlxG.#audio.sounds;
+  }
+
+  /** Global volume (0–1). */
+  static get volume(): number {
+    return FlxG.#audio.volume;
+  }
+
+  static set volume(value: number) {
+    FlxG.#audio.volume = value;
+  }
+
+  /** Global mute flag. */
+  static get mute(): boolean {
+    return FlxG.#audio.mute;
+  }
+
+  static set mute(value: boolean) {
+    FlxG.#audio.mute = value;
+  }
+
+  /**
+   * Play a sound effect.
+   * @param source - `AudioBuffer`, URL string, or asset alias.
+   * @param volume - Per-instance volume (0–1).  Defaults to 1.
+   * @param loop - Whether to loop.  Defaults to false.
+   * @param autoDestroy - Whether to auto-destroy when done.  Defaults to true.
+   */
+  static play(
+    source: unknown,
+    volume?: number,
+    loop?: boolean,
+    autoDestroy?: boolean,
+  ): FlxSound {
+    return FlxG.#audio.play(source, volume, loop, autoDestroy);
+  }
+
+  /**
+   * Play music, stopping the current track.
+   * @param source - `AudioBuffer`, URL string, or asset alias.
+   * @param volume - Volume (0–1).  Defaults to 1.
+   */
+  static playMusic(source: unknown, volume?: number): void {
+    FlxG.#audio.playMusic(source, volume);
+  }
+
+  /**
+   * Play a streaming sound from a URL.
+   * @param url - The streaming URL.
+   * @param volume - Per-instance volume (0–1).  Defaults to 1.
+   * @param loop - Whether to loop.  Defaults to false.
+   * @param autoDestroy - Whether to auto-destroy when done.  Defaults to true.
+   */
+  static stream(
+    url: string,
+    volume?: number,
+    loop?: boolean,
+    autoDestroy?: boolean,
+  ): FlxSound {
+    return FlxG.#audio.stream(url, volume, loop, autoDestroy);
+  }
+
+  /** Pause all sounds and music. */
+  static pauseSounds(): void {
+    FlxG.#audio.pauseSounds();
+  }
+
+  /** Resume all sounds and music. */
+  static resumeSounds(): void {
+    FlxG.#audio.resumeSounds();
+  }
+
+  // ── Save facade ──────────────────────────────────────────────────────
+
+  /** Primary save slot. */
+  static get save(): FlxSave {
+    type SaveService = { save: FlxSave; saves: FlxSave[] };
+    const svc = FlxG.context.getService<SaveService>(FLX_STORAGE_SERVICE);
+    if (svc === undefined) {
+      throw new Error(
+        'No storage service is installed in the active FlxContext.',
+      );
+    }
+    return svc.save;
+  }
+
+  /** All registered save slots. */
+  static get saves(): FlxSave[] {
+    type SaveService = { save: FlxSave; saves: FlxSave[] };
+    const svc = FlxG.context.getService<SaveService>(FLX_STORAGE_SERVICE);
+    if (svc === undefined) {
+      throw new Error(
+        'No storage service is installed in the active FlxContext.',
+      );
+    }
+    return svc.saves;
   }
 
   static #overlapTilemap(

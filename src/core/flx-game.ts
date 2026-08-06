@@ -10,6 +10,11 @@ import {
   FlxInputManager,
   type FlxInputManagerOptions,
 } from '../input/flx-input-manager';
+import {
+  FlxAudioManager,
+} from '../audio/flx-audio-manager';
+import type { FlxAudioBackend } from '../audio/flx-audio-backend';
+import { NullAudioBackend } from '../audio/null-audio-backend';
 import type { FlxState, FlxStateConstructor } from './flx-state';
 
 /** Headless Phase 2 game controller and atomic state boundary. @public */
@@ -22,6 +27,7 @@ export class FlxGame implements FlxStateRuntime {
   useSoundHotKeys = true;
   readonly useSystemCursor: boolean;
   readonly input: FlxInputManager;
+  readonly audio: FlxAudioManager;
 
   readonly #clock: FixedStepAccumulator;
   #destroyed = false;
@@ -37,6 +43,7 @@ export class FlxGame implements FlxStateRuntime {
     flashFramerate = 30,
     useSystemCursor = false,
     inputOptions: FlxInputManagerOptions = {},
+    audioBackend: FlxAudioBackend = new NullAudioBackend(),
   ) {
     if (!Number.isFinite(zoom) || zoom <= 0) {
       throw new RangeError('zoom must be a positive finite number.');
@@ -53,6 +60,7 @@ export class FlxGame implements FlxStateRuntime {
     this.context.attachRuntime(this);
     FlxG.installContext(this.context);
     this.input = new FlxInputManager(this.context, inputOptions);
+    this.audio = new FlxAudioManager(this.context, audioBackend);
     this.context.addPlugin(new DebugPathDisplay());
     this.context.addPlugin(new TimerManager());
     this.#clock = new FixedStepAccumulator({ stepSeconds: 1 / gameFramerate });
@@ -92,6 +100,7 @@ export class FlxGame implements FlxStateRuntime {
     if (!this.context.paused) {
       this.context.updatePlugins();
       this.#state?.update();
+      this.audio.updateSounds(this.context.elapsed);
       this.context.updateCameras();
     }
   }
@@ -114,6 +123,7 @@ export class FlxGame implements FlxStateRuntime {
     this.#state = null;
     this.#requestedState = null;
     this.input.destroy();
+    this.audio.destroy();
     this.context.destroyPlugins();
     this.context.clearServices();
     this.context.detachRuntime(this);
@@ -130,6 +140,7 @@ export class FlxGame implements FlxStateRuntime {
     this.#requestedState = null;
     const previousState = this.#state;
     this.context.getPlugin(TimerManager)?.clear();
+    this.audio.destroySounds(false);
     previousState?.destroy();
     this.#state = nextState;
 

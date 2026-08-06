@@ -11,7 +11,8 @@ are accepted as the basis for Phase 1. Camera implementation details and pixel
 API classifications were locked by the measured C1 spike. Phase 3 added the
 reentrant quadtree callback contract, and Phase 7 locked browser input to
 simulation-step boundaries. Phase 8 keeps particle optimization render-only and
-locks mutation-safe plugin ordering.
+locks mutation-safe plugin ordering. Phase 9 adds replaceable audio and storage
+backends with gesture-unlock queuing and versioned save slots.
 
 | ADR                                               | Decision                                     | Status   |
 | ------------------------------------------------- | -------------------------------------------- | -------- |
@@ -24,3 +25,5 @@ locks mutation-safe plugin ordering.
 | [0007](0007-reentrant-quadtree-callbacks.md)      | Reentrant, pair-unique quadtree callbacks    | Accepted |
 | [0008](0008-step-boundary-input.md)               | Step-boundary browser input queues           | Accepted |
 | [0009](0009-render-only-particle-optimization.md) | Render-only particle optimization            | Accepted |
+| [0010](0010-browser-audio-backend.md)             | Replaceable audio backend with unlock queue  | Accepted |
+| [0011](0011-browser-storage-backend.md)           | Replaceable storage backend with versioned slots | Accepted |
