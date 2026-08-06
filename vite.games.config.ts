@@ -26,6 +26,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/bench-sprites/index.html',
         ),
+        'bench-soak': resolve(
+          import.meta.dirname,
+          'examples/games/bench-soak/index.html',
+        ),
         index: resolve(import.meta.dirname, 'examples/games/index.html'),
       },
     },

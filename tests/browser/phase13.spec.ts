@@ -58,3 +58,29 @@ test.describe('Phase 13 — Sprite stress bench', () => {
     );
   });
 });
+
+test.describe('Phase 13 — Boot/destroy soak', () => {
+  test('completes 10 cycles without errors or rising handle counts', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await page.goto(`${GAMES}/bench-soak/`);
+    await page.waitForFunction(
+      () => window.__FLIXEL_PIXI_SOAK__?.done === true,
+      { timeout: 90_000 },
+    );
+
+    const soak = await page.evaluate(() => window.__FLIXEL_PIXI_SOAK__);
+    expect(soak?.errors ?? ['missing']).toEqual([]);
+    expect(soak?.cycles).toBe(10);
+    expect(soak?.registeredSamples?.length).toBe(10);
+
+    const samples = soak!.registeredSamples;
+    // No monotonic climb: last <= first + 2 (ε for noise)
+    expect(samples[samples.length - 1]!).toBeLessThanOrEqual(samples[0]! + 2);
+    for (let i = 1; i < samples.length; i += 1) {
+      expect(samples[i]!).toBeLessThanOrEqual(samples[0]! + 2);
+    }
+    console.log('[phase13 soak]', soak);
+  });
+});
