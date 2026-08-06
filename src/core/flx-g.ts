@@ -29,6 +29,8 @@ import type { FlxGroup } from './flx-group';
 import type { FlxState } from './flx-state';
 import { FlxReplay } from '../replay/flx-replay';
 import { createVCR, type FlxVCR } from '../replay/flx-vcr';
+import { FLX_LOG_SERVICE, type FlxLog } from '../debugger/flx-log';
+import { FLX_WATCH_SERVICE, type FlxWatch } from '../debugger/flx-watch';
 
 /** Constructor used by the plugin compatibility facade. @public */
 export type FlxPluginConstructor<T extends FlxBasic = FlxBasic> = abstract new (
@@ -520,6 +522,32 @@ export class FlxG {
 
   /** Global VCR state object. */
   static readonly vcr: FlxVCR = createVCR();
+
+  // ── Debugger services facade ───────────────────────────────────────────
+
+  /**
+   * Live log accessible via `FlxG.log.add('message')`. Requires a FlxGame
+   * instance to be active (the log service is installed by FlxGame).
+   */
+  static get log(): FlxLog {
+    const svc = FlxG.context.getService<FlxLog>(FLX_LOG_SERVICE);
+    if (svc === undefined) {
+      throw new Error('No log service is installed. Is a FlxGame active?');
+    }
+    return svc;
+  }
+
+  /**
+   * Live watch panel accessible via `FlxG.watch.add(obj, 'field')`. Requires
+   * a FlxGame instance to be active.
+   */
+  static get watch(): FlxWatch {
+    const svc = FlxG.context.getService<FlxWatch>(FLX_WATCH_SERVICE);
+    if (svc === undefined) {
+      throw new Error('No watch service is installed. Is a FlxGame active?');
+    }
+    return svc;
+  }
 
   /**
    * Begins recording deterministic gameplay input to a new replay.

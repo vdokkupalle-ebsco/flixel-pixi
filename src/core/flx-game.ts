@@ -15,6 +15,9 @@ import { FlxAudioManager } from '../audio/flx-audio-manager';
 import type { FlxAudioBackend } from '../audio/flx-audio-backend';
 import { NullAudioBackend } from '../audio/null-audio-backend';
 import type { FlxState, FlxStateConstructor } from './flx-state';
+import { DebugChannel } from '../debugger/debug-channel';
+import { FlxLog, FLX_LOG_SERVICE } from '../debugger/flx-log';
+import { FlxWatch, FLX_WATCH_SERVICE } from '../debugger/flx-watch';
 
 /** Headless Phase 2 game controller and atomic state boundary. @public */
 export class FlxGame implements FlxStateRuntime {
@@ -28,10 +31,18 @@ export class FlxGame implements FlxStateRuntime {
   readonly input: FlxInputManager;
   readonly audio: FlxAudioManager;
 
+  /** Typed event bus for debug consumers. Zero cost when no listeners. */
+  readonly debugChannel: DebugChannel;
+  /** Shared log service. Access via FlxG.log. */
+  readonly log: FlxLog;
+  /** Shared watch service. Access via FlxG.watch. */
+  readonly watch: FlxWatch;
+
   readonly #clock: FixedStepAccumulator;
   #destroyed = false;
   #requestedState: FlxState | null = null;
   #state: FlxState | null = null;
+  #frame = 0;
 
   constructor(
     gameSizeX: number,
@@ -64,6 +75,12 @@ export class FlxGame implements FlxStateRuntime {
     this.context.addPlugin(new TimerManager());
     this.#clock = new FixedStepAccumulator({ stepSeconds: 1 / gameFramerate });
     this.#requestedState = new initialState();
+    // Debug services — always constructed but free when unused
+    this.debugChannel = new DebugChannel();
+    this.log = new FlxLog();
+    this.watch = new FlxWatch();
+    this.context.setService(FLX_LOG_SERVICE, this.log);
+    this.context.setService(FLX_WATCH_SERVICE, this.watch);
   }
 
   get state(): FlxState | null {
@@ -129,6 +146,7 @@ export class FlxGame implements FlxStateRuntime {
       }
     }
 
+    const t0 = performance.now();
     this.context.elapsed = stepSeconds * this.context.timeScale;
     if (!this.context.paused || FlxG.vcr.stepRequested) {
       FlxG.vcr.stepRequested = false;
@@ -136,6 +154,13 @@ export class FlxGame implements FlxStateRuntime {
       this.#state?.update();
       this.audio.updateSounds(this.context.elapsed);
       this.context.updateCameras();
+    }
+    // Emit step-complete for debug consumers (no-op when no listeners)
+    if (this.debugChannel) {
+      this.debugChannel.emit('step-complete', {
+        frame: ++this.#frame,
+        updateMs: performance.now() - t0,
+      });
     }
   }
 
@@ -158,6 +183,7 @@ export class FlxGame implements FlxStateRuntime {
     this.#requestedState = null;
     this.input.destroy();
     this.audio.destroy();
+    this.debugChannel.destroy();
     this.context.destroyPlugins();
     this.context.clearServices();
     this.context.detachRuntime(this);

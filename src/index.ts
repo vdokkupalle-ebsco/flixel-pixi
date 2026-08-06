@@ -139,3 +139,18 @@ export {
   convertFlxReplayToAS3Text,
 } from './replay/as3-replay-adapter';
 export type { FlxVCR } from './replay/flx-vcr';
+
+// --- Phase 11: Debugger & Preloader ---
+export { DebugChannel } from './debugger/debug-channel';
+export type { DebugEvents, DebugEventType } from './debugger/debug-channel';
+export { FlxLog, FLX_LOG_SERVICE } from './debugger/flx-log';
+export type { LogEntry } from './debugger/flx-log';
+export { FlxWatch, FLX_WATCH_SERVICE } from './debugger/flx-watch';
+export type { WatchEntry, WatchSnapshot } from './debugger/flx-watch';
+export { FlxPreloader } from './debugger/flx-preloader';
+export type { FlxPreloaderOptions, PreloaderState } from './debugger/flx-preloader';
+export { FlxDebugger } from './debugger/flx-debugger';
+export type {
+  FlxDebuggerOptions,
+  FlxDebuggerVCRCallbacks,
+} from './debugger/flx-debugger';

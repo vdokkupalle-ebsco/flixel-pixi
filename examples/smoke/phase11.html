@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi Phase 11 Debugger &amp; Preloader Smoke</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div>
+          <h1>Phase 11: Debugger &amp; Preloader</h1>
+          <p
+            id="status"
+            class="status"
+            data-testid="status"
+            data-state="loading"
+          >
+            Initializing Phase 11…
+          </p>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="toggle-debugger" disabled>
+            Toggle Debugger
+          </button>
+          <button type="button" data-action="add-log" disabled>
+            Add Log Entry
+          </button>
+          <button type="button" data-action="destroy" disabled>Destroy</button>
+        </div>
+      </header>
+
+      <main class="workbench">
+        <section class="stage">
+          <div
+            data-testid="phase11-canvas-host"
+            class="canvas-host"
+          ></div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./phase11-main.ts"></script>
+  </body>
+</html>
