@@ -15,6 +15,8 @@ export default defineConfig({
         phase6: resolve(import.meta.dirname, 'examples/smoke/phase6.html'),
         phase7: resolve(import.meta.dirname, 'examples/smoke/phase7.html'),
         phase8: resolve(import.meta.dirname, 'examples/smoke/phase8.html'),
+        phase9: resolve(import.meta.dirname, 'examples/smoke/phase9.html'),
+        phase10: resolve(import.meta.dirname, 'examples/smoke/phase10.html'),
         smoke: resolve(import.meta.dirname, 'examples/smoke/index.html'),
       },
     },

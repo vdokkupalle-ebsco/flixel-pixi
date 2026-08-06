@@ -1,4 +1,3 @@
-import { Application } from 'pixi.js';
 import {
   convertFlxReplayToAS3Text,
   FlxG,
@@ -60,13 +59,13 @@ class PlayState extends FlxState {
   }
 }
 
-async function bootPhase10Demo(): Promise<() => Promise<void>> {
-  const host = document.querySelector<HTMLElement>(
-    '[data-testid="phase10-canvas-host"]',
-  );
-  const statusEl = document.querySelector<HTMLElement>(
-    '[data-testid="status"]',
-  );
+export interface Phase10Application {
+  game: FlxGame;
+  step(steps?: number): void;
+  destroy(): void;
+}
+
+export async function bootPhase10Demo(): Promise<Phase10Application> {
   const replayInfoEl = document.querySelector<HTMLElement>(
     '[data-testid="replay-info"]',
   );
@@ -93,26 +92,20 @@ async function bootPhase10Demo(): Promise<() => Promise<void>> {
     '[data-action="destroy"]',
   );
 
-  if (!host || !statusEl || !replayInfoEl) {
-    throw new Error('Required Phase 10 DOM elements missing.');
-  }
+  const game = new FlxGame(
+    320,
+    240,
+    PlayState,
+    1,
+    60,
+    30,
+    false,
+    typeof window !== 'undefined' ? { keyboardTarget: window } : {},
+  );
 
-  const app = new Application();
-  await app.init({
-    width: 320,
-    height: 240,
-    backgroundColor: 0x111827,
-  });
-  host.appendChild(app.canvas);
+  game.step(1 / 60);
 
-  const game = new FlxGame(320, 240, PlayState, 1, 60, 30, false, {
-    pointerTarget: app.canvas,
-    keyboardTarget: window,
-  });
-
-  let tickerFn: (() => void) | null = null;
-  tickerFn = () => {
-    game.advance(app.ticker.deltaMS / 1000);
+  const updateReplayInfo = () => {
     if (replayInfoEl) {
       if (FlxG.vcr.recording) {
         replayInfoEl.textContent = `Recording frame ${FlxG.vcr.replay?.frameCount ?? 0}`;
@@ -125,7 +118,6 @@ async function bootPhase10Demo(): Promise<() => Promise<void>> {
       }
     }
   };
-  app.ticker.add(tickerFn);
 
   // Button Listeners
   recordBtn?.addEventListener('click', () => {
@@ -136,6 +128,7 @@ async function bootPhase10Demo(): Promise<() => Promise<void>> {
     if (rewindBtn) rewindBtn.disabled = true;
     if (stepBtn) stepBtn.disabled = true;
     if (exportBtn) exportBtn.disabled = true;
+    updateReplayInfo();
   });
 
   stopBtn?.addEventListener('click', () => {
@@ -146,20 +139,24 @@ async function bootPhase10Demo(): Promise<() => Promise<void>> {
     if (rewindBtn) rewindBtn.disabled = false;
     if (stepBtn) stepBtn.disabled = false;
     if (exportBtn) exportBtn.disabled = false;
+    updateReplayInfo();
   });
 
   playBtn?.addEventListener('click', () => {
     if (FlxG.vcr.replay) {
       FlxG.loadReplay(FlxG.vcr.replay, new PlayState());
+      updateReplayInfo();
     }
   });
 
   rewindBtn?.addEventListener('click', () => {
     FlxG.reloadReplay();
+    updateReplayInfo();
   });
 
   stepBtn?.addEventListener('click', () => {
     game.step();
+    updateReplayInfo();
   });
 
   exportBtn?.addEventListener('click', () => {
@@ -172,30 +169,18 @@ async function bootPhase10Demo(): Promise<() => Promise<void>> {
     }
   });
 
-  statusEl.textContent = 'Phase 10 Replay Lab Active';
-  statusEl.setAttribute('data-state', 'ready');
   if (destroyBtn) destroyBtn.disabled = false;
 
-  let destroyed = false;
-  const teardown = async () => {
-    if (destroyed) return;
-    destroyed = true;
-    if (tickerFn) app.ticker.remove(tickerFn);
-    game.destroy();
-    app.destroy(true);
-    if (statusEl) {
-      statusEl.textContent = 'Destroyed';
-      statusEl.setAttribute('data-state', 'destroyed');
-    }
+  return {
+    game,
+    step(steps = 1) {
+      for (let i = 0; i < steps; i++) {
+        game.step(1 / 60);
+      }
+      updateReplayInfo();
+    },
+    destroy() {
+      game.destroy();
+    },
   };
-
-  destroyBtn?.addEventListener('click', () => {
-    void teardown();
-  });
-
-  return teardown;
-}
-
-if (typeof window !== 'undefined') {
-  void bootPhase10Demo();
 }
