@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10131a" />
+    <title>flixel-pixi Phase 0 smoke test</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">Phase 0 foundation</p>
+          <h1>flixel-pixi smoke test</h1>
+        </div>
+        <button data-action="destroy" type="button" disabled>
+          Destroy application
+        </button>
+      </header>
+      <p class="status" data-testid="status" aria-live="polite">
+        Initializing PixiJS…
+      </p>
+      <div class="canvas-host" data-testid="canvas-host"></div>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

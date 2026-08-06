@@ -1,0 +1,4178 @@
+{
+  "repository": "https://github.com/AdamAtomic/flixel.git",
+  "commit": "8989e5044be072c4abbbaa1317c9854786f6447f",
+  "sourceDirectory": "org/flixel",
+  "classCount": 43,
+  "sourceLineCount": 14928,
+  "classes": [
+    {
+      "qualifiedName": "org.flixel.FlxBasic",
+      "extends": null,
+      "source": "FlxBasic.as",
+      "publicMembers": [
+        {
+          "name": "active",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "alive",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "cameras",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "drawDebug",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "exists",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FlxBasic",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "ID",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "ignoreDrawDebug",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "kill",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "postUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "preUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "revive",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "toString",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "visible",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxButton",
+      "extends": "FlxSprite",
+      "source": "FlxButton.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxButton",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "HIGHLIGHT",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "label",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "labelOffset",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NORMAL",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "on",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "onDown",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "onOut",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "onOver",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "onUp",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "PRESSED",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "preUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setSounds",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "soundDown",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "soundOut",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "soundOver",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "soundUp",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "status",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxCamera",
+      "extends": "FlxBasic",
+      "source": "FlxCamera.as",
+      "publicMembers": [
+        {
+          "name": "alpha",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "angle",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "antialiasing",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "bgColor",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "bounds",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "buffer",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "color",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "copyFrom",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "deadzone",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "defaultZoom",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "fade",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "fill",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "flash",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxCamera",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "focusOn",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "follow",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getContainerSprite",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getScale",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "height",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "screen",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "scroll",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "setBounds",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setScale",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "shake",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "SHAKE_BOTH_AXES",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "SHAKE_HORIZONTAL_ONLY",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "SHAKE_VERTICAL_ONLY",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "stopFX",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "STYLE_LOCKON",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "STYLE_PLATFORMER",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "STYLE_TOPDOWN",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "STYLE_TOPDOWN_TIGHT",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "target",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "width",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "zoom",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxEmitter",
+      "extends": "FlxGroup",
+      "source": "FlxEmitter.as",
+      "publicMembers": [
+        {
+          "name": "at",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "bounce",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "emitParticle",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxEmitter",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "frequency",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "gravity",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "height",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "kill",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "lifespan",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "makeParticles",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "maxParticleSpeed",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "maxRotation",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "minParticleSpeed",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "minRotation",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "on",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "particleClass",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "particleDrag",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "setRotation",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setSize",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setXSpeed",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setYSpeed",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "start",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "width",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxG",
+      "extends": null,
+      "source": "FlxG.as",
+      "publicMembers": [
+        {
+          "name": "addBitmap",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "addCamera",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "addPlugin",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "bgColor",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "BLACK",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "BLUE",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "camera",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "cameras",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "checkBitmapCache",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "clearBitmapCache",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "collide",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "createBitmap",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "debug",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "DEBUGGER_BIG",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "DEBUGGER_LEFT",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "DEBUGGER_MICRO",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "DEBUGGER_RIGHT",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "DEBUGGER_STANDARD",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "DEBUGGER_TOP",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "elapsed",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "fade",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "flash",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "flashFramerate",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "flashGfx",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "flashGfxSprite",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "framerate",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "getLibraryName",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getPlugin",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getRandom",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "globalSeed",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "GREEN",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "height",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "keys",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "level",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "levels",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "LIBRARY_MAJOR_VERSION",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "LIBRARY_MINOR_VERSION",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "LIBRARY_NAME",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "loadReplay",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "loadSound",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "log",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "mobile",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "mouse",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "music",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "mute",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "overlap",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "paused",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "pauseSounds",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "PINK",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "play",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "playMusic",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "plugins",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "random",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "recordReplay",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "RED",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "reloadReplay",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "removeCamera",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "removePlugin",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "removePluginType",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "resetCameras",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "resetDebuggerLayout",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "resetGame",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "resetInput",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "resetState",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "resumeSounds",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "save",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "saves",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "score",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "scores",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "setDebuggerLayout",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "shake",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "shuffle",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "sounds",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "stage",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get"]
+        },
+        {
+          "name": "state",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get"]
+        },
+        {
+          "name": "stopRecording",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "stopReplay",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "stream",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "switchState",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "timeScale",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "unwatch",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "useBufferLocking",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "visualDebug",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "volume",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "volumeHandler",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "watch",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "WHITE",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "width",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "worldBounds",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "worldDivisions",
+          "kind": "var",
+          "static": true
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxGame",
+      "extends": "Sprite",
+      "source": "FlxGame.as",
+      "publicMembers": [
+        {
+          "name": "FlxGame",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "forceDebugger",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "useSoundHotKeys",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "useSystemCursor",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxGroup",
+      "extends": "FlxBasic",
+      "source": "FlxGroup.as",
+      "publicMembers": [
+        {
+          "name": "add",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "ASCENDING",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "callAll",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "clear",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "countDead",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "countLiving",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "DESCENDING",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxGroup",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "getFirstAlive",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getFirstAvailable",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getFirstDead",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getFirstExtant",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getFirstNull",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getRandom",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "kill",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "length",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "maxSize",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "members",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "preUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "recycle",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "remove",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "replace",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setAll",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "sort",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxObject",
+      "extends": "FlxBasic",
+      "source": "FlxObject.as",
+      "publicMembers": [
+        {
+          "name": "acceleration",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "allowCollisions",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "angle",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "angularAcceleration",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "angularDrag",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "angularVelocity",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "ANY",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "CEILING",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "DOWN",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "drag",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "drawDebug",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "elasticity",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "flicker",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "flickering",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "FLOOR",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "FlxObject",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "followPath",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getMidpoint",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getScreenXY",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "health",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "height",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "hurt",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "immovable",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "isTouching",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "justTouched",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "last",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "LEFT",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "mass",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "maxAngular",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "maxVelocity",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "moves",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NONE",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "onScreen",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "OVERLAP_BIAS",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "overlaps",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "overlapsAt",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "overlapsPoint",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "path",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "PATH_BACKWARD",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "PATH_FORWARD",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "PATH_HORIZONTAL_ONLY",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "PATH_LOOP_BACKWARD",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "PATH_LOOP_FORWARD",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "PATH_VERTICAL_ONLY",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "PATH_YOYO",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "pathAngle",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "pathSpeed",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "postUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "preUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "reset",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "RIGHT",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "scrollFactor",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "separate",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "separateX",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "separateY",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "solid",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "stopFollowingPath",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "touching",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "UP",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "velocity",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "WALL",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "wasTouching",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "width",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxParticle",
+      "extends": "FlxSprite",
+      "source": "FlxParticle.as",
+      "publicMembers": [
+        {
+          "name": "FlxParticle",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "friction",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "lifespan",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "onEmit",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxPath",
+      "extends": null,
+      "source": "FlxPath.as",
+      "publicMembers": [
+        {
+          "name": "add",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "addAt",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "addPoint",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "addPointAt",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "debugColor",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "debugScrollFactor",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "drawDebug",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxPath",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "head",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "ignoreDrawDebug",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "manager",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get"]
+        },
+        {
+          "name": "nodes",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "remove",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "removeAt",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "tail",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxPoint",
+      "extends": null,
+      "source": "FlxPoint.as",
+      "publicMembers": [
+        {
+          "name": "copyFrom",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "copyFromFlash",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "copyTo",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "copyToFlash",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxPoint",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "make",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxRect",
+      "extends": null,
+      "source": "FlxRect.as",
+      "publicMembers": [
+        {
+          "name": "bottom",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "copyFrom",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "copyFromFlash",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "copyTo",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "copyToFlash",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxRect",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "height",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "left",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "make",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "overlaps",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "right",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "top",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "width",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxSave",
+      "extends": "Object",
+      "source": "FlxSave.as",
+      "publicMembers": [
+        {
+          "name": "bind",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "close",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "data",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "erase",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "flush",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxSave",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "name",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxSound",
+      "extends": "FlxBasic",
+      "source": "FlxSound.as",
+      "publicMembers": [
+        {
+          "name": "amplitude",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "amplitudeLeft",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "amplitudeRight",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "artist",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "autoDestroy",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "fadeIn",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "fadeOut",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxSound",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "getActualVolume",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "kill",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "loadEmbedded",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "loadStream",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "name",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "pause",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "play",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "proximity",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "resume",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "stop",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "survive",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "volume",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxSprite",
+      "extends": "FlxObject",
+      "source": "FlxSprite.as",
+      "publicMembers": [
+        {
+          "name": "addAnimation",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "addAnimationCallback",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "alpha",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "antialiasing",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "blend",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "centerOffsets",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "color",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "dirty",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "drawFrame",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "drawLine",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "facing",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "fill",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "finished",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FlxSprite",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "frame",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "frameHeight",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "framePixels",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "frames",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "frameWidth",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "loadGraphic",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "loadRotatedGraphic",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "makeGraphic",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "offset",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "onScreen",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "origin",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "pixels",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "pixelsOverlapPoint",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "play",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "postUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "randomFrame",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "replaceColor",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "scale",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "setOriginToCorner",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "stamp",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxState",
+      "extends": "FlxGroup",
+      "source": "FlxState.as",
+      "publicMembers": [
+        {
+          "name": "create",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxText",
+      "extends": "FlxSprite",
+      "source": "FlxText.as",
+      "publicMembers": [
+        {
+          "name": "alignment",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "color",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxText",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "font",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "setFormat",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "shadow",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "size",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        },
+        {
+          "name": "text",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get", "set"]
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxTileblock",
+      "extends": "FlxSprite",
+      "source": "FlxTileblock.as",
+      "publicMembers": [
+        {
+          "name": "FlxTileblock",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "loadTiles",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxTilemap",
+      "extends": "FlxObject",
+      "source": "FlxTilemap.as",
+      "publicMembers": [
+        {
+          "name": "ALT",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "arrayToCSV",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "auto",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "AUTO",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "bitmapToCSV",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "findPath",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxTilemap",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "follow",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getBounds",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getData",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getTile",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getTileByIndex",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getTileCoords",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getTileInstances",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "heightInTiles",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "imageToCSV",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "ImgAuto",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "ImgAutoAlt",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "loadMap",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "OFF",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "overlaps",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "overlapsAt",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "overlapsPoint",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "overlapsWithCallback",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "ray",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setDirty",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setTile",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setTileByIndex",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setTileProperties",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "totalTiles",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "widthInTiles",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxTimer",
+      "extends": null,
+      "source": "FlxTimer.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "finished",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FlxTimer",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "loops",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "loopsLeft",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "manager",
+          "kind": "accessor",
+          "static": true,
+          "accessors": ["get"]
+        },
+        {
+          "name": "paused",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "progress",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "start",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "stop",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "time",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "timeLeft",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.FlxU",
+      "extends": null,
+      "source": "FlxU.as",
+      "publicMembers": [
+        {
+          "name": "abs",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "bound",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "ceil",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "compareClassNames",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "computeVelocity",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "floor",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "formatArray",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "formatMoney",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "formatTicks",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "formatTime",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getAngle",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getClass",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getClassName",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getDistance",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getHSB",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getRandom",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getRGBA",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "getTicks",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "makeColor",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "makeColorFromHSB",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "max",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "min",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "openURL",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "rotatePoint",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "round",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "shuffle",
+          "kind": "method",
+          "static": true
+        },
+        {
+          "name": "srand",
+          "kind": "method",
+          "static": true
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.plugin.DebugPathDisplay",
+      "extends": "FlxBasic",
+      "source": "plugin/DebugPathDisplay.as",
+      "publicMembers": [
+        {
+          "name": "add",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "clear",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "DebugPathDisplay",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "drawDebug",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "remove",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.plugin.TimerManager",
+      "extends": "FlxBasic",
+      "source": "plugin/TimerManager.as",
+      "publicMembers": [
+        {
+          "name": "add",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "clear",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "remove",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "TimerManager",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.debug.Log",
+      "extends": "FlxWindow",
+      "source": "system/debug/Log.as",
+      "publicMembers": [
+        {
+          "name": "add",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "Log",
+          "kind": "constructor",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.debug.Perf",
+      "extends": "FlxWindow",
+      "source": "system/debug/Perf.as",
+      "publicMembers": [
+        {
+          "name": "activeObjects",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "flash",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "flixelDraw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "flixelUpdate",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "Perf",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "visibleObjects",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.debug.VCR",
+      "extends": "Sprite",
+      "source": "system/debug/VCR.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onOpen",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onPause",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onPlay",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onRecord",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onRestart",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onStep",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onStop",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "paused",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "playing",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "recording",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "stepRequested",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "stopped",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "stopRecording",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "updateRuntime",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "VCR",
+          "kind": "constructor",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.debug.Vis",
+      "extends": "Sprite",
+      "source": "system/debug/Vis.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onBounds",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "Vis",
+          "kind": "constructor",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.debug.Watch",
+      "extends": "FlxWindow",
+      "source": "system/debug/Watch.as",
+      "publicMembers": [
+        {
+          "name": "add",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "editing",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "remove",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "removeAll",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "submit",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "Watch",
+          "kind": "constructor",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.debug.WatchEntry",
+      "extends": null,
+      "source": "system/debug/WatchEntry.as",
+      "publicMembers": [
+        {
+          "name": "cancel",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "custom",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "editing",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "field",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "nameDisplay",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "object",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "oldValue",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "onKeyUp",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "onMouseUp",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setY",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "submit",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "updateValue",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "updateWidth",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "valueDisplay",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "WatchEntry",
+          "kind": "constructor",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxAnim",
+      "extends": null,
+      "source": "system/FlxAnim.as",
+      "publicMembers": [
+        {
+          "name": "delay",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxAnim",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "frames",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "looped",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "name",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxDebugger",
+      "extends": "Sprite",
+      "source": "system/FlxDebugger.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxDebugger",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "hasMouse",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "log",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "perf",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "resetLayout",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "setLayout",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "vcr",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "vis",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "watch",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxList",
+      "extends": null,
+      "source": "system/FlxList.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxList",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "next",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "object",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxPreloader",
+      "extends": "MovieClip",
+      "source": "system/FlxPreloader.as",
+      "publicMembers": [
+        {
+          "name": "className",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FlxPreloader",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "minDisplayTime",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "myURL",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxQuadTree",
+      "extends": "FlxRect",
+      "source": "system/FlxQuadTree.as",
+      "publicMembers": [
+        {
+          "name": "A_LIST",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "add",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "B_LIST",
+          "kind": "const",
+          "static": true
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "divisions",
+          "kind": "var",
+          "static": true
+        },
+        {
+          "name": "execute",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxQuadTree",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "load",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxReplay",
+      "extends": null,
+      "source": "system/FlxReplay.as",
+      "publicMembers": [
+        {
+          "name": "create",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "finished",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FlxReplay",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "frame",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "frameCount",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "load",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "playNextFrame",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "recordFrame",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "rewind",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "save",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "seed",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxTile",
+      "extends": "FlxObject",
+      "source": "system/FlxTile.as",
+      "publicMembers": [
+        {
+          "name": "callback",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "filter",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FlxTile",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "index",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "mapIndex",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "tilemap",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxTilemapBuffer",
+      "extends": null,
+      "source": "system/FlxTilemapBuffer.as",
+      "publicMembers": [
+        {
+          "name": "columns",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "dirty",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "draw",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "fill",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxTilemapBuffer",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "height",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "pixels",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "rows",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "width",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.FlxWindow",
+      "extends": "Sprite",
+      "source": "system/FlxWindow.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "FlxWindow",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "maxSize",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "minSize",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "reposition",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "resize",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.input.Input",
+      "extends": null,
+      "source": "system/input/Input.as",
+      "publicMembers": [
+        {
+          "name": "any",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getKeyCode",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "Input",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "justPressed",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "justReleased",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "playback",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "pressed",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "record",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "reset",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.input.Keyboard",
+      "extends": "Input",
+      "source": "system/input/Keyboard.as",
+      "publicMembers": [
+        {
+          "name": "A",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "ALT",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "B",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "BACKSLASH",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "BACKSPACE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "C",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "CAPSLOCK",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "COMMA",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "CONTROL",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "D",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "DELETE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "DOWN",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "E",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "EIGHT",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "END",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "ENTER",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "ESCAPE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F1",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F10",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F11",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F12",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F2",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F3",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F4",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F5",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F6",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F7",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F8",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "F9",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FIVE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FOUR",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "G",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "H",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "handleKeyDown",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "handleKeyUp",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "HOME",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "I",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "INSERT",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "J",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "K",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "Keyboard",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "L",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "LBRACKET",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "LEFT",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "M",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "MINUS",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "N",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NINE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADEIGHT",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADFIVE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADFOUR",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADMINUS",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADNINE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADONE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADPERIOD",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADPLUS",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADSEVEN",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADSIX",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADSLASH",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADTHREE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADTWO",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "NUMPADZERO",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "O",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "ONE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "P",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "PAGEDOWN",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "PAGEUP",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "PERIOD",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "PLUS",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "Q",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "QUOTE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "R",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "RBRACKET",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "RIGHT",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "S",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "SEMICOLON",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "SEVEN",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "SHIFT",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "SIX",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "SLASH",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "SPACE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "T",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "TAB",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "THREE",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "TWO",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "U",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "UP",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "V",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "W",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "X",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "Y",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "Z",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "ZERO",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.input.Mouse",
+      "extends": "FlxPoint",
+      "source": "system/input/Mouse.as",
+      "publicMembers": [
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getScreenPosition",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "getWorldPosition",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "handleMouseDown",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "handleMouseUp",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "handleMouseWheel",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "hide",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "justPressed",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "justReleased",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "load",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "Mouse",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "playback",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "pressed",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "record",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "reset",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "screenX",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "screenY",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "show",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "unload",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "update",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "visible",
+          "kind": "accessor",
+          "static": false,
+          "accessors": ["get"]
+        },
+        {
+          "name": "wheel",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.replay.FrameRecord",
+      "extends": null,
+      "source": "system/replay/FrameRecord.as",
+      "publicMembers": [
+        {
+          "name": "create",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "destroy",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "frame",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "FrameRecord",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "keys",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "load",
+          "kind": "method",
+          "static": false
+        },
+        {
+          "name": "mouse",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "save",
+          "kind": "method",
+          "static": false
+        }
+      ]
+    },
+    {
+      "qualifiedName": "org.flixel.system.replay.MouseRecord",
+      "extends": null,
+      "source": "system/replay/MouseRecord.as",
+      "publicMembers": [
+        {
+          "name": "button",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "MouseRecord",
+          "kind": "constructor",
+          "static": false
+        },
+        {
+          "name": "wheel",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "x",
+          "kind": "var",
+          "static": false
+        },
+        {
+          "name": "y",
+          "kind": "var",
+          "static": false
+        }
+      ]
+    }
+  ]
+}

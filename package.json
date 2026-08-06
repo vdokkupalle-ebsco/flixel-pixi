@@ -1,0 +1,65 @@
+{
+  "name": "flixel-pixi",
+  "version": "0.0.0",
+  "description": "A TypeScript port of the original AS3 Flixel engine using PixiJS v8.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite --config vite.smoke.config.ts",
+    "dev:smoke": "vite --config vite.smoke.config.ts",
+    "build": "npm run clean && npm run build:types && npm run build:lib && npm run build:smoke && npm run report:bundle",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build:lib": "vite build --config vite.lib.config.ts",
+    "build:smoke": "vite build --config vite.smoke.config.ts",
+    "clean": "node scripts/clean.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "bench": "vitest bench --run --outputJson=reports/benchmarks.json",
+    "api:update": "npm run build:types && api-extractor run --local --verbose",
+    "api:check": "npm run build:types && api-extractor run --verbose",
+    "report:bundle": "node scripts/report-bundle-size.mjs",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && npm run bench && npm run test:e2e"
+  },
+  "peerDependencies": {
+    "pixi.js": "^8.19.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@microsoft/api-extractor": "^7.58.12",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.8.7",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.0",
+    "globals": "^17.9.0",
+    "pixi.js": "^8.19.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.66.0",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
+  }
+}

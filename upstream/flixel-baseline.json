@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/AdamAtomic/flixel.git",
+  "sourceDirectory": "org/flixel",
+  "commit": "8989e5044be072c4abbbaa1317c9854786f6447f",
+  "commitDate": "2011-08-22T11:03:53-05:00",
+  "classCount": 43,
+  "publicMemberCount": 766,
+  "sourceLineCount": 14928,
+  "license": "MIT"
+}

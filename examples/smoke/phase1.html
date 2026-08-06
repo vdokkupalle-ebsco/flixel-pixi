@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10131a" />
+    <title>flixel-pixi Phase 1 risk lab</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="phase-one">
+      <header>
+        <div>
+          <p class="eyebrow">Phase 1 risk spikes</p>
+          <h1>Loop, cameras, and pixels</h1>
+        </div>
+        <button data-action="destroy" type="button" disabled>
+          Destroy application
+        </button>
+      </header>
+      <p class="status" data-testid="status" aria-live="polite">
+        Initializing PixiJS…
+      </p>
+      <div
+        class="canvas-host phase-one-canvas"
+        data-testid="phase1-canvas-host"
+      ></div>
+      <dl class="metrics" data-testid="metrics">
+        <div>
+          <dt>Renderer</dt>
+          <dd data-metric="renderer">—</dd>
+        </div>
+        <div>
+          <dt>Camera passes</dt>
+          <dd data-metric="passes">—</dd>
+        </div>
+        <div>
+          <dt>Render targets</dt>
+          <dd data-metric="memory">—</dd>
+        </div>
+        <div>
+          <dt>Canvas readback</dt>
+          <dd data-metric="readback">—</dd>
+        </div>
+      </dl>
+    </main>
+    <script type="module" src="./phase1-main.ts"></script>
+  </body>
+</html>

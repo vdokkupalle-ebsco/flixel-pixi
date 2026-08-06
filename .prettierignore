@@ -1,0 +1,11 @@
+.agents/
+.claude/
+coverage/
+dist/
+etc/*.api.md
+node_modules/
+playwright-report/
+reports/
+temp/
+test-results/
+skills-lock.json
