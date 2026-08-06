@@ -111,7 +111,7 @@ test.describe('Phase 12 — Action sample', () => {
 });
 
 test.describe('Phase 12 — External Mode Lite', () => {
-  test('boots menu, enters play via hook, destroys cleanly', async ({
+  test('boots menu, enters play, spawns visible enemies, destroys', async ({
     page,
   }) => {
     await page.goto(`${GAMES}/external/`);
@@ -129,6 +129,18 @@ test.describe('Phase 12 — External Mode Lite', () => {
       () => window.__FLIXEL_PIXI_EXTERNAL__?.score?.() ?? -1,
     );
     expect(score).toBe(0);
+
+    // Enemies spawn every ~0.9s; wait for at least one and ensure it is
+    // registered with the camera renderer (not just in the Flixel group).
+    await page.waitForFunction(
+      () => (window.__FLIXEL_PIXI_EXTERNAL__?.enemyCount?.() ?? 0) >= 1,
+      { timeout: 5_000 },
+    );
+    const registered = await page.evaluate(
+      () => window.__FLIXEL_PIXI_EXTERNAL__?.registeredCount?.() ?? 0,
+    );
+    // player + 12 bullets + hud text + ≥1 enemy
+    expect(registered).toBeGreaterThan(12);
 
     await page.locator('[data-action="destroy"]').click();
     await expect(page.locator('[data-testid="status"]')).toHaveAttribute(

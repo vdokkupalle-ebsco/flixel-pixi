@@ -17,7 +17,7 @@ Location: [`examples/games/external/`](../examples/games/external/).
 | ------------------------------------------- | ------------------------ | ------------------------------------------------------------------- |
 | Flash embedded graphics / Mode spritesheets | Unsupported (asset path) | Regenerated with `makeGraphic`; documented in sample header         |
 | `FlxButton` as Flash Sprite chrome          | Adapted                  | Uses DOM/Pixi button render handle; works via public API            |
-| Full Mode enemy AI / levels / particles     | Deferred / out of scope  | Explicitly not ported — Mode Lite covers spawn + shoot + score only |
+| Dynamically `add()`ed enemies invisible after play start | Adapted (kit) | `_kit/boot-game` now re-syncs renderables when member count changes, not only on state switch |
 | `FlxWindow` debugger chrome from AS3        | Unsupported              | N/A to this sample; debugger is DOM (Phase 11)                      |
 | Private engine imports for button wiring    | None                     | Sample imports only package barrel + `_kit`                         |
 

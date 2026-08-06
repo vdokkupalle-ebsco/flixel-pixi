@@ -70,6 +70,15 @@ export function syncStateToRenderer(
   }
 }
 
+/** Count renderables currently in the active state (for dirty sync). */
+export function countStateRenderables(game: FlxGame): number {
+  const state = game.state;
+  if (state === null) return 0;
+  const objects: (FlxSprite | FlxTilemap | FlxEmitter)[] = [];
+  collectRenderables(state, objects);
+  return objects.length;
+}
+
 /**
  * Boot Pixi + FlxGame + FlxCameraRenderer for a C12 sample game.
  * Imports engine types only from the package public entry.
@@ -130,13 +139,18 @@ export async function bootGame(
   preloader?.complete();
 
   let lastState = game.state;
+  let lastRenderableCount = countStateRenderables(game);
 
   app.ticker.add(() => {
     if (!FlxG.paused) {
       game.advance(app.ticker.deltaMS / 1000);
     }
-    if (game.state !== lastState) {
+    const renderableCount = countStateRenderables(game);
+    // Re-sync on state switch OR when members are added/removed mid-state
+    // (e.g. external Mode Lite spawning enemies after create).
+    if (game.state !== lastState || renderableCount !== lastRenderableCount) {
       lastState = game.state;
+      lastRenderableCount = renderableCount;
       syncStateToRenderer(game, renderer);
     }
     renderer.render();
@@ -149,6 +163,7 @@ export async function bootGame(
     syncRenderer() {
       syncStateToRenderer(game, renderer);
       lastState = game.state;
+      lastRenderableCount = countStateRenderables(game);
     },
     destroy() {
       app.ticker.stop();

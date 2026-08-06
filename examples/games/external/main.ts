@@ -10,6 +10,8 @@ declare global {
       ready: boolean;
       startPlay?: () => void;
       score?: () => number;
+      enemyCount?: () => number;
+      registeredCount?: () => number;
     };
   }
 }
@@ -43,6 +45,14 @@ bootGame({
       score() {
         const state = app.game.state;
         return state instanceof ModePlayState ? state.score : 0;
+      },
+      enemyCount() {
+        const state = app.game.state;
+        if (!(state instanceof ModePlayState)) return 0;
+        return state.enemies.filter((e) => e.exists).length;
+      },
+      registeredCount() {
+        return app.renderer.registeredObjectCount;
       },
     };
 
