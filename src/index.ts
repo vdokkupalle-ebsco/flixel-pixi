@@ -127,3 +127,15 @@ export type { FlxSaveBindOptions, FlxSaveMigration } from './storage/flx-save';
 export { NullStorageBackend } from './storage/null-storage-backend';
 export { LocalStorageBackend } from './storage/local-storage-backend';
 export { IndexedDBBackend } from './storage/indexed-db-backend';
+
+// --- Phase 10: Replay & Deterministic Verification ---
+export { MouseRecord } from './replay/mouse-record';
+export { FrameRecord } from './replay/frame-record';
+export type { CodePair, FrameRecordData } from './replay/frame-record';
+export { FlxReplay } from './replay/flx-replay';
+export type { ReplayFileFormat } from './replay/flx-replay';
+export {
+  convertAS3ReplayToFlxReplay,
+  convertFlxReplayToAS3Text,
+} from './replay/as3-replay-adapter';
+export type { FlxVCR } from './replay/flx-vcr';

@@ -3,6 +3,7 @@ import {
   type FixedStepAdvanceResult,
 } from './fixed-step-accumulator';
 import { FlxContext, type FlxStateRuntime } from './flx-context';
+import { MouseRecord } from '../replay/mouse-record';
 import { FlxG } from './flx-g';
 import { DebugPathDisplay } from '../plugin/debug-path-display';
 import { TimerManager } from '../plugin/timer-manager';
@@ -93,7 +94,34 @@ export class FlxGame implements FlxStateRuntime {
     }
 
     this.#commitStateChange();
-    this.input.updateInput();
+
+    if (FlxG.vcr.replaying && FlxG.vcr.replay !== null) {
+      if (FlxG.vcr.cancelKeys.some((k) => FlxG.keys.justPressed(k))) {
+        FlxG.stopReplay();
+      } else {
+        const record = FlxG.vcr.replay.playNextFrame();
+        if (record?.mouse !== null && record?.mouse !== undefined) {
+          this.input.mouse.x = record.mouse.x;
+          this.input.mouse.y = record.mouse.y;
+          this.input.mouse.wheel = record.mouse.wheel;
+        }
+        if (FlxG.vcr.replay.finished) {
+          FlxG.stopReplay();
+        }
+      }
+    } else {
+      this.input.updateInput();
+      if (FlxG.vcr.recording && FlxG.vcr.replay !== null) {
+        const mouseRec = new MouseRecord(
+          this.input.mouse.x,
+          this.input.mouse.y,
+          this.input.mouse.pressed() ? 1 : 0,
+          this.input.mouse.wheel,
+        );
+        FlxG.vcr.replay.recordFrame(FlxG.vcr.replay.frameCount, [], mouseRec);
+      }
+    }
+
     this.context.elapsed = stepSeconds * this.context.timeScale;
     if (!this.context.paused) {
       this.context.updatePlugins();

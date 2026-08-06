@@ -27,6 +27,8 @@ import type {
 import type { FlxContext } from './flx-context';
 import type { FlxGroup } from './flx-group';
 import type { FlxState } from './flx-state';
+import { FlxReplay } from '../replay/flx-replay';
+import { createVCR, type FlxVCR } from '../replay/flx-vcr';
 
 /** Constructor used by the plugin compatibility facade. @public */
 export type FlxPluginConstructor<T extends FlxBasic = FlxBasic> = abstract new (
@@ -514,6 +516,71 @@ export class FlxG {
       );
     }
     return svc.saves;
+  }
+
+  /** Global VCR state object. */
+  static readonly vcr: FlxVCR = createVCR();
+
+  /** Begins recording deterministic gameplay input to a new replay. */
+  static recordReplay(): void {
+    const replay = new FlxReplay();
+    replay.create(FlxG.globalSeed);
+    FlxG.vcr.replay = replay;
+    FlxG.vcr.recording = true;
+    FlxG.vcr.replaying = false;
+  }
+
+  /** Loads and starts playback of a recorded replay. */
+  static loadReplay(
+    replay: FlxReplay,
+    reloadState: FlxState | null = null,
+    cancelKeys: string[] = ['Escape'],
+    timeout = 0,
+    onComplete: (() => void) | null = null,
+  ): void {
+    FlxG.vcr.replay = replay;
+    FlxG.vcr.replaying = true;
+    FlxG.vcr.recording = false;
+    FlxG.vcr.cancelKeys = cancelKeys;
+    FlxG.vcr.timeout = timeout;
+    FlxG.vcr.onComplete = onComplete;
+    FlxG.vcr.reloadState = reloadState;
+
+    replay.rewind();
+    FlxG.globalSeed = replay.seed;
+
+    if (reloadState !== null) {
+      FlxG.switchState(reloadState);
+    }
+  }
+
+  /** Reloads the active replay from the beginning. */
+  static reloadReplay(resetState = true): void {
+    if (FlxG.vcr.replay === null) return;
+    FlxG.vcr.replaying = true;
+    FlxG.vcr.recording = false;
+    FlxG.vcr.replay.rewind();
+    FlxG.globalSeed = FlxG.vcr.replay.seed;
+    if (resetState) {
+      FlxG.resetState();
+    }
+  }
+
+  /** Stops playback of the currently running replay. */
+  static stopReplay(): void {
+    FlxG.vcr.replaying = false;
+    if (FlxG.vcr.onComplete !== null) {
+      const cb = FlxG.vcr.onComplete;
+      FlxG.vcr.onComplete = null;
+      cb();
+    }
+  }
+
+  /** Stops recording the current replay and returns its serialized JSON payload. */
+  static stopRecording(): string {
+    FlxG.vcr.recording = false;
+    if (FlxG.vcr.replay === null) return '';
+    return FlxG.vcr.replay.save();
   }
 
   static #overlapTilemap(

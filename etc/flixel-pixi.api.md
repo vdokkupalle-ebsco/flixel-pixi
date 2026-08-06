@@ -19,6 +19,20 @@ import type { TextStyleAlign } from 'pixi.js';
 import { Texture } from 'pixi.js';
 
 // @public
+export interface CodePair {
+    // (undocumented)
+    code: string;
+    // (undocumented)
+    value: number;
+}
+
+// @public
+export function convertAS3ReplayToFlxReplay(as3Text: string): FlxReplay;
+
+// @public
+export function convertFlxReplayToAS3Text(replay: FlxReplay): string;
+
+// @public
 export class DebugPathDisplay extends FlxBasic {
     constructor();
     // (undocumented)
@@ -788,6 +802,7 @@ export class FlxG {
     static readonly LIBRARY_MINOR_VERSION = 0;
     // (undocumented)
     static readonly LIBRARY_NAME = "flixel-pixi";
+    static loadReplay(replay: FlxReplay, reloadState?: FlxState | null, cancelKeys?: string[], timeout?: number, onComplete?: (() => void) | null): void;
     // (undocumented)
     static get mouse(): Mouse;
     static get music(): FlxSound | null;
@@ -807,8 +822,10 @@ export class FlxG {
     static get plugins(): readonly FlxBasic[];
     // (undocumented)
     static random(): number;
+    static recordReplay(): void;
     // (undocumented)
     static readonly RED = 4294901778;
+    static reloadReplay(resetState?: boolean): void;
     // (undocumented)
     static removeCamera(camera: FlxCamera, destroy?: boolean): boolean;
     // (undocumented)
@@ -836,12 +853,15 @@ export class FlxG {
     static get sounds(): FlxGroup;
     // (undocumented)
     static get state(): FlxState | null;
+    static stopRecording(): string;
+    static stopReplay(): void;
     static stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
     // (undocumented)
     static switchState(state: FlxState): void;
     // (undocumented)
     static get timeScale(): number;
     static set timeScale(value: number);
+    static readonly vcr: FlxVCR;
     // (undocumented)
     static get visualDebug(): boolean;
     static set visualDebug(value: boolean);
@@ -1326,6 +1346,35 @@ export interface FlxRenderHandle {
     sync(camera?: FlxCamera): void;
     // (undocumented)
     readonly view: Container;
+}
+
+// @public
+export class FlxReplay {
+    constructor();
+    create(seed: number): void;
+    destroy(): void;
+    // (undocumented)
+    diverged: boolean;
+    // (undocumented)
+    divergenceFrame: number | null;
+    // (undocumented)
+    divergenceInfo: string | null;
+    // (undocumented)
+    finished: boolean;
+    flagDivergence(frameIndex: number, expected: string, actual: string): void;
+    // (undocumented)
+    frame: number;
+    // (undocumented)
+    frameCount: number;
+    // (undocumented)
+    frames: FrameRecord[];
+    load(data: string | ReplayFileFormat): void;
+    playNextFrame(): FrameRecord | null;
+    recordFrame(frameIndex: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null): void;
+    rewind(): void;
+    save(): string;
+    // (undocumented)
+    seed: number;
 }
 
 // @public
@@ -1840,6 +1889,59 @@ export class FlxU {
 }
 
 // @public
+export interface FlxVCR {
+    // (undocumented)
+    cancelKeys: string[];
+    // (undocumented)
+    onComplete: (() => void) | null;
+    // (undocumented)
+    recording: boolean;
+    // (undocumented)
+    reloadState: FlxState | null;
+    // (undocumented)
+    replay: FlxReplay | null;
+    // (undocumented)
+    replaying: boolean;
+    // (undocumented)
+    stepRequested: boolean;
+    // (undocumented)
+    timeout: number;
+}
+
+// @public
+export class FrameRecord {
+    constructor(frame?: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null);
+    // (undocumented)
+    checksum: string | null;
+    destroy(): void;
+    // (undocumented)
+    frame: number;
+    // (undocumented)
+    keys: CodePair[];
+    load(data: string | FrameRecordData): void;
+    // (undocumented)
+    mouse: MouseRecord | null;
+    save(): FrameRecordData;
+}
+
+// @public
+export interface FrameRecordData {
+    // (undocumented)
+    checksum?: string | null;
+    // (undocumented)
+    frame: number;
+    // (undocumented)
+    keys?: CodePair[];
+    // (undocumented)
+    mouse?: {
+        x: number;
+        y: number;
+        button: number;
+        wheel: number;
+    } | null;
+}
+
+// @public
 export class IndexedDBBackend implements FlxStorageBackend {
     // (undocumented)
     close(key: string): void;
@@ -2160,6 +2262,19 @@ export class Mouse extends FlxPoint {
 }
 
 // @public
+export class MouseRecord {
+    constructor(x?: number, y?: number, button?: number, wheel?: number);
+    // (undocumented)
+    button: number;
+    // (undocumented)
+    wheel: number;
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+}
+
+// @public
 export function nextFlixelSeed(seed: number): number;
 
 // @public
@@ -2224,6 +2339,22 @@ export interface RectangleLike {
     x: number;
     // (undocumented)
     y: number;
+}
+
+// @public
+export interface ReplayFileFormat {
+    // (undocumented)
+    engineVersion: string;
+    // (undocumented)
+    frameCount: number;
+    // (undocumented)
+    frames: FrameRecordData[];
+    // (undocumented)
+    seed: number;
+    // (undocumented)
+    targetFps?: number;
+    // (undocumented)
+    version: string;
 }
 
 // @public
