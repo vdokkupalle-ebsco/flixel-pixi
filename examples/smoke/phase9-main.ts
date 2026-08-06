@@ -11,6 +11,7 @@ declare global {
       destroyed: boolean;
       metrics?: PhaseNineMetrics;
       ready: boolean;
+      app?: PhaseNineApplication;
     };
   }
 }
@@ -25,6 +26,16 @@ const metricsElement = document.querySelector<HTMLElement>(
 const destroyButton = document.querySelector<HTMLButtonElement>(
   '[data-action="destroy"]',
 );
+
+// Control elements
+const btnCoin = document.querySelector<HTMLButtonElement>('#btn-coin');
+const btnSoundCoin = document.querySelector<HTMLButtonElement>('#btn-sound-coin');
+const btnSoundJump = document.querySelector<HTMLButtonElement>('#btn-sound-jump');
+const btnMusic = document.querySelector<HTMLButtonElement>('#btn-music');
+const btnResetSave = document.querySelector<HTMLButtonElement>('#btn-reset-save');
+const volSlider = document.querySelector<HTMLInputElement>('#vol-slider');
+const volDisplay = document.querySelector<HTMLElement>('#vol-display');
+const btnMute = document.querySelector<HTMLButtonElement>('#btn-mute');
 
 if (
   host === null ||
@@ -45,14 +56,57 @@ try {
   const app: PhaseNineApplication = await createPhaseNineApplication(host);
   state.advance = (steps) => app.advance(steps);
   state.metrics = app.metrics;
+  state.app = app;
   state.ready = true;
   status.dataset.state = 'ready';
   status.textContent = 'C9 audio & save data scene ready';
   destroyButton.disabled = false;
 
-  for (const [key, value] of Object.entries(app.metrics)) {
-    metricsElement.dataset[key] = String(value);
-  }
+  const updateMetricsUI = () => {
+    const m = app.metrics;
+    for (const [key, value] of Object.entries(m)) {
+      metricsElement.dataset[key] = String(value);
+    }
+  };
+
+  updateMetricsUI();
+
+  // Wire interactive UI handlers
+  btnCoin?.addEventListener('click', () => {
+    app.addCoin();
+    app.playCoinSound();
+    updateMetricsUI();
+  });
+
+  btnSoundCoin?.addEventListener('click', () => {
+    app.playCoinSound();
+  });
+
+  btnSoundJump?.addEventListener('click', () => {
+    app.playJumpSound();
+  });
+
+  btnMusic?.addEventListener('click', () => {
+    app.toggleMusic();
+  });
+
+  btnResetSave?.addEventListener('click', () => {
+    app.resetCoins();
+    updateMetricsUI();
+  });
+
+  volSlider?.addEventListener('input', (e) => {
+    const val = Number((e.target as HTMLInputElement).value);
+    if (volDisplay) volDisplay.textContent = `${val}%`;
+    app.setVolume(val / 100);
+    updateMetricsUI();
+  });
+
+  btnMute?.addEventListener('click', () => {
+    const isMuted = app.toggleMute();
+    if (btnMute) btnMute.textContent = isMuted ? '🔇 Mute: ON' : '🔇 Mute: OFF';
+    updateMetricsUI();
+  });
 
   const destroy = (): void => {
     app.destroy();

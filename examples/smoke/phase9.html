@@ -19,12 +19,31 @@
           <button type="button" data-action="destroy" disabled>Destroy</button>
         </div>
       </header>
+
       <main class="workbench">
         <section class="stage">
           <div data-testid="phase9-canvas-host" class="canvas-host"></div>
         </section>
-        <section class="meta">
-          <h2>State & Save Storage</h2>
+
+        <section class="controls" style="margin-top: 1rem; padding: 1rem; background: #1a202c; border-radius: 8px;">
+          <h3>Audio & Save Interactive Controls</h3>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <button type="button" id="btn-coin" data-action="add-coin">💰 Add Coin (+1)</button>
+            <button type="button" id="btn-sound-coin" data-action="play-coin-sfx">🔊 Play Coin SFX</button>
+            <button type="button" id="btn-sound-jump" data-action="play-jump-sfx">🚀 Play Jump SFX</button>
+            <button type="button" id="btn-music" data-action="toggle-music">🎵 Toggle Music Loop</button>
+            <button type="button" id="btn-reset-save" data-action="reset-save">🗑️ Reset Save Slot</button>
+          </div>
+
+          <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+            <label for="vol-slider" style="font-weight: bold;">Volume: <span id="vol-display">50%</span></label>
+            <input type="range" id="vol-slider" min="0" max="100" value="50" style="flex: 1; max-width: 200px;" />
+            <button type="button" id="btn-mute">🔇 Mute: OFF</button>
+          </div>
+        </section>
+
+        <section class="meta" style="margin-top: 1rem;">
+          <h2>State & Save Metrics</h2>
           <div data-testid="phase9-metrics"></div>
         </section>
       </main>
