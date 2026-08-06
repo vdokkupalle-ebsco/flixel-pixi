@@ -168,7 +168,6 @@ export class FlxDebugger {
   #vcrPlay!: HTMLButtonElement;
   #vcrRewind!: HTMLButtonElement;
   #vcrStep!: HTMLButtonElement;
-  #visDebug!: HTMLButtonElement;
   #vcr: FlxDebuggerVCRCallbacks | null = null;
 
   // Perf state
@@ -218,18 +217,25 @@ export class FlxDebugger {
       tab.className = 'flxdbg-tab' + (id === this.#activeTab ? ' active' : '');
       tab.textContent = label;
       tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', id === this.#activeTab ? 'true' : 'false');
+      tab.setAttribute(
+        'aria-selected',
+        id === this.#activeTab ? 'true' : 'false',
+      );
       tab.setAttribute('aria-controls', `flxdbg-panel-${id}`);
       tab.setAttribute('data-testid', `flxdbg-tab-${id}`);
-      tab.addEventListener('click', () => { this.#switchTab(id); });
+      tab.addEventListener('click', () => {
+        this.#switchTab(id);
+      });
       tab.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
           e.preventDefault();
           const keys = [...this.#tabs.keys()];
           const idx = keys.indexOf(id);
-          const nextKey = (e.key === 'ArrowRight'
-            ? keys[(idx + 1) % keys.length]
-            : keys[(idx - 1 + keys.length) % keys.length]) as string;
+          const nextKey = (
+            e.key === 'ArrowRight'
+              ? keys[(idx + 1) % keys.length]
+              : keys[(idx - 1 + keys.length) % keys.length]
+          ) as string;
           this.#tabs.get(nextKey)?.focus();
           this.#switchTab(nextKey);
         }
@@ -245,7 +251,9 @@ export class FlxDebugger {
     toggleBtn.textContent = '✕';
     toggleBtn.setAttribute('aria-label', 'Hide debugger');
     toggleBtn.setAttribute('data-testid', 'flxdbg-close');
-    toggleBtn.addEventListener('click', () => { this.hide(); });
+    toggleBtn.addEventListener('click', () => {
+      this.hide();
+    });
     tabBar.appendChild(toggleBtn);
 
     // Panels container
@@ -255,7 +263,8 @@ export class FlxDebugger {
 
     for (const [id] of TAB_LABELS) {
       const panel = document.createElement('div');
-      panel.className = 'flxdbg-panel' + (id === this.#activeTab ? ' active' : '');
+      panel.className =
+        'flxdbg-panel' + (id === this.#activeTab ? ' active' : '');
       panel.id = `flxdbg-panel-${id}`;
       panel.setAttribute('role', 'tabpanel');
       panel.setAttribute('data-testid', `flxdbg-panel-${id}`);
@@ -269,7 +278,9 @@ export class FlxDebugger {
 
   // ─── Public API ────────────────────────────────────────────────────────────
 
-  get visible(): boolean { return this.#visible; }
+  get visible(): boolean {
+    return this.#visible;
+  }
 
   show(): void {
     this.#visible = true;
@@ -282,7 +293,8 @@ export class FlxDebugger {
   }
 
   toggle(): void {
-    if (this.#visible) this.hide(); else this.show();
+    if (this.#visible) this.hide();
+    else this.show();
   }
 
   /** Wire up VCR panel callbacks. */
@@ -293,10 +305,20 @@ export class FlxDebugger {
   /**
    * Subscribe to a DebugChannel to receive step-complete, log, and watch events.
    */
-  subscribeToChannel(channel: DebugChannel, log: FlxLog, watch: FlxWatch): void {
-    log.setOnChange(() => { this.#refreshLog(log); });
-    channel.on('step-complete', (p) => { this.#onStepComplete(p.updateMs, watch); });
-    channel.on('pause-change', (p) => { this.#onPauseChange(p.paused); });
+  subscribeToChannel(
+    channel: DebugChannel,
+    log: FlxLog,
+    watch: FlxWatch,
+  ): void {
+    log.setOnChange(() => {
+      this.#refreshLog(log);
+    });
+    channel.on('step-complete', (p) => {
+      this.#onStepComplete(p.updateMs, watch);
+    });
+    channel.on('pause-change', (p) => {
+      this.#onPauseChange(p.paused);
+    });
   }
 
   destroy(): void {
@@ -318,11 +340,13 @@ export class FlxDebugger {
 
   #buildLog(el: HTMLDivElement): void {
     const toolbar = document.createElement('div');
-    toolbar.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:4px';
+    toolbar.style.cssText =
+      'display:flex;justify-content:flex-end;margin-bottom:4px';
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.textContent = 'Clear';
-    clearBtn.style.cssText = 'font:inherit;font-size:11px;background:transparent;border:1px solid #334155;color:#94a3b8;padding:1px 8px;cursor:pointer;border-radius:3px';
+    clearBtn.style.cssText =
+      'font:inherit;font-size:11px;background:transparent;border:1px solid #334155;color:#94a3b8;padding:1px 8px;cursor:pointer;border-radius:3px';
     clearBtn.setAttribute('aria-label', 'Clear log');
     clearBtn.setAttribute('data-testid', 'flxdbg-log-clear');
     clearBtn.addEventListener('click', () => {
@@ -343,7 +367,8 @@ export class FlxDebugger {
     table.setAttribute('aria-label', 'Watched values');
     table.setAttribute('data-testid', 'flxdbg-watch-table');
     const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th style="text-align:left;color:#475569;font-weight:normal;padding:2px 8px 2px 0">Name</th><th style="text-align:left;color:#475569;font-weight:normal">Value</th></tr>';
+    thead.innerHTML =
+      '<tr><th style="text-align:left;color:#475569;font-weight:normal;padding:2px 8px 2px 0">Name</th><th style="text-align:left;color:#475569;font-weight:normal">Value</th></tr>';
     table.appendChild(thead);
     this.#watchBody = document.createElement('tbody');
     this.#watchBody.setAttribute('data-testid', 'flxdbg-watch-body');
@@ -352,7 +377,10 @@ export class FlxDebugger {
   }
 
   #buildPerf(el: HTMLDivElement): void {
-    const mkRow = (label: string, testId: string): [HTMLSpanElement, HTMLDivElement] => {
+    const mkRow = (
+      label: string,
+      testId: string,
+    ): [HTMLSpanElement, HTMLDivElement] => {
       const row = document.createElement('div');
       row.className = 'flxdbg-perf-row';
       const lbl = document.createElement('span');
@@ -374,7 +402,10 @@ export class FlxDebugger {
     };
 
     [this.#perfFps] = mkRow('FPS', 'flxdbg-perf-fps');
-    [this.#perfUpdateMs, this.#perfBar] = mkRow('Update ms', 'flxdbg-perf-updatems');
+    [this.#perfUpdateMs, this.#perfBar] = mkRow(
+      'Update ms',
+      'flxdbg-perf-updatems',
+    );
   }
 
   #buildVCR(el: HTMLDivElement): void {
@@ -390,7 +421,11 @@ export class FlxDebugger {
     const btns = document.createElement('div');
     btns.className = 'flxdbg-vcr-btns';
 
-    const mk = (label: string, testId: string, onClick: () => void): HTMLButtonElement => {
+    const mk = (
+      label: string,
+      testId: string,
+      onClick: () => void,
+    ): HTMLButtonElement => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'flxdbg-vcr-btn';
@@ -401,11 +436,26 @@ export class FlxDebugger {
       return b;
     };
 
-    this.#vcrRecord = mk('● Record', 'flxdbg-vcr-record', () => { this.#vcr?.record(); this.#refreshVCRStatus(); });
-    this.#vcrStop   = mk('■ Stop',   'flxdbg-vcr-stop',   () => { this.#vcr?.stop();   this.#refreshVCRStatus(); });
-    this.#vcrRewind = mk('≪ Rewind', 'flxdbg-vcr-rewind', () => { this.#vcr?.rewind(); this.#refreshVCRStatus(); });
-    this.#vcrStep   = mk('❚ Step',   'flxdbg-vcr-step',   () => { this.#vcr?.stepFrame(); this.#refreshVCRStatus(); });
-    this.#vcrPlay   = mk('▶ Play',   'flxdbg-vcr-play',   () => { this.#vcr?.play();   this.#refreshVCRStatus(); });
+    this.#vcrRecord = mk('● Record', 'flxdbg-vcr-record', () => {
+      this.#vcr?.record();
+      this.#refreshVCRStatus();
+    });
+    this.#vcrStop = mk('■ Stop', 'flxdbg-vcr-stop', () => {
+      this.#vcr?.stop();
+      this.#refreshVCRStatus();
+    });
+    this.#vcrRewind = mk('≪ Rewind', 'flxdbg-vcr-rewind', () => {
+      this.#vcr?.rewind();
+      this.#refreshVCRStatus();
+    });
+    this.#vcrStep = mk('❚ Step', 'flxdbg-vcr-step', () => {
+      this.#vcr?.stepFrame();
+      this.#refreshVCRStatus();
+    });
+    this.#vcrPlay = mk('▶ Play', 'flxdbg-vcr-play', () => {
+      this.#vcr?.play();
+      this.#refreshVCRStatus();
+    });
 
     wrap.appendChild(btns);
     el.appendChild(wrap);
@@ -415,7 +465,11 @@ export class FlxDebugger {
     const wrap = document.createElement('div');
     wrap.className = 'flxdbg-vis';
 
-    const mkToggle = (label: string, testId: string, onChange: (on: boolean) => void): void => {
+    const mkToggle = (
+      label: string,
+      testId: string,
+      onChange: (on: boolean) => void,
+    ): void => {
       const row = document.createElement('div');
       row.className = 'flxdbg-vis-row';
       const btn = document.createElement('button');
@@ -432,7 +486,6 @@ export class FlxDebugger {
         btn.setAttribute('aria-checked', String(on));
         onChange(on);
       });
-      this.#visDebug = btn;
       const lbl = document.createElement('span');
       lbl.className = 'flxdbg-vis-label';
       lbl.textContent = label;
@@ -442,7 +495,9 @@ export class FlxDebugger {
 
     mkToggle('Visual debug (bounds/paths)', 'flxdbg-vis-debug', (on) => {
       // This will be wired to FlxG.visualDebug by the consumer
-      this.#root.dispatchEvent(new CustomEvent('flxdbg:vis-debug', { detail: { on }, bubbles: true }));
+      this.#root.dispatchEvent(
+        new CustomEvent('flxdbg:vis-debug', { detail: { on }, bubbles: true }),
+      );
     });
 
     el.appendChild(wrap);
@@ -475,6 +530,7 @@ export class FlxDebugger {
   }
 
   #onPauseChange(_paused: boolean): void {
+    void _paused;
     if (this.#activeTab === 'vcr') this.#refreshVCRStatus();
   }
 
@@ -483,7 +539,8 @@ export class FlxDebugger {
     const entries = log.entries;
     const existing = this.#logList.children.length;
     for (let i = existing; i < entries.length; i++) {
-      const e = entries[i]!;
+      const e = entries[i];
+      if (e === undefined) continue;
       const row = document.createElement('div');
       row.className = 'flxdbg-log-entry';
       const time = new Date(e.timestamp).toISOString().slice(11, 23);
@@ -528,10 +585,10 @@ export class FlxDebugger {
       this.#vcrStatus.style.color = '#4ade80';
     }
     this.#vcrRecord.disabled = vcr.recording;
-    this.#vcrStop.disabled   = !vcr.recording;
-    this.#vcrPlay.disabled   = vcr.replay === null || vcr.recording;
+    this.#vcrStop.disabled = !vcr.recording;
+    this.#vcrPlay.disabled = vcr.replay === null || vcr.recording;
     this.#vcrRewind.disabled = vcr.replay === null || vcr.recording;
-    this.#vcrStep.disabled   = vcr.replay === null || vcr.recording;
+    this.#vcrStep.disabled = vcr.replay === null || vcr.recording;
   }
 
   // ─── Tab switching ─────────────────────────────────────────────────────────

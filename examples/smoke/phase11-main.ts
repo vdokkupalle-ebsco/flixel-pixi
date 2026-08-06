@@ -15,7 +15,7 @@ declare global {
 
 const host = document.querySelector<HTMLElement>(
   '[data-testid="phase11-canvas-host"]',
-)!;
+);
 const status = document.querySelector<HTMLElement>('[data-testid="status"]');
 const toggleBtn = document.querySelector<HTMLButtonElement>(
   '[data-action="toggle-debugger"]',
@@ -28,6 +28,10 @@ const destroyBtn = document.querySelector<HTMLButtonElement>(
 );
 
 window.__FLIXEL_PIXI_PHASE11__ = { destroyed: false, ready: false };
+
+if (!host) {
+  throw new Error('Missing [data-testid="phase11-canvas-host"]');
+}
 
 bootPhase11Demo(host)
   .then((app) => {
@@ -46,7 +50,10 @@ bootPhase11Demo(host)
     addLogBtn?.removeAttribute('disabled');
     addLogBtn?.addEventListener('click', () => {
       import('../../src').then(({ FlxG }) => {
-        FlxG.log.add(`Manual log entry #${++counter} at ${new Date().toISOString()}`, 0xfffacc15);
+        FlxG.log.add(
+          `Manual log entry #${++counter} at ${new Date().toISOString()}`,
+          0xfffacc15,
+        );
       });
     });
 

@@ -1,0 +1,77 @@
+import { FlxG } from '../../../src';
+import { bootGame, type GameApplication } from '../_kit/boot-game';
+import { PlayState, TitleState } from './game';
+
+declare global {
+  interface Window {
+    __FLIXEL_PIXI_HELLO__?: {
+      app?: GameApplication;
+      destroyed: boolean;
+      ready: boolean;
+      /** Test hook: force switch into PlayState. */
+      startPlay?: () => void;
+      playerX?: () => number;
+      playerY?: () => number;
+    };
+  }
+}
+
+const host = document.querySelector<HTMLElement>('[data-testid="canvas-host"]');
+const status = document.querySelector<HTMLElement>('[data-testid="status"]');
+const destroyBtn = document.querySelector<HTMLButtonElement>(
+  '[data-action="destroy"]',
+);
+
+window.__FLIXEL_PIXI_HELLO__ = { destroyed: false, ready: false };
+
+if (!host) {
+  throw new Error('Missing [data-testid="canvas-host"]');
+}
+
+bootGame({
+  host,
+  initialState: TitleState,
+  title: 'Hello Sample',
+  showPreloader: true,
+})
+  .then((app) => {
+    window.__FLIXEL_PIXI_HELLO__ = {
+      app,
+      destroyed: false,
+      ready: true,
+      startPlay() {
+        FlxG.switchState(new PlayState());
+        app.syncRenderer();
+      },
+      playerX() {
+        const state = app.game.state;
+        if (state instanceof PlayState) return state.player.x;
+        return NaN;
+      },
+      playerY() {
+        const state = app.game.state;
+        if (state instanceof PlayState) return state.player.y;
+        return NaN;
+      },
+    };
+
+    if (status) {
+      status.textContent = 'Hello sample ready';
+      status.setAttribute('data-state', 'ready');
+    }
+    destroyBtn?.removeAttribute('disabled');
+    destroyBtn?.addEventListener('click', () => {
+      app.destroy();
+      window.__FLIXEL_PIXI_HELLO__ = { destroyed: true, ready: false };
+      if (status) {
+        status.textContent = 'Destroyed';
+        status.setAttribute('data-state', 'destroyed');
+      }
+    });
+  })
+  .catch((err: unknown) => {
+    if (status) {
+      status.textContent = `Failed: ${String(err)}`;
+      status.setAttribute('data-state', 'error');
+    }
+  });

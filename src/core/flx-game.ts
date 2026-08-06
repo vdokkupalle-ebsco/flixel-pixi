@@ -3,7 +3,6 @@ import {
   type FixedStepAdvanceResult,
 } from './fixed-step-accumulator';
 import { FlxContext, type FlxStateRuntime } from './flx-context';
-import { MouseRecord } from '../replay/mouse-record';
 import { FlxG } from './flx-g';
 import { DebugPathDisplay } from '../plugin/debug-path-display';
 import { TimerManager } from '../plugin/timer-manager';

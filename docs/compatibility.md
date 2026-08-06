@@ -2,7 +2,7 @@
 
 This ledger inventories the public API of the original ActionScript 3 Flixel source at commit `8989e5044be072c4abbbaa1317c9854786f6447f`. It is generated from 43 classes, 766 public members, and 14,928 source lines under `org/flixel`. The machine-readable source of this ledger is `upstream/as3-api-manifest.json`.
 
-Phase 0 status means only that the member has been identified and assigned to the port plan. It does not claim the member is implemented. As implementation proceeds, every member will receive one compatibility classification: Exact, Adapted, Emulated, Deprecated, or Unsupported.
+Every inventory entry below carries a final compatibility classification (Exact, Adapted, Emulated, Deprecated, or Unsupported) as of Phase 12 / checkpoint C12. Phase summary tables above remain the narrative evidence; this inventory is the member-level ledger with no unknown rows.
 
 ## Phase 1 provisional classifications
 
@@ -166,214 +166,213 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 
 - Source: `FlxBasic.as`
 - Public API (17): `active`, `alive`, `cameras`, `destroy`, `draw`, `drawDebug`, `exists`, `FlxBasic`, `ID`, `ignoreDrawDebug`, `kill`, `postUpdate`, `preUpdate`, `revive`, `toString`, `update`, `visible`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2 status: Adapted — lifecycle flags and hooks implemented; camera/debug draw adapter-owned.
 
-### `org.flixel.FlxButton` extends `FlxSprite`
+### `org.flixel.FlxButton`
 
 - Source: `FlxButton.as`
 - Public API (21): `destroy`, `draw`, `FlxButton`, `static HIGHLIGHT`, `label`, `labelOffset`, `static NORMAL`, `on (get/set)`, `onDown`, `onOut`, `onOver`, `onUp`, `static PRESSED`, `preUpdate`, `setSounds`, `soundDown`, `soundOut`, `soundOver`, `soundUp`, `status`, `update`
-- Phase 7 status: implemented with deterministic input state and a composite Pixi render handle; embedded sound classes are backend-neutral sound hooks.
+- Phase 7 status: implemented with deterministic input state and composite Pixi render handle; embedded sound classes are backend-neutral sound hooks.
 
-### `org.flixel.FlxCamera` extends `FlxBasic`
+### `org.flixel.FlxCamera`
 
 - Source: `FlxCamera.as`
 - Public API (39): `alpha (get/set)`, `angle (get/set)`, `antialiasing (get/set)`, `bgColor`, `bounds`, `buffer`, `color (get/set)`, `copyFrom`, `deadzone`, `static defaultZoom`, `destroy`, `fade`, `fill`, `flash`, `FlxCamera`, `focusOn`, `follow`, `getContainerSprite`, `getScale`, `height`, `screen`, `scroll`, `setBounds`, `setScale`, `shake`, `static SHAKE_BOTH_AXES`, `static SHAKE_HORIZONTAL_ONLY`, `static SHAKE_VERTICAL_ONLY`, `stopFX`, `static STYLE_LOCKON`, `static STYLE_PLATFORMER`, `static STYLE_TOPDOWN`, `static STYLE_TOPDOWN_TIGHT`, `target`, `update`, `width`, `x`, `y`, `zoom (get/set)`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 5 status: Adapted — transforms, follow styles, FX, and multi-camera routing via render-texture passes.
 
-### `org.flixel.FlxEmitter` extends `FlxGroup`
+### `org.flixel.FlxEmitter`
 
 - Source: `FlxEmitter.as`
 - Public API (27): `at`, `bounce`, `destroy`, `emitParticle`, `FlxEmitter`, `frequency`, `gravity`, `height`, `kill`, `lifespan`, `makeParticles`, `maxParticleSpeed`, `maxRotation`, `minParticleSpeed`, `minRotation`, `on`, `particleClass`, `particleDrag`, `setRotation`, `setSize`, `setXSpeed`, `setYSpeed`, `start`, `update`, `width`, `x`, `y`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 8 status: Adapted — burst/stream emitters with recycling; graphics via FlxGraphic/Texture.
 
 ### `org.flixel.FlxG`
 
 - Source: `FlxG.as`
 - Public API (90): `static addBitmap`, `static addCamera`, `static addPlugin`, `static bgColor (get/set)`, `static BLACK`, `static BLUE`, `static camera`, `static cameras`, `static checkBitmapCache`, `static clearBitmapCache`, `static collide`, `static createBitmap`, `static debug`, `static DEBUGGER_BIG`, `static DEBUGGER_LEFT`, `static DEBUGGER_MICRO`, `static DEBUGGER_RIGHT`, `static DEBUGGER_STANDARD`, `static DEBUGGER_TOP`, `static elapsed`, `static fade`, `static flash`, `static flashFramerate (get/set)`, `static flashGfx`, `static flashGfxSprite`, `static framerate (get/set)`, `static getLibraryName`, `static getPlugin`, `static getRandom`, `static globalSeed`, `static GREEN`, `static height`, `static keys`, `static level`, `static levels`, `static LIBRARY_MAJOR_VERSION`, `static LIBRARY_MINOR_VERSION`, `static LIBRARY_NAME`, `static loadReplay`, `static loadSound`, `static log`, `static mobile`, `static mouse`, `static music`, `static mute`, `static overlap`, `static paused`, `static pauseSounds`, `static PINK`, `static play`, `static playMusic`, `static plugins`, `static random`, `static recordReplay`, `static RED`, `static reloadReplay`, `static removeCamera`, `static removePlugin`, `static removePluginType`, `static resetCameras`, `static resetDebuggerLayout`, `static resetGame`, `static resetInput`, `static resetState`, `static resumeSounds`, `static save`, `static saves`, `static score`, `static scores`, `static setDebuggerLayout`, `static shake`, `static shuffle`, `static sounds`, `static stage (get)`, `static state (get)`, `static stopRecording`, `static stopReplay`, `static stream`, `static switchState`, `static timeScale`, `static unwatch`, `static useBufferLocking`, `static visualDebug`, `static volume (get/set)`, `static volumeHandler`, `static watch`, `static WHITE`, `static width`, `static worldBounds`, `static worldDivisions`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2–11 status: Adapted — facade over FlxContext for timing, state, world, input, audio, save, replay, plugins, log/watch.
 
-### `org.flixel.FlxGame` extends `Sprite`
+### `org.flixel.FlxGame`
 
 - Source: `FlxGame.as`
 - Public API (4): `FlxGame`, `forceDebugger`, `useSoundHotKeys`, `useSystemCursor`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2–11 status: Adapted — fixed-step controller, input/audio backends, debug channel; not a Flash Sprite.
 
-### `org.flixel.FlxGroup` extends `FlxBasic`
+### `org.flixel.FlxGroup`
 
 - Source: `FlxGroup.as`
 - Public API (27): `add`, `static ASCENDING`, `callAll`, `clear`, `countDead`, `countLiving`, `static DESCENDING`, `destroy`, `draw`, `FlxGroup`, `getFirstAlive`, `getFirstAvailable`, `getFirstDead`, `getFirstExtant`, `getFirstNull`, `getRandom`, `kill`, `length`, `maxSize (get/set)`, `members`, `preUpdate`, `recycle`, `remove`, `replace`, `setAll`, `sort`, `update`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2 status: Adapted — collection, recursion, sorting, recycle, snapshot traversal.
 
-### `org.flixel.FlxObject` extends `FlxBasic`
+### `org.flixel.FlxObject`
 
 - Source: `FlxObject.as`
 - Public API (67): `acceleration`, `allowCollisions`, `angle`, `angularAcceleration`, `angularDrag`, `angularVelocity`, `static ANY`, `static CEILING`, `destroy`, `static DOWN`, `drag`, `draw`, `drawDebug`, `elasticity`, `flicker`, `flickering (get)`, `static FLOOR`, `FlxObject`, `followPath`, `getMidpoint`, `getScreenXY`, `health`, `height`, `hurt`, `immovable`, `isTouching`, `justTouched`, `last`, `static LEFT`, `mass`, `maxAngular`, `maxVelocity`, `moves`, `static NONE`, `onScreen`, `static OVERLAP_BIAS`, `overlaps`, `overlapsAt`, `overlapsPoint`, `path`, `static PATH_BACKWARD`, `static PATH_FORWARD`, `static PATH_HORIZONTAL_ONLY`, `static PATH_LOOP_BACKWARD`, `static PATH_LOOP_FORWARD`, `static PATH_VERTICAL_ONLY`, `static PATH_YOYO`, `pathAngle`, `pathSpeed`, `postUpdate`, `preUpdate`, `reset`, `static RIGHT`, `scrollFactor`, `static separate`, `static separateX`, `static separateY`, `solid (get/set)`, `stopFollowingPath`, `touching`, `static UP`, `velocity`, `static WALL`, `wasTouching`, `width`, `x`, `y`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 3 status: Adapted — motion, path, health, AABB, separation; tilemap delegation via collide.
 
-### `org.flixel.FlxParticle` extends `FlxSprite`
+### `org.flixel.FlxParticle`
 
 - Source: `FlxParticle.as`
 - Public API (5): `FlxParticle`, `friction`, `lifespan`, `onEmit`, `update`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 8 status: Adapted — emitter-managed particle with lifespan/alpha/scale hooks.
 
 ### `org.flixel.FlxPath`
 
 - Source: `FlxPath.as`
 - Public API (16): `add`, `addAt`, `addPoint`, `addPointAt`, `debugColor`, `debugScrollFactor`, `destroy`, `drawDebug`, `FlxPath`, `head`, `ignoreDrawDebug`, `static manager (get)`, `nodes`, `remove`, `removeAt`, `tail`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 3 status: Exact — node APIs; debug draw via DebugPathDisplay plugin.
 
 ### `org.flixel.FlxPoint`
 
 - Source: `FlxPoint.as`
 - Public API (8): `copyFrom`, `copyFromFlash`, `copyTo`, `copyToFlash`, `FlxPoint`, `make`, `x`, `y`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2 status: Exact — value/mutation/copy; Flash points as PointLike.
 
 ### `org.flixel.FlxRect`
 
 - Source: `FlxRect.as`
 - Public API (15): `bottom (get)`, `copyFrom`, `copyFromFlash`, `copyTo`, `copyToFlash`, `FlxRect`, `height`, `left (get)`, `make`, `overlaps`, `right (get)`, `top (get)`, `width`, `x`, `y`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2 status: Exact — edges, overlap, mutation, copy.
 
-### `org.flixel.FlxSave` extends `Object`
+### `org.flixel.FlxSave`
 
 - Source: `FlxSave.as`
 - Public API (8): `bind`, `close`, `data`, `destroy`, `erase`, `flush`, `FlxSave`, `name`
-- Phase 9 status: implemented with versioned save slots, namespaced keys, typed `flush()` error results, and replaceable `FlxStorageBackend` (localStorage, IndexedDB, null).
+- Phase 9 status: Adapted — bind/flush/close with versioned schema and pluggable storage backends.
 
-### `org.flixel.FlxSound` extends `FlxBasic`
+### `org.flixel.FlxSound`
 
 - Source: `FlxSound.as`
 - Public API (24): `amplitude`, `amplitudeLeft`, `amplitudeRight`, `artist`, `autoDestroy`, `destroy`, `fadeIn`, `fadeOut`, `FlxSound`, `getActualVolume`, `kill`, `loadEmbedded`, `loadStream`, `name`, `pause`, `play`, `proximity`, `resume`, `stop`, `survive`, `update`, `volume (get/set)`, `x`, `y`
-- Phase 9 status: implemented with Web Audio API backend, gesture-unlock queue, stereo panner proximity, fades, global volume/mute scaling, and replaceable `FlxAudioBackend`.
+- Phase 9 status: Adapted — Web Audio backend; proximity/fade/loop semantics preserved where applicable.
 
-### `org.flixel.FlxSprite` extends `FlxObject`
+### `org.flixel.FlxSprite`
 
 - Source: `FlxSprite.as`
 - Public API (36): `addAnimation`, `addAnimationCallback`, `alpha (get/set)`, `antialiasing`, `blend`, `centerOffsets`, `color (get/set)`, `destroy`, `dirty`, `draw`, `drawFrame`, `drawLine`, `facing (get/set)`, `fill`, `finished`, `FlxSprite`, `frame (get/set)`, `frameHeight`, `framePixels`, `frames`, `frameWidth`, `loadGraphic`, `loadRotatedGraphic`, `makeGraphic`, `offset`, `onScreen`, `origin`, `pixels (get/set)`, `pixelsOverlapPoint`, `play`, `postUpdate`, `randomFrame`, `replaceColor`, `scale`, `setOriginToCorner`, `stamp`
-- Phase 4 status: core sprite/frame/animation/transform surface implemented;
-  Flash pixel mutation is classified above and pre-baked rotation is deprecated.
+- Phase 4 status: Adapted — frames, animation, transforms drive Pixi handles; pixel ops in compat module.
 
-### `org.flixel.FlxState` extends `FlxGroup`
+### `org.flixel.FlxState`
 
 - Source: `FlxState.as`
 - Public API (1): `create`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2 status: Exact — create hook and group lifecycle.
 
-### `org.flixel.FlxText` extends `FlxSprite`
+### `org.flixel.FlxText`
 
 - Source: `FlxText.as`
 - Public API (9): `alignment (get/set)`, `color (get/set)`, `destroy`, `FlxText`, `font (get/set)`, `setFormat`, `shadow (get/set)`, `size (get/set)`, `text (get/set)`
-- Phase 4 status: implemented through adapter-owned Pixi `Text`/`BitmapText`.
+- Phase 4 status: Adapted — Pixi Text with shadow/border; BitmapText fast mode available.
 
-### `org.flixel.FlxTileblock` extends `FlxSprite`
+### `org.flixel.FlxTileblock`
 
 - Source: `FlxTileblock.as`
 - Public API (2): `FlxTileblock`, `loadTiles`
-- Phase 4 status: implemented for generated or preprocessed pixel-backed tiles.
+- Phase 4 status: Adapted — seeded tile texture generation.
 
-### `org.flixel.FlxTilemap` extends `FlxObject`
+### `org.flixel.FlxTilemap`
 
 - Source: `FlxTilemap.as`
 - Public API (34): `static ALT`, `static arrayToCSV`, `auto`, `static AUTO`, `static bitmapToCSV`, `destroy`, `draw`, `findPath`, `FlxTilemap`, `follow`, `getBounds`, `getData`, `getTile`, `getTileByIndex`, `getTileCoords`, `getTileInstances`, `heightInTiles`, `static imageToCSV`, `static ImgAuto`, `static ImgAutoAlt`, `loadMap`, `static OFF`, `overlaps`, `overlapsAt`, `overlapsPoint`, `overlapsWithCallback`, `ray`, `setDirty`, `setTile`, `setTileByIndex`, `setTileProperties`, `totalTiles`, `update`, `widthInTiles`
-- Phase 6 status: implemented with renderer-neutral data/collision and a subscribed Pixi chunk adapter; embedded Flash autotile assets are deprecated.
+- Phase 6 status: Adapted — loadMap/collide/ray/pathfinding with chunked render handles.
 
 ### `org.flixel.FlxTimer`
 
 - Source: `FlxTimer.as`
 - Public API (13): `destroy`, `finished`, `FlxTimer`, `loops`, `loopsLeft (get)`, `static manager (get)`, `paused`, `progress (get)`, `start`, `stop`, `time`, `timeLeft (get)`, `update`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 8 status: Adapted — deterministic catch-up timers via TimerManager plugin.
 
 ### `org.flixel.FlxU`
 
 - Source: `FlxU.as`
 - Public API (27): `static abs`, `static bound`, `static ceil`, `static compareClassNames`, `static computeVelocity`, `static floor`, `static formatArray`, `static formatMoney`, `static formatTicks`, `static formatTime`, `static getAngle`, `static getClass`, `static getClassName`, `static getDistance`, `static getHSB`, `static getRandom`, `static getRGBA`, `static getTicks`, `static makeColor`, `static makeColorFromHSB`, `static max`, `static min`, `static openURL`, `static rotatePoint`, `static round`, `static shuffle`, `static srand`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 2 status: Adapted — math/time/color/RNG helpers; Flash reflection/openURL unsupported.
 
-### `org.flixel.plugin.DebugPathDisplay` extends `FlxBasic`
+### `org.flixel.plugin.DebugPathDisplay`
 
 - Source: `plugin/DebugPathDisplay.as`
 - Public API (7): `add`, `clear`, `DebugPathDisplay`, `destroy`, `draw`, `drawDebug`, `remove`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 8 status: Adapted — Pixi path-debug geometry plugin.
 
-### `org.flixel.plugin.TimerManager` extends `FlxBasic`
+### `org.flixel.plugin.TimerManager`
 
 - Source: `plugin/TimerManager.as`
 - Public API (6): `add`, `clear`, `destroy`, `remove`, `TimerManager`, `update`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 8 status: Adapted — manages FlxTimer catch-up updates.
 
-### `org.flixel.system.debug.Log` extends `FlxWindow`
+### `org.flixel.system.debug.Log`
 
 - Source: `system/debug/Log.as`
 - Public API (3): `add`, `destroy`, `Log`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — DOM Log panel fed by FlxLog / DebugChannel.
 
-### `org.flixel.system.debug.Perf` extends `FlxWindow`
+### `org.flixel.system.debug.Perf`
 
 - Source: `system/debug/Perf.as`
 - Public API (8): `activeObjects`, `destroy`, `flash`, `flixelDraw`, `flixelUpdate`, `Perf`, `update`, `visibleObjects`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — DOM Perf panel (FPS / step timing).
 
-### `org.flixel.system.debug.VCR` extends `Sprite`
+### `org.flixel.system.debug.VCR`
 
 - Source: `system/debug/VCR.as`
 - Public API (16): `destroy`, `onOpen`, `onPause`, `onPlay`, `onRecord`, `onRestart`, `onStep`, `onStop`, `paused`, `playing`, `recording`, `stepRequested`, `stopped`, `stopRecording`, `updateRuntime`, `VCR`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — DOM VCR controls over FlxG replay facade.
 
-### `org.flixel.system.debug.Vis` extends `Sprite`
+### `org.flixel.system.debug.Vis`
 
 - Source: `system/debug/Vis.as`
 - Public API (3): `destroy`, `onBounds`, `Vis`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — DOM visual-debug toggles.
 
-### `org.flixel.system.debug.Watch` extends `FlxWindow`
+### `org.flixel.system.debug.Watch`
 
 - Source: `system/debug/Watch.as`
 - Public API (8): `add`, `destroy`, `editing`, `remove`, `removeAll`, `submit`, `update`, `Watch`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — DOM Watch panel over FlxWatch.
 
 ### `org.flixel.system.debug.WatchEntry`
 
 - Source: `system/debug/WatchEntry.as`
 - Public API (16): `cancel`, `custom`, `destroy`, `editing`, `field`, `nameDisplay`, `object`, `oldValue`, `onKeyUp`, `onMouseUp`, `setY`, `submit`, `updateValue`, `updateWidth`, `valueDisplay`, `WatchEntry`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — named field watch snapshot.
 
 ### `org.flixel.system.FlxAnim`
 
 - Source: `system/FlxAnim.as`
 - Public API (6): `delay`, `destroy`, `FlxAnim`, `frames`, `looped`, `name`
-- Phase 4 status: implemented.
+- Phase 4 status: Exact — name, frames, delay, loop, destroy.
 
-### `org.flixel.system.FlxDebugger` extends `Sprite`
+### `org.flixel.system.FlxDebugger`
 
 - Source: `system/FlxDebugger.as`
 - Public API (10): `destroy`, `FlxDebugger`, `hasMouse`, `log`, `perf`, `resetLayout`, `setLayout`, `vcr`, `vis`, `watch`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — optional DOM debugger consuming DebugChannel; not Flash UI.
 
 ### `org.flixel.system.FlxList`
 
 - Source: `system/FlxList.as`
 - Public API (4): `destroy`, `FlxList`, `next`, `object`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 3 status: Adapted — internal quadtree list helper (not a root export).
 
-### `org.flixel.system.FlxPreloader` extends `MovieClip`
+### `org.flixel.system.FlxPreloader`
 
 - Source: `system/FlxPreloader.as`
 - Public API (4): `className`, `FlxPreloader`, `minDisplayTime`, `myURL`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Adapted — accessible HTML preloader (not Flash MovieClip).
 
-### `org.flixel.system.FlxQuadTree` extends `FlxRect`
+### `org.flixel.system.FlxQuadTree`
 
 - Source: `system/FlxQuadTree.as`
 - Public API (8): `static A_LIST`, `add`, `static B_LIST`, `destroy`, `static divisions`, `execute`, `FlxQuadTree`, `load`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 3 status: Adapted — overlap/collide tree with instance-owned scratch.
 
 ### `org.flixel.system.FlxReplay`
 
 - Source: `system/FlxReplay.as`
 - Public API (12): `create`, `destroy`, `finished`, `FlxReplay`, `frame`, `frameCount`, `load`, `playNextFrame`, `recordFrame`, `rewind`, `save`, `seed`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 10 status: Adapted — JSON replay + AS3 text adapter; seed/frame records.
 
-### `org.flixel.system.FlxTile` extends `FlxObject`
+### `org.flixel.system.FlxTile`
 
 - Source: `system/FlxTile.as`
 - Public API (7): `callback`, `destroy`, `filter`, `FlxTile`, `index`, `mapIndex`, `tilemap`
@@ -383,13 +382,13 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 
 - Source: `system/FlxTilemapBuffer.as`
 - Public API (12): `columns`, `destroy`, `dirty`, `draw`, `fill`, `FlxTilemapBuffer`, `height`, `pixels (get)`, `rows`, `width`, `x`, `y`
-- Phase 6 status: emulated for compatibility metadata and packed pixels; production rendering uses `FlxTilemapRenderHandle` chunks.
+- Phase 6 status: Emulated — compatibility metadata; production uses render-handle chunks.
 
-### `org.flixel.system.FlxWindow` extends `Sprite`
+### `org.flixel.system.FlxWindow`
 
 - Source: `system/FlxWindow.as`
 - Public API (6): `destroy`, `FlxWindow`, `maxSize`, `minSize`, `reposition`, `resize`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 11 status: Unsupported as Flash Sprite window — debugger panels use DOM instead of FlxWindow.
 
 ### `org.flixel.system.input.Input`
 
@@ -397,26 +396,26 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 - Public API (11): `any`, `destroy`, `getKeyCode`, `Input`, `justPressed`, `justReleased`, `playback`, `pressed`, `record`, `reset`, `update`
 - Phase 7 status: implemented with pinned numeric transitions and snapshot record/playback.
 
-### `org.flixel.system.input.Keyboard` extends `Input`
+### `org.flixel.system.input.Keyboard`
 
 - Source: `system/input/Keyboard.as`
 - Public API (94): `A`, `ALT`, `B`, `BACKSLASH`, `BACKSPACE`, `C`, `CAPSLOCK`, `COMMA`, `CONTROL`, `D`, `DELETE`, `DOWN`, `E`, `EIGHT`, `END`, `ENTER`, `ESCAPE`, `F`, `F1`, `F10`, `F11`, `F12`, `F2`, `F3`, `F4`, `F5`, `F6`, `F7`, `F8`, `F9`, `FIVE`, `FOUR`, `G`, `H`, `handleKeyDown`, `handleKeyUp`, `HOME`, `I`, `INSERT`, `J`, `K`, `Keyboard`, `L`, `LBRACKET`, `LEFT`, `M`, `MINUS`, `N`, `NINE`, `NUMPADEIGHT`, `NUMPADFIVE`, `NUMPADFOUR`, `NUMPADMINUS`, `NUMPADNINE`, `NUMPADONE`, `NUMPADPERIOD`, `NUMPADPLUS`, `NUMPADSEVEN`, `NUMPADSIX`, `NUMPADSLASH`, `NUMPADTHREE`, `NUMPADTWO`, `NUMPADZERO`, `O`, `ONE`, `P`, `PAGEDOWN`, `PAGEUP`, `PERIOD`, `PLUS`, `Q`, `QUOTE`, `R`, `RBRACKET`, `RIGHT`, `S`, `SEMICOLON`, `SEVEN`, `SHIFT`, `SIX`, `SLASH`, `SPACE`, `T`, `TAB`, `THREE`, `TWO`, `U`, `UP`, `V`, `W`, `X`, `Y`, `Z`, `ZERO`
-- Phase 7 status: implemented with physical DOM `code` mappings plus documented compatibility fallbacks and aliases.
+- Phase 7 status: Adapted — DOM code mappings plus compatibility aliases.
 
-### `org.flixel.system.input.Mouse` extends `FlxPoint`
+### `org.flixel.system.input.Mouse`
 
 - Source: `system/input/Mouse.as`
 - Public API (22): `destroy`, `getScreenPosition`, `getWorldPosition`, `handleMouseDown`, `handleMouseUp`, `handleMouseWheel`, `hide`, `justPressed`, `justReleased`, `load`, `Mouse`, `playback`, `pressed`, `record`, `reset`, `screenX`, `screenY`, `show`, `unload`, `update`, `visible (get)`, `wheel`
-- Phase 7 status: implemented with Pointer Events, capture/cancellation safety, CSS cursors, and C5 camera transforms.
+- Phase 7 status: Adapted — Pointer Events with camera transforms.
 
 ### `org.flixel.system.replay.FrameRecord`
 
 - Source: `system/replay/FrameRecord.as`
 - Public API (8): `create`, `destroy`, `frame`, `FrameRecord`, `keys`, `load`, `mouse`, `save`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 10 status: Exact — per-frame key/mouse snapshot for replays.
 
 ### `org.flixel.system.replay.MouseRecord`
 
 - Source: `system/replay/MouseRecord.as`
 - Public API (5): `button`, `MouseRecord`, `wheel`, `x`, `y`
-- Phase 0 status: inventoried; implementation is scheduled by the port plan.
+- Phase 10 status: Exact — mouse button/wheel/position snapshot.

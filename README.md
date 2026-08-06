@@ -3,12 +3,9 @@
 `flixel-pixi` is a TypeScript port of Adam Saltsman's original ActionScript 3
 Flixel engine, using PixiJS v8 as its browser rendering foundation.
 
-The repository has completed **Phase 8: particles, timers, and plugins**. It now
-includes seeded burst and stream emitters, bounded particle recycling,
-deterministic catch-up timers, mutation-safe plugin update/draw passes, Pixi
-path-debug geometry, and an opt-in `ParticleContainer` projection that leaves
-Flixel lifecycle state authoritative. Phase 9 adds audio and save data in
-[PORTING_PLAN.md](PORTING_PLAN.md).
+The repository has completed **Phase 12: samples, API closure, and guides**.
+Playable public-API games live under `examples/games/`; phase smoke labs remain
+under `examples/smoke/`. See [PORTING_PLAN.md](PORTING_PLAN.md).
 
 ## Prerequisites
 
@@ -63,6 +60,11 @@ Compatibility is pinned to Flixel commit
 
 - [Compatibility ledger](docs/compatibility.md)
 - [Architecture decisions](docs/adr/README.md)
+- [Lifecycle guide](docs/guides/lifecycle.md)
+- [Performance guide](docs/guides/performance.md)
+- [Browser guide](docs/guides/browser.md)
+- [Debugging guide](docs/guides/debugging.md)
+- [Extension points](docs/guides/extensions.md)
 - [Phase 1 evidence and C1 verdict](docs/phase1-evidence.md)
 - [Phase 2 evidence and C2 verdict](docs/phase2-evidence.md)
 - [Phase 3 evidence and C3 verdict](docs/phase3-evidence.md)

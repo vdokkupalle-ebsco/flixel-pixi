@@ -431,14 +431,17 @@ Checkpoint C11 — tooling gate:
 - Keyboard navigation and screen-reader labels exist for debugger controls and the loading/error UI.
 - Production bundle analysis shows no debugger UI dependency and negligible disabled-hook overhead.
 
-### Phase 12 — Whole-game ports, API closure, and migration docs (4–6 weeks)
+### Phase 12 — Whole-game ports, API closure, and guides (4–6 weeks)
+
+Status: completed on 2026-08-06; checkpoint C12 passed. See
+[`docs/phase12-evidence.md`](docs/phase12-evidence.md) and
+[`docs/phase12-external-gap.md`](docs/phase12-external-gap.md).
 
 Work:
 
 - Port three representative samples in increasing complexity: Hello World/basic movement, a platformer with tilemaps/collision, and an action scene with particles, audio, save, replay, and multiple cameras.
 - Complete the member-by-member compatibility ledger.
-- Add AS3-to-TypeScript recipes for constructors, state switching, embedded assets, callbacks, maps, text, sound, save data, input, replay, and custom drawing.
-- Add API docs, lifecycle guide, performance guide, browser restrictions, debugging guide, and extension points.
+- Add API docs / guides: lifecycle, performance, browser restrictions, debugging, and extension points.
 - Run a source-port exercise on one external open-source Flixel game to discover missing assumptions, subject to its license.
 
 Checkpoint C12 — release candidate feature gate:

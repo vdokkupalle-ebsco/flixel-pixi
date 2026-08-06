@@ -26,10 +26,13 @@
   "scripts": {
     "dev": "vite --config vite.smoke.config.ts",
     "dev:smoke": "vite --config vite.smoke.config.ts",
-    "build": "npm run clean && npm run build:types && npm run build:lib && npm run build:smoke && npm run report:bundle",
+    "dev:games": "vite --config vite.games.config.ts",
+    "build": "npm run clean && npm run build:types && npm run build:lib && npm run build:smoke && npm run build:games && npm run report:bundle",
     "build:types": "tsc -p tsconfig.build.json",
     "build:lib": "vite build --config vite.lib.config.ts",
     "build:smoke": "vite build --config vite.smoke.config.ts",
+    "build:games": "vite build --config vite.games.config.ts",
+    "check:games-imports": "node scripts/check-games-public-imports.mjs",
     "clean": "node scripts/clean.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
@@ -42,7 +45,7 @@
     "api:update": "npm run build:types && api-extractor run --local --verbose",
     "api:check": "npm run build:types && api-extractor run --verbose",
     "report:bundle": "node scripts/report-bundle-size.mjs",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && npm run bench && npm run test:e2e"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && npm run bench && npm run check:games-imports && npm run test:e2e"
   },
   "peerDependencies": {
     "pixi.js": "^8.19.0"
