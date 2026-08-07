@@ -4,6 +4,14 @@ import { FlxBasic } from './flx-basic';
 /** Constructor accepted by {@link FlxGroup.recycle}. @public */
 export type FlxBasicConstructor<T extends FlxBasic = FlxBasic> = new () => T;
 
+function markRenderablesDirty(): void {
+  try {
+    FlxG.context.markRenderablesDirty();
+  } catch {
+    // No active context (headless construction) — ignore.
+  }
+}
+
 /** Mutation-safe collection that owns member lifecycle traversal. @public */
 export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
   static readonly ASCENDING = -1;
@@ -92,6 +100,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     this.members.length = size;
     this.length = size;
     if (this.#marker >= size) this.#marker = 0;
+    markRenderablesDirty();
   }
 
   add(object: T): T {
@@ -101,6 +110,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
       if (this.members[index] === null) {
         this.members[index] = object;
         this.length = Math.max(this.length, index + 1);
+        markRenderablesDirty();
         return object;
       }
     }
@@ -118,6 +128,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     this.members.fill(null, oldCapacity);
     this.members[oldCapacity] = object;
     this.length = oldCapacity + 1;
+    markRenderablesDirty();
     return object;
   }
 
@@ -147,6 +158,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     } else {
       this.members[index] = null;
     }
+    markRenderablesDirty();
     return object;
   }
 
@@ -154,6 +166,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     const index = this.members.indexOf(oldObject);
     if (index < 0) return null;
     this.members[index] = newObject;
+    markRenderablesDirty();
     return newObject;
   }
 
@@ -259,6 +272,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     this.members.length = 0;
     this.length = 0;
     this.#marker = 0;
+    markRenderablesDirty();
   }
 
   override kill(): void {

@@ -93,22 +93,24 @@ export async function createBrowserGame(
 
   preloader?.setProgress(100, 'Ready!');
   preloader?.complete();
-  preloader = null;
 
   app.ticker.add(() => {
     if (!FlxG.paused) {
       game.advance(app.ticker.deltaMS / 1000);
     }
-    syncWorldToRenderer(game, renderer);
+    // Membership sync is O(n); skip when groups have not changed.
+    if (game.context.renderablesDirty) {
+      syncWorldToRenderer(game, renderer);
+    }
     renderer.render();
   });
-
 
   return {
     game,
     renderer,
     app,
     syncRenderer() {
+      game.context.markRenderablesDirty();
       syncWorldToRenderer(game, renderer);
     },
     destroy() {

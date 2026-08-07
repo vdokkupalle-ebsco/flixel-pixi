@@ -454,7 +454,7 @@ Checkpoint C12 — release candidate feature gate:
 
 ### Phase 13 — Performance, browser hardening, and 1.0 release (3–4 weeks)
 
-Status: **hardening pass in progress** (2026-08-06). Atlas sprite FPS baseline + short soak shipped; full C13 (30‑minute soak, hard budgets, 1.0 publish) not closed. See [`docs/phase13-evidence.md`](docs/phase13-evidence.md) and [`docs/superpowers/specs/2026-08-06-phase13-hardening-design.md`](docs/superpowers/specs/2026-08-06-phase13-hardening-design.md).
+Status: **hardening pass in progress** (updated 2026-08-07). Sprite FPS baselines, longer soak, dirty world-sync skip, and soft Chromium avg-FPS floors for 2k/5k. Full C13 (30‑minute soak, multi-browser freeze, 1.0 publish) not closed. See [`docs/phase13-evidence.md`](docs/phase13-evidence.md) and [`docs/superpowers/plans/2026-08-07-c13-completion.md`](docs/superpowers/plans/2026-08-07-c13-completion.md).
 
 **Game-maker DX track (parallel, not a C13 claim):** public `createBrowserGame`, incremental `syncWorldToRenderer`, Mode Lite pooling, and `FlxG.actions`. See [`docs/dx-evidence.md`](docs/dx-evidence.md), [`docs/guides/making-games.md`](docs/guides/making-games.md), and [`docs/superpowers/plans/2026-08-07-game-maker-dx.md`](docs/superpowers/plans/2026-08-07-game-maker-dx.md).
 

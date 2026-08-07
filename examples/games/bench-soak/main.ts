@@ -1,7 +1,7 @@
 import { bootGame } from '../_kit/boot-game';
 import { SoakState } from './game';
 
-const CYCLES = 10;
+const CYCLES = 30;
 const RUN_MS = 750;
 
 declare global {

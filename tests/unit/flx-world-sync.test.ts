@@ -94,4 +94,31 @@ describe('syncWorldToRenderer', () => {
     syncWorldToRenderer(game, renderer);
     expect(renderer.registeredObjectCount).toBe(0);
   });
+
+  it('clears renderablesDirty after sync and sets it on add/remove', () => {
+    game = new FlxGame(640, 480, emptyState());
+    game.step();
+    const renderer = new FlxCameraRenderer(
+      fakeRenderer(),
+      new Container(),
+      game.context,
+    );
+    const state = requireState(game);
+
+    expect(game.context.renderablesDirty).toBe(true);
+    syncWorldToRenderer(game, renderer);
+    expect(game.context.renderablesDirty).toBe(false);
+
+    const sprite = new FlxSprite(0, 0);
+    state.add(sprite);
+    expect(game.context.renderablesDirty).toBe(true);
+    syncWorldToRenderer(game, renderer);
+    expect(game.context.renderablesDirty).toBe(false);
+    expect(renderer.registeredObjectCount).toBe(1);
+
+    state.remove(sprite);
+    expect(game.context.renderablesDirty).toBe(true);
+    syncWorldToRenderer(game, renderer);
+    expect(renderer.registeredObjectCount).toBe(0);
+  });
 });

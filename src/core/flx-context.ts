@@ -36,6 +36,11 @@ export class FlxContext {
   level = 0;
   score = 0;
   visualDebug = false;
+  /**
+   * When true, browser boot should re-run {@link syncWorldToRenderer}.
+   * Cleared after a successful sync. Group membership changes set this.
+   */
+  renderablesDirty = true;
   readonly randomSource: FlxRandom;
   readonly cameras: FlxCamera[] = [];
   readonly plugins: FlxBasic[] = [];
@@ -64,6 +69,16 @@ export class FlxContext {
     this.worldBounds = new FlxRect(-10, -10, width + 20, height + 20);
     this.camera = new FlxCamera(0, 0, width, height);
     this.cameras.push(this.camera);
+  }
+
+  /** Mark the active world's renderable membership as needing a renderer sync. */
+  markRenderablesDirty(): void {
+    this.renderablesDirty = true;
+  }
+
+  /** Clear the renderables dirty flag after syncing. */
+  clearRenderablesDirty(): void {
+    this.renderablesDirty = false;
   }
 
   get state(): FlxState | null {

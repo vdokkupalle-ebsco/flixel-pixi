@@ -28,8 +28,7 @@ barrel). Do not import `src/core/...` from game code.
 ## What the helper does each frame
 
 1. `game.advance(deltaSeconds)` (unless `FlxG.paused`)
-2. `syncWorldToRenderer(game, renderer)` — incremental add/remove of sprites,
-   tilemaps, and emitters found in the active state tree
+2. `syncWorldToRenderer(game, renderer)` when `game.context.renderablesDirty` — incremental add/remove of sprites, tilemaps, and emitters (skipped on frames with no membership changes)
 3. `renderer.render()`
 
 You do **not** need to call `syncRenderer()` after mid-state `this.add(sprite)`.

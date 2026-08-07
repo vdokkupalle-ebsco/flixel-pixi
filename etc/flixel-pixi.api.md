@@ -677,6 +677,7 @@ export class FlxContext {
     camera: FlxCamera;
     // (undocumented)
     readonly cameras: FlxCamera[];
+    clearRenderablesDirty(): void;
     // (undocumented)
     clearServices(): void;
     // (undocumented)
@@ -697,6 +698,7 @@ export class FlxContext {
     level: number;
     // (undocumented)
     readonly levels: unknown[];
+    markRenderablesDirty(): void;
     // (undocumented)
     paused: boolean;
     // (undocumented)
@@ -711,6 +713,7 @@ export class FlxContext {
     removePluginType<T extends FlxBasic>(pluginClass: abstract new (...args: never[]) => T): boolean;
     // (undocumented)
     removeService(token: symbol): boolean;
+    renderablesDirty: boolean;
     // (undocumented)
     requestState(state: FlxState): void;
     // (undocumented)

@@ -27,7 +27,13 @@ test.describe('Phase 13 — Sprite stress bench', () => {
       expect(Number.isFinite(metrics?.avgFps)).toBe(true);
       expect(Number.isFinite(metrics?.minFps)).toBe(true);
       expect(metrics?.avgFps ?? 0).toBeGreaterThan(0);
-      // Report-only: log, do not assert a floor
+      // Soft Chromium floors (avg only — minFps hitches remain report-only).
+      if (active === 2000) {
+        expect(metrics?.avgFps ?? 0).toBeGreaterThanOrEqual(60);
+      } else if (active === 5000) {
+        expect(metrics?.avgFps ?? 0).toBeGreaterThanOrEqual(30);
+      }
+      // 10k stays report-only until CI baselines stabilize
       console.log(`[phase13 bench active=${active}]`, metrics);
 
       await page.locator('[data-action="destroy"]').click();
@@ -40,26 +46,28 @@ test.describe('Phase 13 — Sprite stress bench', () => {
 });
 
 test.describe('Phase 13 — Boot/destroy soak', () => {
-  test('completes 10 cycles without errors or rising handle counts', async ({
+  test('completes 30 cycles without errors or rising handle counts', async ({
     page,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     await page.goto(`${GAMES}/bench-soak/`);
     await page.waitForFunction(
       () => window.__FLIXEL_PIXI_SOAK__?.done === true,
-      { timeout: 90_000 },
+      { timeout: 150_000 },
     );
 
     const soak = await page.evaluate(() => window.__FLIXEL_PIXI_SOAK__);
     expect(soak?.errors ?? ['missing']).toEqual([]);
-    expect(soak?.cycles).toBe(10);
-    expect(soak?.registeredSamples?.length).toBe(10);
+    expect(soak?.cycles).toBe(30);
+    expect(soak?.registeredSamples?.length).toBe(30);
 
-    const samples = soak!.registeredSamples;
+    const samples = soak?.registeredSamples ?? [];
+    const first = samples[0] ?? 0;
+    const last = samples[samples.length - 1] ?? 0;
     // No monotonic climb: last <= first + 2 (ε for noise)
-    expect(samples[samples.length - 1]!).toBeLessThanOrEqual(samples[0]! + 2);
-    for (let i = 1; i < samples.length; i += 1) {
-      expect(samples[i]!).toBeLessThanOrEqual(samples[0]! + 2);
+    expect(last).toBeLessThanOrEqual(first + 2);
+    for (const sample of samples) {
+      expect(sample).toBeLessThanOrEqual(first + 2);
     }
     console.log('[phase13 soak]', soak);
   });

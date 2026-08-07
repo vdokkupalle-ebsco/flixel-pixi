@@ -32,6 +32,7 @@ export function collectRenderables(
  * Synchronize renderer entries with the active state's renderables.
  * Adds missing objects; removes entries for objects no longer in the tree.
  * Does not clear and rebuild all handles.
+ * Clears {@link FlxContext.renderablesDirty} when a context is attached.
  * @public
  */
 export function syncWorldToRenderer(
@@ -53,4 +54,6 @@ export function syncWorldToRenderer(
   for (const object of desired) {
     renderer.add(object);
   }
+
+  game.context.clearRenderablesDirty();
 }

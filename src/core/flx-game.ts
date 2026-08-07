@@ -205,6 +205,7 @@ export class FlxGame implements FlxStateRuntime {
 
     try {
       nextState.create();
+      this.context.markRenderablesDirty();
     } catch (error: unknown) {
       nextState.destroy();
       this.#state = null;
