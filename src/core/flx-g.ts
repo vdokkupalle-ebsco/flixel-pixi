@@ -24,8 +24,9 @@ import type {
   FlxCameraEffectCallback,
   FlxCameraShakeDirection,
 } from './flx-camera';
-import { FLX_ACTIONS_SERVICE, type FlxContext } from './flx-context';
+import { FLX_ACTIONS_SERVICE, FLX_ATLAS_SERVICE, type FlxContext } from './flx-context';
 import { FlxActions } from '../input/flx-actions';
+import { FlxAtlasRegistry } from '../assets/flx-atlas-registry';
 
 import type { FlxGroup } from './flx-group';
 import type { FlxState } from './flx-state';
@@ -227,6 +228,22 @@ export class FlxG {
     if (instance === undefined) {
       instance = new FlxActions();
       FlxG.context.setService(FLX_ACTIONS_SERVICE, instance);
+    }
+    return instance;
+  }
+
+  /**
+   * The atlas registry. Load named atlases then look them up by key:
+   * ```ts
+   * await FlxG.atlas.load('player', './player.png', './player.xml');
+   * const atlas = FlxG.atlas.get('player');
+   * ```
+   */
+  static get atlas(): FlxAtlasRegistry {
+    let instance = FlxG.context.getService<FlxAtlasRegistry>(FLX_ATLAS_SERVICE);
+    if (instance === undefined) {
+      instance = new FlxAtlasRegistry();
+      FlxG.context.setService(FLX_ATLAS_SERVICE, instance);
     }
     return instance;
   }

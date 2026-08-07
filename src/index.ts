@@ -27,6 +27,19 @@ export type {
   FlxAssetManifest,
 } from './assets/flx-assets';
 export { FlxGraphic } from './assets/flx-graphic';
+
+// --- Atlas ---
+export { FlxAtlas } from './assets/flx-atlas';
+export { FlxAtlasRegistry } from './assets/flx-atlas-registry';
+export { FLX_ATLAS_SERVICE } from './core/flx-context';
+export type {
+  FlxAtlasFrame,
+  FlxAtlasFrameList,
+  FlxAtlasFrameRect,
+  FlxAtlasGridMeta,
+  FlxAtlasMeta,
+  FlxAtlasPrefixOptions,
+} from './assets/flx-atlas-frame';
 export { FlxContext } from './core/flx-context';
 export { FLX_CAMERA_HOST_SERVICE } from './core/flx-context';
 export type { FlxCameraHost, FlxStateRuntime } from './core/flx-context';
@@ -79,7 +92,7 @@ export { FlxParticle } from './objects/flx-particle';
 export { FlxEmitter } from './objects/flx-emitter';
 export type { FlxParticleConstructor } from './objects/flx-emitter';
 export { FlxSprite } from './objects/flx-sprite';
-export type { FlxAnimationCallback } from './objects/flx-sprite';
+export type { FlxAnimationCallback, FlxAnimationPlayOptions } from './objects/flx-sprite';
 export { FlxText } from './objects/flx-text';
 export type { FlxTextRenderMode } from './objects/flx-text';
 export { FlxTileblock } from './objects/flx-tileblock';

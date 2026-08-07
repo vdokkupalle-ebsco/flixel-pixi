@@ -16,6 +16,8 @@ export const FLX_CAMERA_HOST_SERVICE = Symbol('flixel-pixi.camera-host');
 /** Service token for the action input manager. @public */
 export const FLX_ACTIONS_SERVICE = Symbol('flixel-pixi.actions');
 
+/** Service token for the atlas registry. @public */
+export const FLX_ATLAS_SERVICE = Symbol('flixel-pixi.atlas');
 
 /** Runtime bridge installed by a `FlxGame` into its context. @public */
 export interface FlxStateRuntime {
