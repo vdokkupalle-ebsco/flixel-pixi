@@ -66,6 +66,7 @@ export class FlxGame implements FlxStateRuntime {
     this.updateFramerate = gameFramerate;
     this.useSystemCursor = useSystemCursor;
     this.context = new FlxContext(gameSizeX, gameSizeY);
+    this.context.updateFramerate = gameFramerate;
     this.context.attachRuntime(this);
     FlxG.installContext(this.context);
     this.input = new FlxInputManager(this.context, inputOptions);

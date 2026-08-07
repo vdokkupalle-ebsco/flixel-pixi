@@ -31,6 +31,11 @@ export class FlxContext {
   elapsed = 0;
   paused = false;
   timeScale = 1;
+  /**
+   * Fixed update rate of the active {@link FlxGame} (updates per second).
+   * Defaults to 60 before a game attaches; {@link FlxGame} overwrites this.
+   */
+  updateFramerate = 60;
   worldBounds: FlxRect;
   worldDivisions = 6;
   readonly levels: unknown[] = [];

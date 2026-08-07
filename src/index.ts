@@ -92,7 +92,11 @@ export { FlxParticle } from './objects/flx-particle';
 export { FlxEmitter } from './objects/flx-emitter';
 export type { FlxParticleConstructor } from './objects/flx-emitter';
 export { FlxSprite } from './objects/flx-sprite';
-export type { FlxAnimationCallback, FlxAnimationPlayOptions } from './objects/flx-sprite';
+export type {
+  FlxAnimationCallback,
+  FlxAnimationPlayOptions,
+  FlxAtlasAnimationOptions,
+} from './objects/flx-sprite';
 export { FlxText } from './objects/flx-text';
 export type { FlxTextRenderMode } from './objects/flx-text';
 export { FlxTileblock } from './objects/flx-tileblock';

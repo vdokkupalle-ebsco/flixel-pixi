@@ -2,7 +2,10 @@ import { Texture, type BLEND_MODES } from 'pixi.js';
 
 import { FlxGraphic } from '../assets/flx-graphic';
 import { bakeAtlasFrameStrip } from '../assets/flx-atlas-bake';
-import type { FlxAtlasFrame, FlxAtlasFrameList } from '../assets/flx-atlas-frame';
+import {
+  canvasSourceFromTexture,
+} from '../assets/flx-atlas';
+import type { FlxAtlasFrameList } from '../assets/flx-atlas-frame';
 import { makeGraphicPixels, type PixelBuffer } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
 import { FlxPoint } from '../math/flx-point';
@@ -40,24 +43,44 @@ export interface FlxAnimationPlayOptions {
   force?: boolean;
 }
 
+/**
+ * Options when registering an animation from {@link FlxAtlasFrameList}.
+ * @public
+ */
+export interface FlxAtlasAnimationOptions {
+  /** Output cell width when baking atlas frames into the sprite strip. */
+  frameWidth?: number;
+  /** Output cell height when baking atlas frames into the sprite strip. */
+  frameHeight?: number;
+}
+
 /** @internal Discriminator: is `frames` an atlas frame list? */
 function isAtlasFrameList(
   frames: readonly number[] | FlxAtlasFrameList,
 ): frames is FlxAtlasFrameList {
   return (
     frames.length > 0 &&
-    typeof (frames as FlxAtlasFrameList)[0] === 'object' &&
-    'texture' in (frames as FlxAtlasFrameList)[0]!
+    typeof frames[0] === 'object' &&
+    frames[0] !== null &&
+    'texture' in frames[0]
   );
 }
 
-/** Default game update rate used when no FlxGame is active. */
 const DEFAULT_FRAMERATE = 60;
 
 function resolveFramerate(): number {
-  // FlxG does not expose updateFramerate directly; use default.
-  // (FlxGame.updateFramerate is the source of truth but is not on FlxG.)
-  return DEFAULT_FRAMERATE;
+  if (!FlxG.hasContext) return DEFAULT_FRAMERATE;
+  const rate = FlxG.context.updateFramerate;
+  return Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_FRAMERATE;
+}
+
+interface AtlasStripSlot {
+  readonly key: string;
+  readonly source: CanvasImageSource;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 /** Renderer-neutral Flixel sprite state with adapter-owned Pixi views. @public */
@@ -92,6 +115,13 @@ export class FlxSprite extends FlxObject {
   #playbackLoop = true;
   /** Per-playback delay in seconds (set by play). 0 = freeze on frame 0. */
   #playbackDelay = 0;
+  /**
+   * Append-only atlas strip slots. Multiple atlas `addAnimation` calls share
+   * one graphic; indices stay stable because slots are only appended.
+   */
+  readonly #atlasStripSlots: AtlasStripSlot[] = [];
+  #atlasStripCellW = 0;
+  #atlasStripCellH = 0;
 
   constructor(x = 0, y = 0, simpleGraphic: FlxGraphic | Texture | null = null) {
     super(x, y);
@@ -221,18 +251,21 @@ export class FlxSprite extends FlxObject {
    * sprite.addAnimation('walk', [0, 1, 2], 12, true);
    * ```
    *
-   * **Atlas frame form (new):**
+   * **Atlas frame form:**
    * ```ts
-   * sprite.addAnimation('walk', atlas.framesByPrefix('walk_', 1, 2));
-   * // Bakes a horizontal strip internally; default loop=false, speed=1.
+   * sprite.addAnimation('walk', atlas.framesByPrefix('walk_', 1, 2), {
+   *   frameWidth: 64,
+   *   frameHeight: 128,
+   * });
    * ```
+   * Atlas frames are baked into a shared strip internally (append-only).
    *
    * Replaces any existing animation with the same name.
    */
   addAnimation(
     name: string,
     frames: readonly number[] | FlxAtlasFrameList,
-    frameRate?: number,
+    frameRateOrOptions?: number | FlxAtlasAnimationOptions,
     looped?: boolean,
   ): void {
     if (name.length === 0)
@@ -246,16 +279,32 @@ export class FlxSprite extends FlxObject {
     if (existingIdx >= 0) this.#animations.splice(existingIdx, 1);
 
     if (isAtlasFrameList(frames)) {
-      this.#addAnimationFromAtlas(name, frames);
+      const atlasOpts =
+        typeof frameRateOrOptions === 'object' && frameRateOrOptions !== null
+          ? frameRateOrOptions
+          : undefined;
+      this.#addAnimationFromAtlas(name, frames, atlasOpts);
     } else {
+      const frameRate =
+        typeof frameRateOrOptions === 'number' ? frameRateOrOptions : undefined;
       // Strip indices — validate each
       for (const frame of frames as readonly number[]) this.#validateFrame(frame);
       // 4-arg form: legacy frameRate/looped defaults; 2-arg form: speed=1/loop=false
       const useLegacyDefaults = frameRate !== undefined || looped !== undefined;
       const resolvedFrameRate = frameRate ?? 0;
       const resolvedLooped = useLegacyDefaults ? (looped ?? true) : false;
+      const defaultSpeed =
+        resolvedFrameRate > 0
+          ? resolvedFrameRate / resolveFramerate()
+          : 1;
       this.#animations.push(
-        new FlxAnim(name, frames as readonly number[], resolvedFrameRate, resolvedLooped, 1),
+        new FlxAnim(
+          name,
+          frames as readonly number[],
+          resolvedFrameRate,
+          resolvedLooped,
+          defaultSpeed,
+        ),
       );
     }
   }
@@ -493,67 +542,82 @@ export class FlxSprite extends FlxObject {
   // ── Private helpers ─────────────────────────────────────────────────────────
 
   /**
-   * Bake atlas frames into a horizontal strip graphic and register the
-   * animation with 0..n-1 indices. Default loop=false, speed=1.
+   * Bake atlas frames into a shared horizontal strip graphic and register the
+   * animation. Slots are append-only so earlier atlas animations keep working.
    */
-  #addAnimationFromAtlas(name: string, frames: FlxAtlasFrameList): void {
-    const first = frames[0]!;
-    const outW = first.texture.frame.width;
-    const outH = first.texture.frame.height;
-
-    // Build a canvas image source from the shared atlas base texture.
-    // PixiJS stores the GPU texture; for the bake we access it via the
-    // source's canvas/image resource if available, otherwise fall back to
-    // building a temporary canvas from the raw resource.
-    const atlasTexture = first.texture.source;
-
-    // Obtain a CanvasImageSource from the Pixi TextureSource.
-    // In browser (happy-dom / real browser) the resource can be:
-    //   - HTMLImageElement, HTMLCanvasElement, HTMLVideoElement (direct use)
-    //   - Uint8Array (BufferImageSource) → draw to an offscreen canvas first
-    let canvasSource: CanvasImageSource;
-    const resource = (atlasTexture as { resource?: unknown }).resource;
-    if (
-      resource instanceof HTMLImageElement ||
-      resource instanceof HTMLCanvasElement ||
-      resource instanceof HTMLVideoElement
-    ) {
-      canvasSource = resource;
-    } else {
-      // Fallback: render into an offscreen canvas using the atlas sub-textures.
-      // We reconstruct from the frame rects since we can't directly read GPU
-      // memory in all environments.
-      const offscreen = document.createElement('canvas');
-      const srcW = (atlasTexture as { width: number }).width ?? outW * frames.length;
-      const srcH = (atlasTexture as { height: number }).height ?? outH;
-      offscreen.width = srcW;
-      offscreen.height = srcH;
-      const ctx2d = offscreen.getContext('2d');
-      if (ctx2d !== null && resource instanceof Uint8Array) {
-        // Slice to produce a plain ArrayBuffer (never SharedArrayBuffer)
-        const plainBuffer = resource.buffer.slice(0) as ArrayBuffer;
-        const imgData = new ImageData(
-          new Uint8ClampedArray(plainBuffer),
-          srcW,
-          srcH,
-        );
-        ctx2d.putImageData(imgData, 0, 0);
-      }
-      canvasSource = offscreen;
+  #addAnimationFromAtlas(
+    name: string,
+    frames: FlxAtlasFrameList,
+    options?: FlxAtlasAnimationOptions,
+  ): void {
+    const first = frames[0];
+    if (first === undefined) {
+      throw new RangeError('Atlas animation requires at least one frame.');
+    }
+    const outW = options?.frameWidth ?? first.texture.frame.width;
+    const outH = options?.frameHeight ?? first.texture.frame.height;
+    if (outW <= 0 || outH <= 0) {
+      throw new RangeError('Atlas animation frameWidth/frameHeight must be positive.');
     }
 
-    const frameRects = frames.map((f: FlxAtlasFrame) => ({
-      height: f.texture.frame.height,
-      width: f.texture.frame.width,
-      x: f.texture.frame.x,
-      y: f.texture.frame.y,
-    }));
+    if (this.#atlasStripSlots.length === 0) {
+      this.#atlasStripCellW = outW;
+      this.#atlasStripCellH = outH;
+    } else if (
+      outW !== this.#atlasStripCellW ||
+      outH !== this.#atlasStripCellH
+    ) {
+      throw new RangeError(
+        `Atlas animation "${name}" frame size ${outW}×${outH} does not match ` +
+          `existing strip cell size ${this.#atlasStripCellW}×${this.#atlasStripCellH}.`,
+      );
+    }
 
-    const stripTexture = bakeAtlasFrameStrip(canvasSource, frameRects, outW, outH);
-    this.loadGraphic(stripTexture, true, false, outW, outH);
+    const indices: number[] = [];
+    let appended = false;
+    for (const frame of frames) {
+      const key = `${frame.name}@${frame.texture.frame.x},${frame.texture.frame.y},${frame.texture.frame.width}x${frame.texture.frame.height}->${outW}x${outH}`;
+      let slotIndex = this.#atlasStripSlots.findIndex((slot) => slot.key === key);
+      if (slotIndex < 0) {
+        const canvasSource = canvasSourceFromTexture(
+          new Texture({ source: frame.texture.source }),
+        );
+        slotIndex = this.#atlasStripSlots.length;
+        this.#atlasStripSlots.push({
+          height: frame.texture.frame.height,
+          key,
+          source: canvasSource,
+          width: frame.texture.frame.width,
+          x: frame.texture.frame.x,
+          y: frame.texture.frame.y,
+        });
+        appended = true;
+      }
+      indices.push(slotIndex);
+    }
 
-    const indices = Array.from({ length: frames.length }, (_, i) => i);
-    // Default for atlas-backed animations: loop=false, speed=1 (no legacy frameRate)
+    if (appended || this.#graphic === null) {
+      const cells = this.#atlasStripSlots.map((slot) => ({
+        height: slot.height,
+        source: slot.source,
+        width: slot.width,
+        x: slot.x,
+        y: slot.y,
+      }));
+      const stripTexture = bakeAtlasFrameStrip(
+        cells,
+        this.#atlasStripCellW,
+        this.#atlasStripCellH,
+      );
+      this.loadGraphic(
+        stripTexture,
+        true,
+        true,
+        this.#atlasStripCellW,
+        this.#atlasStripCellH,
+      );
+    }
+
     this.#animations.push(new FlxAnim(name, indices, 0, false, 1));
   }
 

@@ -65,6 +65,81 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
     sprite.destroy();
   });
 
+  it('two atlas animations share one append-only strip', () => {
+    const sprite = new FlxSprite();
+    const walk = buildFrameList(2, 8, 8);
+    const jump = buildFrameList(1, 8, 8).map((frame, i) => ({
+      ...frame,
+      name: `jump_${i}.png`,
+      // Offset the frame rect so keys differ from walk slots
+      texture: new Texture({
+        frame: new Rectangle(16 + i * 8, 0, 8, 8),
+        source: frame.texture.source,
+      }),
+    }));
+
+    const bakeSpy = vi.spyOn(atlasBAke, 'bakeAtlasFrameStrip').mockImplementation(
+      (cells, outW, outH) => {
+        const width = outW * cells.length;
+        const bytes = new Uint8Array(width * outH * 4);
+        return new Texture({
+          source: new BufferImageSource({
+            autoGenerateMipmaps: false,
+            height: outH,
+            resource: bytes,
+            scaleMode: 'nearest',
+            width,
+          }),
+        });
+      },
+    );
+
+    sprite.addAnimation('walk', walk);
+    expect(bakeSpy).toHaveBeenCalledTimes(1);
+    expect(sprite.frames).toBe(2);
+
+    sprite.addAnimation('jump', jump);
+    expect(bakeSpy).toHaveBeenCalledTimes(2);
+    expect(sprite.frames).toBe(3); // 2 walk + 1 jump appended
+
+    sprite.play('walk', { loop: true });
+    expect(sprite.animationName).toBe('walk');
+    sprite.play('jump', { force: true });
+    expect(sprite.animationName).toBe('jump');
+
+    sprite.destroy();
+  });
+
+  it('atlas addAnimation respects frameWidth/frameHeight options', () => {
+    const sprite = new FlxSprite();
+    const frames = buildFrameList(2, 16, 32);
+    vi.spyOn(atlasBAke, 'bakeAtlasFrameStrip').mockImplementation(
+      (cells, outW, outH) => {
+        const width = outW * cells.length;
+        const bytes = new Uint8Array(width * outH * 4);
+        return new Texture({
+          source: new BufferImageSource({
+            autoGenerateMipmaps: false,
+            height: outH,
+            resource: bytes,
+            scaleMode: 'nearest',
+            width,
+          }),
+        });
+      },
+    );
+
+    sprite.addAnimation('walk', frames, { frameWidth: 8, frameHeight: 16 });
+    expect(atlasBAke.bakeAtlasFrameStrip).toHaveBeenCalledWith(
+      expect.any(Array),
+      8,
+      16,
+    );
+    expect(sprite.frameWidth).toBe(8);
+    expect(sprite.frameHeight).toBe(16);
+    sprite.destroy();
+  });
+
   it('play with options object: loop defaults to false, speed defaults to 1', () => {
     const sprite = new FlxSprite();
     sprite.makeGraphic(16, 8);

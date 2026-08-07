@@ -24,47 +24,61 @@ export class FlxAtlasRegistry {
    * `meta` can be:
    * - A URL string ending in `.json` → TexturePacker/Pixi JSON format.
    * - Any other URL string → TextureAtlas XML format.
+   * - Inline XML / JSON text (starts with `<` or `{`) → parsed directly.
    * - A `{ frameWidth, frameHeight }` object → uniform fixed-size grid.
    *
    * @public
    */
-  async load(key: string, imageUrl: string, meta: FlxAtlasMeta): Promise<FlxAtlas> {
-    // 1. Load image
+  async load(
+    key: string,
+    imageUrl: string,
+    meta: FlxAtlasMeta,
+  ): Promise<FlxAtlas> {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
-      img.onerror = () => reject(new Error(`FlxAtlas: failed to load image "${imageUrl}".`));
+      img.onerror = () =>
+        reject(new Error(`FlxAtlas: failed to load image "${imageUrl}".`));
       img.src = imageUrl;
     });
 
-    // 2. Build a base Pixi Texture from the loaded image
     const baseTexture = Texture.from(img);
 
-    // 3. Parse frame rects
     let rects;
     if (typeof meta === 'string') {
-      const isJson =
-        meta.endsWith('.json') ||
-        meta.startsWith('{');
+      const trimmed = meta.trim();
+      const inlineXml = trimmed.startsWith('<');
+      const inlineJson = trimmed.startsWith('{') || trimmed.startsWith('[');
       let text: string;
-      try {
-        const response = await fetch(meta);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} loading atlas meta "${meta}".`);
+      let isJson: boolean;
+
+      if (inlineXml || inlineJson) {
+        text = meta;
+        isJson = inlineJson;
+      } else {
+        isJson = meta.endsWith('.json');
+        try {
+          const response = await fetch(meta);
+          if (!response.ok) {
+            throw new Error(
+              `HTTP ${response.status} loading atlas meta "${meta}".`,
+            );
+          }
+          text = await response.text();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          throw new Error(
+            `FlxAtlas: could not fetch atlas meta "${meta}". ${message}`,
+            { cause: err },
+          );
         }
-        text = await response.text();
-      } catch (err) {
-        throw new Error(
-          `FlxAtlas: could not fetch atlas meta "${meta}". ` +
-            String(err instanceof Error ? err.message : err),
-        );
       }
+
       rects = isJson
         ? parseTextureAtlasJson(text)
         : parseTextureAtlasXml(text);
     } else {
-      // Grid meta
       const grid = meta as FlxAtlasGridMeta;
       rects = parseFixedGridAtlas(
         baseTexture.width,
@@ -74,7 +88,6 @@ export class FlxAtlasRegistry {
       );
     }
 
-    // 4. Build FlxAtlas and store
     const atlas = FlxAtlas.fromTextureAndRects(key, baseTexture, rects);
     this.#atlases.set(key, atlas);
     return atlas;

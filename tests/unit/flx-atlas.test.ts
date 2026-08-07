@@ -5,6 +5,7 @@ import { BufferImageSource, Texture } from 'pixi.js';
 import { FlxAtlas } from '../../src/assets/flx-atlas';
 import { FlxAtlasRegistry } from '../../src/assets/flx-atlas-registry';
 import type { FlxAtlasFrameRect } from '../../src/assets/flx-atlas-frame';
+import * as atlasBake from '../../src/assets/flx-atlas-bake';
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
@@ -195,5 +196,31 @@ describe('FlxAtlasRegistry', () => {
     expect(registry.has('tiles')).toBe(false);
 
     globalThis.Image = originalImage;
+  });
+});
+
+describe('FlxAtlas.makeGraphic', () => {
+  it('delegates to bakeAtlasFrameStrip with scaled cell size', () => {
+    const atlas = makeAtlas([
+      { height: 16, name: 'a.png', width: 16, x: 0, y: 0 },
+      { height: 16, name: 'b.png', width: 16, x: 16, y: 0 },
+    ]);
+    const strip = makeTexture(24, 8);
+    const spy = vi.spyOn(atlasBake, 'bakeAtlasFrameStrip').mockReturnValue(strip);
+
+    const result = atlas.makeGraphic(
+      [null, atlas.getFrame('a'), atlas.getFrame('b')],
+      8,
+      8,
+    );
+    expect(result).toBe(strip);
+    expect(spy).toHaveBeenCalledWith(expect.any(Array), 8, 8);
+    expect(spy.mock.calls[0]?.[0]).toHaveLength(3);
+  });
+
+  it('rejects empty or all-null frame lists', () => {
+    const atlas = makeAtlas([{ height: 8, name: 'a.png', width: 8, x: 0, y: 0 }]);
+    expect(() => atlas.makeGraphic([])).toThrow(RangeError);
+    expect(() => atlas.makeGraphic([null, null])).toThrow(RangeError);
   });
 });

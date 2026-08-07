@@ -120,12 +120,21 @@ const idle = playerAtlas.getFrame('idle');
 ### Registering animations from atlas frames
 
 Pass a `FlxAtlasFrameList` directly to `addAnimation`. The engine bakes the
-frames into a horizontal strip internally — no manual canvas work needed:
+frames into a horizontal strip internally — games never call bake helpers:
 
 ```ts
 sprite.addAnimation('walk', playerAtlas.framesByPrefix('walk_', 1, 2));
 sprite.addAnimation('jump', playerAtlas.framesByNumber(4, 6));
+
+// Optional: scale frames while baking (e.g. half-size art for 64px tiles)
+sprite.addAnimation('walk', playerAtlas.framesByPrefix('walk_', 1, 2), {
+  frameWidth: 64,
+  frameHeight: 128,
+});
 ```
+
+For tilemaps and single-frame items, use `atlas.makeGraphic(...)` then
+`loadGraphic` / `loadMap` — still no internal bake API.
 
 ### Unified `play` API
 

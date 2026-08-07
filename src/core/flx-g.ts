@@ -232,17 +232,27 @@ export class FlxG {
     return instance;
   }
 
+  /** Process-wide fallback so atlases can load before a FlxGame exists. */
+  static #atlasFallback: FlxAtlasRegistry | null = null;
+
   /**
    * The atlas registry. Load named atlases then look them up by key:
    * ```ts
    * await FlxG.atlas.load('player', './player.png', './player.xml');
    * const atlas = FlxG.atlas.get('player');
    * ```
+   * Safe to call before `FlxGame` boots — a shared fallback registry is used
+   * and then attached to the active context when one appears.
    */
   static get atlas(): FlxAtlasRegistry {
+    if (!FlxG.hasContext) {
+      FlxG.#atlasFallback ??= new FlxAtlasRegistry();
+      return FlxG.#atlasFallback;
+    }
     let instance = FlxG.context.getService<FlxAtlasRegistry>(FLX_ATLAS_SERVICE);
     if (instance === undefined) {
-      instance = new FlxAtlasRegistry();
+      instance = FlxG.#atlasFallback ?? new FlxAtlasRegistry();
+      FlxG.#atlasFallback = instance;
       FlxG.context.setService(FLX_ATLAS_SERVICE, instance);
     }
     return instance;

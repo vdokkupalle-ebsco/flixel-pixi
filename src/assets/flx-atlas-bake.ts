@@ -1,20 +1,32 @@
 import { BufferImageSource, Texture } from 'pixi.js';
 
+/** One cell to blit into a horizontal strip. @internal */
+export interface FlxAtlasBakeCell {
+  readonly source: CanvasImageSource;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 /**
  * Bake an ordered list of source regions into a single horizontal-strip Texture.
- * Transparent (null) slots are left blank.
- *
- * All non-null frames must have the same dimensions (outW × outH).
- * The resulting canvas is `(outW * frames.length) × outH`.
+ * `null` cells are left fully transparent.
  *
  * @internal
  */
 export function bakeAtlasFrameStrip(
-  source: CanvasImageSource,
-  frames: readonly ({ x: number; y: number; width: number; height: number } | null)[],
+  frames: readonly (FlxAtlasBakeCell | null)[],
   outW: number,
   outH: number,
 ): Texture {
+  if (frames.length === 0) {
+    throw new RangeError('bakeAtlasFrameStrip requires at least one cell');
+  }
+  if (outW <= 0 || outH <= 0) {
+    throw new RangeError('bakeAtlasFrameStrip out dimensions must be positive');
+  }
+
   const canvas = document.createElement('canvas');
   canvas.width = outW * frames.length;
   canvas.height = outH;
@@ -31,7 +43,7 @@ export function bakeAtlasFrameStrip(
     const frame = frames[i];
     if (frame == null) continue;
     ctx.drawImage(
-      source,
+      frame.source,
       frame.x,
       frame.y,
       frame.width,
@@ -43,7 +55,6 @@ export function bakeAtlasFrameStrip(
     );
   }
 
-  // Read back as Uint8Array for Pixi's BufferImageSource
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const bytes = new Uint8Array(imageData.data.buffer);
 

@@ -1,5 +1,9 @@
 import { Rectangle, Texture } from 'pixi.js';
 
+import {
+  bakeAtlasFrameStrip,
+  type FlxAtlasBakeCell,
+} from './flx-atlas-bake';
 import type {
   FlxAtlasFrame,
   FlxAtlasFrameList,
@@ -54,7 +58,8 @@ export class FlxAtlas {
     const ordered: FlxAtlasFrame[] = [];
 
     for (let i = 0; i < rects.length; i += 1) {
-      const rect = rects[i]!;
+      const rect = rects[i];
+      if (rect === undefined) continue;
       const frame = new Rectangle(rect.x, rect.y, rect.width, rect.height);
       const sub = new Texture({
         frame,
@@ -149,7 +154,40 @@ export class FlxAtlas {
     return result;
   }
 
-  // ── private helpers ────────────────────────────────────────────────────────
+  /**
+   * Build a Flixel strip {@link Texture} for `loadGraphic` / tilemaps.
+   * Pass `null` for a fully transparent cell (e.g. tilemap air = index 0).
+   * Optional `frameWidth` / `frameHeight` scale cells while copying.
+   *
+   * @public
+   */
+  makeGraphic(
+    frames: readonly (FlxAtlasFrame | null)[],
+    frameWidth?: number,
+    frameHeight?: number,
+  ): Texture {
+    if (frames.length === 0) {
+      throw new RangeError('makeGraphic requires at least one cell');
+    }
+    const sample = frames.find((f) => f !== null);
+    if (sample === undefined) {
+      throw new RangeError('makeGraphic requires at least one non-null frame');
+    }
+    const width = frameWidth ?? sample.texture.frame.width;
+    const height = frameHeight ?? sample.texture.frame.height;
+    const source = canvasSourceFromTexture(this.texture);
+    const cells: (FlxAtlasBakeCell | null)[] = frames.map((frame) => {
+      if (frame === null) return null;
+      return {
+        height: frame.texture.frame.height,
+        source,
+        width: frame.texture.frame.width,
+        x: frame.texture.frame.x,
+        y: frame.texture.frame.y,
+      };
+    });
+    return bakeAtlasFrameStrip(cells, width, height);
+  }
 
   #resolve(name: string): FlxAtlasFrame {
     const frame =
@@ -173,6 +211,36 @@ export class FlxAtlas {
         `FlxAtlas "${this.key}": index ${index} is out of range 0..${this.#ordered.length - 1}.`,
       );
     }
-    return this.#ordered[index]!;
+    return this.#ordered[index] as FlxAtlasFrame;
   }
+}
+
+/** @internal */
+export function canvasSourceFromTexture(texture: Texture): CanvasImageSource {
+  const atlasTexture = texture.source;
+  const resource = (atlasTexture as { resource?: unknown }).resource;
+  if (
+    resource instanceof HTMLImageElement ||
+    resource instanceof HTMLCanvasElement ||
+    resource instanceof HTMLVideoElement
+  ) {
+    return resource;
+  }
+
+  const offscreen = document.createElement('canvas');
+  const srcW = (atlasTexture as { width: number }).width ?? texture.width;
+  const srcH = (atlasTexture as { height: number }).height ?? texture.height;
+  offscreen.width = srcW;
+  offscreen.height = srcH;
+  const ctx2d = offscreen.getContext('2d');
+  if (ctx2d !== null && resource instanceof Uint8Array) {
+    const plainBuffer = resource.buffer.slice(0) as ArrayBuffer;
+    const imgData = new ImageData(
+      new Uint8ClampedArray(plainBuffer),
+      srcW,
+      srcH,
+    );
+    ctx2d.putImageData(imgData, 0, 0);
+  }
+  return offscreen;
 }
