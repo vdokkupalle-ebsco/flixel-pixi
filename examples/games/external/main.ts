@@ -49,7 +49,8 @@ bootGame({
       enemyCount() {
         const state = app.game.state;
         if (!(state instanceof ModePlayState)) return 0;
-        return state.enemies.members.filter((e) => e !== null && e.exists).length;
+        return state.enemies.members.filter((e) => e !== null && e.exists)
+          .length;
       },
       registeredCount() {
         return app.renderer.registeredObjectCount;

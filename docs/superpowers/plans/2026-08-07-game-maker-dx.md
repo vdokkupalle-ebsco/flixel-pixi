@@ -21,32 +21,34 @@
 
 ## File map
 
-| Path | Responsibility |
-| ---- | -------------- |
-| `src/rendering/flx-world-sync.ts` | Diff state renderables ↔ renderer entries; add/remove |
-| `src/browser/create-browser-game.ts` | Public Pixi+FlxGame+sync+destroy boot |
-| `src/index.ts` (or `src/browser.ts` + export map) | Export boot + world sync |
-| `src/input/flx-actions.ts` | Named action → key bindings |
-| `src/core/flx-g.ts` / audio-style service wiring | Expose `FlxG.actions` |
-| `src/core/flx-typed-group.ts` (or helpers in `flx-group.ts`) | Typed recycle helper if needed |
-| `examples/games/_kit/boot-game.ts` | Re-export public boot or thin wrapper |
-| `examples/games/external/game.ts` | Enemy pool via recycle |
-| `docs/guides/lifecycle.md`, `making-games.md` | Author docs |
-| `tests/unit/flx-world-sync.test.ts` | Diff sync contracts |
-| `tests/unit/flx-actions.test.ts` | Action bindings |
-| `tests/browser/phase12.spec.ts` | External enemies still register |
+| Path                                                         | Responsibility                                        |
+| ------------------------------------------------------------ | ----------------------------------------------------- |
+| `src/rendering/flx-world-sync.ts`                            | Diff state renderables ↔ renderer entries; add/remove |
+| `src/browser/create-browser-game.ts`                         | Public Pixi+FlxGame+sync+destroy boot                 |
+| `src/index.ts` (or `src/browser.ts` + export map)            | Export boot + world sync                              |
+| `src/input/flx-actions.ts`                                   | Named action → key bindings                           |
+| `src/core/flx-g.ts` / audio-style service wiring             | Expose `FlxG.actions`                                 |
+| `src/core/flx-typed-group.ts` (or helpers in `flx-group.ts`) | Typed recycle helper if needed                        |
+| `examples/games/_kit/boot-game.ts`                           | Re-export public boot or thin wrapper                 |
+| `examples/games/external/game.ts`                            | Enemy pool via recycle                                |
+| `docs/guides/lifecycle.md`, `making-games.md`                | Author docs                                           |
+| `tests/unit/flx-world-sync.test.ts`                          | Diff sync contracts                                   |
+| `tests/unit/flx-actions.test.ts`                             | Action bindings                                       |
+| `tests/browser/phase12.spec.ts`                              | External enemies still register                       |
 
 ---
 
 ### Task 1: World sync (incremental renderer diff)
 
 **Files:**
+
 - Create: `src/rendering/flx-world-sync.ts`
 - Create: `tests/unit/flx-world-sync.test.ts`
 - Modify: `src/index.ts` (export)
 - Modify: `examples/games/_kit/boot-game.ts` (use world sync instead of count-only full clear)
 
 **Interfaces:**
+
 - Consumes: `FlxGame`, `FlxState`/`FlxGroup` tree, `FlxCameraRenderer.add/remove`, `FlxSprite` | `FlxTilemap` | `FlxEmitter`
 - Produces:
 
@@ -206,6 +208,7 @@ EOF
 ### Task 2: Public `createBrowserGame` boot API
 
 **Files:**
+
 - Create: `src/browser/create-browser-game.ts`
 - Modify: `package.json` `exports` if using subpath; else export from `src/index.ts`
 - Modify: `examples/games/_kit/boot-game.ts` → re-export / thin adapter
@@ -219,8 +222,8 @@ EOF
 export interface CreateBrowserGameOptions {
   host: HTMLElement;
   initialState: FlxStateConstructor;
-  width?: number;   // default 640
-  height?: number;  // default 480
+  width?: number; // default 640
+  height?: number; // default 480
   title?: string;
   showPreloader?: boolean;
   backgroundColor?: number;
@@ -317,6 +320,7 @@ EOF
 ### Task 3: Pooling DX + Mode Lite enemy recycle
 
 **Files:**
+
 - Create or modify: `src/core/flx-typed-group.ts` **only if** `FlxGroup<Enemy>` + `recycle(Enemy)` is insufficient — prefer documenting + using existing APIs first
 - Modify: `examples/games/external/game.ts`
 - Modify: `tests/browser/phase12.spec.ts` (keep enemy visibility assert)
@@ -367,6 +371,7 @@ EOF
 ### Task 4: Thin `FlxActions` keyboard bindings
 
 **Files:**
+
 - Create: `src/input/flx-actions.ts`
 - Create: `tests/unit/flx-actions.test.ts`
 - Modify: `src/core/flx-g.ts` (or input service) to expose `FlxG.actions`
@@ -431,6 +436,7 @@ EOF
 ### Task 5: Docs rollup + DX evidence note
 
 **Files:**
+
 - Modify: `docs/guides/lifecycle.md`, `extensions.md`, `README.md` (pointer)
 - Create: `docs/dx-evidence.md` (short: what shipped, tests run)
 - Modify: `PORTING_PLAN.md` — note “Game-maker DX track” under Phase 13 or a short subsection (not a new C-gate)

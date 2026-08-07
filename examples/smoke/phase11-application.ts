@@ -41,7 +41,12 @@ class PlayState extends FlxState {
     title.setFormat(undefined, 16, 0xfacc15, 'left');
     this.add(title);
 
-    const hint = new FlxText(20, 38, 600, 'Open the debugger panel below. Watch player.x and player.y live.');
+    const hint = new FlxText(
+      20,
+      38,
+      600,
+      'Open the debugger panel below. Watch player.x and player.y live.',
+    );
     hint.setFormat(undefined, 11, 0xff94a3b8, 'left');
     this.add(hint);
 
@@ -53,8 +58,16 @@ class PlayState extends FlxState {
     }
 
     // Register watch entries
-    FlxG.watch.add(this.player as unknown as Record<string, unknown>, 'x', 'player.x');
-    FlxG.watch.add(this.player as unknown as Record<string, unknown>, 'y', 'player.y');
+    FlxG.watch.add(
+      this.player as unknown as Record<string, unknown>,
+      'x',
+      'player.x',
+    );
+    FlxG.watch.add(
+      this.player as unknown as Record<string, unknown>,
+      'y',
+      'player.y',
+    );
     FlxG.watch.add(
       this.player.velocity as unknown as Record<string, unknown>,
       'x',
@@ -70,15 +83,27 @@ class PlayState extends FlxState {
   override update(): void {
     this.frameCount++;
 
-    if (FlxG.keys.pressed('LEFT'))  this.player.velocity.x = -240;
-    if (FlxG.keys.pressed('RIGHT')) this.player.velocity.x =  240;
-    if (FlxG.keys.pressed('UP'))    this.player.velocity.y = -240;
-    if (FlxG.keys.pressed('DOWN'))  this.player.velocity.y =  240;
+    if (FlxG.keys.pressed('LEFT')) this.player.velocity.x = -240;
+    if (FlxG.keys.pressed('RIGHT')) this.player.velocity.x = 240;
+    if (FlxG.keys.pressed('UP')) this.player.velocity.y = -240;
+    if (FlxG.keys.pressed('DOWN')) this.player.velocity.y = 240;
 
-    if (this.player.x <= 10)  { this.player.x = 10;  this.player.velocity.x =  Math.abs(this.player.velocity.x); }
-    if (this.player.x >= 590) { this.player.x = 590; this.player.velocity.x = -Math.abs(this.player.velocity.x); }
-    if (this.player.y <= 40)  { this.player.y = 40;  this.player.velocity.y =  Math.abs(this.player.velocity.y); }
-    if (this.player.y >= 430) { this.player.y = 430; this.player.velocity.y = -Math.abs(this.player.velocity.y); }
+    if (this.player.x <= 10) {
+      this.player.x = 10;
+      this.player.velocity.x = Math.abs(this.player.velocity.x);
+    }
+    if (this.player.x >= 590) {
+      this.player.x = 590;
+      this.player.velocity.x = -Math.abs(this.player.velocity.x);
+    }
+    if (this.player.y <= 40) {
+      this.player.y = 40;
+      this.player.velocity.y = Math.abs(this.player.velocity.y);
+    }
+    if (this.player.y >= 430) {
+      this.player.y = 430;
+      this.player.velocity.y = -Math.abs(this.player.velocity.y);
+    }
 
     // Log ball position every 120 frames (~2 s at 60 FPS)
     if (this.frameCount % 120 === 0) {
@@ -108,7 +133,6 @@ export interface Phase11Application {
 export async function bootPhase11Demo(
   host: HTMLElement,
 ): Promise<Phase11Application> {
-
   // ── Preloader ──────────────────────────────────────────────────────────────
   const preloader = new FlxPreloader({ title: 'Phase 11 Debugger Lab' });
   preloader.setProgress(10, 'Setting up renderer…');
@@ -119,7 +143,10 @@ export async function bootPhase11Demo(
     const interval = setInterval(() => {
       pct += 30;
       preloader.setProgress(pct, pct < 100 ? `Loading… (${pct}%)` : 'Done!');
-      if (pct >= 100) { clearInterval(interval); resolve(); }
+      if (pct >= 100) {
+        clearInterval(interval);
+        resolve();
+      }
     }, 600);
   });
 
@@ -132,16 +159,17 @@ export async function bootPhase11Demo(
     resolution: Math.min(window.devicePixelRatio, 2),
     autoDensity: true,
   });
-  app.canvas.style.cssText = 'width:100%;height:100%;display:block;object-fit:contain';
+  app.canvas.style.cssText =
+    'width:100%;height:100%;display:block;object-fit:contain';
   host.replaceChildren(app.canvas);
 
   preloader.setProgress(100, 'Ready!');
 
   // ── Game ──────────────────────────────────────────────────────────────────
-  const game = new FlxGame(
-    640, 480, PlayState, 1, 60, 30, false,
-    { pointerTarget: app.canvas, keyboardTarget: window },
-  );
+  const game = new FlxGame(640, 480, PlayState, 1, 60, 30, false, {
+    pointerTarget: app.canvas,
+    keyboardTarget: window,
+  });
 
   activeRenderer = new FlxCameraRenderer(app.renderer, app.stage, game.context);
   game.step(1 / 60);
@@ -160,12 +188,27 @@ export async function bootPhase11Demo(
   // ── Debugger ──────────────────────────────────────────────────────────────
   const dbg = new FlxDebugger({ container: document.body });
   dbg.setVCRCallbacks({
-    record:    () => { FlxG.recordReplay(false); },
-    stop:      () => { FlxG.stopRecording(); },
-    play:      () => { if (FlxG.vcr.replay) FlxG.loadReplay(FlxG.vcr.replay, new PlayState()); FlxG.paused = false; },
-    rewind:    () => { FlxG.paused = true; FlxG.reloadReplay(); },
-    stepFrame: () => { FlxG.paused = true; FlxG.vcr.stepRequested = true; game.step(1 / 60); activeRenderer?.render(); },
-    getVCR:    () => FlxG.vcr,
+    record: () => {
+      FlxG.recordReplay(false);
+    },
+    stop: () => {
+      FlxG.stopRecording();
+    },
+    play: () => {
+      if (FlxG.vcr.replay) FlxG.loadReplay(FlxG.vcr.replay, new PlayState());
+      FlxG.paused = false;
+    },
+    rewind: () => {
+      FlxG.paused = true;
+      FlxG.reloadReplay();
+    },
+    stepFrame: () => {
+      FlxG.paused = true;
+      FlxG.vcr.stepRequested = true;
+      game.step(1 / 60);
+      activeRenderer?.render();
+    },
+    getVCR: () => FlxG.vcr,
   });
   dbg.subscribeToChannel(game.debugChannel, game.log, game.watch);
 
@@ -184,7 +227,10 @@ export async function bootPhase11Demo(
 
   // Initial log message
   FlxG.log.add('Phase 11 Debugger Lab ready. Ball bouncing!', 0xff38bdf8);
-  FlxG.log.add('Use arrow keys to steer. Watch panel shows live position.', 0xffcbd5e1);
+  FlxG.log.add(
+    'Use arrow keys to steer. Watch panel shows live position.',
+    0xffcbd5e1,
+  );
 
   return {
     game,

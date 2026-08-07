@@ -59,7 +59,10 @@ class PlayState extends FlxState {
     // Pointer Marker (20x20 magenta square)
     const markerPixels = makeGraphicPixels(20, 20, 0xffec4899);
     const markerGraphic = FlxGraphic.fromPixels(markerPixels, 'phase10-marker');
-    this.pointerMarker = new FlxSprite(snap?.markerX ?? -100, snap?.markerY ?? -100);
+    this.pointerMarker = new FlxSprite(
+      snap?.markerX ?? -100,
+      snap?.markerY ?? -100,
+    );
     this.pointerMarker.loadGraphic(markerGraphic);
     this.add(this.pointerMarker);
 

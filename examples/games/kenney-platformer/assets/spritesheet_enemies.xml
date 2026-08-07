@@ -15,8 +15,8 @@
 	<SubTexture name="fishPink_dead.png" x="260" y="1560" width="128" height="128"/>
 	<SubTexture name="fishPink_move.png" x="260" y="1430" width="128" height="128"/>
 	<SubTexture name="fly.png" x="260" y="1300" width="128" height="128"/>
-	<SubTexture name="fly_dead.png" x="260" y="1170" width="128" height="128"/>
-	<SubTexture name="fly_move.png" x="260" y="1040" width="128" height="128"/>
+	<SubTexture name="fly_move.png" x="260" y="1170" width="128" height="128"/>
+	<SubTexture name="fly_dead.png" x="260" y="1040" width="128" height="128"/>
 	<SubTexture name="frog.png" x="260" y="910" width="128" height="128"/>
 	<SubTexture name="frog_dead.png" x="260" y="780" width="128" height="128"/>
 	<SubTexture name="frog_move.png" x="260" y="650" width="128" height="128"/>

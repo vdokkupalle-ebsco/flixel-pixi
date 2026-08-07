@@ -165,7 +165,10 @@ export type { LogEntry } from './debugger/flx-log';
 export { FlxWatch, FLX_WATCH_SERVICE } from './debugger/flx-watch';
 export type { WatchEntry, WatchSnapshot } from './debugger/flx-watch';
 export { FlxPreloader } from './debugger/flx-preloader';
-export type { FlxPreloaderOptions, PreloaderState } from './debugger/flx-preloader';
+export type {
+  FlxPreloaderOptions,
+  PreloaderState,
+} from './debugger/flx-preloader';
 export { FlxDebugger } from './debugger/flx-debugger';
 export type {
   FlxDebuggerOptions,
@@ -176,9 +179,7 @@ export { FlxActions } from './input/flx-actions';
 
 // --- Game Maker DX ---
 
-export {
-  createBrowserGame,
-} from './browser/create-browser-game';
+export { createBrowserGame } from './browser/create-browser-game';
 export type {
   BrowserGameApplication,
   CreateBrowserGameOptions,
@@ -188,4 +189,3 @@ export {
   syncWorldToRenderer,
 } from './rendering/flx-world-sync';
 export type { FlxRenderable } from './rendering/flx-world-sync';
-

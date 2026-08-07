@@ -24,7 +24,11 @@ import type {
   FlxCameraEffectCallback,
   FlxCameraShakeDirection,
 } from './flx-camera';
-import { FLX_ACTIONS_SERVICE, FLX_ATLAS_SERVICE, type FlxContext } from './flx-context';
+import {
+  FLX_ACTIONS_SERVICE,
+  FLX_ATLAS_SERVICE,
+  type FlxContext,
+} from './flx-context';
 import { FlxActions } from '../input/flx-actions';
 import { FlxAtlasRegistry } from '../assets/flx-atlas-registry';
 
@@ -257,7 +261,6 @@ export class FlxG {
     }
     return instance;
   }
-
 
   static get #audio(): FlxAudioService {
     const audio = FlxG.context.getService<FlxAudioService>(FLX_AUDIO_SERVICE);

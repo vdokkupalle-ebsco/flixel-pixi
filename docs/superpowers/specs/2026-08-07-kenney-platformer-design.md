@@ -37,25 +37,25 @@ Authors currently have Kenney’s pack only as an untracked dump at repo root (`
 
 ## 4. Decisions (locked)
 
-| Decision | Choice |
-| --- | --- |
-| Location | **New** sample: `examples/games/kenney-platformer/` |
-| Scope | Full Mode-lite: long side-scroller, pits, slime + fly, coins, lives, flag goal, win/lose |
-| Loading | Kenney XML+PNG atlases → bake strips → `FlxTilemap` / `loadGraphic` |
-| Theme | Grass ground; **blue alien** player; **slimeGreen** + **fly** enemies; gold coins; green flag |
-| Assets | **Copy curated files into the game folder** under `assets/` |
-| Pack at root | Leave `platform-game-assets/` untracked; use only as copy source during implementation |
-| Jump feel | Port Paragon helpers from `examples/games/platformer/game.ts` (coyote, buffer, early fall, apex gravity, sticky feet) |
-| Boot | `bootGame` from `examples/games/_kit/boot-game.ts` (same as other samples) |
-| Resolution | **640×480** (match other games samples) |
+| Decision     | Choice                                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Location     | **New** sample: `examples/games/kenney-platformer/`                                                                   |
+| Scope        | Full Mode-lite: long side-scroller, pits, slime + fly, coins, lives, flag goal, win/lose                              |
+| Loading      | Kenney XML+PNG atlases → bake strips → `FlxTilemap` / `loadGraphic`                                                   |
+| Theme        | Grass ground; **blue alien** player; **slimeGreen** + **fly** enemies; gold coins; green flag                         |
+| Assets       | **Copy curated files into the game folder** under `assets/`                                                           |
+| Pack at root | Leave `platform-game-assets/` untracked; use only as copy source during implementation                                |
+| Jump feel    | Port Paragon helpers from `examples/games/platformer/game.ts` (coyote, buffer, early fall, apex gravity, sticky feet) |
+| Boot         | `bootGame` from `examples/games/_kit/boot-game.ts` (same as other samples)                                            |
+| Resolution   | **640×480** (match other games samples)                                                                               |
 
 ## 5. Approaches considered
 
-| Approach | Pros | Cons |
-| --- | --- | --- |
-| **1. New sample beside procedural (chosen)** | Clear roles; no Phase 12 regressions | Two platformers to maintain |
-| 2. Replace `platformer/` | One sample | Loses jump-feel lab + breaks Phase 12 tests |
-| 3. Shared kit atlas helpers first | Reusable | Overbuilds API before the game is fun |
+| Approach                                     | Pros                                 | Cons                                        |
+| -------------------------------------------- | ------------------------------------ | ------------------------------------------- |
+| **1. New sample beside procedural (chosen)** | Clear roles; no Phase 12 regressions | Two platformers to maintain                 |
+| 2. Replace `platformer/`                     | One sample                           | Loses jump-feel lab + breaks Phase 12 tests |
+| 3. Shared kit atlas helpers first            | Reusable                             | Overbuilds API before the game is fun       |
 
 ## 6. Architecture
 
@@ -142,34 +142,34 @@ Kenney ground tiles are **128×128**. Players are **128×256**. At 640×480, raw
 
 **Locked scale:** bake everything at **50%**.
 
-| Concept | Value |
-| --- | --- |
-| Art source tile | 128×128 |
-| **World `TILE`** | **64** |
-| Player source frame | 128×256 |
-| Player strip frame | **64×128** |
-| Enemy/item source | 128×128 |
-| Enemy/item baked | **64×64** (or keep 128 and set `scale` — prefer bake to 64 for consistent collision) |
-| Map size | **MAP_W = 100**, **MAP_H = 16** |
-| Floor row | `FLOOR = MAP_H - 2` (= 14) |
-| World pixel size | `100 * 64` × `16 * 64` = **6400 × 1024** |
+| Concept             | Value                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Art source tile     | 128×128                                                                              |
+| **World `TILE`**    | **64**                                                                               |
+| Player source frame | 128×256                                                                              |
+| Player strip frame  | **64×128**                                                                           |
+| Enemy/item source   | 128×128                                                                              |
+| Enemy/item baked    | **64×64** (or keep 128 and set `scale` — prefer bake to 64 for consistent collision) |
+| Map size            | **MAP_W = 100**, **MAP_H = 16**                                                      |
+| Floor row           | `FLOOR = MAP_H - 2` (= 14)                                                           |
+| World pixel size    | `100 * 64` × `16 * 64` = **6400 × 1024**                                             |
 
 Jump/move constants: **start from procedural platformer**, then tune once art hitboxes are known. Initial port (world units ≈ pixels):
 
-| Constant | Initial value | Notes |
-| --- | --- | --- |
-| `JUMP_VELOCITY` | `-460` | from platformer |
-| `GRAVITY` | `1300` | |
-| `APEX_GRAVITY` | `650` | |
-| `APEX_SPEED` | `90` | |
-| `MAX_FALL` | `520` | |
-| `MOVE_ACCEL` | `900` | |
-| `AIR_ACCEL` | `700` | |
-| `APEX_TURN_ACCEL` | `1600` | |
-| `MAX_RUN` | `190` | |
-| `GROUND_DRAG` | `1200` | |
-| `COYOTE_TIME` | `8/60` | |
-| `JUMP_BUFFER` | `7/60` | |
+| Constant          | Initial value | Notes           |
+| ----------------- | ------------- | --------------- |
+| `JUMP_VELOCITY`   | `-460`        | from platformer |
+| `GRAVITY`         | `1300`        |                 |
+| `APEX_GRAVITY`    | `650`         |                 |
+| `APEX_SPEED`      | `90`          |                 |
+| `MAX_FALL`        | `520`         |                 |
+| `MOVE_ACCEL`      | `900`         |                 |
+| `AIR_ACCEL`       | `700`         |                 |
+| `APEX_TURN_ACCEL` | `1600`        |                 |
+| `MAX_RUN`         | `190`         |                 |
+| `GROUND_DRAG`     | `1200`        |                 |
+| `COYOTE_TIME`     | `8/60`        |                 |
+| `JUMP_BUFFER`     | `7/60`        |                 |
 
 If the taller player sprite feels floaty/heavy after hitbox shrink, adjust jump/gravity in a single pass — do not invent a second feel system.
 
@@ -178,8 +178,8 @@ If the taller player sprite feels floaty/heavy after hitbox shrink, adjust jump/
 ```ts
 player.width = 28;
 player.height = 48;
-player.offset.x = (64 - 28) / 2;   // ~18
-player.offset.y = 128 - 48;        // feet at bottom of frame (~80)
+player.offset.x = (64 - 28) / 2; // ~18
+player.offset.y = 128 - 48; // feet at bottom of frame (~80)
 ```
 
 Tune if feet clip into tiles; collision must feel fair.
@@ -283,14 +283,14 @@ async function loadImage(url: string): Promise<HTMLImageElement> {
 
 `autoTile = FlxTilemap.OFF`. `collideIndex = 1`, `drawIndex = 1`, `startingIndex = 0`.
 
-| Map ID | Strip frame | Kenney name | Collides? | Use |
-| --- | --- | --- | --- | --- |
-| 0 | 0 | _(empty)_ | no | air / pits |
-| 1 | 1 | `grassMid.png` | yes | default solid / ledges |
-| 2 | 2 | `grassLeft.png` | yes | optional visual left cap |
-| 3 | 3 | `grassRight.png` | yes | optional visual right cap |
-| 4 | 4 | `grassCenter.png` | yes | filler under mid if double-thick ground |
-| 5 | 5 | `grassHalf.png` | yes | thin floating platforms |
+| Map ID | Strip frame | Kenney name       | Collides? | Use                                     |
+| ------ | ----------- | ----------------- | --------- | --------------------------------------- |
+| 0      | 0           | _(empty)_         | no        | air / pits                              |
+| 1      | 1           | `grassMid.png`    | yes       | default solid / ledges                  |
+| 2      | 2           | `grassLeft.png`   | yes       | optional visual left cap                |
+| 3      | 3           | `grassRight.png`  | yes       | optional visual right cap               |
+| 4      | 4           | `grassCenter.png` | yes       | filler under mid if double-thick ground |
+| 5      | 5           | `grassHalf.png`   | yes       | thin floating platforms                 |
 
 Bake order array (exact):
 
@@ -336,7 +336,12 @@ export function makeMapData(): number[]; // length MAP_W * MAP_H
 export const PLAYER_SPAWN: { tx: number; ty: number }; // e.g. { tx: 3, ty: FLOOR - 1 }
 
 export const COIN_SPOTS: readonly [number, number][]; // tile coords, ~12–16 coins
-export const SLIME_SPOTS: readonly { tx: number; ty: number; left: number; right: number }[];
+export const SLIME_SPOTS: readonly {
+  tx: number;
+  ty: number;
+  left: number;
+  right: number;
+}[];
 export const FLY_SPOTS: readonly { tx: number; ty: number; amp: number }[];
 export const FLAG_SPOT: { tx: number; ty: number };
 ```
@@ -378,8 +383,8 @@ const PLAYER_FRAMES = [
   'alienBlue_stand.png', // 0
   'alienBlue_walk1.png', // 1
   'alienBlue_walk2.png', // 2
-  'alienBlue_jump.png',  // 3
-  'alienBlue_hit.png',   // 4
+  'alienBlue_jump.png', // 3
+  'alienBlue_hit.png', // 4
 ] as const;
 ```
 
@@ -419,13 +424,13 @@ const PLAYER_FRAMES = [
 
 ### 12.7 Lives, hurt, pits
 
-| Rule | Behavior |
-| --- | --- |
-| Start lives | **3** |
-| Enemy touch | −1 life; 1.5s invulnerability (blink `alpha` 0.4/1); knockback optional small −vx |
-| Lives hit 0 | **Lose** overlay; freeze; R restart |
+| Rule                             | Behavior                                                                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Start lives                      | **3**                                                                                                                                     |
+| Enemy touch                      | −1 life; 1.5s invulnerability (blink `alpha` 0.4/1); knockback optional small −vx                                                         |
+| Lives hit 0                      | **Lose** overlay; freeze; R restart                                                                                                       |
 | Fall below camera bottom / world | −1 life, respawn at last grounded X (like platformer `#spawnX`) **or** at `PLAYER_SPAWN` if you want simpler — **prefer last grounded X** |
-| Restart | `FlxG.switchState(new KenneyPlayState())` or reset fields — switchState is cleaner |
+| Restart                          | `FlxG.switchState(new KenneyPlayState())` or reset fields — switchState is cleaner                                                        |
 
 Expose on probe: `lives()`, `coins()`, `won()`, `lost()`.
 
@@ -571,14 +576,14 @@ Use this order when executing:
 
 ## 17. Risks & mitigations
 
-| Risk | Mitigation |
-| --- | --- |
-| Hitbox / foot clipping | Explicit width/height/offset; tune after first visual boot |
-| Bake fails (Texture resource not drawable) | Bake from `HTMLImageElement.decode()` path |
-| Vite build omits assets | Always use `new URL(..., import.meta.url)` |
-| XML name typos | Centralize name constants; throw if atlas missing key |
-| Jump feel wrong at TILE=64 | Single constant tweak pass; keep Paragon structure |
-| Large PNGs slow CI e2e | 15s ready timeout; curated sheets only |
+| Risk                                       | Mitigation                                                 |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| Hitbox / foot clipping                     | Explicit width/height/offset; tune after first visual boot |
+| Bake fails (Texture resource not drawable) | Bake from `HTMLImageElement.decode()` path                 |
+| Vite build omits assets                    | Always use `new URL(..., import.meta.url)`                 |
+| XML name typos                             | Centralize name constants; throw if atlas missing key      |
+| Jump feel wrong at TILE=64                 | Single constant tweak pass; keep Paragon structure         |
+| Large PNGs slow CI e2e                     | 15s ready timeout; curated sheets only                     |
 
 ## 18. Out-of-scope follow-ups (explicitly deferred)
 

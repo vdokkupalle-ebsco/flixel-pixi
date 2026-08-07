@@ -50,7 +50,9 @@ describe('FlxAtlas.getFrame', () => {
   });
 
   it('throws when neither name nor name+.png resolves', () => {
-    const atlas = makeAtlas([{ height: 8, name: 'a.png', width: 8, x: 0, y: 0 }]);
+    const atlas = makeAtlas([
+      { height: 8, name: 'a.png', width: 8, x: 0, y: 0 },
+    ]);
     expect(() => atlas.getFrame('missing')).toThrow(/missing/);
   });
 });
@@ -78,14 +80,18 @@ describe('FlxAtlas.framesByPrefix', () => {
   });
 
   it('throws when padding < 1', () => {
-    const atlas = makeAtlas([{ height: 8, name: 'a_1.png', width: 8, x: 0, y: 0 }]);
+    const atlas = makeAtlas([
+      { height: 8, name: 'a_1.png', width: 8, x: 0, y: 0 },
+    ]);
     expect(() => atlas.framesByPrefix('a_', 1, 1, { padding: 0 })).toThrow(
       RangeError,
     );
   });
 
   it('throws when start > end', () => {
-    const atlas = makeAtlas([{ height: 8, name: 'a_1.png', width: 8, x: 0, y: 0 }]);
+    const atlas = makeAtlas([
+      { height: 8, name: 'a_1.png', width: 8, x: 0, y: 0 },
+    ]);
     expect(() => atlas.framesByPrefix('a_', 5, 3)).toThrow(RangeError);
   });
 });
@@ -113,13 +119,17 @@ describe('FlxAtlas.framesByNumber', () => {
   });
 
   it('throws on out-of-range index', () => {
-    const atlas = makeAtlas([{ height: 8, name: 'a.png', width: 8, x: 0, y: 0 }]);
+    const atlas = makeAtlas([
+      { height: 8, name: 'a.png', width: 8, x: 0, y: 0 },
+    ]);
     expect(() => atlas.framesByNumber(0, 5)).toThrow(RangeError);
     expect(() => atlas.framesByNumber([99])).toThrow(RangeError);
   });
 
   it('throws when start > end', () => {
-    const atlas = makeAtlas([{ height: 8, name: 'a.png', width: 8, x: 0, y: 0 }]);
+    const atlas = makeAtlas([
+      { height: 8, name: 'a.png', width: 8, x: 0, y: 0 },
+    ]);
     expect(() => atlas.framesByNumber(1, 0)).toThrow(RangeError);
   });
 });
@@ -169,11 +179,15 @@ describe('FlxAtlasRegistry', () => {
       onload: (() => void) | null = null;
       onerror: (() => void) | null = null;
       #src = '';
-      get src(): string { return this.#src; }
+      get src(): string {
+        return this.#src;
+      }
       set src(url: string) {
         this.#src = url;
         const self = this;
-        queueMicrotask(() => { self.onload?.(); });
+        queueMicrotask(() => {
+          self.onload?.();
+        });
       }
     }
     globalThis.Image = FakeImage as unknown as typeof Image;
@@ -206,7 +220,9 @@ describe('FlxAtlas.makeGraphic', () => {
       { height: 16, name: 'b.png', width: 16, x: 16, y: 0 },
     ]);
     const strip = makeTexture(24, 8);
-    const spy = vi.spyOn(atlasBake, 'bakeAtlasFrameStrip').mockReturnValue(strip);
+    const spy = vi
+      .spyOn(atlasBake, 'bakeAtlasFrameStrip')
+      .mockReturnValue(strip);
 
     const result = atlas.makeGraphic(
       [null, atlas.getFrame('a'), atlas.getFrame('b')],
@@ -219,7 +235,9 @@ describe('FlxAtlas.makeGraphic', () => {
   });
 
   it('rejects empty or all-null frame lists', () => {
-    const atlas = makeAtlas([{ height: 8, name: 'a.png', width: 8, x: 0, y: 0 }]);
+    const atlas = makeAtlas([
+      { height: 8, name: 'a.png', width: 8, x: 0, y: 0 },
+    ]);
     expect(() => atlas.makeGraphic([])).toThrow(RangeError);
     expect(() => atlas.makeGraphic([null, null])).toThrow(RangeError);
   });

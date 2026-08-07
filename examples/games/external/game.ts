@@ -3,7 +3,14 @@
  * (Flixel demo, MIT). Original Flash assets are NOT copied — procedural
  * graphics only. See docs/phase12-external-gap.md.
  */
-import { FlxButton, FlxG, FlxGroup, FlxSprite, FlxState, FlxText } from '../../../src';
+import {
+  FlxButton,
+  FlxG,
+  FlxGroup,
+  FlxSprite,
+  FlxState,
+  FlxText,
+} from '../../../src';
 
 class Enemy extends FlxSprite {
   constructor() {

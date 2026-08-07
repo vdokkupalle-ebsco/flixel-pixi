@@ -11,7 +11,9 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
     // It may already be dismissed by the time the test runs — that's fine.
 
     const status = page.locator('[data-testid="status"]');
-    await expect(status).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(status).toHaveAttribute('data-state', 'ready', {
+      timeout: 8000,
+    });
 
     // Debugger overlay should be in the DOM and visible
     const debugger_ = page.locator('[data-testid="flx-debugger"]');
@@ -19,7 +21,9 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
 
     // All 5 tabs should be present
     for (const tab of ['log', 'watch', 'perf', 'vcr', 'vis']) {
-      await expect(page.locator(`[data-testid="flxdbg-tab-${tab}"]`)).toBeVisible();
+      await expect(
+        page.locator(`[data-testid="flxdbg-tab-${tab}"]`),
+      ).toBeVisible();
     }
 
     // Preloader should be gone (removed from DOM after fade)
@@ -29,9 +33,11 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
   test('Log panel displays messages from FlxG.log.add()', async ({ page }) => {
     await page.goto('/phase11.html');
     await page.locator('[data-testid="status"]').waitFor({ state: 'attached' });
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
 
     // Click the Log tab to ensure it's active
     await page.locator('[data-testid="flxdbg-tab-log"]').click();
@@ -52,9 +58,11 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
 
   test('Watch panel shows live player position values', async ({ page }) => {
     await page.goto('/phase11.html');
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
 
     // Switch to Watch tab
     await page.locator('[data-testid="flxdbg-tab-watch"]').click();
@@ -67,9 +75,11 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
 
   test('Perf panel shows FPS value', async ({ page }) => {
     await page.goto('/phase11.html');
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
 
     await page.locator('[data-testid="flxdbg-tab-perf"]').click();
     // Wait for half a second for FPS counter to update (it updates every 500 ms)
@@ -81,9 +91,11 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
 
   test('VCR panel record/stop/rewind/step/play workflow', async ({ page }) => {
     await page.goto('/phase11.html');
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
 
     await page.locator('[data-testid="flxdbg-tab-vcr"]').click();
     const vcrStatus = page.locator('[data-testid="flxdbg-vcr-status"]');
@@ -113,9 +125,11 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
 
   test('Toggle button shows/hides debugger overlay', async ({ page }) => {
     await page.goto('/phase11.html');
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
 
     const dbg = page.locator('[data-testid="flx-debugger"]');
     await expect(dbg).not.toHaveClass(/hidden/);
@@ -131,9 +145,11 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
 
   test('Tab keyboard navigation (arrow keys)', async ({ page }) => {
     await page.goto('/phase11.html');
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
 
     const logTab = page.locator('[data-testid="flxdbg-tab-log"]');
     await logTab.focus();
@@ -147,16 +163,21 @@ test.describe('Phase 11 — Debugger & Preloader (C11 gate)', () => {
 
   test('survives destruction cleanly', async ({ page }) => {
     await page.goto('/phase11.html');
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'ready', { timeout: 8000 });
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
 
     await page.locator('[data-action="destroy"]').click();
-    await expect(
-      page.locator('[data-testid="status"]'),
-    ).toHaveAttribute('data-state', 'destroyed');
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'destroyed',
+    );
 
     // Debugger overlay should be removed from DOM
-    await expect(page.locator('[data-testid="flx-debugger"]')).not.toBeAttached();
+    await expect(
+      page.locator('[data-testid="flx-debugger"]'),
+    ).not.toBeAttached();
   });
 });

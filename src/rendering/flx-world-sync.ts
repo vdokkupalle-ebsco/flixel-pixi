@@ -10,10 +10,7 @@ import type { FlxCameraRenderer } from './flx-camera-renderer';
 export type FlxRenderable = FlxSprite | FlxTilemap | FlxEmitter;
 
 /** Collect displayables under a Flixel basic (state/group tree). @public */
-export function collectRenderables(
-  root: FlxBasic,
-  out: FlxRenderable[],
-): void {
+export function collectRenderables(root: FlxBasic, out: FlxRenderable[]): void {
   if (root instanceof FlxTilemap || root instanceof FlxEmitter) {
     out.push(root);
     return;

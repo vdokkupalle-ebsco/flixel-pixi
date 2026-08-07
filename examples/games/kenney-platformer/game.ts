@@ -113,10 +113,7 @@ export async function preloadKenneyAssets(): Promise<KenneyAssets> {
       64,
     ),
     slime: enemies.makeGraphic(
-      [
-        enemies.getFrame('slimeGreen'),
-        enemies.getFrame('slimeGreen_move'),
-      ],
+      [enemies.getFrame('slimeGreen'), enemies.getFrame('slimeGreen_move')],
       64,
       64,
     ),
@@ -140,13 +137,7 @@ class Slime extends FlxSprite {
   leftBound = 0;
   rightBound = 0;
 
-  spawn(
-    x: number,
-    y: number,
-    left: number,
-    right: number,
-    tex: Texture,
-  ): void {
+  spawn(x: number, y: number, left: number, right: number, tex: Texture): void {
     this.loadGraphic(tex, true, true, 64, 64);
     this.width = 40;
     this.height = 32;
@@ -162,11 +153,22 @@ class Slime extends FlxSprite {
   }
 
   override update(): void {
-    if (this.x < this.leftBound) this.velocity.x = 60;
-    else if (this.x > this.rightBound) this.velocity.x = -60;
+    if (
+      this.x < this.leftBound ||
+      (this.wasTouching & FlxObject.LEFT) !== 0 ||
+      this.isTouching(FlxObject.LEFT)
+    ) {
+      this.velocity.x = 60;
+    } else if (
+      this.x > this.rightBound ||
+      (this.wasTouching & FlxObject.RIGHT) !== 0 ||
+      this.isTouching(FlxObject.RIGHT)
+    ) {
+      this.velocity.x = -60;
+    }
 
-    if (this.velocity.x < 0) this.facing = FlxObject.LEFT;
-    else if (this.velocity.x > 0) this.facing = FlxObject.RIGHT;
+    if (this.velocity.x < 0) this.facing = FlxObject.RIGHT;
+    else if (this.velocity.x > 0) this.facing = FlxObject.LEFT;
 
     super.update();
   }
@@ -244,11 +246,16 @@ export class KenneyPlayState extends FlxState {
     }
     this.#wrapBackgrounds();
 
-    this.map = new FlxTilemap().loadMapData(makeMapData(), MAP_W, assets.tiles, {
-      tileWidth: TILE,
-      tileHeight: TILE,
-      collideIndex: 1,
-    });
+    this.map = new FlxTilemap().loadMapData(
+      makeMapData(),
+      MAP_W,
+      assets.tiles,
+      {
+        tileWidth: TILE,
+        tileHeight: TILE,
+        collideIndex: 1,
+      },
+    );
     this.add(this.map);
 
     this.#spawnX = PLAYER_SPAWN.tx * TILE;
@@ -332,7 +339,12 @@ export class KenneyPlayState extends FlxState {
     this.hudText.scrollFactor.make(0, 0);
     this.add(this.hudText);
 
-    const credit = new FlxText(8, 460, 624, 'Art: Kenney.nl (CC0) · ←→ move · SPACE jump');
+    const credit = new FlxText(
+      8,
+      460,
+      624,
+      'Art: Kenney.nl (CC0) · ←→ move · SPACE jump',
+    );
     credit.setFormat(undefined, 11, 0xff334155, 'left');
     credit.scrollFactor.make(0, 0);
     this.add(credit);

@@ -30,6 +30,7 @@ The implementation was verified against the pinned AS3 source:
 
 The interactive smoke workbench is hosted at `http://localhost:5173/phase10.html` (served via `npm run dev` / `vite --config vite.smoke.config.ts`).
 It features:
+
 - Interactive ball motion and marker placement driven by keyboard and mouse input.
 - Real-time VCR controls (`● Record`, `■ Stop Record`, `▶ Play`, `≪ Rewind`, `❚❚ Step 1 Frame`, `Export AS3 Text`).
 - Live frame counter, VCR status indicator, and ball position readouts.

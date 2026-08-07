@@ -86,9 +86,7 @@ function createSynthBlip(
       const f0 = 420;
       const f1 = 980;
       const phase =
-        2 *
-        Math.PI *
-        (f0 * t + ((f1 - f0) / (2 * duration)) * t * t);
+        2 * Math.PI * (f0 * t + ((f1 - f0) / (2 * duration)) * t * t);
       const sine = Math.sin(phase);
       const square = Math.sign(sine);
       sample = (0.55 * sine + 0.35 * square) * Math.exp(-t * 16) * 0.7;
@@ -97,9 +95,7 @@ function createSynthBlip(
       const f0 = 640;
       const f1 = 220;
       const phase =
-        2 *
-        Math.PI *
-        (f0 * t + ((f1 - f0) / (2 * duration)) * t * t);
+        2 * Math.PI * (f0 * t + ((f1 - f0) / (2 * duration)) * t * t);
       sample =
         (Math.sin(phase) + 0.3 * Math.sin(phase * 0.5)) *
         Math.exp(-t * 7) *
@@ -125,8 +121,7 @@ function makeCoinGraphic(): FlxGraphic {
       const ny = (y - cy) / ry;
       const d = nx * nx + ny * ny;
       if (d <= 1) {
-        pixels.data[y * width + x] =
-          d > 0.72 ? COIN_YELLOW_EDGE : COIN_YELLOW;
+        pixels.data[y * width + x] = d > 0.72 ? COIN_YELLOW_EDGE : COIN_YELLOW;
       }
     }
   }
@@ -294,8 +289,7 @@ export class PlatformerState extends FlxState {
   override update(): void {
     const dt = FlxG.elapsed;
     const grounded = (this.player.wasTouching & FlxObject.FLOOR) !== 0;
-    const atApex =
-      !grounded && Math.abs(this.player.velocity.y) < APEX_SPEED;
+    const atApex = !grounded && Math.abs(this.player.velocity.y) < APEX_SPEED;
 
     // --- timers (Paragon: grounded_frames_ago / w_frames_ago) ---
     if (grounded) {
@@ -350,8 +344,7 @@ export class PlatformerState extends FlxState {
 
     // --- jump (coyote + buffer); Paragon: can_jump && use_w ---
     const canJump =
-      this.#touchedGroundSinceJump &&
-      (grounded || this.#coyote > 0);
+      this.#touchedGroundSinceJump && (grounded || this.#coyote > 0);
     const buffered =
       this.#jumpBuffer > 0 &&
       (grounded || this.#framesGoingDown > 2 || this.#coyote > 0);

@@ -19,7 +19,9 @@ describe('kenney level', () => {
     expect(MAP_H).toBe(16);
     const data = makeMapData();
     expect(data).toHaveLength(MAP_W * MAP_H);
-    expect(data.every((v) => Number.isInteger(v) && v >= 0 && v <= 5)).toBe(true);
+    expect(data.every((v) => Number.isInteger(v) && v >= 0 && v <= 5)).toBe(
+      true,
+    );
     expect(COIN_SPOTS).toHaveLength(14);
     expect(SLIME_SPOTS).toHaveLength(4);
     expect(FLY_SPOTS).toHaveLength(3);

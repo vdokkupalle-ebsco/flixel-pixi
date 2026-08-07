@@ -75,9 +75,7 @@ export class FlxAtlasRegistry {
         }
       }
 
-      rects = isJson
-        ? parseTextureAtlasJson(text)
-        : parseTextureAtlasXml(text);
+      rects = isJson ? parseTextureAtlasJson(text) : parseTextureAtlasXml(text);
     } else {
       const grid = meta as FlxAtlasGridMeta;
       rects = parseFixedGridAtlas(

@@ -4,10 +4,7 @@ import { FlxGame } from '../../src/core/flx-game';
 import { FlxState } from '../../src/core/flx-state';
 import { FlxG } from '../../src/core/flx-g';
 
-function eventWith(
-  type: string,
-  properties: Record<string, unknown>,
-): Event {
+function eventWith(type: string, properties: Record<string, unknown>): Event {
   const event = new Event(type, { cancelable: true });
   for (const [key, value] of Object.entries(properties)) {
     Object.defineProperty(event, key, { configurable: true, value });
@@ -32,7 +29,9 @@ describe('FlxActions', () => {
     FlxG.actions.bind('jump', 'SPACE', 'W');
     expect(FlxG.actions.pressed('jump')).toBe(false);
 
-    target.dispatchEvent(eventWith('keydown', { code: 'Space', repeat: false }));
+    target.dispatchEvent(
+      eventWith('keydown', { code: 'Space', repeat: false }),
+    );
     game.input.updateInput();
     expect(FlxG.actions.pressed('jump')).toBe(true);
     expect(FlxG.actions.justPressed('jump')).toBe(true);

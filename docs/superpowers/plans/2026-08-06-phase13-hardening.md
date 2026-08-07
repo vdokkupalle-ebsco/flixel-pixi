@@ -22,26 +22,27 @@
 
 ## File map
 
-| Path | Responsibility |
-| ---- | -------------- |
-| `examples/games/bench-sprites/game.ts` | Stress `FlxState`: atlas, 2000 movers, HUD, FPS sampler |
-| `examples/games/bench-sprites/main.ts` | Boot + `__FLIXEL_PIXI_BENCH__` hook |
-| `examples/games/bench-sprites/index.html` | Shell page |
-| `examples/games/bench-soak/game.ts` | Tiny idle state for soak cycles |
-| `examples/games/bench-soak/main.ts` | 10× boot/destroy loop + `__FLIXEL_PIXI_SOAK__` |
-| `examples/games/bench-soak/index.html` | Shell page |
-| `examples/games/index.html` | Links to new samples |
-| `vite.games.config.ts` | Rollup entries for new HTML |
-| `tests/browser/phase13.spec.ts` | Bench + soak Playwright tests |
-| `docs/phase13-evidence.md` | Recorded metrics |
-| `docs/guides/performance.md` | Pointer to benches |
-| `PORTING_PLAN.md` | Phase 13 status = hardening in progress |
+| Path                                      | Responsibility                                          |
+| ----------------------------------------- | ------------------------------------------------------- |
+| `examples/games/bench-sprites/game.ts`    | Stress `FlxState`: atlas, 2000 movers, HUD, FPS sampler |
+| `examples/games/bench-sprites/main.ts`    | Boot + `__FLIXEL_PIXI_BENCH__` hook                     |
+| `examples/games/bench-sprites/index.html` | Shell page                                              |
+| `examples/games/bench-soak/game.ts`       | Tiny idle state for soak cycles                         |
+| `examples/games/bench-soak/main.ts`       | 10× boot/destroy loop + `__FLIXEL_PIXI_SOAK__`          |
+| `examples/games/bench-soak/index.html`    | Shell page                                              |
+| `examples/games/index.html`               | Links to new samples                                    |
+| `vite.games.config.ts`                    | Rollup entries for new HTML                             |
+| `tests/browser/phase13.spec.ts`           | Bench + soak Playwright tests                           |
+| `docs/phase13-evidence.md`                | Recorded metrics                                        |
+| `docs/guides/performance.md`              | Pointer to benches                                      |
+| `PORTING_PLAN.md`                         | Phase 13 status = hardening in progress                 |
 
 ---
 
 ### Task 1: Sprite stress sample (`bench-sprites`)
 
 **Files:**
+
 - Create: `examples/games/bench-sprites/game.ts`
 - Create: `examples/games/bench-sprites/main.ts`
 - Create: `examples/games/bench-sprites/index.html`
@@ -50,6 +51,7 @@
 - Test: `tests/browser/phase13.spec.ts` (bench describe only in this task)
 
 **Interfaces:**
+
 - Consumes: `bootGame` from `../_kit/boot-game`; public `FlxSprite.loadGraphic(graphic, true, false, 16, 16)`, `FlxGraphic.fromPixels`, `makeGraphicPixels`, `FlxGroup`, `FlxState`, `FlxText`, `FlxG`
 - Produces: `window.__FLIXEL_PIXI_BENCH__` with shape:
 
@@ -170,9 +172,8 @@ export function createAtlasGraphic(): FlxGraphic {
   const h = ATLAS_ROWS * TILE;
   const pixels = makeGraphicPixels(w, h, 0x00000000);
   const colors = [
-    0x38bdf8ff, 0xf472b6ff, 0xfacc15ff, 0x4ade80ff,
-    0xa78bfaff, 0xfb923cff, 0x22d3eeff, 0xf87171ff,
-    0x94a3b8ff, 0x2dd4bfff, 0xe879f9ff, 0xfde047ff,
+    0x38bdf8ff, 0xf472b6ff, 0xfacc15ff, 0x4ade80ff, 0xa78bfaff, 0xfb923cff,
+    0x22d3eeff, 0xf87171ff, 0x94a3b8ff, 0x2dd4bfff, 0xe879f9ff, 0xfde047ff,
     0x60a5faff, 0xc084fcff, 0x34d399ff, 0xfda4afff,
   ];
   for (let row = 0; row < ATLAS_ROWS; row += 1) {
@@ -298,11 +299,7 @@ If `makeGraphicPixels` / pixel layout differs (RGBA packing), match the pattern 
 
 ```ts
 import { bootGame, type GameApplication } from '../_kit/boot-game';
-import {
-  ACTIVE_COUNT,
-  BenchSpritesState,
-  INACTIVE_COUNT,
-} from './game';
+import { ACTIVE_COUNT, BenchSpritesState, INACTIVE_COUNT } from './game';
 
 declare global {
   interface Window {
@@ -441,6 +438,7 @@ EOF
 ### Task 2: Soak harness (`bench-soak`)
 
 **Files:**
+
 - Create: `examples/games/bench-soak/game.ts`
 - Create: `examples/games/bench-soak/main.ts`
 - Create: `examples/games/bench-soak/index.html`
@@ -449,6 +447,7 @@ EOF
 - Modify: `tests/browser/phase13.spec.ts` (add soak describe)
 
 **Interfaces:**
+
 - Consumes: `bootGame` / `GameApplication`; `app.renderer.registeredObjectCount`
 - Produces: `window.__FLIXEL_PIXI_SOAK__`:
 
@@ -644,11 +643,13 @@ EOF
 ### Task 3: Evidence + plan/docs status
 
 **Files:**
+
 - Create: `docs/phase13-evidence.md`
 - Modify: `docs/guides/performance.md`
 - Modify: `PORTING_PLAN.md` (Phase 13 status blurb)
 
 **Interfaces:**
+
 - Consumes: console metrics from Task 1–2 Playwright runs
 - Produces: evidence doc + status notes
 
@@ -670,29 +671,29 @@ Copy `[phase13 bench]` and `[phase13 soak]` log objects.
 
 ## Scene config (bench-sprites)
 
-| Parameter | Value |
-| --- | --- |
-| Resolution | 640×480 |
-| Atlas | Procedural 4×4 × 16px tiles, one texture |
-| Active sprites | 2000 moving |
-| Inactive pool | 8000 (allocation only, not registered) |
-| Warmup | 1s |
-| Measure | 4s |
+| Parameter      | Value                                    |
+| -------------- | ---------------------------------------- |
+| Resolution     | 640×480                                  |
+| Atlas          | Procedural 4×4 × 16px tiles, one texture |
+| Active sprites | 2000 moving                              |
+| Inactive pool  | 8000 (allocation only, not registered)   |
+| Warmup         | 1s                                       |
+| Measure        | 4s                                       |
 
 ## FPS baseline (report-only)
 
-| Browser | avgFps | minFps | Notes |
-| --- | --- | --- | --- |
-| Chromium (local/CI) | … | … | from Playwright log |
+| Browser             | avgFps | minFps | Notes               |
+| ------------------- | ------ | ------ | ------------------- |
+| Chromium (local/CI) | …      | …      | from Playwright log |
 
 ## Soak (10 × ~750ms)
 
-| Metric | Value |
-| --- | --- |
-| cycles | 10 |
-| errors | [] |
-| registeredSamples | […] |
-| verdict | flat / no throw |
+| Metric            | Value           |
+| ----------------- | --------------- |
+| cycles            | 10              |
+| errors            | []              |
+| registeredSamples | […]             |
+| verdict           | flat / no throw |
 
 ## Verification
 

@@ -21,7 +21,7 @@ function fakeRenderer(): Renderer {
 }
 
 function emptyState(): typeof FlxState {
-  return class extends FlxState { };
+  return class extends FlxState {};
 }
 
 function requireState(game: FlxGame): FlxState {

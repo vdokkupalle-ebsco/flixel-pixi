@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BufferImageSource, Rectangle, Texture } from 'pixi.js';
 
 import { FlxContext, FlxG, FlxSprite } from '../../src';
-import type { FlxAtlasFrame, FlxAtlasFrameList } from '../../src/assets/flx-atlas-frame';
+import type {
+  FlxAtlasFrame,
+  FlxAtlasFrameList,
+} from '../../src/assets/flx-atlas-frame';
 import * as atlasBAke from '../../src/assets/flx-atlas-bake';
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
@@ -78,8 +81,9 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
       }),
     }));
 
-    const bakeSpy = vi.spyOn(atlasBAke, 'bakeAtlasFrameStrip').mockImplementation(
-      (cells, outW, outH) => {
+    const bakeSpy = vi
+      .spyOn(atlasBAke, 'bakeAtlasFrameStrip')
+      .mockImplementation((cells, outW, outH) => {
         const width = outW * cells.length;
         const bytes = new Uint8Array(width * outH * 4);
         return new Texture({
@@ -91,8 +95,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
             width,
           }),
         });
-      },
-    );
+      });
 
     sprite.addAnimation('walk', walk);
     expect(bakeSpy).toHaveBeenCalledTimes(1);

@@ -34,9 +34,7 @@ export function parseTextureAtlasXml(xmlText: string): FlxAtlasFrameRect[] {
     const x = Number(el.getAttribute('x') ?? 0);
     const y = Number(el.getAttribute('y') ?? 0);
     // Support both width/height and w/h attribute variants
-    const width = Number(
-      el.getAttribute('width') ?? el.getAttribute('w') ?? 0,
-    );
+    const width = Number(el.getAttribute('width') ?? el.getAttribute('w') ?? 0);
     const height = Number(
       el.getAttribute('height') ?? el.getAttribute('h') ?? 0,
     );
@@ -48,7 +46,14 @@ export function parseTextureAtlasXml(xmlText: string): FlxAtlasFrameRect[] {
 // ── JSON parser ───────────────────────────────────────────────────────────────
 
 interface JsonFrameEntry {
-  frame: { x: number; y: number; w?: number; h?: number; width?: number; height?: number };
+  frame: {
+    x: number;
+    y: number;
+    w?: number;
+    h?: number;
+    width?: number;
+    height?: number;
+  };
   rotated?: boolean;
 }
 
@@ -95,7 +100,8 @@ export function parseTextureAtlasJson(jsonText: string): FlxAtlasFrameRect[] {
         );
       }
       const frame = entry['frame'] as Record<string, number> | undefined;
-      if (frame === undefined) throw new Error(`Frame at index ${idx} is missing "frame" rect.`);
+      if (frame === undefined)
+        throw new Error(`Frame at index ${idx} is missing "frame" rect.`);
       const x = frame['x'] ?? 0;
       const y = frame['y'] ?? 0;
       const width = frame['w'] ?? frame['width'] ?? 0;
@@ -117,7 +123,8 @@ export function parseTextureAtlasJson(jsonText: string): FlxAtlasFrameRect[] {
         );
       }
       const frame = entry['frame'] as Record<string, number> | undefined;
-      if (frame === undefined) throw new Error(`Frame "${name}" is missing "frame" rect.`);
+      if (frame === undefined)
+        throw new Error(`Frame "${name}" is missing "frame" rect.`);
       const x = frame['x'] ?? 0;
       const y = frame['y'] ?? 0;
       const width = frame['w'] ?? frame['width'] ?? 0;

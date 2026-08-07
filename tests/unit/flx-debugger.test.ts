@@ -172,7 +172,10 @@ describe('FlxPreloader', () => {
   it('setProgress clamps to 0–100', () => {
     const container = document.createElement('div');
     const p = new FlxPreloader({ container });
-    expect(() => { p.setProgress(-50, 'test'); p.setProgress(200, 'test'); }).not.toThrow();
+    expect(() => {
+      p.setProgress(-50, 'test');
+      p.setProgress(200, 'test');
+    }).not.toThrow();
     p.destroy();
   });
 });

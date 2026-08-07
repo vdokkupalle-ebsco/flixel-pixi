@@ -2,9 +2,7 @@ import { Texture, type BLEND_MODES } from 'pixi.js';
 
 import { FlxGraphic } from '../assets/flx-graphic';
 import { bakeAtlasFrameStrip } from '../assets/flx-atlas-bake';
-import {
-  canvasSourceFromTexture,
-} from '../assets/flx-atlas';
+import { canvasSourceFromTexture } from '../assets/flx-atlas';
 import type { FlxAtlasFrameList } from '../assets/flx-atlas-frame';
 import { makeGraphicPixels, type PixelBuffer } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
@@ -288,15 +286,14 @@ export class FlxSprite extends FlxObject {
       const frameRate =
         typeof frameRateOrOptions === 'number' ? frameRateOrOptions : undefined;
       // Strip indices — validate each
-      for (const frame of frames as readonly number[]) this.#validateFrame(frame);
+      for (const frame of frames as readonly number[])
+        this.#validateFrame(frame);
       // 4-arg form: legacy frameRate/looped defaults; 2-arg form: speed=1/loop=false
       const useLegacyDefaults = frameRate !== undefined || looped !== undefined;
       const resolvedFrameRate = frameRate ?? 0;
       const resolvedLooped = useLegacyDefaults ? (looped ?? true) : false;
       const defaultSpeed =
-        resolvedFrameRate > 0
-          ? resolvedFrameRate / resolveFramerate()
-          : 1;
+        resolvedFrameRate > 0 ? resolvedFrameRate / resolveFramerate() : 1;
       this.#animations.push(
         new FlxAnim(
           name,
@@ -320,7 +317,10 @@ export class FlxSprite extends FlxObject {
    * - `speed` defaults to `1` (one anim frame per game update)
    * - `force` defaults to `false`
    */
-  play(name: string, forceOrOptions: boolean | FlxAnimationPlayOptions = false): void {
+  play(
+    name: string,
+    forceOrOptions: boolean | FlxAnimationPlayOptions = false,
+  ): void {
     let loop: boolean;
     let speed: number;
     let force: boolean;
@@ -557,7 +557,9 @@ export class FlxSprite extends FlxObject {
     const outW = options?.frameWidth ?? first.texture.frame.width;
     const outH = options?.frameHeight ?? first.texture.frame.height;
     if (outW <= 0 || outH <= 0) {
-      throw new RangeError('Atlas animation frameWidth/frameHeight must be positive.');
+      throw new RangeError(
+        'Atlas animation frameWidth/frameHeight must be positive.',
+      );
     }
 
     if (this.#atlasStripSlots.length === 0) {
@@ -577,7 +579,9 @@ export class FlxSprite extends FlxObject {
     let appended = false;
     for (const frame of frames) {
       const key = `${frame.name}@${frame.texture.frame.x},${frame.texture.frame.y},${frame.texture.frame.width}x${frame.texture.frame.height}->${outW}x${outH}`;
-      let slotIndex = this.#atlasStripSlots.findIndex((slot) => slot.key === key);
+      let slotIndex = this.#atlasStripSlots.findIndex(
+        (slot) => slot.key === key,
+      );
       if (slotIndex < 0) {
         const canvasSource = canvasSourceFromTexture(
           new Texture({ source: frame.texture.source }),

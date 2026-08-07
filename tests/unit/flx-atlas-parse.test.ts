@@ -25,13 +25,19 @@ describe('parseTextureAtlasXml', () => {
     const frames = parseTextureAtlasXml(
       `<TextureAtlas><SubTexture name="c.png" x="5" y="5" w="32" h="32"/></TextureAtlas>`,
     );
-    expect(frames[0]).toMatchObject({ height: 32, name: 'c.png', width: 32, x: 5, y: 5 });
+    expect(frames[0]).toMatchObject({
+      height: 32,
+      name: 'c.png',
+      width: 32,
+      x: 5,
+      y: 5,
+    });
   });
 
   it('throws when empty', () => {
-    expect(() =>
-      parseTextureAtlasXml('<TextureAtlas></TextureAtlas>'),
-    ).toThrow(/SubTexture/i);
+    expect(() => parseTextureAtlasXml('<TextureAtlas></TextureAtlas>')).toThrow(
+      /SubTexture/i,
+    );
   });
 
   it('throws on invalid XML', () => {
@@ -118,8 +124,20 @@ describe('parseFixedGridAtlas', () => {
   it('names frames by 0-based index, row-major', () => {
     const frames = parseFixedGridAtlas(16, 8, 8, 8);
     expect(frames).toHaveLength(2);
-    expect(frames[0]).toMatchObject({ height: 8, name: '0', width: 8, x: 0, y: 0 });
-    expect(frames[1]).toMatchObject({ height: 8, name: '1', width: 8, x: 8, y: 0 });
+    expect(frames[0]).toMatchObject({
+      height: 8,
+      name: '0',
+      width: 8,
+      x: 0,
+      y: 0,
+    });
+    expect(frames[1]).toMatchObject({
+      height: 8,
+      name: '1',
+      width: 8,
+      x: 8,
+      y: 0,
+    });
   });
 
   it('handles multiple rows correctly', () => {

@@ -31,11 +31,11 @@ Authors can write correct Flixel simulation code and still get blank/missing spr
 
 ## Approaches considered
 
-| Approach | Pros | Cons |
-| --- | --- | --- |
-| **1. Docs + kit only** | Fast | npm consumers still hit the footgun |
-| **2. Engine auto-sync only** | Fixes root cause | Boot still copy-paste; no pool/input DX |
-| **3. Hybrid (recommended)** | Public boot + incremental renderer registration + pool/input helpers | Slightly larger API surface |
+| Approach                     | Pros                                                                 | Cons                                    |
+| ---------------------------- | -------------------------------------------------------------------- | --------------------------------------- |
+| **1. Docs + kit only**       | Fast                                                                 | npm consumers still hit the footgun     |
+| **2. Engine auto-sync only** | Fixes root cause                                                     | Boot still copy-paste; no pool/input DX |
+| **3. Hybrid (recommended)**  | Public boot + incremental renderer registration + pool/input helpers | Slightly larger API surface             |
 
 **Recommendation:** Approach **3**.
 
@@ -104,12 +104,12 @@ Backed by existing `Keyboard` queries. Gamepad = Phase 2 of this track (separate
 
 ## Testing
 
-| Area | Proof |
-| --- | --- |
+| Area       | Proof                                                                                                                                                      |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | World sync | Unit/integration: add sprite mid-state → renderer `registeredObjectCount` increases without manual sync; remove/kill+remove → count drops when appropriate |
-| Boot | Playwright: hello or external boots via public helper |
-| Pool | External: enemies visible + recycle does not leak registered handles unbounded |
-| Actions | Unit: bind + justPressed mirrors keys |
+| Boot       | Playwright: hello or external boots via public helper                                                                                                      |
+| Pool       | External: enemies visible + recycle does not leak registered handles unbounded                                                                             |
+| Actions    | Unit: bind + justPressed mirrors keys                                                                                                                      |
 
 ## Docs
 

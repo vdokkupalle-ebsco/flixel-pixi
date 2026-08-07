@@ -1,9 +1,6 @@
 import { Rectangle, Texture } from 'pixi.js';
 
-import {
-  bakeAtlasFrameStrip,
-  type FlxAtlasBakeCell,
-} from './flx-atlas-bake';
+import { bakeAtlasFrameStrip, type FlxAtlasBakeCell } from './flx-atlas-bake';
 import type {
   FlxAtlasFrame,
   FlxAtlasFrameList,
@@ -190,8 +187,7 @@ export class FlxAtlas {
   }
 
   #resolve(name: string): FlxAtlasFrame {
-    const frame =
-      this.#byName.get(name) ?? this.#byName.get(`${name}.png`);
+    const frame = this.#byName.get(name) ?? this.#byName.get(`${name}.png`);
     if (frame === undefined) {
       throw new Error(
         `FlxAtlas "${this.key}": frame "${name}" not found. ` +

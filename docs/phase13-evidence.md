@@ -8,14 +8,14 @@
 
 ## Scene config (bench-sprites)
 
-| Parameter | Value |
-| --- | --- |
-| Resolution | 640×480 |
-| Atlas | Procedural 4×4 × 16px tiles, one texture |
-| Active sprites | 2000 / 5000 / 10000 via `?active=` |
-| Inactive pool | 8000 (allocation only) |
-| Warmup | 1s |
-| Measure | 4s |
+| Parameter      | Value                                    |
+| -------------- | ---------------------------------------- |
+| Resolution     | 640×480                                  |
+| Atlas          | Procedural 4×4 × 16px tiles, one texture |
+| Active sprites | 2000 / 5000 / 10000 via `?active=`       |
+| Inactive pool  | 8000 (allocation only)                   |
+| Warmup         | 1s                                       |
+| Measure        | 4s                                       |
 
 ## Perf note (2026-08-07)
 
@@ -25,19 +25,19 @@ pay O(n) membership diffs every frame.
 
 ## FPS baseline (Chromium local)
 
-| active | avgFps | minFps | Gate |
-| --- | --- | --- | --- |
-| 2000 | 790.6 | *(log)* | soft ≥ 60 avg |
-| 5000 | 339.0 | *(log)* | soft ≥ 30 avg |
-| 10000 | 125.2 | ~4.4 | report-only |
+| active | avgFps | minFps  | Gate          |
+| ------ | ------ | ------- | ------------- |
+| 2000   | 790.6  | _(log)_ | soft ≥ 60 avg |
+| 5000   | 339.0  | _(log)_ | soft ≥ 30 avg |
+| 10000  | 125.2  | ~4.4    | report-only   |
 
 ## Soak
 
-| Metric | Value |
-| --- | --- |
-| cycles | 30 × ~750ms |
-| probe | `registeredObjectCount` mid-cycle |
-| assert | flat within ε=+2; no errors |
+| Metric | Value                             |
+| ------ | --------------------------------- |
+| cycles | 30 × ~750ms                       |
+| probe  | `registeredObjectCount` mid-cycle |
+| assert | flat within ε=+2; no errors       |
 
 ## Verification
 

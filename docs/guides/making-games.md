@@ -97,7 +97,10 @@ await FlxG.atlas.load('player', './assets/player.png', './assets/player.xml');
 await FlxG.atlas.load('ui', './assets/ui.png', './assets/ui.json');
 
 // Fixed-size grid (frameWidth × frameHeight cells, named "0","1",…)
-await FlxG.atlas.load('tiles', './assets/tiles.png', { frameWidth: 64, frameHeight: 64 });
+await FlxG.atlas.load('tiles', './assets/tiles.png', {
+  frameWidth: 64,
+  frameHeight: 64,
+});
 
 const playerAtlas = FlxG.atlas.get('player');
 ```
@@ -106,12 +109,12 @@ const playerAtlas = FlxG.atlas.get('player');
 
 ```ts
 // framesByPrefix — pick a numbered range; retries with ".png" suffix (Kenney)
-const walkFrames = playerAtlas.framesByPrefix('walk_', 1, 2);          // padding=1 → walk_1, walk_2
-const runFrames  = playerAtlas.framesByPrefix('run_', 1, 4, { padding: 2 }); // run_01…run_04
+const walkFrames = playerAtlas.framesByPrefix('walk_', 1, 2); // padding=1 → walk_1, walk_2
+const runFrames = playerAtlas.framesByPrefix('run_', 1, 4, { padding: 2 }); // run_01…run_04
 
 // framesByNumber — 0-based index range or explicit list
 const first2 = playerAtlas.framesByNumber(0, 1);
-const custom  = playerAtlas.framesByNumber([0, 2, 1]);
+const custom = playerAtlas.framesByNumber([0, 2, 1]);
 
 // getFrame — single named frame (also retries name+".png")
 const idle = playerAtlas.getFrame('idle');
@@ -141,13 +144,13 @@ For tilemaps and single-frame items, use `atlas.makeGraphic(...)` then
 ```ts
 // Options form — loop default false, speed default 1 (one anim frame per update)
 sprite.play('walk', { loop: true });
-sprite.play('jump', { loop: false, speed: 2 });   // 2× faster
+sprite.play('jump', { loop: false, speed: 2 }); // 2× faster
 sprite.play('idle', { loop: false, speed: 0.5, force: true }); // half speed, force restart
 
 // Legacy boolean form — still works; loop/speed come from addAnimation defaults
-sprite.addAnimation('run', [0, 1, 2], 12, true);  // frameRate=12, looped=true
-sprite.play('run');        // uses stored defaults
-sprite.play('run', true);  // force restart (legacy)
+sprite.addAnimation('run', [0, 1, 2], 12, true); // frameRate=12, looped=true
+sprite.play('run'); // uses stored defaults
+sprite.play('run', true); // force restart (legacy)
 ```
 
 `speed` is relative to the game update rate (default 60 fps). `speed=1` means
@@ -156,10 +159,9 @@ one animation frame per game update; `speed=2` means two frames per update.
 ### Registry management
 
 ```ts
-FlxG.atlas.has('player');    // boolean
+FlxG.atlas.has('player'); // boolean
 FlxG.atlas.remove('player'); // drop from registry (does not destroy live textures)
-FlxG.atlas.clear();          // drop all atlases
+FlxG.atlas.clear(); // drop all atlases
 ```
 
 See `examples/games/kenney-platformer/` for a full game using TextureAtlas XML.
-

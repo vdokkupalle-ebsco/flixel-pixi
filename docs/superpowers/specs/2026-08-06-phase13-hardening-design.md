@@ -41,27 +41,27 @@ Both samples boot via public APIs only (`bootGame` + `src` public exports). Game
 
 ### Scene config (fixed for evidence)
 
-| Parameter        | Value                                      |
-| ---------------- | ------------------------------------------ |
-| Resolution       | 640×480 (match other games samples)        |
-| Atlas            | Procedural in-memory; one texture, ≥4 frames (e.g. 4×4 grid of 16×16 tiles) |
-| Active sprites   | 2000 moving (bounce/wrap), shared atlas frames |
-| Inactive pool    | 8000–10000 members with `exists = false` (or equivalent off-update) |
-| Warmup           | Discard first ~1s of samples               |
-| Measure window   | ~3–5s after warmup                         |
+| Parameter      | Value                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| Resolution     | 640×480 (match other games samples)                                         |
+| Atlas          | Procedural in-memory; one texture, ≥4 frames (e.g. 4×4 grid of 16×16 tiles) |
+| Active sprites | 2000 moving (bounce/wrap), shared atlas frames                              |
+| Inactive pool  | 8000–10000 members with `exists = false` (or equivalent off-update)         |
+| Warmup         | Discard first ~1s of samples                                                |
+| Measure window | ~3–5s after warmup                                                          |
 
 ### Metrics surface
 
 Expose on `window.__FLIXEL_PIXI_BENCH__` after ready:
 
-| Field            | Meaning                                      |
-| ---------------- | -------------------------------------------- |
-| `ready`          | boolean                                      |
-| `avgFps`         | average FPS over measure window              |
-| `minFps`         | minimum (or ~p5) FPS in window               |
-| `activeCount`    | active moving sprites                        |
-| `inactiveCount`  | inactive pooled sprites                      |
-| `drawCalls`      | optional; omit / `null` if not cheap via Pixi |
+| Field           | Meaning                                       |
+| --------------- | --------------------------------------------- |
+| `ready`         | boolean                                       |
+| `avgFps`        | average FPS over measure window               |
+| `minFps`        | minimum (or ~p5) FPS in window                |
+| `activeCount`   | active moving sprites                         |
+| `inactiveCount` | inactive pooled sprites                       |
+| `drawCalls`     | optional; omit / `null` if not cheap via Pixi |
 
 HUD may mirror FPS/counts for manual runs (`npm run dev:games`).
 
@@ -103,11 +103,11 @@ Wire entries into `playwright.config.ts` / games Vite config the same way as Pha
 
 ## Documentation
 
-| Artifact | Role |
-| -------- | ---- |
-| `docs/phase13-evidence.md` | Scene config, machine/browser note, FPS table, soak result |
-| `docs/guides/performance.md` | Short pointer to `bench-sprites` / soak |
-| `PORTING_PLAN.md` | Phase 13 status: hardening pass in progress; C13 not closed |
+| Artifact                     | Role                                                        |
+| ---------------------------- | ----------------------------------------------------------- |
+| `docs/phase13-evidence.md`   | Scene config, machine/browser note, FPS table, soak result  |
+| `docs/guides/performance.md` | Short pointer to `bench-sprites` / soak                     |
+| `PORTING_PLAN.md`            | Phase 13 status: hardening pass in progress; C13 not closed |
 
 ## Done criteria
 

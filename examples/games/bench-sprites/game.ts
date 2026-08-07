@@ -45,9 +45,8 @@ export function createAtlasGraphic(): FlxGraphic {
   const h = ATLAS_ROWS * TILE;
   const pixels = makeGraphicPixels(w, h, 0x00000000);
   const colors = [
-    0x38bdf8ff, 0xf472b6ff, 0xfacc15ff, 0x4ade80ff,
-    0xa78bfaff, 0xfb923cff, 0x22d3eeff, 0xf87171ff,
-    0x94a3b8ff, 0x2dd4bfff, 0xe879f9ff, 0xfde047ff,
+    0x38bdf8ff, 0xf472b6ff, 0xfacc15ff, 0x4ade80ff, 0xa78bfaff, 0xfb923cff,
+    0x22d3eeff, 0xf87171ff, 0x94a3b8ff, 0x2dd4bfff, 0xe879f9ff, 0xfde047ff,
     0x60a5faff, 0xc084fcff, 0x34d399ff, 0xfda4afff,
   ];
   for (let row = 0; row < ATLAS_ROWS; row += 1) {

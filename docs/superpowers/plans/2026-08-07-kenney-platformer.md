@@ -24,29 +24,30 @@
 
 ## File map
 
-| Path | Responsibility |
-| ---- | -------------- |
-| `examples/games/kenney-platformer/assets/**` | Curated Kenney PNG/XML + License + background |
-| `examples/games/kenney-platformer/atlas.ts` | Parse Kenney TextureAtlas XML → `Map<string, AtlasFrame>` |
-| `examples/games/kenney-platformer/bake.ts` | Stitch atlas regions into horizontal strip `Texture`s |
-| `examples/games/kenney-platformer/level.ts` | `TILE`/`MAP_*`, `makeMapData()`, spawn tables |
-| `examples/games/kenney-platformer/audio.ts` | Local `AudioContext` synth blips |
-| `examples/games/kenney-platformer/game.ts` | `KenneyPlayState` gameplay |
-| `examples/games/kenney-platformer/main.ts` | `bootGame` + `window.__FLIXEL_PIXI_KENNEY__` |
-| `examples/games/kenney-platformer/index.html` | Shell (status, canvas-host, destroy) |
-| `examples/games/kenney-platformer/README.md` | Controls + Kenney credit |
-| `vite.games.config.ts` | Rollup input entry |
-| `examples/games/index.html` | Nav link |
-| `docs/guides/making-games.md` | Short “Atlases & tilemaps” pointer |
-| `.gitignore` | Ignore `platform-game-assets/` |
-| `tests/unit/kenney-atlas.test.ts` | XML parser unit tests |
-| `tests/browser/kenney-platformer.spec.ts` | Playwright smoke |
+| Path                                          | Responsibility                                            |
+| --------------------------------------------- | --------------------------------------------------------- |
+| `examples/games/kenney-platformer/assets/**`  | Curated Kenney PNG/XML + License + background             |
+| `examples/games/kenney-platformer/atlas.ts`   | Parse Kenney TextureAtlas XML → `Map<string, AtlasFrame>` |
+| `examples/games/kenney-platformer/bake.ts`    | Stitch atlas regions into horizontal strip `Texture`s     |
+| `examples/games/kenney-platformer/level.ts`   | `TILE`/`MAP_*`, `makeMapData()`, spawn tables             |
+| `examples/games/kenney-platformer/audio.ts`   | Local `AudioContext` synth blips                          |
+| `examples/games/kenney-platformer/game.ts`    | `KenneyPlayState` gameplay                                |
+| `examples/games/kenney-platformer/main.ts`    | `bootGame` + `window.__FLIXEL_PIXI_KENNEY__`              |
+| `examples/games/kenney-platformer/index.html` | Shell (status, canvas-host, destroy)                      |
+| `examples/games/kenney-platformer/README.md`  | Controls + Kenney credit                                  |
+| `vite.games.config.ts`                        | Rollup input entry                                        |
+| `examples/games/index.html`                   | Nav link                                                  |
+| `docs/guides/making-games.md`                 | Short “Atlases & tilemaps” pointer                        |
+| `.gitignore`                                  | Ignore `platform-game-assets/`                            |
+| `tests/unit/kenney-atlas.test.ts`             | XML parser unit tests                                     |
+| `tests/browser/kenney-platformer.spec.ts`     | Playwright smoke                                          |
 
 ---
 
 ### Task 1: Curated assets + gitignore + scaffold HTML/main
 
 **Files:**
+
 - Create: `examples/games/kenney-platformer/assets/**` (copied)
 - Create: `examples/games/kenney-platformer/index.html`
 - Create: `examples/games/kenney-platformer/main.ts` (stub)
@@ -56,6 +57,7 @@
 - Modify: `examples/games/index.html` (nav link)
 
 **Interfaces:**
+
 - Consumes: `platform-game-assets/` on disk as copy source; `bootGame` from `../_kit/boot-game`
 - Produces: runnable page that sets `data-state=ready` with empty play state; assets present at paths below
 
@@ -109,7 +111,12 @@ export class KenneyPlayState extends FlxState {
   override create(): void {
     super.create();
     FlxG.camera.bgColor = 0xff87ceeb;
-    const hint = new FlxText(8, 6, 620, 'Kenney platformer — assets loading next…');
+    const hint = new FlxText(
+      8,
+      6,
+      620,
+      'Kenney platformer — assets loading next…',
+    );
     hint.setFormat(undefined, 12, 0xff1e293b, 'left');
     hint.scrollFactor.x = 0;
     hint.scrollFactor.y = 0;
@@ -146,7 +153,9 @@ In `vite.games.config.ts` `rollupOptions.input`, add:
 In `examples/games/index.html` nav, add:
 
 ```html
-<a href="./kenney-platformer/"><button type="button">Kenney Platformer</button></a>
+<a href="./kenney-platformer/"
+  ><button type="button">Kenney Platformer</button></a
+>
 ```
 
 - [ ] **Step 7: Smoke the scaffold**
@@ -170,10 +179,12 @@ EOF
 ### Task 2: Atlas XML parser (TDD)
 
 **Files:**
+
 - Create: `examples/games/kenney-platformer/atlas.ts`
 - Create: `tests/unit/kenney-atlas.test.ts`
 
 **Interfaces:**
+
 - Consumes: Kenney XML text strings
 - Produces:
 
@@ -221,7 +232,9 @@ describe('parseKenneyAtlasXml', () => {
 
   it('throws on empty atlas', () => {
     expect(() =>
-      parseKenneyAtlasXml('<TextureAtlas imagePath="sheet.png"></TextureAtlas>'),
+      parseKenneyAtlasXml(
+        '<TextureAtlas imagePath="sheet.png"></TextureAtlas>',
+      ),
     ).toThrow(/SubTexture/i);
   });
 });
@@ -287,10 +300,12 @@ EOF
 ### Task 3: Bake horizontal strips
 
 **Files:**
+
 - Create: `examples/games/kenney-platformer/bake.ts`
 - Create: `tests/unit/kenney-bake.test.ts` (canvas smoke)
 
 **Interfaces:**
+
 - Consumes: `AtlasFrame` from `atlas.ts`; drawable `HTMLImageElement` or `CanvasImageSource`
 - Produces:
 
@@ -320,7 +335,10 @@ export function requireFrame(
 ```ts
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
-import { bakeHorizontalStrip, requireFrame } from '../../examples/games/kenney-platformer/bake';
+import {
+  bakeHorizontalStrip,
+  requireFrame,
+} from '../../examples/games/kenney-platformer/bake';
 import { parseKenneyAtlasXml } from '../../examples/games/kenney-platformer/atlas';
 
 describe('bakeHorizontalStrip', () => {
@@ -374,7 +392,8 @@ export function bakeHorizontalStrip(
   outH: number,
 ): Texture {
   if (frames.length === 0) throw new RangeError('frames must be non-empty');
-  if (outW <= 0 || outH <= 0) throw new RangeError('out dimensions must be positive');
+  if (outW <= 0 || outH <= 0)
+    throw new RangeError('out dimensions must be positive');
 
   const canvas = document.createElement('canvas');
   canvas.width = outW * frames.length;
@@ -424,10 +443,12 @@ EOF
 ### Task 4: Level data
 
 **Files:**
+
 - Create: `examples/games/kenney-platformer/level.ts`
 - Create: `tests/unit/kenney-level.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing from earlier tasks except constants used by game later
 - Produces:
 
@@ -444,7 +465,7 @@ export const COIN_SPOTS: readonly (readonly [number, number])[]; // length 14
 export const SLIME_SPOTS: readonly {
   readonly tx: number;
   readonly ty: number;
-  readonly left: number;  // world px min X for patrol
+  readonly left: number; // world px min X for patrol
   readonly right: number; // world px max X for patrol
 }[]; // length 4
 export const FLY_SPOTS: readonly {
@@ -479,7 +500,9 @@ describe('kenney level', () => {
     expect(MAP_H).toBe(16);
     const data = makeMapData();
     expect(data).toHaveLength(MAP_W * MAP_H);
-    expect(data.every((v) => Number.isInteger(v) && v >= 0 && v <= 5)).toBe(true);
+    expect(data.every((v) => Number.isInteger(v) && v >= 0 && v <= 5)).toBe(
+      true,
+    );
     expect(COIN_SPOTS).toHaveLength(14);
     expect(SLIME_SPOTS).toHaveLength(4);
     expect(FLY_SPOTS).toHaveLength(3);
@@ -535,11 +558,13 @@ EOF
 ### Task 5: Asset load helpers + tilemap + player (playable walk/jump)
 
 **Files:**
+
 - Create: `examples/games/kenney-platformer/audio.ts`
 - Modify: `examples/games/kenney-platformer/game.ts` (full create/update for player+map)
 - Modify: `examples/games/kenney-platformer/main.ts` (probe `playerY` / `onFloor`)
 
 **Interfaces:**
+
 - Consumes: `parseKenneyAtlasXml`, `bakeHorizontalStrip`, `requireFrame`, `level.ts` exports
 - Produces: playable state with tilemap + Paragon jump; probe methods work
 
@@ -689,10 +714,12 @@ EOF
 ### Task 6: Coins, flag, HUD text, win state
 
 **Files:**
+
 - Modify: `examples/games/kenney-platformer/game.ts` (`preloadKenneyAssets` + gameplay)
 - Modify: `examples/games/kenney-platformer/audio.ts` if win/coin kinds missing
 
 **Interfaces:**
+
 - Consumes: `COIN_SPOTS`, `FLAG_SPOT`; items atlas `coinGold.png`, `flagGreen1.png`, `flagGreen2.png`
 - Produces: coin collection; flag → `status='won'`; HUD shows counts; `R` restarts via `FlxG.switchState(new KenneyPlayState())`
 
@@ -702,7 +729,7 @@ Bake or single-frame textures:
 
 ```ts
 // items sheet
-coin: Texture;      // 32×32 or 64×64 from coinGold.png
+coin: Texture; // 32×32 or 64×64 from coinGold.png
 flagStrip: Texture; // bake flagGreen1, flagGreen2 at 64×64
 ```
 
@@ -758,9 +785,11 @@ EOF
 ### Task 7: Slimes, flies, lives, hurt, lose
 
 **Files:**
+
 - Modify: `examples/games/kenney-platformer/game.ts`
 
 **Interfaces:**
+
 - Consumes: `SLIME_SPOTS`, `FLY_SPOTS`; enemies atlas frames
 - Produces: 4 slimes, 3 flies; enemy touch −1 life + invuln; 0 lives → `status='lost'`
 
@@ -839,12 +868,14 @@ EOF
 ### Task 8: README, making-games blurb, Playwright, verify
 
 **Files:**
+
 - Create: `examples/games/kenney-platformer/README.md`
 - Create: `tests/browser/kenney-platformer.spec.ts`
 - Modify: `docs/guides/making-games.md`
 - Modify: `main.ts` / `game.ts` if probe fields incomplete
 
 **Interfaces:**
+
 - Consumes: `window.__FLIXEL_PIXI_KENNEY__` with `ready`, `lives`, `onFloor`, destroy path
 - Produces: green e2e smoke; docs pointer
 
@@ -935,20 +966,20 @@ EOF
 
 ## Spec coverage self-review
 
-| Spec requirement | Task |
-| --- | --- |
-| New sample, keep procedural platformer | 1 (scaffold), never edits platformer gameplay |
-| Curated assets in game folder | 1 |
-| Ignore full pack | 1 |
-| Atlas XML parse | 2 |
-| Bake strips + empty tile 0 | 3 |
-| Map 100×16, TILE 64, spawns | 4 |
-| Grass + blue alien + Paragon jump | 5 |
-| Coins, flag, win, R restart | 6 |
-| Slime + fly, 3 lives, lose | 7 |
-| Vite, index, README, making-games, Playwright | 1 + 8 |
-| No new public package API | all helpers under sample |
-| Acceptance criteria §16 | Tasks 5–8 manual + e2e |
+| Spec requirement                              | Task                                          |
+| --------------------------------------------- | --------------------------------------------- |
+| New sample, keep procedural platformer        | 1 (scaffold), never edits platformer gameplay |
+| Curated assets in game folder                 | 1                                             |
+| Ignore full pack                              | 1                                             |
+| Atlas XML parse                               | 2                                             |
+| Bake strips + empty tile 0                    | 3                                             |
+| Map 100×16, TILE 64, spawns                   | 4                                             |
+| Grass + blue alien + Paragon jump             | 5                                             |
+| Coins, flag, win, R restart                   | 6                                             |
+| Slime + fly, 3 lives, lose                    | 7                                             |
+| Vite, index, README, making-games, Playwright | 1 + 8                                         |
+| No new public package API                     | all helpers under sample                      |
+| Acceptance criteria §16                       | Tasks 5–8 manual + e2e                        |
 
 **Placeholder scan:** none intentional.  
 **Type consistency:** `KenneyPlayState.status`, `preloadKenneyAssets`, `parseKenneyAtlasXml`, `bakeHorizontalStrip`, `TILE=64` used uniformly.
@@ -961,7 +992,7 @@ Plan complete and saved to `docs/superpowers/plans/2026-08-07-kenney-platformer.
 
 **Two execution options:**
 
-1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks  
-2. **Inline Execution** — run tasks in this session with executing-plans checkpoints  
+1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks
+2. **Inline Execution** — run tasks in this session with executing-plans checkpoints
 
 Which approach?

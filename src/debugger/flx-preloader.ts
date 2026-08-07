@@ -31,18 +31,25 @@ export class FlxPreloader {
     this.#root.setAttribute('aria-label', 'Game loading screen');
     this.#root.setAttribute('data-testid', 'flx-preloader');
     this.#root.style.cssText = [
-      'position:fixed', 'inset:0', 'z-index:9999',
-      'display:flex', 'flex-direction:column',
-      'align-items:center', 'justify-content:center',
-      'background:#0f172a', 'color:#f8fafc',
-      'font-family:system-ui,sans-serif', 'gap:1rem',
+      'position:fixed',
+      'inset:0',
+      'z-index:9999',
+      'display:flex',
+      'flex-direction:column',
+      'align-items:center',
+      'justify-content:center',
+      'background:#0f172a',
+      'color:#f8fafc',
+      'font-family:system-ui,sans-serif',
+      'gap:1rem',
       'transition:opacity 0.4s ease',
     ].join(';');
 
     // Title
     const titleEl = document.createElement('h1');
     titleEl.textContent = title;
-    titleEl.style.cssText = 'font-size:1.5rem;font-weight:700;margin:0;color:#38bdf8';
+    titleEl.style.cssText =
+      'font-size:1.5rem;font-weight:700;margin:0;color:#38bdf8';
     this.#root.appendChild(titleEl);
 
     // Progress bar
@@ -51,9 +58,13 @@ export class FlxPreloader {
     this.#progressEl.max = 100;
     this.#progressEl.value = 0;
     this.#progressEl.style.cssText = [
-      'width:320px', 'height:8px', 'border-radius:4px',
-      'appearance:none', '-webkit-appearance:none',
-      'background:#1e293b', 'accent-color:#38bdf8',
+      'width:320px',
+      'height:8px',
+      'border-radius:4px',
+      'appearance:none',
+      '-webkit-appearance:none',
+      'background:#1e293b',
+      'accent-color:#38bdf8',
     ].join(';');
     this.#root.appendChild(this.#progressEl);
 
@@ -69,10 +80,14 @@ export class FlxPreloader {
     this.#retryBtn.setAttribute('type', 'button');
     this.#retryBtn.setAttribute('aria-label', 'Retry loading');
     this.#retryBtn.style.cssText = [
-      'display:none', 'padding:0.5rem 1.5rem',
-      'background:#38bdf8', 'color:#0f172a',
-      'border:none', 'border-radius:6px',
-      'font-size:1rem', 'font-weight:600',
+      'display:none',
+      'padding:0.5rem 1.5rem',
+      'background:#38bdf8',
+      'color:#0f172a',
+      'border:none',
+      'border-radius:6px',
+      'font-size:1rem',
+      'font-weight:600',
       'cursor:pointer',
     ].join(';');
     this.#retryBtn.addEventListener('click', () => {

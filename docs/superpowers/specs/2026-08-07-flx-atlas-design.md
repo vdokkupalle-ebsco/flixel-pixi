@@ -18,7 +18,7 @@ Separately, proposing both `addAnimation` and `createAnimation` (plus loop/once 
 
 1. **`FlxG.atlas`** — load/get atlases by key from XML, JSON, or fixed width/height.
 2. **Frame pickers** on the atlas — prefix ranges (with padding), numeric index ranges/lists, single `getFrame`.
-3. **Unified `FlxSprite.addAnimation` + `play`** — accept strip indices *or* atlas frames; play takes `{ loop, speed, force }` with sensible defaults.
+3. **Unified `FlxSprite.addAnimation` + `play`** — accept strip indices _or_ atlas frames; play takes `{ loop, speed, force }` with sensible defaults.
 4. Keep **GPU-cheap named frames** (texture views); bake a sprite-local strip only when needed for index-based `FlxAnim` playback.
 5. **Back-compat** with existing `addAnimation(name, frames, frameRate, looped)` and `play(name, force: boolean)`.
 
@@ -32,11 +32,11 @@ Separately, proposing both `addAnimation` and `createAnimation` (plus loop/once 
 
 ## 4. Approaches considered
 
-| Approach | Pros | Cons |
-| --- | --- | --- |
+| Approach                                           | Pros                                     | Cons                                |
+| -------------------------------------------------- | ---------------------------------------- | ----------------------------------- |
 | **1. `FlxG.atlas` + unified sprite anim (chosen)** | Clear ownership; Flixel DX; one play API | Touches `FlxAnim` / `play` slightly |
-| 2. Pixi `Spritesheet` only | Less code | Poor Flixel fit |
-| 3. Sample-only helpers | No API surface | Every game recopies |
+| 2. Pixi `Spritesheet` only                         | Less code                                | Poor Flixel fit                     |
+| 3. Sample-only helpers                             | No API surface                           | Every game recopies                 |
 
 ## 5. Architecture
 
@@ -81,11 +81,7 @@ export class FlxAtlasRegistry {
    * - meta string ending in .json → TexturePacker/Pixi JSON hash or array
    * - meta object → uniform grid; frame names "0","1",… in row-major order
    */
-  load(
-    key: string,
-    imageUrl: string,
-    meta: FlxAtlasMeta,
-  ): Promise<FlxAtlas>;
+  load(key: string, imageUrl: string, meta: FlxAtlasMeta): Promise<FlxAtlas>;
 
   /** Return a previously loaded atlas; throw if missing. */
   get(key: string): FlxAtlas;
@@ -105,8 +101,15 @@ export class FlxAtlasRegistry {
 **Example:**
 
 ```ts
-await FlxG.atlas.load('player', './assets/spritesheet_players.png', './assets/spritesheet_players.xml');
-await FlxG.atlas.load('tiles', './assets/tiles.png', { frameWidth: 64, frameHeight: 64 });
+await FlxG.atlas.load(
+  'player',
+  './assets/spritesheet_players.png',
+  './assets/spritesheet_players.xml',
+);
+await FlxG.atlas.load('tiles', './assets/tiles.png', {
+  frameWidth: 64,
+  frameHeight: 64,
+});
 
 const playerAtlas = FlxG.atlas.get('player');
 ```
@@ -119,7 +122,7 @@ const playerAtlas = FlxG.atlas.get('player');
 export interface FlxAtlasFrame {
   readonly name: string;
   readonly texture: Texture; // view into shared sheet (Pixi frame/rect)
-  readonly index: number;    // stable order index in this atlas
+  readonly index: number; // stable order index in this atlas
 }
 
 export type FlxAtlasFrameList = readonly FlxAtlasFrame[];
@@ -205,9 +208,9 @@ addAnimation(
 
 **Behavior:**
 
-| `frames` type | Action |
-| --- | --- |
-| `number[]` | Validate against current graphic frame count; store indices |
+| `frames` type       | Action                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| `number[]`          | Validate against current graphic frame count; store indices                                 |
 | `FlxAtlasFrameList` | Bake ordered regions into a strip (or reuse cache), `loadGraphic` if needed, store `0..n-1` |
 
 Legacy `frameRate` / `looped` become **defaults** for `play(name)` when no options object is passed:
