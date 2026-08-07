@@ -1,6 +1,8 @@
 import { Texture, type BLEND_MODES } from 'pixi.js';
 
 import { FlxGraphic } from '../assets/flx-graphic';
+import { bakeAtlasFrameStrip } from '../assets/flx-atlas-bake';
+import type { FlxAtlasFrame, FlxAtlasFrameList } from '../assets/flx-atlas-frame';
 import { makeGraphicPixels, type PixelBuffer } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
 import { FlxPoint } from '../math/flx-point';
@@ -15,6 +17,48 @@ export type FlxAnimationCallback = (
   frameNumber: number,
   frameIndex: number,
 ) => void;
+
+/**
+ * Options for `FlxSprite.play` when using the object-form overload.
+ * @public
+ */
+export interface FlxAnimationPlayOptions {
+  /**
+   * Whether the animation loops. Default `false` for the options-object form.
+   * Use the legacy `addAnimation(name, frames, frameRate, looped)` call if you
+   * want looping to be the stored default.
+   */
+  loop?: boolean;
+  /**
+   * Playback speed multiplier relative to the game update rate.
+   * `1` = one animation frame per update. Must be > 0. Default `1`.
+   */
+  speed?: number;
+  /**
+   * Force restart even if this animation is already playing. Default `false`.
+   */
+  force?: boolean;
+}
+
+/** @internal Discriminator: is `frames` an atlas frame list? */
+function isAtlasFrameList(
+  frames: readonly number[] | FlxAtlasFrameList,
+): frames is FlxAtlasFrameList {
+  return (
+    frames.length > 0 &&
+    typeof (frames as FlxAtlasFrameList)[0] === 'object' &&
+    'texture' in (frames as FlxAtlasFrameList)[0]!
+  );
+}
+
+/** Default game update rate used when no FlxGame is active. */
+const DEFAULT_FRAMERATE = 60;
+
+function resolveFramerate(): number {
+  // FlxG does not expose updateFramerate directly; use default.
+  // (FlxGame.updateFramerate is the source of truth but is not on FlxG.)
+  return DEFAULT_FRAMERATE;
+}
 
 /** Renderer-neutral Flixel sprite state with adapter-owned Pixi views. @public */
 export class FlxSprite extends FlxObject {
@@ -44,6 +88,10 @@ export class FlxSprite extends FlxObject {
   #color = 0xffffff;
   #animationPaused = false;
   #destroyed = false;
+  /** Per-playback loop override (set by play). */
+  #playbackLoop = true;
+  /** Per-playback delay in seconds (set by play). 0 = freeze on frame 0. */
+  #playbackDelay = 0;
 
   constructor(x = 0, y = 0, simpleGraphic: FlxGraphic | Texture | null = null) {
     super(x, y);
@@ -129,18 +177,18 @@ export class FlxSprite extends FlxObject {
     if (
       this.#animationPaused ||
       animation === null ||
-      animation.delay <= 0 ||
-      (!animation.looped && this.finished)
+      this.#playbackDelay <= 0 ||
+      (!this.#playbackLoop && this.finished)
     ) {
       if (this.dirty) this.drawFrame();
       return;
     }
 
     this.#frameTimer += FlxG.elapsed;
-    while (this.#frameTimer > animation.delay) {
-      this.#frameTimer -= animation.delay;
+    while (this.#frameTimer > this.#playbackDelay) {
+      this.#frameTimer -= this.#playbackDelay;
       if (this.#currentAnimationFrame === animation.frames.length - 1) {
-        if (animation.looped) this.#currentAnimationFrame = 0;
+        if (this.#playbackLoop) this.#currentAnimationFrame = 0;
         this.finished = true;
       } else {
         this.#currentAnimationFrame += 1;
@@ -165,38 +213,98 @@ export class FlxSprite extends FlxObject {
     this.syncRenderHandles();
   }
 
+  /**
+   * Register a named animation.
+   *
+   * **Strip form (legacy-compatible):**
+   * ```ts
+   * sprite.addAnimation('walk', [0, 1, 2], 12, true);
+   * ```
+   *
+   * **Atlas frame form (new):**
+   * ```ts
+   * sprite.addAnimation('walk', atlas.framesByPrefix('walk_', 1, 2));
+   * // Bakes a horizontal strip internally; default loop=false, speed=1.
+   * ```
+   *
+   * Replaces any existing animation with the same name.
+   */
   addAnimation(
     name: string,
-    frames: readonly number[],
-    frameRate = 0,
-    looped = true,
+    frames: readonly number[] | FlxAtlasFrameList,
+    frameRate?: number,
+    looped?: boolean,
   ): void {
     if (name.length === 0)
       throw new RangeError('Animation name cannot be empty.');
     if (frames.length === 0) {
       throw new RangeError('Animation must contain at least one frame.');
     }
-    for (const frame of frames) this.#validateFrame(frame);
-    this.#animations.push(new FlxAnim(name, frames, frameRate, looped));
+
+    // Remove existing animation with the same name
+    const existingIdx = this.#animations.findIndex((a) => a.name === name);
+    if (existingIdx >= 0) this.#animations.splice(existingIdx, 1);
+
+    if (isAtlasFrameList(frames)) {
+      this.#addAnimationFromAtlas(name, frames);
+    } else {
+      // Strip indices — validate each
+      for (const frame of frames as readonly number[]) this.#validateFrame(frame);
+      // 4-arg form: legacy frameRate/looped defaults; 2-arg form: speed=1/loop=false
+      const useLegacyDefaults = frameRate !== undefined || looped !== undefined;
+      const resolvedFrameRate = frameRate ?? 0;
+      const resolvedLooped = useLegacyDefaults ? (looped ?? true) : false;
+      this.#animations.push(
+        new FlxAnim(name, frames as readonly number[], resolvedFrameRate, resolvedLooped, 1),
+      );
+    }
   }
 
-  addAnimationCallback(callback: FlxAnimationCallback | null): void {
-    this.#callback = callback;
-  }
+  /**
+   * Play a named animation.
+   *
+   * **Legacy form:** `play(name)` or `play(name, force: boolean)` — uses the
+   * `looped` / `frameRate` values stored when `addAnimation` was called.
+   *
+   * **Options form:** `play(name, { loop, speed, force })`
+   * - `loop` defaults to `false`
+   * - `speed` defaults to `1` (one anim frame per game update)
+   * - `force` defaults to `false`
+   */
+  play(name: string, forceOrOptions: boolean | FlxAnimationPlayOptions = false): void {
+    let loop: boolean;
+    let speed: number;
+    let force: boolean;
 
-  play(animationName: string, force = false): void {
+    if (typeof forceOrOptions === 'boolean') {
+      // Legacy form — apply per-animation stored defaults
+      force = forceOrOptions;
+      const existing = this.#animations.find((a) => a.name === name);
+      loop = existing?.defaultLooped ?? true;
+      speed = existing?.defaultSpeed ?? 1;
+    } else {
+      // Options form
+      const opts = forceOrOptions;
+      force = opts.force ?? false;
+      loop = opts.loop ?? false;
+      speed = opts.speed ?? 1;
+      if (speed <= 0) {
+        throw new RangeError('FlxSprite.play: speed must be > 0.');
+      }
+    }
+
     if (
       !force &&
-      this.#currentAnimation?.name === animationName &&
-      (this.#currentAnimation.looped || !this.finished)
+      this.#currentAnimation?.name === name &&
+      (this.#playbackLoop || !this.finished)
     ) {
       return;
     }
     const animation = this.#animations.find((candidate) => {
-      return candidate.name === animationName;
+      return candidate.name === name;
     });
     if (animation === undefined) {
-      throw new Error(`No animation called "${animationName}".`);
+      throw new Error(`No animation called "${name}".`);
     }
 
     this.#currentAnimation = animation;
@@ -204,9 +312,25 @@ export class FlxSprite extends FlxObject {
     this.#currentFrameIndex = animation.frames[0] ?? 0;
     this.#frameTimer = 0;
     this.#animationPaused = false;
-    this.finished = animation.delay <= 0;
+    this.#playbackLoop = loop;
+
+    // Compute delay from speed + framerate
+    const framerate = resolveFramerate();
+    this.#playbackDelay = speed > 0 ? 1 / (framerate * speed) : 0;
+
+    // If the animation was registered with a legacy frameRate, its stored
+    // delay is authoritative when play() is called in legacy boolean form.
+    if (typeof forceOrOptions === 'boolean' && animation.delay > 0) {
+      this.#playbackDelay = animation.delay;
+    }
+
+    this.finished = this.#playbackDelay <= 0;
     this.dirty = true;
     this.drawFrame();
+  }
+
+  addAnimationCallback(callback: FlxAnimationCallback | null): void {
+    this.#callback = callback;
   }
 
   pauseAnimation(): void {
@@ -364,6 +488,73 @@ export class FlxSprite extends FlxObject {
   /** @internal */
   get graphic(): FlxGraphic | null {
     return this.#graphic;
+  }
+
+  // ── Private helpers ─────────────────────────────────────────────────────────
+
+  /**
+   * Bake atlas frames into a horizontal strip graphic and register the
+   * animation with 0..n-1 indices. Default loop=false, speed=1.
+   */
+  #addAnimationFromAtlas(name: string, frames: FlxAtlasFrameList): void {
+    const first = frames[0]!;
+    const outW = first.texture.frame.width;
+    const outH = first.texture.frame.height;
+
+    // Build a canvas image source from the shared atlas base texture.
+    // PixiJS stores the GPU texture; for the bake we access it via the
+    // source's canvas/image resource if available, otherwise fall back to
+    // building a temporary canvas from the raw resource.
+    const atlasTexture = first.texture.source;
+
+    // Obtain a CanvasImageSource from the Pixi TextureSource.
+    // In browser (happy-dom / real browser) the resource can be:
+    //   - HTMLImageElement, HTMLCanvasElement, HTMLVideoElement (direct use)
+    //   - Uint8Array (BufferImageSource) → draw to an offscreen canvas first
+    let canvasSource: CanvasImageSource;
+    const resource = (atlasTexture as { resource?: unknown }).resource;
+    if (
+      resource instanceof HTMLImageElement ||
+      resource instanceof HTMLCanvasElement ||
+      resource instanceof HTMLVideoElement
+    ) {
+      canvasSource = resource;
+    } else {
+      // Fallback: render into an offscreen canvas using the atlas sub-textures.
+      // We reconstruct from the frame rects since we can't directly read GPU
+      // memory in all environments.
+      const offscreen = document.createElement('canvas');
+      const srcW = (atlasTexture as { width: number }).width ?? outW * frames.length;
+      const srcH = (atlasTexture as { height: number }).height ?? outH;
+      offscreen.width = srcW;
+      offscreen.height = srcH;
+      const ctx2d = offscreen.getContext('2d');
+      if (ctx2d !== null && resource instanceof Uint8Array) {
+        // Slice to produce a plain ArrayBuffer (never SharedArrayBuffer)
+        const plainBuffer = resource.buffer.slice(0) as ArrayBuffer;
+        const imgData = new ImageData(
+          new Uint8ClampedArray(plainBuffer),
+          srcW,
+          srcH,
+        );
+        ctx2d.putImageData(imgData, 0, 0);
+      }
+      canvasSource = offscreen;
+    }
+
+    const frameRects = frames.map((f: FlxAtlasFrame) => ({
+      height: f.texture.frame.height,
+      width: f.texture.frame.width,
+      x: f.texture.frame.x,
+      y: f.texture.frame.y,
+    }));
+
+    const stripTexture = bakeAtlasFrameStrip(canvasSource, frameRects, outW, outH);
+    this.loadGraphic(stripTexture, true, false, outW, outH);
+
+    const indices = Array.from({ length: frames.length }, (_, i) => i);
+    // Default for atlas-backed animations: loop=false, speed=1 (no legacy frameRate)
+    this.#animations.push(new FlxAnim(name, indices, 0, false, 1));
   }
 
   #configureGraphic(
