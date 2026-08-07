@@ -22,6 +22,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/external/index.html',
         ),
+        'kenney-platformer': resolve(
+          import.meta.dirname,
+          'examples/games/kenney-platformer/index.html',
+        ),
         'bench-sprites': resolve(
           import.meta.dirname,
           'examples/games/bench-sprites/index.html',
