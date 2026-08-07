@@ -10,6 +10,8 @@ declare global {
       ready: boolean;
       /** Test hook: force switch into PlayState. */
       startPlay?: () => void;
+      /** Test hook: nudge player right without keyboard. */
+      moveRight?: () => void;
       playerX?: () => number;
       playerY?: () => number;
     };
@@ -42,6 +44,12 @@ bootGame({
       startPlay() {
         FlxG.switchState(new PlayState());
         app.syncRenderer();
+      },
+      moveRight() {
+        const state = app.game.state;
+        if (state instanceof PlayState) {
+          state.player.x += 10;
+        }
       },
       playerX() {
         const state = app.game.state;

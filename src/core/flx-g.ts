@@ -24,7 +24,9 @@ import type {
   FlxCameraEffectCallback,
   FlxCameraShakeDirection,
 } from './flx-camera';
-import type { FlxContext } from './flx-context';
+import { FLX_ACTIONS_SERVICE, type FlxContext } from './flx-context';
+import { FlxActions } from '../input/flx-actions';
+
 import type { FlxGroup } from './flx-group';
 import type { FlxState } from './flx-state';
 import { FlxReplay } from '../replay/flx-replay';
@@ -219,6 +221,16 @@ export class FlxG {
     }
     return input;
   }
+
+  static get actions(): FlxActions {
+    let instance = FlxG.context.getService<FlxActions>(FLX_ACTIONS_SERVICE);
+    if (instance === undefined) {
+      instance = new FlxActions();
+      FlxG.context.setService(FLX_ACTIONS_SERVICE, instance);
+    }
+    return instance;
+  }
+
 
   static get #audio(): FlxAudioService {
     const audio = FlxG.context.getService<FlxAudioService>(FLX_AUDIO_SERVICE);

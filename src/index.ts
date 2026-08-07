@@ -154,3 +154,21 @@ export type {
   FlxDebuggerOptions,
   FlxDebuggerVCRCallbacks,
 } from './debugger/flx-debugger';
+
+export { FlxActions } from './input/flx-actions';
+
+// --- Game Maker DX ---
+
+export {
+  createBrowserGame,
+} from './browser/create-browser-game';
+export type {
+  BrowserGameApplication,
+  CreateBrowserGameOptions,
+} from './browser/create-browser-game';
+export {
+  collectRenderables,
+  syncWorldToRenderer,
+} from './rendering/flx-world-sync';
+export type { FlxRenderable } from './rendering/flx-world-sync';
+

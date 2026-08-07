@@ -1,25 +1,3 @@
-declare global {
-  interface Window {
-    __FLIXEL_PIXI_BENCH__?: {
-      ready: boolean;
-      measured: boolean;
-      destroyed: boolean;
-      avgFps: number;
-      minFps: number;
-      activeCount: number;
-      inactiveCount: number;
-      drawCalls: number | null;
-    };
-    __FLIXEL_PIXI_SOAK__?: {
-      done: boolean;
-      cycles: number;
-      errors: string[];
-      registeredSamples: number[];
-    };
-  }
-}
-export {};
-
 import { expect, test } from '@playwright/test';
 
 const GAMES = 'http://127.0.0.1:4174';

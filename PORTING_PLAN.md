@@ -456,6 +456,8 @@ Checkpoint C12 — release candidate feature gate:
 
 Status: **hardening pass in progress** (2026-08-06). Atlas sprite FPS baseline + short soak shipped; full C13 (30‑minute soak, hard budgets, 1.0 publish) not closed. See [`docs/phase13-evidence.md`](docs/phase13-evidence.md) and [`docs/superpowers/specs/2026-08-06-phase13-hardening-design.md`](docs/superpowers/specs/2026-08-06-phase13-hardening-design.md).
 
+**Game-maker DX track (parallel, not a C13 claim):** public `createBrowserGame`, incremental `syncWorldToRenderer`, Mode Lite pooling, and `FlxG.actions`. See [`docs/dx-evidence.md`](docs/dx-evidence.md), [`docs/guides/making-games.md`](docs/guides/making-games.md), and [`docs/superpowers/plans/2026-08-07-game-maker-dx.md`](docs/superpowers/plans/2026-08-07-game-maker-dx.md).
+
 Work:
 
 - Profile before optimizing; tune batching, atlases, render groups, culling, tile chunks, text choice, resolution, and object pools based on measured bottlenecks.

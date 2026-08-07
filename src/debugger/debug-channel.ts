@@ -4,7 +4,7 @@
  * @public
  */
 
-/** Payload shapes for each debug event type. */
+/** Payload shapes for each debug event type. @public */
 export interface DebugEvents {
   /** Emitted after every simulation step. */
   'step-complete': {
@@ -25,6 +25,7 @@ export interface DebugEvents {
   'pause-change': { paused: boolean };
 }
 
+/** @public */
 export type DebugEventType = keyof DebugEvents;
 export type DebugHandler<T extends DebugEventType> = (
   payload: DebugEvents[T],

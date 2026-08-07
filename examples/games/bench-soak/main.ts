@@ -26,6 +26,7 @@ window.__FLIXEL_PIXI_SOAK__ = {
 };
 
 if (!host) throw new Error('Missing [data-testid="canvas-host"]');
+const canvasHost = host;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,7 +39,7 @@ async function runSoak(): Promise<void> {
   for (let i = 0; i < CYCLES; i += 1) {
     try {
       const app = await bootGame({
-        host,
+        host: canvasHost,
         initialState: SoakState,
         width: 640,
         height: 480,

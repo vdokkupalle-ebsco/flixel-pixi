@@ -8,7 +8,11 @@ How to extend `flixel-pixi` without forking the core.
 
 ## Render handles
 
-Sprites, tilemaps, emitters, and buttons expose `createRenderHandle()`. `FlxCameraRenderer.add` attaches handles into the world layer. Custom drawables should follow the same pattern: simulation object + handle that `sync(camera)` each pass (ADR 0001).
+Sprites, tilemaps, emitters, and buttons expose `createRenderHandle()`.
+`FlxCameraRenderer.add` attaches handles into the world layer. Prefer
+`createBrowserGame` / `syncWorldToRenderer` so membership stays in sync; custom
+drawables should still follow simulation object + handle that `sync(camera)` each
+pass (ADR 0001).
 
 ## Compatibility modules
 
@@ -16,12 +20,12 @@ CPU pixel ops (`stamp`, `replaceColor`, mutable `pixels`) live in the explicit c
 
 ## Services
 
-`FlxContext.setService` / `getService` host audio, storage, camera host, log, and watch. Swap backends (`WebAudioBackend`, `LocalStorageBackend`, …) at construction time for tests or alternate platforms.
+`FlxContext.setService` / `getService` host audio, storage, camera host, log, watch, and actions. Swap backends (`WebAudioBackend`, `LocalStorageBackend`, …) at construction time for tests or alternate platforms.
 
 ## Input / audio / save
 
-- Input: `FlxInputManager` options on `FlxGame`
-- Audio: pass `FlxAudioBackend` into `FlxGame` (ADR 0010)
+- Input: `FlxInputManager` options on `FlxGame`; optional `FlxG.actions` for named key bindings
+- Audio: pass `FlxAudioBackend` into `FlxGame` / `createBrowserGame` (ADR 0010)
 - Save: `FlxSave.bind` with versioned migrations (ADR 0011)
 
 ## What not to do

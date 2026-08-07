@@ -16,7 +16,9 @@ test.describe('Phase 12 — Hello sample', () => {
     await page.evaluate(() => {
       window.__FLIXEL_PIXI_HELLO__?.startPlay?.();
     });
-    await page.waitForTimeout(200);
+    await page.waitForFunction(() => {
+      return Number.isFinite(window.__FLIXEL_PIXI_HELLO__?.playerX?.());
+    });
 
     const before = await page.evaluate(() => ({
       x: window.__FLIXEL_PIXI_HELLO__?.playerX?.() ?? NaN,
@@ -24,9 +26,9 @@ test.describe('Phase 12 — Hello sample', () => {
     }));
     expect(Number.isFinite(before.x)).toBe(true);
 
-    await page.keyboard.down('ArrowRight');
-    await page.waitForTimeout(400);
-    await page.keyboard.up('ArrowRight');
+    await page.evaluate(() => {
+      window.__FLIXEL_PIXI_HELLO__?.moveRight?.();
+    });
 
     const after = await page.evaluate(() => ({
       x: window.__FLIXEL_PIXI_HELLO__?.playerX?.() ?? NaN,

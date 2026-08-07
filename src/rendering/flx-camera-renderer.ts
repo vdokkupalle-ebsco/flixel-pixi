@@ -104,6 +104,10 @@ export class FlxCameraRenderer implements FlxCameraHost {
     return this.#entries.size;
   }
 
+  get registeredObjects(): IterableIterator<FlxSprite | FlxTilemap | FlxEmitter> {
+    return this.#entries.keys();
+  }
+
   get renderTargetBytes(): number {
     let bytes = 0;
     for (const view of this.#views.values()) {

@@ -4,6 +4,7 @@
 
 ```ts
 
+import { Application } from 'pixi.js';
 import { BitmapText } from 'pixi.js';
 import { BLEND_MODES } from 'pixi.js';
 import { Container } from 'pixi.js';
@@ -19,18 +20,97 @@ import type { TextStyleAlign } from 'pixi.js';
 import { Texture } from 'pixi.js';
 
 // @public
+export interface BrowserGameApplication {
+    // (undocumented)
+    readonly app: Application;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    readonly game: FlxGame;
+    // (undocumented)
+    readonly renderer: FlxCameraRenderer;
+    syncRenderer(): void;
+}
+
+// @public
 export interface CodePair {
     // (undocumented)
-    code: string;
+    code: number;
     // (undocumented)
     value: number;
 }
+
+// @public
+export function collectRenderables(root: FlxBasic, out: FlxRenderable[]): void;
 
 // @public
 export function convertAS3ReplayToFlxReplay(as3Text: string): FlxReplay;
 
 // @public
 export function convertFlxReplayToAS3Text(replay: FlxReplay): string;
+
+// @public
+export function createBrowserGame(options: CreateBrowserGameOptions): Promise<BrowserGameApplication>;
+
+// @public
+export interface CreateBrowserGameOptions {
+    // (undocumented)
+    audioBackend?: FlxAudioBackend;
+    // (undocumented)
+    backgroundColor?: number;
+    // (undocumented)
+    height?: number;
+    // (undocumented)
+    host: HTMLElement;
+    // (undocumented)
+    initialState: FlxStateConstructor;
+    // (undocumented)
+    showPreloader?: boolean;
+    // (undocumented)
+    title?: string;
+    // (undocumented)
+    width?: number;
+    // (undocumented)
+    zoom?: number;
+}
+
+// @public
+export class DebugChannel {
+    destroy(): void;
+    // (undocumented)
+    emit<T extends DebugEventType>(type: T, payload: DebugEvents[T]): void;
+    // (undocumented)
+    off<T extends DebugEventType>(type: T, handler: DebugHandler<T>): void;
+    // Warning: (ae-forgotten-export) The symbol "DebugHandler" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    on<T extends DebugEventType>(type: T, handler: DebugHandler<T>): void;
+}
+
+// @public
+export interface DebugEvents {
+    'pause-change': {
+        paused: boolean;
+    };
+    'step-complete': {
+        frame: number;
+        updateMs: number;
+    };
+    log: {
+        color: number;
+        message: string;
+        timestamp: number;
+    };
+    watch: {
+        entries: readonly {
+            name: string;
+            value: string;
+        }[];
+    };
+}
+
+// @public (undocumented)
+export type DebugEventType = keyof DebugEvents;
 
 // @public
 export class DebugPathDisplay extends FlxBasic {
@@ -86,7 +166,23 @@ export const FLX_CAMERA_HOST_SERVICE: unique symbol;
 export const FLX_INPUT_SERVICE: unique symbol;
 
 // @public
+export const FLX_LOG_SERVICE: unique symbol;
+
+// @public
 export const FLX_STORAGE_SERVICE: unique symbol;
+
+// @public
+export const FLX_WATCH_SERVICE: unique symbol;
+
+// @public
+export class FlxActions {
+    bind(action: string, ...keys: string[]): void;
+    justPressed(action: string): boolean;
+    justReleased(action: string): boolean;
+    pressed(action: string): boolean;
+    reset(): void;
+    unbind(action: string): void;
+}
 
 // @public
 export class FlxAnim {
@@ -542,6 +638,8 @@ export class FlxCameraRenderer implements FlxCameraHost {
     // (undocumented)
     get registeredObjectCount(): number;
     // (undocumented)
+    get registeredObjects(): IterableIterator<FlxSprite | FlxTilemap | FlxEmitter>;
+    // (undocumented)
     remove(object: FlxSprite | FlxTilemap | FlxEmitter, destroyHandle?: boolean): boolean;
     // (undocumented)
     removeCamera(camera: FlxCamera): void;
@@ -646,6 +744,44 @@ export class FlxContext {
 }
 
 // @public
+export class FlxDebugger {
+    constructor(options?: FlxDebuggerOptions);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    hide(): void;
+    setVCRCallbacks(callbacks: FlxDebuggerVCRCallbacks): void;
+    // (undocumented)
+    show(): void;
+    subscribeToChannel(channel: DebugChannel, log: FlxLog, watch: FlxWatch): void;
+    // (undocumented)
+    toggle(): void;
+    // (undocumented)
+    get visible(): boolean;
+}
+
+// @public (undocumented)
+export interface FlxDebuggerOptions {
+    container?: HTMLElement;
+}
+
+// @public
+export interface FlxDebuggerVCRCallbacks {
+    // (undocumented)
+    getVCR(): FlxVCR;
+    // (undocumented)
+    play(): void;
+    // (undocumented)
+    record(): void;
+    // (undocumented)
+    rewind(): void;
+    // (undocumented)
+    stepFrame(): void;
+    // (undocumented)
+    stop(): void;
+}
+
+// @public
 export class FlxEmitter extends FlxGroup<FlxParticle> {
     constructor(x?: number, y?: number, size?: number);
     // (undocumented)
@@ -734,6 +870,8 @@ export interface FlxEmitterRenderOptions {
 // @public
 export class FlxG {
     // (undocumented)
+    static get actions(): FlxActions;
+    // (undocumented)
     static addCamera(camera: FlxCamera): FlxCamera;
     // (undocumented)
     static addPlugin<T extends FlxBasic>(plugin: T): T;
@@ -805,6 +943,7 @@ export class FlxG {
     // (undocumented)
     static readonly LIBRARY_NAME = "flixel-pixi";
     static loadReplay(replay: FlxReplay, reloadState?: FlxState | null, cancelKeys?: string[], timeout?: number, onComplete?: (() => void) | null): void;
+    static get log(): FlxLog;
     // (undocumented)
     static get mouse(): Mouse;
     static get music(): FlxSound | null;
@@ -824,7 +963,7 @@ export class FlxG {
     static get plugins(): readonly FlxBasic[];
     // (undocumented)
     static random(): number;
-    static recordReplay(): void;
+    static recordReplay(standardMode?: boolean): void;
     // (undocumented)
     static readonly RED = 4294901778;
     static reloadReplay(resetState?: boolean): void;
@@ -869,6 +1008,7 @@ export class FlxG {
     static set visualDebug(value: boolean);
     static get volume(): number;
     static set volume(value: number);
+    static get watch(): FlxWatch;
     // (undocumented)
     static readonly WHITE = 4294967295;
     // (undocumented)
@@ -889,6 +1029,7 @@ export class FlxGame implements FlxStateRuntime {
     readonly audio: FlxAudioManager;
     // (undocumented)
     readonly context: FlxContext;
+    readonly debugChannel: DebugChannel;
     // (undocumented)
     destroy(): void;
     // (undocumented)
@@ -899,6 +1040,7 @@ export class FlxGame implements FlxStateRuntime {
     readonly input: FlxInputManager;
     // (undocumented)
     get interpolationAlpha(): number;
+    readonly log: FlxLog;
     // (undocumented)
     requestState(state: FlxState): void;
     // (undocumented)
@@ -912,6 +1054,7 @@ export class FlxGame implements FlxStateRuntime {
     useSoundHotKeys: boolean;
     // (undocumented)
     readonly useSystemCursor: boolean;
+    readonly watch: FlxWatch;
     // (undocumented)
     readonly zoom: number;
 }
@@ -1051,6 +1194,17 @@ export interface FlxKeyRecord {
     readonly code: number;
     // (undocumented)
     readonly value: number;
+}
+
+// @public
+export class FlxLog {
+    add(message: string, color?: number): void;
+    clear(): void;
+    get entries(): readonly LogEntry[];
+    error(message: string): void;
+    // (undocumented)
+    static readonly MAX_ENTRIES = 1024;
+    warn(message: string): void;
 }
 
 // @public
@@ -1282,6 +1436,24 @@ export interface FlxPointerEventLike {
 }
 
 // @public
+export class FlxPreloader {
+    constructor(options?: FlxPreloaderOptions);
+    complete(): void;
+    destroy(): void;
+    onRetry(handler: () => void): void;
+    setProgress(percent: number, statusText?: string): void;
+    showError(message: string): void;
+    // (undocumented)
+    get state(): PreloaderState;
+}
+
+// @public
+export interface FlxPreloaderOptions {
+    container?: HTMLElement;
+    title?: string;
+}
+
+// @public
 export type FlxProcessCallback = (first: FlxObject, second: FlxObject) => boolean;
 
 // @public
@@ -1337,6 +1509,9 @@ export class FlxRect implements RectangleLike {
     // (undocumented)
     y: number;
 }
+
+// @public
+export type FlxRenderable = FlxSprite | FlxTilemap | FlxEmitter;
 
 // @public
 export interface FlxRenderHandle {
@@ -1911,6 +2086,14 @@ export interface FlxVCR {
 }
 
 // @public
+export class FlxWatch {
+    add(obj: Record<string, any>, field: string, displayName?: string): void;
+    clear(): void;
+    remove(obj: Record<string, any>, field: string): void;
+    snapshot(): WatchSnapshot[];
+}
+
+// @public
 export class FrameRecord {
     constructor(frame?: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null);
     // (undocumented)
@@ -2200,6 +2383,16 @@ export class LocalStorageBackend implements FlxStorageBackend {
 }
 
 // @public
+export interface LogEntry {
+    // (undocumented)
+    readonly color: number;
+    // (undocumented)
+    readonly message: string;
+    // (undocumented)
+    readonly timestamp: number;
+}
+
+// @public
 export function makeGraphicPixels(width: number, height: number, color: number): PixelBuffer;
 
 // @public
@@ -2332,6 +2525,9 @@ export interface PointLike {
 }
 
 // @public
+export type PreloaderState = 'loading' | 'ready' | 'error';
+
+// @public
 export interface RectangleLike {
     // (undocumented)
     height: number;
@@ -2358,6 +2554,9 @@ export interface ReplayFileFormat {
     // (undocumented)
     version: string;
 }
+
+// @public
+export function syncWorldToRenderer(game: FlxGame, renderer: FlxCameraRenderer): void;
 
 // @public
 export class TimerManager extends FlxBasic {
@@ -2387,6 +2586,24 @@ export interface UpstreamBaseline {
 
 // @public
 export const upstreamBaseline: Readonly<UpstreamBaseline>;
+
+// @public
+export interface WatchEntry {
+    // (undocumented)
+    readonly displayName: string;
+    // (undocumented)
+    readonly field: string;
+    // (undocumented)
+    readonly obj: Record<string, any>;
+}
+
+// @public
+export interface WatchSnapshot {
+    // (undocumented)
+    readonly name: string;
+    // (undocumented)
+    readonly value: string;
+}
 
 // @public
 export class WebAudioBackend implements FlxAudioBackend {

@@ -3,12 +3,19 @@
  * (Flixel demo, MIT). Original Flash assets are NOT copied — procedural
  * graphics only. See docs/phase12-external-gap.md.
  */
-import { FlxButton, FlxG, FlxSprite, FlxState, FlxText } from '../../../src';
+import { FlxButton, FlxG, FlxGroup, FlxSprite, FlxState, FlxText } from '../../../src';
 
 class Enemy extends FlxSprite {
-  constructor(x: number, y: number) {
-    super(x, y);
+  constructor() {
+    super(0, 0);
     this.makeGraphic(18, 18, 0xffef4444);
+    this.exists = false;
+  }
+
+  spawn(x: number, y: number, vx: number): void {
+    this.reset(x, y);
+    this.velocity.x = vx;
+    this.velocity.y = 0;
     this.health = 1;
   }
 }
@@ -54,7 +61,7 @@ export class ModeMenuState extends FlxState {
 
 export class ModePlayState extends FlxState {
   player!: FlxSprite;
-  enemies!: Enemy[];
+  enemies!: FlxGroup<Enemy>;
   bullets!: Bullet[];
   hud!: FlxText;
   score = 0;
@@ -64,6 +71,8 @@ export class ModePlayState extends FlxState {
     super.create();
     FlxG.camera.bgColor = 0xff1c1917;
 
+    FlxG.actions.bind('shoot', 'Z');
+
     this.player = new FlxSprite(80, 220);
     this.player.makeGraphic(20, 28, 0xff38bdf8);
     this.player.maxVelocity.x = 200;
@@ -72,7 +81,12 @@ export class ModePlayState extends FlxState {
     this.player.drag.y = 1200;
     this.add(this.player);
 
-    this.enemies = [];
+    this.enemies = new FlxGroup<Enemy>(16);
+    for (let i = 0; i < 16; i += 1) {
+      this.enemies.add(new Enemy());
+    }
+    this.add(this.enemies);
+
     this.bullets = [];
     for (let i = 0; i < 12; i += 1) {
       const b = new Bullet();
@@ -96,13 +110,14 @@ export class ModePlayState extends FlxState {
   }
 
   #spawnEnemy(): void {
-    const enemy = new Enemy(
-      FlxG.width + 10,
-      40 + Math.floor(FlxG.random() * (FlxG.height - 80)),
-    );
-    enemy.velocity.x = -80 - FlxG.random() * 60;
-    this.enemies.push(enemy);
-    this.add(enemy);
+    const enemy = this.enemies.recycle(Enemy);
+    if (enemy) {
+      enemy.spawn(
+        FlxG.width + 10,
+        40 + Math.floor(FlxG.random() * (FlxG.height - 80)),
+        -80 - FlxG.random() * 60,
+      );
+    }
   }
 
   override update(): void {
@@ -112,7 +127,7 @@ export class ModePlayState extends FlxState {
     if (FlxG.keys.pressed('RIGHT')) this.player.acceleration.x = 1000;
     if (FlxG.keys.pressed('UP')) this.player.acceleration.y = -1000;
     if (FlxG.keys.pressed('DOWN')) this.player.acceleration.y = 1000;
-    if (FlxG.keys.justPressed('Z')) this.#fire();
+    if (FlxG.actions.justPressed('shoot')) this.#fire();
 
     if (this.player.x < 0) this.player.x = 0;
     if (this.player.y < 0) this.player.y = 0;
@@ -132,8 +147,8 @@ export class ModePlayState extends FlxState {
     for (const bullet of this.bullets) {
       if (!bullet.exists) continue;
       if (bullet.x > FlxG.width + 20) bullet.kill();
-      for (const enemy of this.enemies) {
-        if (!enemy.exists) continue;
+      for (const enemy of this.enemies.members) {
+        if (!enemy || !enemy.exists) continue;
         if (bullet.overlaps(enemy)) {
           bullet.kill();
           enemy.kill();
@@ -142,8 +157,8 @@ export class ModePlayState extends FlxState {
       }
     }
 
-    for (const enemy of this.enemies) {
-      if (!enemy.exists) continue;
+    for (const enemy of this.enemies.members) {
+      if (!enemy || !enemy.exists) continue;
       if (enemy.x < -40) enemy.kill();
       if (enemy.overlaps(this.player)) {
         this.hud.text = `GAME OVER — score ${this.score} · Esc menu`;

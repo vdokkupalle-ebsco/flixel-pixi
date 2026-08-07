@@ -13,6 +13,10 @@ export interface FlxCameraHost {
 /** Service token for the active camera renderer adapter. @public */
 export const FLX_CAMERA_HOST_SERVICE = Symbol('flixel-pixi.camera-host');
 
+/** Service token for the action input manager. @public */
+export const FLX_ACTIONS_SERVICE = Symbol('flixel-pixi.actions');
+
+
 /** Runtime bridge installed by a `FlxGame` into its context. @public */
 export interface FlxStateRuntime {
   readonly state: FlxState | null;

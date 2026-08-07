@@ -127,12 +127,13 @@ const DEBUGGER_CSS = `
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/** @public */
 export interface FlxDebuggerOptions {
   /** Element to mount the overlay inside. Defaults to document.body. */
   container?: HTMLElement;
 }
 
-/** Callbacks the debugger needs to invoke VCR actions on the game. */
+/** Callbacks the debugger needs to invoke VCR actions on the game. @public */
 export interface FlxDebuggerVCRCallbacks {
   record(): void;
   stop(): void;
