@@ -6,13 +6,16 @@ import { Texture } from 'pixi.js';
 
 import {
   FlxCamera,
+  FlxEmitter,
   FlxG,
   FlxGroup,
   FlxObject,
+  FlxSave,
   FlxSprite,
   FlxState,
   FlxText,
   FlxTilemap,
+  LocalStorageBackend,
 } from '../../../src';
 import { playKenneySfx } from './audio';
 import {
@@ -23,6 +26,7 @@ import {
   MAP_W,
   PLAYER_SPAWN,
   SLIME_SPOTS,
+  SPRING_SPOTS,
   TILE,
   makeMapData,
 } from './level';
@@ -70,6 +74,7 @@ export interface KenneyAssets {
   flag: Texture;
   slime: Texture;
   fly: Texture;
+  star: Texture;
 }
 
 let preloadedAssets: KenneyAssets | null = null;
@@ -122,6 +127,7 @@ export async function preloadKenneyAssets(): Promise<KenneyAssets> {
       64,
       64,
     ),
+    star: items.makeGraphic([items.getFrame('star')], 32, 32),
   };
   return preloadedAssets;
 }
@@ -201,6 +207,15 @@ class Fly extends FlxSprite {
   }
 }
 
+class Spring extends FlxSprite {
+  spawn(x: number, y: number, tex: Texture): void {
+    this.loadGraphic(tex);
+    this.width = 32;
+    this.height = 32;
+    this.reset(x, y);
+  }
+}
+
 /** Side-view Kenney platformer with Paragon-style jump helpers. */
 export class KenneyPlayState extends FlxState {
   map!: FlxTilemap;
@@ -208,13 +223,21 @@ export class KenneyPlayState extends FlxState {
   coins!: FlxGroup<FlxSprite>;
   slimes!: FlxGroup<Slime>;
   flies!: FlxGroup<Fly>;
+  springs!: FlxGroup<Spring>;
   flag!: FlxSprite;
   hudText!: FlxText;
   #bgLayers: FlxSprite[] = [];
 
+  coinEmitter!: FlxEmitter;
+  stompEmitter!: FlxEmitter;
+  springEmitter!: FlxEmitter;
+  hurtEmitter!: FlxEmitter;
+
   status: 'play' | 'won' | 'lost' = 'play';
   lives = 3;
   coinsCollected = 0;
+  score = 0;
+  highScore = 0;
 
   #spawnX = PLAYER_SPAWN.tx * TILE;
   #spawnY = PLAYER_SPAWN.ty * TILE - PLAYER_HIT_H;
@@ -229,6 +252,14 @@ export class KenneyPlayState extends FlxState {
   override create(): void {
     super.create();
     const assets = requireAssets();
+
+    // Persistent High Score
+    const save = new FlxSave();
+    save.bind('kenney_platformer', { backend: new LocalStorageBackend() });
+    if (typeof save.data?.highScore === 'number') {
+      this.highScore = save.data.highScore as number;
+    }
+    save.close();
 
     FlxG.worldBounds.make(0, 0, MAP_W * TILE, MAP_H * TILE);
     FlxG.camera.bgColor = 0xff87ceeb;
@@ -306,6 +337,14 @@ export class KenneyPlayState extends FlxState {
     }
     this.add(this.coins);
 
+    this.springs = new FlxGroup<Spring>();
+    for (const [tx, ty] of SPRING_SPOTS) {
+      const spring = new Spring();
+      spring.spawn(tx * TILE + 16, ty * TILE + 32, assets.star);
+      this.springs.add(spring);
+    }
+    this.add(this.springs);
+
     this.slimes = new FlxGroup<Slime>();
     for (const spot of SLIME_SPOTS) {
       const slime = new Slime();
@@ -333,6 +372,35 @@ export class KenneyPlayState extends FlxState {
     this.flag.addAnimation('wave', [0, 1], 6, true);
     this.flag.play('wave', { loop: true, speed: 6 / 60 });
     this.add(this.flag);
+
+    // Emitters
+    this.coinEmitter = new FlxEmitter(0, 0, 15);
+    this.coinEmitter.makeParticles(assets.coin, 15);
+    this.coinEmitter.setXSpeed(-60, 60);
+    this.coinEmitter.setYSpeed(-120, -30);
+    this.coinEmitter.gravity = 300;
+    this.add(this.coinEmitter);
+
+    this.stompEmitter = new FlxEmitter(0, 0, 20);
+    this.stompEmitter.makeParticles(assets.slime, 20);
+    this.stompEmitter.setXSpeed(-100, 100);
+    this.stompEmitter.setYSpeed(-150, -40);
+    this.stompEmitter.gravity = 400;
+    this.add(this.stompEmitter);
+
+    this.springEmitter = new FlxEmitter(0, 0, 15);
+    this.springEmitter.makeParticles(assets.star, 15);
+    this.springEmitter.setXSpeed(-80, 80);
+    this.springEmitter.setYSpeed(-200, -80);
+    this.springEmitter.gravity = 250;
+    this.add(this.springEmitter);
+
+    this.hurtEmitter = new FlxEmitter(0, 0, 15);
+    this.hurtEmitter.makeParticles(assets.coin, 15);
+    this.hurtEmitter.setXSpeed(-90, 90);
+    this.hurtEmitter.setYSpeed(-140, -40);
+    this.hurtEmitter.gravity = 350;
+    this.add(this.hurtEmitter);
 
     this.hudText = new FlxText(8, 6, 624, '');
     this.hudText.setFormat(undefined, 13, 0xff0f172a, 'left');
@@ -456,32 +524,83 @@ export class KenneyPlayState extends FlxState {
       this.player.velocity.y = MAX_FALL;
     }
 
+    // Coin collection
     for (const member of this.coins.members) {
       if (member === null || !member.exists) continue;
       if (this.player.overlaps(member)) {
         member.kill();
         this.coinsCollected += 1;
+        this.score += 50;
         playKenneySfx('coin');
+        this.coinEmitter.x = member.x + 16;
+        this.coinEmitter.y = member.y + 16;
+        this.coinEmitter.start(true, 0.5, 0, 8);
       }
     }
 
-    if (this.#invuln <= 0) {
+    // Spring Pads
+    for (const spring of this.springs.members) {
+      if (spring !== null && spring.exists && this.player.overlaps(spring)) {
+        this.player.velocity.y = -750;
+        this.player.y = spring.y - PLAYER_HIT_H;
+        this.#jumpHeld = true;
+        this.#touchedGroundSinceJump = true;
+        playKenneySfx('jump');
+        this.springEmitter.x = spring.x + 16;
+        this.springEmitter.y = spring.y + 16;
+        this.springEmitter.start(true, 0.5, 0, 10);
+      }
+    }
+
+    // Slimes stomping vs damage
+    if (this.#invuln <= 0 && this.status === 'play') {
       for (const slime of this.slimes.members) {
         if (slime !== null && slime.exists && this.player.overlaps(slime)) {
-          this.#takeDamage(false);
-          break;
+          const playerBottom = this.player.last.y + this.player.height;
+          const slimeMidY = slime.y + 16;
+          if (this.player.velocity.y > 0 && playerBottom <= slimeMidY) {
+            slime.kill();
+            this.score += 100;
+            this.player.velocity.y = -400;
+            this.#jumpHeld = true;
+            this.#touchedGroundSinceJump = true;
+            playKenneySfx('stomp');
+            this.stompEmitter.x = slime.x + 20;
+            this.stompEmitter.y = slime.y + 16;
+            this.stompEmitter.start(true, 0.5, 0, 10);
+          } else {
+            this.#takeDamage(false, slime.x + slime.width * 0.5);
+            break;
+          }
         }
       }
     }
+
+    // Flying pests stomping vs damage
     if (this.#invuln <= 0 && this.status === 'play') {
       for (const fly of this.flies.members) {
         if (fly !== null && fly.exists && this.player.overlaps(fly)) {
-          this.#takeDamage(false);
-          break;
+          const playerBottom = this.player.last.y + this.player.height;
+          const flyMidY = fly.y + 14;
+          if (this.player.velocity.y > 0 && playerBottom <= flyMidY) {
+            fly.kill();
+            this.score += 150;
+            this.player.velocity.y = -450;
+            this.#jumpHeld = true;
+            this.#touchedGroundSinceJump = true;
+            playKenneySfx('stomp');
+            this.stompEmitter.x = fly.x + 20;
+            this.stompEmitter.y = fly.y + 14;
+            this.stompEmitter.start(true, 0.5, 0, 10);
+          } else {
+            this.#takeDamage(false, fly.x + fly.width * 0.5);
+            break;
+          }
         }
       }
     }
 
+    // Flag Victory
     if (
       this.status === 'play' &&
       this.flag.exists &&
@@ -489,8 +608,10 @@ export class KenneyPlayState extends FlxState {
     ) {
       this.status = 'won';
       playKenneySfx('win');
+      this.#saveHighScore();
     }
 
+    // Pit fall check
     const viewBottom = FlxG.camera.scroll.y + FlxG.camera.height;
     if (this.player.y > viewBottom + 32 || this.player.y > MAP_H * TILE + 32) {
       this.#takeDamage(true);
@@ -527,7 +648,7 @@ export class KenneyPlayState extends FlxState {
     this.player.play('idle', { loop: true });
   }
 
-  #takeDamage(fromPit: boolean): void {
+  #takeDamage(fromPit: boolean, sourceX?: number): void {
     if (this.status !== 'play') return;
     if (this.#invuln > 0 && !fromPit) return;
 
@@ -535,18 +656,37 @@ export class KenneyPlayState extends FlxState {
     this.#invuln = INVULN_TIME;
     this.player.play('hit', true);
 
+    // Screen Shake & Hurt Particles
+    FlxG.camera.shake(0.015, 0.25);
+    if (this.hurtEmitter) {
+      this.hurtEmitter.x = this.player.x + PLAYER_HIT_W * 0.5;
+      this.hurtEmitter.y = this.player.y + PLAYER_HIT_H * 0.5;
+      this.hurtEmitter.start(true, 0.5, 0, 10);
+    }
+
     if (this.lives <= 0) {
       this.status = 'lost';
       playKenneySfx('hurt');
       this.player.velocity.make(0, 0);
       this.player.acceleration.make(0, 0);
+      this.#saveHighScore();
       return;
     }
 
     playKenneySfx(fromPit ? 'respawn' : 'hurt');
-    this.player.reset(this.#spawnX, this.#spawnY);
-    this.player.velocity.make(0, 0);
-    this.player.acceleration.make(0, 0);
+
+    if (fromPit) {
+      this.player.reset(this.#spawnX, this.#spawnY);
+      this.player.velocity.make(0, 0);
+      this.player.acceleration.make(0, 0);
+    } else {
+      // Recoil jump / knockback away from enemy!
+      const knockDir =
+        sourceX !== undefined && this.player.x < sourceX ? -1 : 1;
+      this.player.velocity.y = -320;
+      this.player.velocity.x = knockDir * 240;
+    }
+
     this.#coyote = 0;
     this.#jumpBuffer = 0;
     this.#jumpHeld = false;
@@ -555,11 +695,28 @@ export class KenneyPlayState extends FlxState {
     this.#framesGoingDown = 0;
   }
 
+  #saveHighScore(): void {
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      const save = new FlxSave();
+      save.bind('kenney_platformer', { backend: new LocalStorageBackend() });
+      if (!save.data) save.data = {};
+      save.data.highScore = this.highScore;
+      save.flush();
+      save.close();
+    }
+  }
+
   #updateHud(): void {
-    const total = COIN_SPOTS.length;
-    let text = `lives ${this.lives} · coins ${this.coinsCollected}/${total}`;
-    if (this.status === 'won') text += ' · YOU WIN — press R';
-    else if (this.status === 'lost') text += ' · GAME OVER — press R';
-    this.hudText.text = text;
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+    }
+    let statusMsg = '';
+    if (this.status === 'won') {
+      statusMsg = ` · 🎉 WIN! Score: ${this.score} (Press 'R' to Restart)`;
+    } else if (this.status === 'lost') {
+      statusMsg = ` · 💀 GAME OVER! Score: ${this.score} (Press 'R' to Restart)`;
+    }
+    this.hudText.text = `LIVES: ${'❤️'.repeat(Math.max(0, this.lives))} | COINS: ${this.coinsCollected} | SCORE: ${this.score} | BEST: ${this.highScore}${statusMsg}`;
   }
 }

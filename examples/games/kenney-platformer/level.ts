@@ -50,6 +50,12 @@ export const FLY_SPOTS: readonly {
 
 export const FLAG_SPOT = { tx: 94, ty: FLOOR - 1 } as const;
 
+export const SPRING_SPOTS: readonly (readonly [number, number])[] = [
+  [15, FLOOR - 1],
+  [41, FLOOR - 1],
+  [69, FLOOR - 1],
+] as const;
+
 export function makeMapData(): number[] {
   const data = new Array<number>(MAP_W * MAP_H).fill(0);
 

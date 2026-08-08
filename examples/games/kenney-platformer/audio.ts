@@ -1,4 +1,4 @@
-export type SfxKind = 'jump' | 'coin' | 'hurt' | 'respawn' | 'win';
+export type SfxKind = 'jump' | 'coin' | 'hurt' | 'respawn' | 'win' | 'stomp';
 
 let audioCtx: AudioContext | null = null;
 
@@ -49,6 +49,16 @@ export function playKenneySfx(kind: SfxKind): void {
       gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
       osc.start(now);
       osc.stop(now + 0.2);
+      break;
+
+    case 'stomp':
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
       break;
 
     case 'hurt':
