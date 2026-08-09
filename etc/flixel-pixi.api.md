@@ -5,11 +5,13 @@
 ```ts
 
 import { Application } from 'pixi.js';
+import { BitmapFont } from 'pixi.js';
 import { BitmapText } from 'pixi.js';
 import { BLEND_MODES } from 'pixi.js';
 import { Container } from 'pixi.js';
 import { ContainerChild } from 'pixi.js';
 import { Graphics } from 'pixi.js';
+import { NineSliceSprite } from 'pixi.js';
 import { Particle } from 'pixi.js';
 import { ParticleContainer } from 'pixi.js';
 import { Renderer } from 'pixi.js';
@@ -896,6 +898,109 @@ export class FlxBasic {
 export type FlxBasicConstructor<T extends FlxBasic = FlxBasic> = new () => T;
 
 // @public
+export class FlxBitmapFont {
+    constructor(pixiFont: BitmapFont, ownsPixiFont?: boolean);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    get fontFamily(): string;
+    // (undocumented)
+    static fromAngelCode(source: FlxGraphic | Texture, xmlText: string, fontFamily?: string): FlxBitmapFont;
+    // (undocumented)
+    static fromMonospace(source: FlxGraphic | Texture, letters: string | undefined, charWidth: number, charHeight: number, options?: {
+        fontFamily?: string;
+        spacingX?: number;
+        spacingY?: number;
+    }): FlxBitmapFont;
+    // (undocumented)
+    static getDefaultFont(): FlxBitmapFont;
+    // (undocumented)
+    get lineHeight(): number;
+    // (undocumented)
+    get size(): number;
+}
+
+// @public
+export class FlxBitmapText extends FlxSprite {
+    constructor(x?: number, y?: number, text?: string, font?: FlxBitmapFont | null, fieldWidth?: number);
+    // (undocumented)
+    alignment: TextStyleAlign;
+    // (undocumented)
+    createRenderHandle(): FlxRenderHandle;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    fieldWidth: number;
+    // (undocumented)
+    get font(): FlxBitmapFont;
+    set font(value: FlxBitmapFont);
+    // (undocumented)
+    letterSpacing: number;
+    // (undocumented)
+    lineSpacing: number;
+    // (undocumented)
+    postUpdate(): void;
+    // (undocumented)
+    setFormat(_font?: string | null, size?: number, color?: number, alignment?: TextStyleAlign | null): this;
+    // (undocumented)
+    get text(): string;
+    set text(value: string);
+}
+
+// @public
+export class FlxBitmapTextRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxBitmapText, onDestroy?: () => void);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly textNode: BitmapText;
+    // (undocumented)
+    readonly view: Container;
+}
+
+// @public
+export interface FlxBmFontData {
+    // (undocumented)
+    baseLineOffset: number;
+    // (undocumented)
+    chars: Record<string, {
+        id: number;
+        kerning: Record<string, number>;
+        letter: string;
+        page: number;
+        width: number;
+        height: number;
+        x: number;
+        xAdvance: number;
+        xOffset: number;
+        y: number;
+        yOffset: number;
+    }>;
+    // (undocumented)
+    distanceField?: {
+        range: number;
+        type: 'none' | 'sdf' | 'msdf';
+    };
+    // (undocumented)
+    fontFamily: string;
+    // (undocumented)
+    fontSize: number;
+    // (undocumented)
+    lineHeight: number;
+    // (undocumented)
+    pages: {
+        id: number;
+        file: string;
+    }[];
+}
+
+// @public
 export class FlxButton extends FlxSprite {
     constructor(x?: number, y?: number, label?: string | null, onClick?: FlxButtonCallback | null);
     get accessibleLabel(): string | null;
@@ -903,7 +1008,7 @@ export class FlxButton extends FlxSprite {
     activate(): boolean;
     allowSwiping: boolean;
     // (undocumented)
-    createRenderHandle(): FlxButtonRenderHandle;
+    createRenderHandle(): FlxRenderHandle;
     // (undocumented)
     destroy(): void;
     // (undocumented)
@@ -2244,6 +2349,113 @@ export interface FlxMouseRecord {
     readonly x: number;
     // (undocumented)
     readonly y: number;
+}
+
+// @public
+export interface FlxNineSliceBorderInput {
+    // (undocumented)
+    bottom?: number;
+    // (undocumented)
+    left?: number;
+    // (undocumented)
+    right?: number;
+    // (undocumented)
+    top?: number;
+}
+
+// @public
+export interface FlxNineSliceBorders {
+    // (undocumented)
+    bottom: number;
+    // (undocumented)
+    left: number;
+    // (undocumented)
+    right: number;
+    // (undocumented)
+    top: number;
+}
+
+// @public
+export class FlxNineSliceButton extends FlxButton {
+    // (undocumented)
+    get bottomHeight(): number;
+    // (undocumented)
+    createRenderHandle(): FlxNineSliceButtonRenderHandle;
+    // (undocumented)
+    get leftWidth(): number;
+    // (undocumented)
+    loadGraphic(source: FlxGraphic | Texture, animated?: boolean, reverse?: boolean, width?: number, height?: number, unique?: boolean): this;
+    // (undocumented)
+    loadNineSliceFrame(atlas: FlxAtlas, name: string, width: number, height: number, borders?: FlxNineSliceBorderInput): this;
+    // (undocumented)
+    loadNineSliceGraphic(source: FlxGraphic | Texture, animated?: boolean, reverse?: boolean, frameWidth?: number, frameHeight?: number, borders?: FlxNineSliceBorderInput, displayWidth?: number, displayHeight?: number): this;
+    // (undocumented)
+    loadNineSliceTexture(texture: Texture, width: number, height: number, borders?: FlxNineSliceBorderInput): this;
+    // (undocumented)
+    postUpdate(): void;
+    // (undocumented)
+    get rightWidth(): number;
+    // (undocumented)
+    setBorders(left: number, top: number, right: number, bottom: number): this;
+    // (undocumented)
+    get topHeight(): number;
+}
+
+// @public
+export class FlxNineSliceButtonRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxNineSliceButton, onDestroy?: () => void);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    readonly slice: NineSliceSprite;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
+export class FlxNineSliceRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxNineSliceSprite, onDestroy?: () => void);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    readonly slice: NineSliceSprite;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
+export class FlxNineSliceSprite extends FlxSprite {
+    constructor(x?: number, y?: number, width?: number, height?: number);
+    // (undocumented)
+    get bottomHeight(): number;
+    // (undocumented)
+    createRenderHandle(): FlxNineSliceRenderHandle;
+    // (undocumented)
+    get leftWidth(): number;
+    // (undocumented)
+    loadGraphic(source: FlxGraphic | Texture, animated?: boolean, reverse?: boolean, width?: number, height?: number, unique?: boolean): this;
+    // (undocumented)
+    loadNineSliceFrame(atlas: FlxAtlas, name: string, width: number, height: number, borders?: FlxNineSliceBorderInput): this;
+    // (undocumented)
+    loadNineSliceGraphic(source: FlxGraphic | Texture, animated?: boolean, reverse?: boolean, frameWidth?: number, frameHeight?: number, borders?: FlxNineSliceBorderInput, displayWidth?: number, displayHeight?: number): this;
+    // (undocumented)
+    loadNineSliceTexture(texture: Texture, width: number, height: number, borders?: FlxNineSliceBorderInput): this;
+    // (undocumented)
+    postUpdate(): void;
+    resize(width: number, height: number): this;
+    // (undocumented)
+    get rightWidth(): number;
+    setBorders(left: number, top: number, right: number, bottom: number): this;
+    // (undocumented)
+    get topHeight(): number;
 }
 
 // @public
@@ -4134,6 +4346,9 @@ export class NullStorageBackend implements FlxStorageBackend {
     // (undocumented)
     write(key: string, data: Record<string, unknown>): FlxSaveResult;
 }
+
+// @public
+export function parseBmFontXml(xmlText: string): FlxBmFontData;
 
 // @public
 export interface PixelBuffer {

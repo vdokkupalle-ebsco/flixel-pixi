@@ -27,6 +27,9 @@ export type {
   FlxAssetManifest,
 } from './assets/flx-assets';
 export { FlxGraphic } from './assets/flx-graphic';
+export { FlxBitmapFont } from './assets/flx-bitmap-font';
+export { parseBmFontXml } from './assets/flx-bmfont-parse';
+export type { FlxBmFontData } from './assets/flx-bmfont-parse';
 
 // --- Atlas ---
 export { FlxAtlas } from './assets/flx-atlas';
@@ -143,6 +146,7 @@ export { FlxSpriteContainer, FlxSpriteGroup } from './objects/flx-sprite-group';
 export type { FlxSpriteTransform } from './objects/flx-sprite-group';
 export { FlxText } from './objects/flx-text';
 export type { FlxTextRenderMode } from './objects/flx-text';
+export { FlxBitmapText } from './objects/flx-bitmap-text';
 export { FlxTileblock } from './objects/flx-tileblock';
 export { FlxTile } from './tilemap/flx-tile';
 export type { FlxTileCallback, FlxTileFilter } from './tilemap/flx-tile';
@@ -163,6 +167,7 @@ export { FlxNineSliceButtonRenderHandle } from './rendering/flx-nine-slice-butto
 export { FlxNineSliceRenderHandle } from './rendering/flx-nine-slice-render-handle';
 export { FlxButtonRenderHandle } from './rendering/flx-button-render-handle';
 export { FlxBarRenderHandle } from './rendering/flx-bar-render-handle';
+export { FlxBitmapTextRenderHandle } from './rendering/flx-bitmap-text-render-handle';
 export { FlxTextRenderHandle } from './rendering/flx-text-render-handle';
 export type { FlxPixiTextNode } from './rendering/flx-text-render-handle';
 export { FlxTilemapRenderHandle } from './rendering/flx-tilemap-render-handle';

@@ -1,10 +1,11 @@
-import { FlxState, FlxText } from '../../../src';
+import { FlxBitmapText, FlxState } from '../../../src';
 import {
   KenneyValueBar,
   KENNEY_BUTTON_W,
   makeKenneyButton,
   makeKenneyPanelInset,
   requireKenneyUiAtlas,
+  requireKenneyUiFont,
 } from './kenney-ui';
 
 export interface UiDemoSnapshot {
@@ -30,8 +31,20 @@ export class UiDemoState extends FlxState {
   health = 65;
   mana = 40;
 
-  readonly #healthText = new FlxText(0, 0, BAR_WIDTH, '', true, 'bitmap');
-  readonly #manaText = new FlxText(0, 0, BAR_WIDTH, '', true, 'bitmap');
+  readonly #healthText = new FlxBitmapText(
+    0,
+    0,
+    '',
+    requireKenneyUiFont(),
+    BAR_WIDTH,
+  );
+  readonly #manaText = new FlxBitmapText(
+    0,
+    0,
+    '',
+    requireKenneyUiFont(),
+    BAR_WIDTH,
+  );
   readonly #healthBar = new KenneyValueBar(
     requireKenneyUiAtlas(),
     BAR_X,
@@ -83,23 +96,24 @@ export class UiDemoState extends FlxState {
     );
     panel.scrollFactor.make(0, 0);
 
-    const title = new FlxText(
+    const title = new FlxBitmapText(
       PANEL_LEFT + 16,
       PANEL_TOP + 12,
-      PANEL_W - 32,
       'RPG UI PACK',
-      true,
-      'bitmap',
+      requireKenneyUiFont(),
+      PANEL_W - 32,
     );
-    title.setFormat('Arial', 22, 0x3d2f24, 'center');
+    title.setFormat(null, 0, 0x3d2f24, 'center');
     title.scrollFactor.make(0, 0);
 
-    this.#healthText.setFormat('Arial', 14, 0x4a3b30, 'left');
+    this.#healthText.setFormat(null, 0, 0x4a3b30, 'left');
+    this.#healthText.origin.make(0, 0);
     this.#healthText.x = BAR_X;
     this.#healthText.y = 88;
     this.#healthText.scrollFactor.make(0, 0);
 
-    this.#manaText.setFormat('Arial', 14, 0x4a3b30, 'left');
+    this.#manaText.setFormat(null, 0, 0x4a3b30, 'left');
+    this.#manaText.origin.make(0, 0);
     this.#manaText.x = BAR_X;
     this.#manaText.y = 126;
     this.#manaText.scrollFactor.make(0, 0);

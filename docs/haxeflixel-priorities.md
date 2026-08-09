@@ -227,11 +227,15 @@ Current slice:
 - `FlxButton` exposes text, enabled, focus, accessibility label/tab order, and
   shared activation behavior. The public browser boot path owns the native DOM
   bridge and lifecycle.
+- `FlxBitmapFont` and `FlxBitmapText` parse AngelCode XML and monospace grids,
+  register Pixi `BitmapFont` instances, and project labels through a dedicated
+  render handle with alignment, spacing, and tint.
 - The public UI demo and Chromium test cover camera placement, semantic labels,
-  disabled state, Enter/Space activation, and cleanup.
+  disabled state, Enter/Space activation, Kenney atlas bars/buttons, and
+  bitmap-font HUD labels.
 
-Remaining slices: BMFont parsing/ownership, DOM/IME text input, and virtual
-controls. See [`guides/ui.md`](guides/ui.md) and
+Remaining slices: DOM/IME text input and virtual controls. See
+[`guides/ui.md`](guides/ui.md) and
 [`adr/0017-native-accessibility-over-render-textures.md`](adr/0017-native-accessibility-over-render-textures.md).
 
 ### Atlas and content-pipeline expansion

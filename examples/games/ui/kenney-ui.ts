@@ -1,8 +1,10 @@
 import type { Texture } from 'pixi.js';
+import { BitmapFont, Cache } from 'pixi.js';
 
 import type { FlxAtlas } from '../../../src';
 import {
   FlxBar,
+  FlxBitmapFont,
   FlxG,
   FlxNineSliceButton,
   FlxNineSliceSprite,
@@ -29,6 +31,33 @@ const PANEL_BORDERS = { bottom: 20, left: 20, right: 20, top: 20 };
 const BUTTON_BORDERS = { bottom: 14, left: 22, right: 22, top: 14 };
 
 let preloadedAtlas: FlxAtlas | null = null;
+let preloadedUiFont: FlxBitmapFont | null = null;
+
+const UI_BITMAP_FONT_NAME = 'kenney-ui-label';
+
+function buildUiBitmapFont(): FlxBitmapFont {
+  const cacheKey = `${UI_BITMAP_FONT_NAME}-bitmap`;
+  if (Cache.has(cacheKey)) {
+    return new FlxBitmapFont(Cache.get(cacheKey) as BitmapFont, false);
+  }
+  BitmapFont.install({
+    name: UI_BITMAP_FONT_NAME,
+    chars: [
+      ['A', 'Z'],
+      ['a', 'z'],
+      ['0', '9'],
+      ' ',
+    ],
+    resolution: 2,
+    style: {
+      fontFamily: UI_BITMAP_FONT_NAME,
+      fontSize: 16,
+      fill: '#ffffff',
+    },
+    textureStyle: { scaleMode: 'nearest' },
+  });
+  return new FlxBitmapFont(Cache.get(cacheKey) as BitmapFont, false);
+}
 
 /** Flixel-style width stretch for 3-part horizontal bar mids. */
 function stretchWidth(
@@ -44,7 +73,17 @@ export async function preloadKenneyUiAtlas(): Promise<FlxAtlas> {
   if (preloadedAtlas !== null) return preloadedAtlas;
   await FlxG.atlas.load(UI_ATLAS_KEY, sheetPngUrl, sheetXmlUrl);
   preloadedAtlas = FlxG.atlas.get(UI_ATLAS_KEY);
+  if (preloadedUiFont === null) {
+    preloadedUiFont = buildUiBitmapFont();
+  }
   return preloadedAtlas;
+}
+
+export function requireKenneyUiFont(): FlxBitmapFont {
+  if (preloadedUiFont === null) {
+    throw new Error('Call preloadKenneyUiAtlas() before booting the UI demo.');
+  }
+  return preloadedUiFont;
 }
 
 export function requireKenneyUiAtlas(): FlxAtlas {
@@ -85,7 +124,7 @@ function styleKenneyButtonLabel(
   button.label.height = BUTTON_H;
   button.label.frameHeight = BUTTON_H;
   button.label.origin.make(0, 0);
-  const labelColor = color === 'blue' ? 0xe8f0ff : 0x2b2118;
+  const labelColor = color === 'blue' ? 0x1a3050 : 0x2b2118;
   button.label.setFormat('Arial', 18, labelColor, 'center');
   const labelY = Math.round((BUTTON_H - 18) * 0.5);
   const pressedY = labelY + 2;

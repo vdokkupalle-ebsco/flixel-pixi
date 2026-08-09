@@ -107,6 +107,21 @@ action.loadNineSliceGraphic(
 Kenney RPG bars in the public demo still use atlas cap/mid/cap strips because
 those assets are authored as horizontal 3-part fills, not full 9-slice tiles.
 
+## Bitmap fonts and labels
+
+`FlxBitmapFont` parses AngelCode BMFont XML or builds a monospace grid, then
+registers a Pixi `BitmapFont` for `FlxBitmapText`:
+
+```ts
+const font = FlxBitmapFont.fromAngelCode(texture, xmlText);
+const score = new FlxBitmapText(8, 8, 'Health 100', font, 160);
+score.setFormat(null, 0, 0x4a3b30, 'left');
+add(score);
+```
+
+Use `FlxBitmapText` for HUD counters and labels that update every frame; keep
+styled `FlxText` for infrequent labels with borders and shadows.
+
 ## Remaining UI checkpoint
 
 Bitmap-font file parsing, DOM/IME-backed text input, and virtual controls remain
