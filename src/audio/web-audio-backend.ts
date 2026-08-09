@@ -17,6 +17,13 @@ class WebSoundHandle implements FlxSoundHandle {
   readonly #panNode: StereoPannerNode;
   readonly #source: AudioBuffer | HTMLAudioElement;
   readonly #streaming: boolean;
+  readonly #queuePlay: (
+    handle: WebSoundHandle,
+    startTime: number,
+    loop: boolean,
+  ) => boolean;
+  readonly #cancelPending: (handle: WebSoundHandle) => void;
+  readonly #onDestroy: (handle: WebSoundHandle) => void;
   #sourceNode: AudioBufferSourceNode | MediaElementAudioSourceNode | null =
     null;
   #startedAt = 0;
@@ -29,10 +36,20 @@ class WebSoundHandle implements FlxSoundHandle {
     masterGain: GainNode,
     source: AudioBuffer | HTMLAudioElement,
     streaming: boolean,
+    queuePlay: (
+      handle: WebSoundHandle,
+      startTime: number,
+      loop: boolean,
+    ) => boolean,
+    cancelPending: (handle: WebSoundHandle) => void,
+    onDestroy: (handle: WebSoundHandle) => void,
   ) {
     this.#ctx = ctx;
     this.#source = source;
     this.#streaming = streaming;
+    this.#queuePlay = queuePlay;
+    this.#cancelPending = cancelPending;
+    this.#onDestroy = onDestroy;
     this.duration =
       source instanceof AudioBuffer ? source.duration : source.duration || 0;
 
@@ -47,6 +64,12 @@ class WebSoundHandle implements FlxSoundHandle {
     this.stop();
     this.#loop = loop;
 
+    if (this.#queuePlay(this, startTime, loop)) {
+      this.playing = true;
+      this.#pausedAt = startTime;
+      return;
+    }
+
     if (this.#streaming && this.#source instanceof HTMLAudioElement) {
       const el = this.#source;
       el.currentTime = startTime;
@@ -57,7 +80,7 @@ class WebSoundHandle implements FlxSoundHandle {
         this.#sourceNode = node;
       }
       el.play().catch(() => {
-        /* autoplay blocked — queued by backend */
+        this.playing = false;
       });
     } else if (this.#source instanceof AudioBuffer) {
       const node = this.#ctx.createBufferSource();
@@ -80,6 +103,8 @@ class WebSoundHandle implements FlxSoundHandle {
 
   pause(): void {
     if (!this.playing || this.#destroyed) return;
+
+    this.#cancelPending(this);
 
     if (this.#streaming && this.#source instanceof HTMLAudioElement) {
       this.#source.pause();
@@ -108,6 +133,8 @@ class WebSoundHandle implements FlxSoundHandle {
 
   stop(): void {
     if (this.#destroyed) return;
+
+    this.#cancelPending(this);
 
     if (this.#streaming && this.#source instanceof HTMLAudioElement) {
       this.#source.pause();
@@ -139,10 +166,13 @@ class WebSoundHandle implements FlxSoundHandle {
 
   destroy(): void {
     if (this.#destroyed) return;
-    this.#destroyed = true;
     this.stop();
+    this.#destroyed = true;
+    this.#sourceNode?.disconnect();
+    this.#sourceNode = null;
     this.#gainNode.disconnect();
     this.#panNode.disconnect();
+    this.#onDestroy(this);
   }
 }
 
@@ -192,11 +222,39 @@ export class WebAudioBackend implements FlxAudioBackend {
     if (ctx === null || masterGain === null) {
       throw new Error('AudioContext failed to initialize.');
     }
+    let resolvedSource: AudioBuffer | HTMLAudioElement;
+    let resolvedStreaming: boolean;
+    if (typeof source === 'string') {
+      resolvedSource = new Audio(source);
+      resolvedSource.preload = streaming ? 'metadata' : 'auto';
+      resolvedStreaming = true;
+    } else if (
+      typeof AudioBuffer !== 'undefined' &&
+      source instanceof AudioBuffer
+    ) {
+      resolvedSource = source;
+      resolvedStreaming = false;
+    } else if (
+      typeof HTMLAudioElement !== 'undefined' &&
+      source instanceof HTMLAudioElement
+    ) {
+      resolvedSource = source;
+      resolvedStreaming = true;
+    } else {
+      throw new TypeError(
+        'WebAudioBackend source must be an AudioBuffer, HTMLAudioElement, or URL string.',
+      );
+    }
+
     const handle = new WebSoundHandle(
       ctx,
       masterGain,
-      source as AudioBuffer | HTMLAudioElement,
-      streaming,
+      resolvedSource,
+      resolvedStreaming,
+      (candidate, startTime, loop) =>
+        this.#queueIfLocked(candidate, startTime, loop),
+      (candidate) => this.#cancelPending(candidate),
+      (candidate) => this.#handles.delete(candidate),
     );
     this.#handles.add(handle);
     return handle;
@@ -217,8 +275,10 @@ export class WebAudioBackend implements FlxAudioBackend {
   }
 
   pauseAll(): void {
-    for (const handle of this.#handles) {
-      if (handle.playing) handle.pause();
+    if (this.#ctx?.state === 'running') {
+      this.#ctx.suspend().catch(() => {
+        /* No-op */
+      });
     }
   }
 
@@ -227,9 +287,6 @@ export class WebAudioBackend implements FlxAudioBackend {
       this.#ctx.resume().catch(() => {
         /* No-op */
       });
-    }
-    for (const handle of this.#handles) {
-      handle.resume();
     }
   }
 
@@ -242,7 +299,7 @@ export class WebAudioBackend implements FlxAudioBackend {
     }
     document.removeEventListener('visibilitychange', this.#boundVisibility);
 
-    for (const handle of this.#handles) handle.destroy();
+    for (const handle of [...this.#handles]) handle.destroy();
     this.#handles.clear();
     this.#pendingQueue.length = 0;
 
@@ -259,18 +316,27 @@ export class WebAudioBackend implements FlxAudioBackend {
    * Called by `FlxSound` through the handle.
    * @internal
    */
-  queueIfLocked(
-    handle: FlxSoundHandle,
+  #queueIfLocked(
+    handle: WebSoundHandle,
     startTime: number,
     loop: boolean,
   ): boolean {
     if (this.#unlocked) return false;
+    this.#cancelPending(handle);
     this.#pendingQueue.push({
-      handle: handle as WebSoundHandle,
+      handle,
       startTime,
       loop,
     });
     return true;
+  }
+
+  #cancelPending(handle: WebSoundHandle): void {
+    for (let index = this.#pendingQueue.length - 1; index >= 0; index -= 1) {
+      if (this.#pendingQueue[index]?.handle === handle) {
+        this.#pendingQueue.splice(index, 1);
+      }
+    }
   }
 
   #ensureContext(): void {

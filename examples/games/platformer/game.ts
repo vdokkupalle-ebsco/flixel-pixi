@@ -77,7 +77,7 @@ function createSynthBlip(
   const data = buffer.getChannelData(0);
   for (let i = 0; i < data.length; i += 1) {
     const t = i / ctx.sampleRate;
-    let sample = 0;
+    let sample: number;
     if (kind === 'coin') {
       const freq = t < 0.08 ? 987.77 : 1318.51;
       sample = Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 14) * 0.45;

@@ -29,9 +29,11 @@ console warning rather than throwing.
 includes a `__version` field. When the loaded version differs from the requested
 version, `migrate(oldData, oldVersion)` runs and the result replaces the data.
 
-An `IndexedDBBackend` is available as an opt-in for games that need larger or
-async-compatible storage. It wraps a pre-opened `IDBDatabase` with the same
-synchronous-style `FlxStorageBackend` interface using micro-task transactions.
+An `IndexedDBBackend` is available as an opt-in for games that need larger
+storage. It implements `FlxAsyncStorageBackend`; callers use
+`await save.flushAsync()` and `await save.eraseAsync()` so success is reported
+only after the transaction commits. Calling synchronous `flush()` against this
+backend returns the typed `async` failure category instead of claiming success.
 
 A `NullStorageBackend` provides an in-memory `Map` for headless unit tests.
 
@@ -40,8 +42,9 @@ A `NullStorageBackend` provides an in-memory `Map` for headless unit tests.
 ## Consequences
 
 Games using `localStorage` continue to work with a synchronous API.
-`flush()` returns a typed `FlxSaveResult` with explicit `quota`,
+`flush()` returns a typed `FlxSaveResult` with explicit `async`, `quota`,
 `serialization`, and `unknown` error categories. Schema migrations run once
-per version bump on `bind()`. IndexedDB users opt in explicitly. Headless tests
-never touch browser storage. Namespaced keys avoid collisions with other web
-applications.
+per version bump on `bind()`. IndexedDB users opt in explicitly and must await
+their final `flushAsync()` before closing the database or leaving the page.
+Headless tests never touch browser storage. Namespaced keys avoid collisions
+with other web applications.

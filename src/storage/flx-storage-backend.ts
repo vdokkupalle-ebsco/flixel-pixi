@@ -10,7 +10,7 @@ export type FlxSaveResult =
   | { success: true }
   | {
       success: false;
-      error: 'quota' | 'serialization' | 'unknown';
+      error: 'async' | 'quota' | 'serialization' | 'unknown';
       message: string;
     };
 
@@ -35,4 +35,16 @@ export interface FlxStorageBackend {
 
   /** Release any resources associated with `key`. */
   close(key: string): void;
+}
+
+/** Storage backend whose durable writes must be awaited. @public */
+export interface FlxAsyncStorageBackend extends FlxStorageBackend {
+  /** Persist data and resolve only after the transaction commits or fails. */
+  writeAsync(
+    key: string,
+    data: Record<string, unknown>,
+  ): Promise<FlxSaveResult>;
+
+  /** Erase data and resolve only after the transaction commits or fails. */
+  eraseAsync(key: string): Promise<boolean>;
 }

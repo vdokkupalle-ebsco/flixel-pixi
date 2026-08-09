@@ -116,6 +116,27 @@ describe('Phase 2 lifecycle and groups', () => {
     expect(group.remove(tail)).toBeNull();
   });
 
+  it('tracks duplicate references created by replace without linear membership scans', () => {
+    let updates = 0;
+    class Counted extends FlxBasic {
+      override update(): void {
+        updates += 1;
+      }
+    }
+
+    const group = new FlxGroup<Counted>();
+    const first = group.add(new Counted());
+    const repeated = group.add(new Counted());
+    group.replace(first, repeated);
+    group.update();
+    expect(updates).toBe(2);
+
+    updates = 0;
+    group.remove(repeated);
+    group.update();
+    expect(updates).toBe(1);
+  });
+
   it('supports recursive setters, calls, sorting, queries, and deterministic random', () => {
     const context = new FlxContext(320, 240, 0.5);
     FlxG.installContext(context);

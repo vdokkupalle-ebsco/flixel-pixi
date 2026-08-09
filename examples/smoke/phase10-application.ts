@@ -339,8 +339,10 @@ export async function bootPhase10Demo(
       FlxG.vcr.recording = false;
       FlxG.globalSeed = FlxG.vcr.replay.seed;
       FlxG.switchState(new PlayState());
-      // Force one step so the state commits and objects are created
+      // Commit the fresh state without consuming replay frame 0.
+      FlxG.vcr.replaying = false;
       game.step(1 / 60);
+      FlxG.vcr.replaying = true;
       reRegisterRenderer();
       activeRenderer?.render();
       updateReplayInfo();

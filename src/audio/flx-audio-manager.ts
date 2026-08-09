@@ -63,6 +63,7 @@ export class FlxAudioManager implements FlxAudioService {
     this.#context = context;
     this.#backend = backend;
     this.#backend.setGlobalVolume(this.#volume);
+    this.#backend.unlockAudio();
     context.setService(FLX_AUDIO_SERVICE, this);
   }
 
@@ -88,7 +89,7 @@ export class FlxAudioManager implements FlxAudioService {
 
   /**
    * Play a sound effect.
-   * @param source - `AudioBuffer`, URL string, or asset alias.
+   * @param source - `AudioBuffer`, `HTMLAudioElement`, or URL string.
    * @param volume - Per-instance volume (0–1). Defaults to 1.
    * @param loop - Whether to loop. Defaults to false.
    * @param autoDestroy - Whether to auto-destroy when done. Defaults to true.
@@ -107,7 +108,7 @@ export class FlxAudioManager implements FlxAudioService {
 
   /**
    * Play music, stopping the current track.
-   * @param source - `AudioBuffer`, URL string, or asset alias.
+   * @param source - `AudioBuffer`, `HTMLAudioElement`, or URL string.
    * @param volume - Volume (0–1). Defaults to 1.
    */
   playMusic(source: unknown, volume = 1): void {
@@ -161,11 +162,14 @@ export class FlxAudioManager implements FlxAudioService {
       }
     }
 
-    for (const member of this.sounds.members) {
-      if (member instanceof FlxSound && member.exists && member.active) {
+    for (let index = this.sounds.members.length - 1; index >= 0; index -= 1) {
+      const member = this.sounds.members[index];
+      if (!(member instanceof FlxSound)) continue;
+      if (member.exists && member.active) {
         member._elapsed = elapsed;
         member.update();
       }
+      if (!member.exists) this.sounds.remove(member);
     }
   }
 

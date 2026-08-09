@@ -3,9 +3,12 @@
 `flixel-pixi` is a TypeScript port of Adam Saltsman's original ActionScript 3
 Flixel engine, using PixiJS v8 as its browser rendering foundation.
 
-The repository has completed **Phase 12: samples, API closure, and guides**.
-Playable public-API games live under `examples/games/`; phase smoke labs remain
-under `examples/smoke/`. See [PORTING_PLAN.md](PORTING_PLAN.md).
+The repository includes the Phase 12 samples, API ledger, and guides, and is in
+the **Phase 13 stabilization pass**. Checkpoint C12 is reopened only for a true
+external source-port exercise; the existing Mode Lite example is an original
+compatibility sample, not evidence of a source port. Playable public-API games
+live under `examples/games/`; phase smoke labs remain under `examples/smoke/`.
+See [PORTING_PLAN.md](PORTING_PLAN.md).
 
 ## Prerequisites
 
@@ -46,6 +49,7 @@ Useful commands:
 | `npm run build`         | Build declarations, ESM library, smoke example, and bundle report. |
 | `npm run test`          | Run headless unit tests.                                           |
 | `npm run test:e2e`      | Run lifecycle, GPU isolation, and high-DPI camera checks.          |
+| `npm run test:perf`     | Run serial Chromium render-FPS floors and the teardown soak.       |
 | `npm run test:coverage` | Run unit tests with initial coverage gates.                        |
 | `npm run bench`         | Write fixed-loop and pixel-operation benchmark JSON.               |
 | `npm run api:check`     | Verify the committed public API report.                            |
@@ -75,6 +79,11 @@ Compatibility is pinned to Flixel commit
 - [Phase 6 evidence and C6 verdict](docs/phase6-evidence.md)
 - [Phase 7 evidence and C7 verdict](docs/phase7-evidence.md)
 - [Phase 8 evidence and C8 verdict](docs/phase8-evidence.md)
+- [Phase 9 evidence and C9 verdict](docs/phase9-evidence.md)
+- [Phase 10 evidence and C10 verdict](docs/phase10-evidence.md)
+- [Phase 11 evidence and C11 verdict](docs/phase11-evidence.md)
+- [Phase 12 evidence and current C12 verdict](docs/phase12-evidence.md)
+- [Phase 13 hardening evidence](docs/phase13-evidence.md)
 - [Browser support policy](docs/browser-support.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 - [Detailed port plan](PORTING_PLAN.md)

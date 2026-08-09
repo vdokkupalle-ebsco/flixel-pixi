@@ -24,4 +24,18 @@ test.describe('Phase 9 — Audio and save data (C9 gate)', () => {
     const status = page.locator('[data-testid="status"]');
     await expect(status).toHaveAttribute('data-state', 'destroyed');
   });
+
+  test('awaits IndexedDB durability and reads the committed value', async ({
+    page,
+  }) => {
+    await page.goto('/phase9.html');
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+    );
+    const persisted = await page.evaluate(async () => {
+      return window.__FLIXEL_PIXI_PHASE9__?.app?.verifyIndexedDb() ?? false;
+    });
+    expect(persisted).toBe(true);
+  });
 });

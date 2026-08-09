@@ -45,26 +45,6 @@ export function parseTextureAtlasXml(xmlText: string): FlxAtlasFrameRect[] {
 
 // ── JSON parser ───────────────────────────────────────────────────────────────
 
-interface JsonFrameEntry {
-  frame: {
-    x: number;
-    y: number;
-    w?: number;
-    h?: number;
-    width?: number;
-    height?: number;
-  };
-  rotated?: boolean;
-}
-
-interface JsonAtlasHash {
-  frames: Record<string, JsonFrameEntry>;
-}
-
-interface JsonAtlasArray {
-  frames: Array<{ filename: string } & JsonFrameEntry>;
-}
-
 /**
  * Parse a TexturePacker / Pixi JSON atlas string into an ordered array of
  * frame rects. Supports both hash (`frames: { "name": {...} }`) and array
@@ -76,7 +56,6 @@ interface JsonAtlasArray {
  * @public
  */
 export function parseTextureAtlasJson(jsonText: string): FlxAtlasFrameRect[] {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const data: unknown = JSON.parse(jsonText);
   if (typeof data !== 'object' || data === null) {
     throw new Error('Atlas JSON must be an object.');
@@ -91,7 +70,7 @@ export function parseTextureAtlasJson(jsonText: string): FlxAtlasFrameRect[] {
 
   // Array format: [ { filename, frame: { x, y, w, h }, rotated? } ]
   if (Array.isArray(framesRaw)) {
-    return (framesRaw as Array<Record<string, unknown>>).map((entry, idx) => {
+    return (framesRaw as Record<string, unknown>[]).map((entry, idx) => {
       if (entry['rotated'] === true) {
         const name = String(entry['filename'] ?? idx);
         throw new Error(

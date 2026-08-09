@@ -6,6 +6,7 @@ import {
   FlxState,
   FlxText,
   LocalStorageBackend,
+  IndexedDBBackend,
   WebAudioBackend,
 } from '../../src';
 
@@ -157,6 +158,7 @@ export interface PhaseNineApplication {
   toggleMusic(): void;
   setVolume(vol: number): void;
   toggleMute(): boolean;
+  verifyIndexedDb(): Promise<boolean>;
   game: FlxGame;
 }
 
@@ -259,6 +261,27 @@ export async function createPhaseNineApplication(
     toggleMute() {
       FlxG.mute = !FlxG.mute;
       return FlxG.mute;
+    },
+    async verifyIndexedDb() {
+      const databaseName = `flixel-pixi-phase9-${crypto.randomUUID()}`;
+      const backend = await IndexedDBBackend.open(databaseName);
+      const save = new FlxSave();
+      save.bind('browser-slot', { backend });
+      if (save.data !== null) save.data.value = 73;
+      const write = await save.flushAsync();
+      save.close();
+      backend.closeDatabase();
+      if (!write.success) return false;
+
+      const reopened = await IndexedDBBackend.open(databaseName);
+      const loaded = new FlxSave();
+      loaded.bind('browser-slot', { backend: reopened });
+      const persisted = loaded.data?.value === 73;
+      const erased = await loaded.eraseAsync();
+      loaded.close();
+      reopened.closeDatabase();
+      indexedDB.deleteDatabase(databaseName);
+      return persisted && erased;
     },
   };
 }

@@ -26,9 +26,23 @@ export interface BrowserGameApplication {
   readonly game: FlxGame;
   readonly renderer: FlxCameraRenderer;
   readonly app: Application;
+  /** Number of completed browser render frames. */
+  readonly frameCount: number;
+  /** Subscribe to completed browser render frames. Returns an unsubscribe callback. */
+  onFrame(callback: (frame: BrowserGameFrame) => void): () => void;
   /** Re-sync all state members into the camera renderer (call after switchState or manual mutations). */
   syncRenderer(): void;
   destroy(): void;
+}
+
+/** Timing information for one completed browser render frame. @public */
+export interface BrowserGameFrame {
+  /** Raw wall-clock interval since the previous rendered frame. */
+  readonly elapsedMS: number;
+  /** Monotonic count of completed rendered frames. */
+  readonly frameCount: number;
+  /** Number of fixed simulation updates executed before this render. */
+  readonly simulationSteps: number;
 }
 
 /**
@@ -59,6 +73,7 @@ export async function createBrowserGame(
 
   const app = new Application();
   await app.init({
+    autoStart: false,
     width,
     height,
     backgroundColor,
@@ -94,30 +109,55 @@ export async function createBrowserGame(
   preloader?.setProgress(100, 'Ready!');
   preloader?.complete();
 
-  app.ticker.add(() => {
+  const frameListeners = new Set<(frame: BrowserGameFrame) => void>();
+  let destroyed = false;
+  let frameCount = 0;
+  let previousFrameTime = performance.now();
+  let animationFrame = 0;
+
+  const frame = (now: number): void => {
+    if (destroyed) return;
+    const elapsedMS = Math.max(0, now - previousFrameTime);
+    previousFrameTime = now;
+    let simulationSteps = 0;
     if (!FlxG.paused) {
-      game.advance(app.ticker.deltaMS / 1000);
+      simulationSteps = game.advance(elapsedMS / 1000).steps;
     }
     // Membership sync is O(n); skip when groups have not changed.
     if (game.context.renderablesDirty) {
       syncWorldToRenderer(game, renderer);
     }
     renderer.render();
-  });
+    frameCount += 1;
+    const event = { elapsedMS, frameCount, simulationSteps };
+    for (const listener of [...frameListeners]) listener(event);
+    animationFrame = requestAnimationFrame(frame);
+  };
+  animationFrame = requestAnimationFrame(frame);
 
   return {
     game,
     renderer,
     app,
+    get frameCount() {
+      return frameCount;
+    },
+    onFrame(callback) {
+      frameListeners.add(callback);
+      return () => frameListeners.delete(callback);
+    },
     syncRenderer() {
       game.context.markRenderablesDirty();
       syncWorldToRenderer(game, renderer);
     },
     destroy() {
-      app.ticker.stop();
+      if (destroyed) return;
+      destroyed = true;
+      cancelAnimationFrame(animationFrame);
+      frameListeners.clear();
       renderer.destroy();
       game.destroy();
-      app.destroy(true);
+      app.destroy({ removeView: true, releaseGlobalResources: true });
       host.replaceChildren();
     },
   };

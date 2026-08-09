@@ -25,11 +25,20 @@ export interface BrowserGameApplication {
     readonly app: Application;
     // (undocumented)
     destroy(): void;
+    readonly frameCount: number;
     // (undocumented)
     readonly game: FlxGame;
+    onFrame(callback: (frame: BrowserGameFrame) => void): () => void;
     // (undocumented)
     readonly renderer: FlxCameraRenderer;
     syncRenderer(): void;
+}
+
+// @public
+export interface BrowserGameFrame {
+    readonly elapsedMS: number;
+    readonly frameCount: number;
+    readonly simulationSteps: number;
 }
 
 // @public
@@ -157,6 +166,9 @@ export interface FixedStepAdvanceResult {
 export const FLX_ASSETS_SERVICE: unique symbol;
 
 // @public
+export const FLX_ATLAS_SERVICE: unique symbol;
+
+// @public
 export const FLX_AUDIO_SERVICE: unique symbol;
 
 // @public
@@ -186,7 +198,9 @@ export class FlxActions {
 
 // @public
 export class FlxAnim {
-    constructor(name: string, frames: readonly number[], frameRate?: number, looped?: boolean);
+    constructor(name: string, frames: readonly number[], frameRate?: number, looped?: boolean, defaultSpeed?: number);
+    readonly defaultLooped: boolean;
+    readonly defaultSpeed: number;
     // (undocumented)
     readonly delay: number;
     // (undocumented)
@@ -201,6 +215,13 @@ export class FlxAnim {
 
 // @public
 export type FlxAnimationCallback = (animationName: string | null, frameNumber: number, frameIndex: number) => void;
+
+// @public
+export interface FlxAnimationPlayOptions {
+    force?: boolean;
+    loop?: boolean;
+    speed?: number;
+}
 
 // @public
 export interface FlxAssetBackend {
@@ -324,6 +345,82 @@ export class FlxAssets {
     unload(id: string | string[]): Promise<void>;
     // (undocumented)
     unloadBundle(name: string | string[]): Promise<void>;
+}
+
+// @public
+export interface FlxAsyncStorageBackend extends FlxStorageBackend {
+    eraseAsync(key: string): Promise<boolean>;
+    writeAsync(key: string, data: Record<string, unknown>): Promise<FlxSaveResult>;
+}
+
+// @public
+export class FlxAtlas {
+    get frameCount(): number;
+    framesByNumber(start: number, end: number): FlxAtlasFrameList;
+    // (undocumented)
+    framesByNumber(indices: readonly number[]): FlxAtlasFrameList;
+    framesByPrefix(prefix: string, start: number, end: number, options?: FlxAtlasPrefixOptions): FlxAtlasFrameList;
+    getFrame(name: string): FlxAtlasFrame;
+    // (undocumented)
+    readonly key: string;
+    makeGraphic(frames: readonly (FlxAtlasFrame | null)[], frameWidth?: number, frameHeight?: number): Texture;
+    readonly texture: Texture;
+}
+
+// @public
+export interface FlxAtlasAnimationOptions {
+    frameHeight?: number;
+    frameWidth?: number;
+}
+
+// @public
+export interface FlxAtlasFrame {
+    readonly index: number;
+    // (undocumented)
+    readonly name: string;
+    readonly texture: Texture;
+}
+
+// @public
+export type FlxAtlasFrameList = readonly FlxAtlasFrame[];
+
+// @public
+export interface FlxAtlasFrameRect {
+    // (undocumented)
+    readonly height: number;
+    // (undocumented)
+    readonly name: string;
+    // (undocumented)
+    readonly width: number;
+    // (undocumented)
+    readonly x: number;
+    // (undocumented)
+    readonly y: number;
+}
+
+// @public
+export interface FlxAtlasGridMeta {
+    // (undocumented)
+    readonly frameHeight: number;
+    // (undocumented)
+    readonly frameWidth: number;
+}
+
+// @public
+export type FlxAtlasMeta = string | FlxAtlasGridMeta;
+
+// @public
+export interface FlxAtlasPrefixOptions {
+    readonly padding?: number;
+}
+
+// @public
+export class FlxAtlasRegistry {
+    clear(): void;
+    get(key: string): FlxAtlas;
+    has(key: string): boolean;
+    load(key: string, imageUrl: string, meta: FlxAtlasMeta): Promise<FlxAtlas>;
+    remove(key: string): void;
 }
 
 // @public
@@ -734,6 +831,7 @@ export class FlxContext {
     timeScale: number;
     // (undocumented)
     updateCameras(): void;
+    updateFramerate: number;
     // (undocumented)
     updatePlugins(): void;
     // (undocumented)
@@ -878,6 +976,7 @@ export class FlxG {
     static addCamera(camera: FlxCamera): FlxCamera;
     // (undocumented)
     static addPlugin<T extends FlxBasic>(plugin: T): T;
+    static get atlas(): FlxAtlasRegistry;
     // (undocumented)
     static get bgColor(): number;
     static set bgColor(value: number);
@@ -1564,7 +1663,9 @@ export class FlxSave {
     data: Record<string, unknown> | null;
     destroy(): void;
     erase(): boolean;
+    eraseAsync(): Promise<boolean>;
     flush(): FlxSaveResult;
+    flushAsync(): Promise<FlxSaveResult>;
     name: string | null;
 }
 
@@ -1583,7 +1684,7 @@ export type FlxSaveResult = {
     success: true;
 } | {
     success: false;
-    error: 'quota' | 'serialization' | 'unknown';
+    error: 'async' | 'quota' | 'serialization' | 'unknown';
     message: string;
 };
 
@@ -1642,8 +1743,7 @@ export interface FlxSoundHandle {
 // @public
 export class FlxSprite extends FlxObject {
     constructor(x?: number, y?: number, simpleGraphic?: FlxGraphic | Texture | null);
-    // (undocumented)
-    addAnimation(name: string, frames: readonly number[], frameRate?: number, looped?: boolean): void;
+    addAnimation(name: string, frames: readonly number[] | FlxAtlasFrameList, frameRateOrOptions?: number | FlxAtlasAnimationOptions, looped?: boolean): void;
     // (undocumented)
     addAnimationCallback(callback: FlxAnimationCallback | null): void;
     // (undocumented)
@@ -1701,8 +1801,7 @@ export class FlxSprite extends FlxObject {
     origin: FlxPoint;
     // (undocumented)
     pauseAnimation(): void;
-    // (undocumented)
-    play(animationName: string, force?: boolean): void;
+    play(name: string, forceOrOptions?: boolean | FlxAnimationPlayOptions): void;
     // (undocumented)
     postUpdate(): void;
     // (undocumented)
@@ -2130,17 +2229,19 @@ export interface FrameRecordData {
 }
 
 // @public
-export class IndexedDBBackend implements FlxStorageBackend {
+export class IndexedDBBackend implements FlxAsyncStorageBackend {
     // (undocumented)
     close(key: string): void;
     closeDatabase(): void;
     // (undocumented)
     erase(key: string): boolean;
+    eraseAsync(key: string): Promise<boolean>;
     static open(dbName: string): Promise<IndexedDBBackend>;
     // (undocumented)
     read(key: string): Record<string, unknown> | null;
     // (undocumented)
     write(key: string, data: Record<string, unknown>): FlxSaveResult;
+    writeAsync(key: string, data: Record<string, unknown>): Promise<FlxSaveResult>;
 }
 
 // @public

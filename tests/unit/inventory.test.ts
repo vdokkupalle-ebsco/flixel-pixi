@@ -3,8 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 interface As3ClassEntry {
-  readonly publicMembers: readonly unknown[];
+  readonly publicMembers: readonly As3MemberEntry[];
   readonly qualifiedName: string;
+}
+
+interface As3MemberEntry {
+  readonly name: string;
 }
 
 interface As3ApiManifest {
@@ -39,7 +43,45 @@ describe('upstream compatibility inventory', () => {
     ).toBe(766);
 
     for (const entry of manifest.classes) {
-      expect(ledger).toContain(`### \`${entry.qualifiedName}\``);
+      const heading = `### \`${entry.qualifiedName}\``;
+      const sectionStart = ledger.indexOf(heading);
+      expect(
+        sectionStart,
+        `missing ledger section for ${entry.qualifiedName}`,
+      ).toBeGreaterThanOrEqual(0);
+
+      const nextSection = ledger.indexOf(
+        '\n### `',
+        sectionStart + heading.length,
+      );
+      const section = ledger.slice(
+        sectionStart,
+        nextSection === -1 ? undefined : nextSection,
+      );
+      const apiLine = section.match(/^- Public API \((\d+)\): (.+)$/m);
+      expect(
+        apiLine,
+        `missing Public API row for ${entry.qualifiedName}`,
+      ).not.toBeNull();
+
+      const declaredCount = Number(apiLine?.[1]);
+      const listedMembers = (apiLine?.[2] ?? '').split(', ').map((member) =>
+        member
+          .replaceAll('`', '')
+          .replace(/^static /, '')
+          .replace(/ \(get(?:\/set)?\)$/, ''),
+      );
+      const manifestMembers = entry.publicMembers.map((member) => member.name);
+
+      expect(declaredCount, `${entry.qualifiedName} declared API count`).toBe(
+        entry.publicMembers.length,
+      );
+      expect(listedMembers, `${entry.qualifiedName} member ledger`).toEqual(
+        manifestMembers,
+      );
+      expect(section, `${entry.qualifiedName} final classification`).toMatch(
+        /- Phase [^\n]+ status: (?:Exact|Adapted|Emulated|Deprecated|Unsupported)\b/,
+      );
     }
   });
 });

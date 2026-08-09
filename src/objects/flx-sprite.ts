@@ -32,7 +32,7 @@ export interface FlxAnimationPlayOptions {
   loop?: boolean;
   /**
    * Playback speed multiplier relative to the game update rate.
-   * `1` = one animation frame per update. Must be > 0. Default `1`.
+   * `1` = one animation frame per update. Must be positive. Default `1`.
    */
   speed?: number;
   /**

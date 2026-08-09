@@ -136,6 +136,7 @@ export { WebAudioBackend } from './audio/web-audio-backend';
 // --- Phase 9: Save ---
 export { FLX_STORAGE_SERVICE } from './storage/flx-storage-backend';
 export type {
+  FlxAsyncStorageBackend,
   FlxSaveResult,
   FlxStorageBackend,
 } from './storage/flx-storage-backend';
@@ -181,6 +182,7 @@ export { FlxActions } from './input/flx-actions';
 
 export { createBrowserGame } from './browser/create-browser-game';
 export type {
+  BrowserGameFrame,
   BrowserGameApplication,
   CreateBrowserGameOptions,
 } from './browser/create-browser-game';

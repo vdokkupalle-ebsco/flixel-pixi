@@ -1,13 +1,17 @@
-# Phase 12 external port — gap report
+# Phase 12 Mode Lite compatibility exercise — gap report
+
+> Audit correction (2026-08-09): this example was authored for this repository
+> from mechanics inspired by Mode. It is not a source-level port of an external
+> open-source game and therefore does not, by itself, close checkpoint C12.
 
 ## Selection
 
-| Criterion                  | Result                                                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Target                     | **Mode Lite** — educational port of combat/menu mechanics inspired by Adam Saltsman’s **Mode** (classic Flixel demo) |
-| License                    | Upstream Flixel / Mode lineage is **MIT**; **no original Mode art or audio copied** — procedural `makeGraphic` only  |
-| Size                       | Intentionally small (~200 LOC game code)                                                                             |
-| Extra APIs beyond Sample 3 | `FlxButton` menu, enemy spawn loop, bullet pool, overlap combat, multi-state flow                                    |
+| Criterion                  | Result                                                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Target                     | **Mode Lite** — original exercise using combat/menu mechanics inspired by Adam Saltsman’s **Mode**                  |
+| License                    | Upstream Flixel / Mode lineage is **MIT**; **no original Mode art or audio copied** — procedural `makeGraphic` only |
+| Size                       | Intentionally small (~200 LOC game code)                                                                            |
+| Extra APIs beyond Sample 3 | `FlxButton` menu, enemy spawn loop, bullet pool, overlap combat, multi-state flow                                   |
 
 Location: [`examples/games/external/`](../examples/games/external/).
 
@@ -21,9 +25,11 @@ Location: [`examples/games/external/`](../examples/games/external/).
 | `FlxWindow` debugger chrome from AS3                     | Unsupported              | N/A to this sample; debugger is DOM (Phase 11)                                                |
 | Private engine imports for button wiring                 | None                     | Sample imports only package barrel + `_kit`                                                   |
 
-## Blockers
+## Outstanding checkpoint evidence
 
-None open. Every discovered assumption is fixed or classified above.
+The compatibility exercise itself has no open blockers. C12 still requires a
+separately licensed external Flixel game, a source-to-source port attempt, and a
+gap report tied to concrete upstream files and revisions.
 
 ## Clean-room note
 

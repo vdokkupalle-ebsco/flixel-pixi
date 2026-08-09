@@ -93,7 +93,7 @@ export class FlxAtlasRegistry {
 
   /**
    * Return a previously loaded atlas.
-   * @throws {Error} If no atlas with `key` is registered.
+   * @throws Error if no atlas with `key` is registered.
    * @public
    */
   get(key: string): FlxAtlas {

@@ -166,4 +166,19 @@ describe('FlxSound and FlxAudioManager', () => {
 
     game.destroy();
   });
+
+  it('returns auto-destroyed one-shot sounds to reusable group slots', () => {
+    const context = new FlxContext(320, 240);
+    const manager = new FlxAudioManager(context, new NullAudioBackend());
+
+    for (let index = 0; index < 100; index += 1) {
+      const sound = manager.play('one-shot', 1, false, true);
+      sound.stop();
+      manager.updateSounds(1 / 60);
+      expect(manager.sounds.members.includes(sound)).toBe(false);
+    }
+
+    expect(manager.sounds.members.length).toBeLessThanOrEqual(1);
+    manager.destroy();
+  });
 });

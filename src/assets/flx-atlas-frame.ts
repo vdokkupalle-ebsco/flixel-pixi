@@ -42,7 +42,7 @@ export type FlxAtlasFrameList = readonly FlxAtlasFrame[];
 export interface FlxAtlasPrefixOptions {
   /**
    * Width of the numeric suffix, padded with leading zeros.
-   * Must be >= 1. Defaults to 1.
+   * Must be at least 1. Defaults to 1.
    * - padding 1 → `walk_1`
    * - padding 2 → `walk_01`
    */

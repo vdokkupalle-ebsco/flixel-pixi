@@ -1,24 +1,27 @@
-import type { FlxSaveResult, FlxStorageBackend } from './flx-storage-backend';
+import type {
+  FlxAsyncStorageBackend,
+  FlxSaveResult,
+} from './flx-storage-backend';
 
 const STORE_NAME = 'flixel_saves';
 
 /**
  * Optional IndexedDB-backed storage adapter.
  *
- * Provides the same synchronous-style `FlxStorageBackend` interface by
- * pre-opening the database.  Actual read/write operations use micro-task
- * transactions.
+ * Reads from a cache populated while opening. Writes and erases must use the
+ * async `FlxSave` methods so their results represent transaction completion.
  *
  * **Usage:**
  * ```ts
  * const db = await IndexedDBBackend.open('my-game-saves');
  * const save = new FlxSave();
  * save.bind('slot1', { backend: db });
+ * await save.flushAsync();
  * ```
  *
  * @public
  */
-export class IndexedDBBackend implements FlxStorageBackend {
+export class IndexedDBBackend implements FlxAsyncStorageBackend {
   readonly #db: IDBDatabase;
   /** In-memory mirror for synchronous reads after initial load. */
   readonly #cache = new Map<string, Record<string, unknown>>();
@@ -67,27 +70,61 @@ export class IndexedDBBackend implements FlxStorageBackend {
   }
 
   write(key: string, data: Record<string, unknown>): FlxSaveResult {
-    try {
-      const copy = { ...data };
-      this.#cache.set(key, copy);
-      // Fire-and-forget async write.
-      this.#asyncWrite(key, copy);
-      return { success: true };
-    } catch (error: unknown) {
-      return {
-        success: false,
-        error: 'unknown',
-        message: String(error),
-      };
-    }
+    void key;
+    void data;
+    return {
+      success: false,
+      error: 'async',
+      message: 'IndexedDB writes must be awaited with FlxSave.flushAsync().',
+    };
   }
 
   erase(key: string): boolean {
+    void key;
+    return false;
+  }
+
+  /** Persist a record and resolve only after its transaction commits. */
+  writeAsync(
+    key: string,
+    data: Record<string, unknown>,
+  ): Promise<FlxSaveResult> {
+    const copy = { ...data };
+    return new Promise<FlxSaveResult>((resolve) => {
+      try {
+        const tx = this.#db.transaction(STORE_NAME, 'readwrite');
+        const request = tx.objectStore(STORE_NAME).put(copy, key);
+        tx.oncomplete = (): void => {
+          this.#cache.set(key, copy);
+          resolve({ success: true });
+        };
+        const fail = (): void =>
+          resolve(this.#failure(tx.error ?? request.error));
+        tx.onerror = fail;
+        tx.onabort = fail;
+      } catch (error: unknown) {
+        resolve(this.#failure(error));
+      }
+    });
+  }
+
+  /** Delete a record and resolve only after its transaction commits. */
+  eraseAsync(key: string): Promise<boolean> {
     const existed = this.#cache.has(key);
-    this.#cache.delete(key);
-    // Fire-and-forget async delete.
-    this.#asyncDelete(key);
-    return existed;
+    return new Promise<boolean>((resolve) => {
+      try {
+        const tx = this.#db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).delete(key);
+        tx.oncomplete = (): void => {
+          this.#cache.delete(key);
+          resolve(existed);
+        };
+        tx.onerror = (): void => resolve(false);
+        tx.onabort = (): void => resolve(false);
+      } catch {
+        resolve(false);
+      }
+    });
   }
 
   close(key: string): void {
@@ -99,22 +136,28 @@ export class IndexedDBBackend implements FlxStorageBackend {
     this.#db.close();
   }
 
-  #asyncWrite(key: string, data: Record<string, unknown>): void {
-    try {
-      const tx = this.#db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put(data, key);
-    } catch {
-      console.warn(`[FlxSave] IndexedDB async write failed for key "${key}".`);
+  #failure(error: unknown): FlxSaveResult {
+    if (error instanceof DOMException) {
+      if (error.name === 'QuotaExceededError') {
+        return {
+          success: false,
+          error: 'quota',
+          message: `IndexedDB quota exceeded: ${error.message}`,
+        };
+      }
+      if (error.name === 'DataCloneError') {
+        return {
+          success: false,
+          error: 'serialization',
+          message: `IndexedDB could not clone save data: ${error.message}`,
+        };
+      }
     }
-  }
-
-  #asyncDelete(key: string): void {
-    try {
-      const tx = this.#db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).delete(key);
-    } catch {
-      console.warn(`[FlxSave] IndexedDB async delete failed for key "${key}".`);
-    }
+    return {
+      success: false,
+      error: 'unknown',
+      message: String(error),
+    };
   }
 
   async #preload(): Promise<void> {

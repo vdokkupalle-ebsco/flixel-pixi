@@ -108,7 +108,13 @@ bootGame({
       };
     };
     syncHook();
-    app.app.ticker.add(syncHook);
+    app.onFrame((frame) => {
+      const gameState = app.game.state;
+      if (gameState instanceof BenchSpritesState) {
+        gameState.recordRenderedFrame(frame.elapsedMS);
+      }
+      syncHook();
+    });
 
     if (status) {
       status.textContent = `Sprite bench ready (${activeCount} active)`;

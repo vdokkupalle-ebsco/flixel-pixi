@@ -33,6 +33,13 @@ function buildFrameList(count: number, fw = 8, fh = 8): FlxAtlasFrameList {
   }));
 }
 
+function loadTwoFrameGraphic(sprite: FlxSprite): void {
+  sprite.makeGraphic(16, 8);
+  const graphic = sprite.graphic;
+  if (graphic === null) throw new Error('Expected makeGraphic to create data.');
+  sprite.loadGraphic(graphic.texture, true, false, 8, 8);
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('FlxSprite.addAnimation + play — atlas frame list', () => {
@@ -145,8 +152,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('play with options object: loop defaults to false, speed defaults to 1', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
     sprite.addAnimation('idle', [0, 1]);
 
     sprite.play('idle', { loop: false, speed: 1 });
@@ -162,8 +168,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('play with options object: speed <= 0 throws RangeError', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
     sprite.addAnimation('idle', [0, 1]);
 
     expect(() => sprite.play('idle', { speed: 0 })).toThrow(RangeError);
@@ -174,8 +179,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('play with legacy boolean force preserves looped=true default from 4-arg addAnimation', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
 
     // 4-arg form: looped = true stored as default
     sprite.addAnimation('walk', [0, 1], 10, true);
@@ -195,8 +199,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('play with legacy boolean: non-looped animation sets finished=true and stops', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
 
     sprite.addAnimation('once', [0, 1], 10, false);
     sprite.play('once');
@@ -211,8 +214,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('play force:true option restarts animation', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
     sprite.addAnimation('idle', [0, 1], 10, true);
     sprite.play('idle');
 
@@ -228,8 +230,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('play without force does not restart same looping animation', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
     sprite.addAnimation('walk', [0, 1], 10, true);
     sprite.play('walk');
 
@@ -245,8 +246,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('addAnimation replaces existing animation with same name', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
 
     sprite.addAnimation('a', [0, 1], 10, true);
     sprite.addAnimation('a', [1], 5, false); // replace
@@ -260,8 +260,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('new 2-arg addAnimation: defaultLooped=false so animation stops after one pass', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
 
     // 2-arg form (no frameRate / looped)
     sprite.addAnimation('idle', [0, 1]);
@@ -277,8 +276,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
 
   it('play with options { loop: true } loops via #playbackLoop', () => {
     const sprite = new FlxSprite();
-    sprite.makeGraphic(16, 8);
-    sprite.loadGraphic(sprite.graphic!.texture, true, false, 8, 8);
+    loadTwoFrameGraphic(sprite);
     sprite.addAnimation('walk', [0, 1]); // default loop=false
     sprite.play('walk', { loop: true, speed: 10 }); // high speed
 

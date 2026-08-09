@@ -350,6 +350,9 @@ Checkpoint C7 — input gate:
 
 ### Phase 8 — Particles, timers, and plugins (2–3 weeks)
 
+Status: completed on 2026-08-06; checkpoint C8 passed. See
+[`docs/phase8-evidence.md`](docs/phase8-evidence.md).
+
 Classes: `FlxParticle`, `FlxEmitter`, `FlxTimer`, `TimerManager`, `DebugPathDisplay`.
 
 Work:
@@ -433,7 +436,10 @@ Checkpoint C11 — tooling gate:
 
 ### Phase 12 — Whole-game ports, API closure, and guides (4–6 weeks)
 
-Status: completed on 2026-08-06; checkpoint C12 passed. See
+Status: implementation substantially complete on 2026-08-06, but checkpoint
+C12 was reopened during the 2026-08-09 audit. The three public-API samples,
+guides, and member ledger pass; a licensed external game still needs a genuine
+source-port exercise. See
 [`docs/phase12-evidence.md`](docs/phase12-evidence.md) and
 [`docs/phase12-external-gap.md`](docs/phase12-external-gap.md).
 
@@ -454,7 +460,12 @@ Checkpoint C12 — release candidate feature gate:
 
 ### Phase 13 — Performance, browser hardening, and 1.0 release (3–4 weeks)
 
-Status: **hardening pass in progress** (updated 2026-08-07). Sprite FPS baselines, longer soak, dirty world-sync skip, and soft Chromium avg-FPS floors for 2k/5k. Full C13 (30‑minute soak, multi-browser freeze, 1.0 publish) not closed. See [`docs/phase13-evidence.md`](docs/phase13-evidence.md) and [`docs/superpowers/plans/2026-08-07-c13-completion.md`](docs/superpowers/plans/2026-08-07-c13-completion.md).
+Status: **stabilization pass in progress** (updated 2026-08-09). Frame ownership,
+render-based FPS measurement, audio unlock/lifecycle, async IndexedDB durability,
+replay rewind, group traversal, and verification gates are being hardened. Full
+C13 (30-minute soak, multi-browser freeze, 1.0 publish) is not closed. See
+[`docs/phase13-evidence.md`](docs/phase13-evidence.md) and
+[`docs/superpowers/plans/2026-08-07-c13-completion.md`](docs/superpowers/plans/2026-08-07-c13-completion.md).
 
 **Game-maker DX track (parallel, not a C13 claim):** public `createBrowserGame`, incremental `syncWorldToRenderer`, Mode Lite pooling, and `FlxG.actions`. See [`docs/dx-evidence.md`](docs/dx-evidence.md), [`docs/guides/making-games.md`](docs/guides/making-games.md), and [`docs/superpowers/plans/2026-08-07-game-maker-dx.md`](docs/superpowers/plans/2026-08-07-game-maker-dx.md).
 

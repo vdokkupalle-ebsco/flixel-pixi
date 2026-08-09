@@ -21,6 +21,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
   length = 0;
 
   #destroyed = false;
+  readonly #membership = new Map<T, number>();
   #marker = 0;
   #maxSize: number;
 
@@ -38,6 +39,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
 
     for (const member of this.members) member?.destroy();
     this.members.length = 0;
+    this.#membership.clear();
     this.length = 0;
     this.#marker = 0;
     super.destroy();
@@ -57,7 +59,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     for (const member of snapshot) {
       if (
         member !== null &&
-        this.members.includes(member) &&
+        this.#membership.has(member) &&
         member.exists &&
         member.active
       ) {
@@ -73,7 +75,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     for (const member of snapshot) {
       if (
         member !== null &&
-        this.members.includes(member) &&
+        this.#membership.has(member) &&
         member.exists &&
         member.visible
       ) {
@@ -95,7 +97,9 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     if (size === 0 || size >= this.members.length) return;
 
     for (let index = size; index < this.members.length; index += 1) {
-      this.members[index]?.destroy();
+      const member = this.members[index];
+      if (member !== null && member !== undefined) this.#trackRemove(member);
+      member?.destroy();
     }
     this.members.length = size;
     this.length = size;
@@ -104,11 +108,12 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
   }
 
   add(object: T): T {
-    if (this.members.includes(object)) return object;
+    if (this.#membership.has(object)) return object;
 
     for (let index = 0; index < this.members.length; index += 1) {
       if (this.members[index] === null) {
         this.members[index] = object;
+        this.#trackAdd(object);
         this.length = Math.max(this.length, index + 1);
         markRenderablesDirty();
         return object;
@@ -127,6 +132,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     this.members.length = newCapacity;
     this.members.fill(null, oldCapacity);
     this.members[oldCapacity] = object;
+    this.#trackAdd(object);
     this.length = oldCapacity + 1;
     markRenderablesDirty();
     return object;
@@ -158,6 +164,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     } else {
       this.members[index] = null;
     }
+    this.#trackRemove(object);
     markRenderablesDirty();
     return object;
   }
@@ -166,6 +173,8 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
     const index = this.members.indexOf(oldObject);
     if (index < 0) return null;
     this.members[index] = newObject;
+    this.#trackRemove(oldObject);
+    this.#trackAdd(newObject);
     markRenderablesDirty();
     return newObject;
   }
@@ -270,6 +279,7 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
 
   clear(): void {
     this.members.length = 0;
+    this.#membership.clear();
     this.length = 0;
     this.#marker = 0;
     markRenderablesDirty();
@@ -280,5 +290,15 @@ export class FlxGroup<T extends FlxBasic = FlxBasic> extends FlxBasic {
       if (member?.exists) member.kill();
     }
     super.kill();
+  }
+
+  #trackAdd(object: T): void {
+    this.#membership.set(object, (this.#membership.get(object) ?? 0) + 1);
+  }
+
+  #trackRemove(object: T): void {
+    const count = this.#membership.get(object) ?? 0;
+    if (count <= 1) this.#membership.delete(object);
+    else this.#membership.set(object, count - 1);
   }
 }

@@ -92,10 +92,10 @@ export class FlxAtlas {
    * Return an ordered list of frames whose names match `prefix + paddedNumber`
    * for each integer in `[start, end]` inclusive.
    *
-   * `options.padding` defaults to 1 (no leading zeros). padding >= 1.
+   * `options.padding` defaults to 1 (no leading zeros) and must be at least 1.
    * Also retries each lookup with a `.png` suffix (Kenney convention).
    *
-   * @throws {RangeError} If `padding < 1` or any frame is not found.
+   * @throws RangeError if `padding` is less than 1 or a frame is not found.
    */
   framesByPrefix(
     prefix: string,
@@ -124,7 +124,7 @@ export class FlxAtlas {
 
   /**
    * Return frames by 0-based index range (inclusive) or explicit index array.
-   * @throws {RangeError} If any index is out of bounds or start > end.
+   * @throws RangeError if an index is out of bounds or start exceeds end.
    */
   framesByNumber(start: number, end: number): FlxAtlasFrameList;
   framesByNumber(indices: readonly number[]): FlxAtlasFrameList;
@@ -152,7 +152,7 @@ export class FlxAtlas {
   }
 
   /**
-   * Build a Flixel strip {@link Texture} for `loadGraphic` / tilemaps.
+   * Build a Flixel `Texture` strip for `loadGraphic` / tilemaps.
    * Pass `null` for a fully transparent cell (e.g. tilemap air = index 0).
    * Optional `frameWidth` / `frameHeight` scale cells while copying.
    *

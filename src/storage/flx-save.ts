@@ -1,7 +1,22 @@
-import type { FlxSaveResult, FlxStorageBackend } from './flx-storage-backend';
+import type {
+  FlxAsyncStorageBackend,
+  FlxSaveResult,
+  FlxStorageBackend,
+} from './flx-storage-backend';
 
 /** Version field stored alongside user data for schema migration. @internal */
 const VERSION_KEY = '__version';
+
+function isAsyncBackend(
+  backend: FlxStorageBackend,
+): backend is FlxAsyncStorageBackend {
+  return (
+    'writeAsync' in backend &&
+    typeof backend.writeAsync === 'function' &&
+    'eraseAsync' in backend &&
+    typeof backend.eraseAsync === 'function'
+  );
+}
 
 /**
  * Callback for migrating save data between schema versions.
@@ -135,12 +150,48 @@ export class FlxSave {
     return this.#backend.write(this.name, this.data);
   }
 
+  /**
+   * Persist data and await durable completion for asynchronous backends.
+   * Synchronous backends resolve with the same result as {@link FlxSave.flush}.
+   */
+  async flushAsync(): Promise<FlxSaveResult> {
+    if (!this.#bound || this.name === null || this.data === null) {
+      return {
+        success: false,
+        error: 'unknown',
+        message: 'FlxSave is not bound to a slot.',
+      };
+    }
+    if (this.#backend === null) {
+      return {
+        success: false,
+        error: 'unknown',
+        message: 'No storage backend is available.',
+      };
+    }
+    return isAsyncBackend(this.#backend)
+      ? this.#backend.writeAsync(this.name, this.data)
+      : this.#backend.write(this.name, this.data);
+  }
+
   /** Erase all stored data for this slot. */
   erase(): boolean {
     if (!this.#bound || this.name === null || this.#backend === null) {
       return false;
     }
     const result = this.#backend.erase(this.name);
+    this.data = {};
+    return result;
+  }
+
+  /** Await erasure for an asynchronous backend. */
+  async eraseAsync(): Promise<boolean> {
+    if (!this.#bound || this.name === null || this.#backend === null) {
+      return false;
+    }
+    const result = isAsyncBackend(this.#backend)
+      ? await this.#backend.eraseAsync(this.name)
+      : this.#backend.erase(this.name);
     this.data = {};
     return result;
   }

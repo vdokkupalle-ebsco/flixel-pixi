@@ -5,6 +5,10 @@ import { LocalStorageBackend } from '../../src/storage/local-storage-backend';
 import { FlxContext } from '../../src/core/flx-context';
 import { FlxG } from '../../src/core/flx-g';
 import { FLX_STORAGE_SERVICE } from '../../src/storage/flx-storage-backend';
+import type {
+  FlxAsyncStorageBackend,
+  FlxSaveResult,
+} from '../../src/storage/flx-storage-backend';
 
 describe('FlxSave and Storage Backends', () => {
   it('handles bind, read, write, flush, erase, and close on NullStorageBackend', () => {
@@ -193,5 +197,48 @@ describe('FlxSave and Storage Backends', () => {
     expect(FlxG.saves[0]).toBe(saveInstance);
 
     FlxG.clearContext(context);
+  });
+
+  it('awaits durable writes and erases on asynchronous backends', async () => {
+    class AsyncBackend implements FlxAsyncStorageBackend {
+      readonly data = new Map<string, Record<string, unknown>>();
+      read(key: string): Record<string, unknown> | null {
+        return this.data.get(key) ?? null;
+      }
+      write(): FlxSaveResult {
+        return {
+          success: false,
+          error: 'async',
+          message: 'await the write',
+        };
+      }
+      async writeAsync(
+        key: string,
+        data: Record<string, unknown>,
+      ): Promise<FlxSaveResult> {
+        this.data.set(key, { ...data });
+        return { success: true };
+      }
+      erase(): boolean {
+        return false;
+      }
+      async eraseAsync(key: string): Promise<boolean> {
+        return this.data.delete(key);
+      }
+      close(): void {
+        return undefined;
+      }
+    }
+
+    const backend = new AsyncBackend();
+    const save = new FlxSave();
+    save.bind('async-slot', { backend });
+    if (save.data !== null) save.data.score = 42;
+
+    expect(save.flush()).toMatchObject({ success: false, error: 'async' });
+    expect(await save.flushAsync()).toEqual({ success: true });
+    expect(backend.data.get('async-slot')?.score).toBe(42);
+    expect(await save.eraseAsync()).toBe(true);
+    expect(save.data).toEqual({});
   });
 });

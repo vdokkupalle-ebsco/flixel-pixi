@@ -30,6 +30,11 @@ queues the sound and replays it on the first user gesture. Focus loss suspends
 the context; visibility return resumes it. Volume hot-keys (`+`/`-`/`0`) are
 retained and bound by `FlxGame` when `useSoundHotKeys` is true.
 
+`FlxAudioManager` installs the backend's gesture listeners during construction.
+Decoded `AudioBuffer` values use buffer-source nodes; URL strings and supplied
+`HTMLAudioElement` values use media-element source nodes. Asset aliases must be
+resolved to one of those supported source forms before playback.
+
 Proximity audio uses `StereoPannerNode` for left/right pan with linear
 distance-based volume attenuation, matching the AS3 2D behavior without the
 overhead of 3D `PannerNode` HRTF processing.
@@ -41,6 +46,7 @@ All methods are stubs; `unlocked` is always true.
 
 Games that call `FlxG.play()` before a gesture receive silent but queued audio.
 Once any click, keydown, or touchstart arrives, the queue drains and subsequent
-calls play immediately. Tab suspension and resume are transparent to gameplay
-code. Headless tests use the null backend and never touch browser APIs. Proximity
+calls play immediately. Stopping or destroying a queued sound removes its
+pending request. Tab suspension and resume are transparent to gameplay code.
+Headless tests use the null backend and never touch browser APIs. Proximity
 panning is simple stereo, not 3D spatialized.

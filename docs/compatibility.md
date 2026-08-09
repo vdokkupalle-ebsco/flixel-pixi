@@ -172,7 +172,7 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 
 - Source: `FlxButton.as`
 - Public API (21): `destroy`, `draw`, `FlxButton`, `static HIGHLIGHT`, `label`, `labelOffset`, `static NORMAL`, `on (get/set)`, `onDown`, `onOut`, `onOver`, `onUp`, `static PRESSED`, `preUpdate`, `setSounds`, `soundDown`, `soundOut`, `soundOver`, `soundUp`, `status`, `update`
-- Phase 7 status: implemented with deterministic input state and composite Pixi render handle; embedded sound classes are backend-neutral sound hooks.
+- Phase 7 status: Adapted — deterministic input state and composite Pixi render handle; embedded sound classes are backend-neutral sound hooks.
 
 ### `org.flixel.FlxCamera`
 
@@ -376,7 +376,7 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 
 - Source: `system/FlxTile.as`
 - Public API (7): `callback`, `destroy`, `filter`, `FlxTile`, `index`, `mapIndex`, `tilemap`
-- Phase 6 status: implemented as the reusable tile collision/callback proxy.
+- Phase 6 status: Adapted — reusable tile collision/callback proxy.
 
 ### `org.flixel.system.FlxTilemapBuffer`
 
@@ -394,7 +394,7 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 
 - Source: `system/input/Input.as`
 - Public API (11): `any`, `destroy`, `getKeyCode`, `Input`, `justPressed`, `justReleased`, `playback`, `pressed`, `record`, `reset`, `update`
-- Phase 7 status: implemented with pinned numeric transitions and snapshot record/playback.
+- Phase 7 status: Adapted — pinned numeric transitions and snapshot record/playback.
 
 ### `org.flixel.system.input.Keyboard`
 

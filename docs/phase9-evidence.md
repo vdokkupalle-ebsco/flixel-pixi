@@ -7,7 +7,7 @@
 - PixiJS baseline: 8.19
 
 Phase 9 ports `FlxSound` (all 24 AS3 members) and `FlxSave` (all 8 AS3 members),
-defines replaceable audio and storage backends (`FlxAudioBackend`, `FlxStorageBackend`),
+defines replaceable audio and storage backends (`FlxAudioBackend`, `FlxStorageBackend`, `FlxAsyncStorageBackend`),
 and implements browser Web Audio API and localStorage/IndexedDB integration.
 
 ## Pinned source contracts
@@ -28,14 +28,21 @@ The implementation was verified against the pinned AS3 source:
 ## Replaceable architecture & browser risks
 
 - **Audio Backend**: `WebAudioBackend` handles browser autoplay gesture unlocking
-  via a queue, suspending/resuming audio context on visibility loss, and stereo
-  panning via `StereoPannerNode`. `NullAudioBackend` provides headless execution for unit tests.
+  via a real pending-play queue, suspending/resuming audio context on visibility
+  loss, URL playback through `HTMLAudioElement`, decoded `AudioBuffer` playback,
+  and stereo panning via `StereoPannerNode`. `FlxAudioManager` installs the
+  gesture listeners automatically. `NullAudioBackend` provides headless execution for unit tests.
 - **Storage Backend**: `LocalStorageBackend` handles quota failure classification
   (`DOMException`), JSON serialization, and safe key namespacing. `IndexedDBBackend`
-  provides an async-capable adapter. `NullStorageBackend` provides in-memory map storage.
+  provides an async adapter whose `flushAsync()` / `eraseAsync()` methods settle
+  only when the IndexedDB transaction commits or fails. Its synchronous
+  `flush()` returns an `async` error instead of reporting false durability.
+  `NullStorageBackend` provides in-memory map storage.
 
 ## Verification results
 
-- Headless unit tests (`tests/unit/flx-sound.test.ts`, `tests/unit/flx-save.test.ts`): 100% pass (20 files, 130 tests).
-- Real-browser Playwright tests (`tests/browser/phase9.spec.ts`): 100% pass across Chromium, Firefox, and WebKit (45 browser tests).
+- Headless suite, including audio/save/backend tests: 29 files and 218 tests pass.
+- Real-browser Playwright tests (`tests/browser/phase9.spec.ts`): 9/9 pass
+  (three scenarios across Chromium, Firefox, and WebKit), including an actual
+  close/reopen IndexedDB durability check.
 - TypeScript strict compilation: clean (`npx tsc --noEmit`).

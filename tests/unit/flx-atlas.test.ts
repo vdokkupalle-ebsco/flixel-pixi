@@ -28,6 +28,92 @@ function makeAtlas(rects: FlxAtlasFrameRect[], key = 'test'): FlxAtlas {
   return FlxAtlas.fromTextureAndRects(key, tex, rects);
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('bakeAtlasFrameStrip', () => {
+  it('validates the frame list and output dimensions', () => {
+    expect(() => atlasBake.bakeAtlasFrameStrip([], 8, 8)).toThrow(RangeError);
+    expect(() => atlasBake.bakeAtlasFrameStrip([null], 0, 8)).toThrow(
+      RangeError,
+    );
+    expect(() => atlasBake.bakeAtlasFrameStrip([null], 8, -1)).toThrow(
+      RangeError,
+    );
+  });
+
+  it('bakes non-null cells and leaves null cells transparent', () => {
+    const context = {
+      clearRect: vi.fn(),
+      drawImage: vi.fn(),
+      getImageData: vi.fn(() => ({
+        data: new Uint8ClampedArray(16 * 8 * 4),
+      })),
+      imageSmoothingEnabled: true,
+    };
+    const canvas = {
+      getContext: vi.fn(() => context),
+      height: 0,
+      width: 0,
+    };
+    const createElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName) =>
+      tagName === 'canvas'
+        ? (canvas as unknown as HTMLCanvasElement)
+        : createElement(tagName),
+    );
+
+    const texture = atlasBake.bakeAtlasFrameStrip(
+      [
+        null,
+        {
+          height: 4,
+          source: {} as CanvasImageSource,
+          width: 4,
+          x: 2,
+          y: 3,
+        },
+      ],
+      8,
+      8,
+    );
+
+    expect(canvas).toMatchObject({ height: 8, width: 16 });
+    expect(context.imageSmoothingEnabled).toBe(false);
+    expect(context.clearRect).toHaveBeenCalledWith(0, 0, 16, 8);
+    expect(context.drawImage).toHaveBeenCalledOnce();
+    expect(context.drawImage).toHaveBeenCalledWith(
+      expect.anything(),
+      2,
+      3,
+      4,
+      4,
+      8,
+      0,
+      8,
+      8,
+    );
+    expect(texture.width).toBe(16);
+    texture.destroy(true);
+  });
+
+  it('reports a missing 2D canvas context', () => {
+    const canvas = {
+      getContext: vi.fn(() => null),
+      height: 0,
+      width: 0,
+    };
+    vi.spyOn(document, 'createElement').mockReturnValue(
+      canvas as unknown as HTMLCanvasElement,
+    );
+
+    expect(() => atlasBake.bakeAtlasFrameStrip([null], 8, 8)).toThrow(
+      /2D canvas context/,
+    );
+  });
+});
+
 // ── FlxAtlas pickers ──────────────────────────────────────────────────────────
 
 describe('FlxAtlas.getFrame', () => {
@@ -143,10 +229,6 @@ describe('FlxAtlasRegistry', () => {
     registry = new FlxAtlasRegistry();
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('get throws when key is missing', () => {
     expect(() => registry.get('missing')).toThrow(/missing/i);
   });
@@ -184,9 +266,8 @@ describe('FlxAtlasRegistry', () => {
       }
       set src(url: string) {
         this.#src = url;
-        const self = this;
         queueMicrotask(() => {
-          self.onload?.();
+          this.onload?.();
         });
       }
     }

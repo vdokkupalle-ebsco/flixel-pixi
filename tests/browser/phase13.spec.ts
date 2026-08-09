@@ -1,10 +1,16 @@
 import { expect, test } from '@playwright/test';
 
 const GAMES = 'http://127.0.0.1:4174';
+const PERF_GATES = process.env.PHASE13_PERF_GATES === '1';
+
+// Perf samples and the soak share CPU/GPU resources, so this file must not
+// measure several stress scenes against one another.
+test.describe.configure({ mode: 'serial' });
 
 test.describe('Phase 13 — Sprite stress bench', () => {
   for (const active of [2000, 5000, 10000] as const) {
     test(`boots ${active} sprites, reports finite FPS (report-only), destroys`, async ({
+      browserName,
       page,
     }) => {
       test.setTimeout(active >= 10000 ? 120_000 : 60_000);
@@ -27,10 +33,10 @@ test.describe('Phase 13 — Sprite stress bench', () => {
       expect(Number.isFinite(metrics?.avgFps)).toBe(true);
       expect(Number.isFinite(metrics?.minFps)).toBe(true);
       expect(metrics?.avgFps ?? 0).toBeGreaterThan(0);
-      // Soft Chromium floors (avg only — minFps hitches remain report-only).
-      if (active === 2000) {
+      // Hardware floors are enabled only by the dedicated serial perf command.
+      if (PERF_GATES && browserName === 'chromium' && active === 2000) {
         expect(metrics?.avgFps ?? 0).toBeGreaterThanOrEqual(60);
-      } else if (active === 5000) {
+      } else if (PERF_GATES && browserName === 'chromium' && active === 5000) {
         expect(metrics?.avgFps ?? 0).toBeGreaterThanOrEqual(30);
       }
       // 10k stays report-only until CI baselines stabilize

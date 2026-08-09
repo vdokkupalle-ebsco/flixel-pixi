@@ -51,7 +51,7 @@ export function createAtlasGraphic(): FlxGraphic {
   ];
   for (let row = 0; row < ATLAS_ROWS; row += 1) {
     for (let col = 0; col < ATLAS_COLS; col += 1) {
-      const color = colors[row * ATLAS_COLS + col]!;
+      const color = colors[row * ATLAS_COLS + col] ?? 0xffffffff;
       for (let y = 0; y < TILE; y += 1) {
         for (let x = 0; x < TILE; x += 1) {
           pixels.data[(row * TILE + y) * w + col * TILE + x] = color;
@@ -72,7 +72,6 @@ export class BenchSpritesState extends FlxState {
   #sampleElapsed = 0;
   #warmupDone = false;
   #frameTimes: number[] = [];
-  #lastNow = 0;
   measured = false;
   avgFps = 0;
   minFps = 0;
@@ -111,15 +110,10 @@ export class BenchSpritesState extends FlxState {
     this.hud.scrollFactor.x = 0;
     this.hud.scrollFactor.y = 0;
     this.add(this.hud);
-    this.#lastNow = performance.now();
   }
 
   override update(): void {
     super.update();
-    const now = performance.now();
-    const dtMs = now - this.#lastNow;
-    this.#lastNow = now;
-    this.#sampleElapsed += FlxG.elapsed;
     const n = this.activeCount;
 
     for (const member of this.activeSprites.members) {
@@ -135,28 +129,39 @@ export class BenchSpritesState extends FlxState {
     }
 
     if (!this.#warmupDone) {
-      if (this.#sampleElapsed >= 1) {
-        this.#warmupDone = true;
-        this.#sampleElapsed = 0;
-        this.#frameTimes.length = 0;
-      }
       this.hud.text = `BENCH — warmup ${this.#sampleElapsed.toFixed(2)}s · active ${n} · keys 1/2/3 presets`;
       return;
-    }
-
-    if (!this.measured) {
-      if (dtMs > 0 && dtMs < 250) this.#frameTimes.push(dtMs);
-      if (this.#sampleElapsed >= 4) {
-        const fpss = this.#frameTimes.map((ms) => 1000 / ms);
-        const sum = fpss.reduce((a, b) => a + b, 0);
-        this.avgFps = fpss.length ? sum / fpss.length : 0;
-        this.minFps = fpss.length ? Math.min(...fpss) : 0;
-        this.measured = true;
-      }
     }
 
     this.hud.text = this.measured
       ? `BENCH — avg ${this.avgFps.toFixed(1)} fps · min ${this.minFps.toFixed(1)} · active ${n} · inactive ${INACTIVE_COUNT}`
       : `BENCH — measuring ${this.#sampleElapsed.toFixed(2)}s · active ${n}`;
+  }
+
+  /** Record one completed browser render interval. */
+  recordRenderedFrame(elapsedMS: number): void {
+    if (!Number.isFinite(elapsedMS) || elapsedMS <= 0) return;
+    this.#sampleElapsed += elapsedMS / 1000;
+
+    if (!this.#warmupDone) {
+      if (this.#sampleElapsed >= 1) {
+        this.#warmupDone = true;
+        this.#sampleElapsed = 0;
+        this.#frameTimes.length = 0;
+      }
+      return;
+    }
+
+    if (!this.measured) {
+      if (elapsedMS < 250) this.#frameTimes.push(elapsedMS);
+      if (this.#sampleElapsed >= 4) {
+        const totalMS = this.#frameTimes.reduce((sum, ms) => sum + ms, 0);
+        const maxMS = Math.max(...this.#frameTimes);
+        this.avgFps =
+          totalMS > 0 ? (this.#frameTimes.length * 1000) / totalMS : 0;
+        this.minFps = maxMS > 0 ? 1000 / maxMS : 0;
+        this.measured = true;
+      }
+    }
   }
 }
