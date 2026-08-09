@@ -1,8 +1,11 @@
+import type { FlxCamera } from '../core/flx-camera';
 import { FlxGraphic } from '../assets/flx-graphic';
 import { makeGraphicPixels } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
+import type { FlxTouch } from '../input/flx-touch';
 import { FlxPoint } from '../math/flx-point';
 import { FlxButtonRenderHandle } from '../rendering/flx-button-render-handle';
+import type { FlxRenderHandle } from '../rendering/flx-render-handle';
 import { FlxObject } from './flx-object';
 import { FlxSprite } from './flx-sprite';
 import { FlxText } from './flx-text';
@@ -16,10 +19,24 @@ export interface FlxButtonSound {
   play(forceRestart?: boolean): unknown;
 }
 
+interface FlxButtonInput {
+  readonly id: number | 'mouse';
+  readonly justCancelled: boolean;
+  readonly justPressed: boolean;
+  readonly justReleased: boolean;
+  readonly pressed: boolean;
+  getWorldPosition(camera: FlxCamera, point: FlxPoint): FlxPoint;
+}
+
 function makeDefaultButtonGraphic(): FlxGraphic {
   const width = 80;
   const frameHeight = 20;
-  const colors = [0x31415cff, 0x466384ff, 0x243247ff];
+  const colors = [
+    0x31415cff,
+    0x466384ff,
+    0x243247ff,
+    0x1a2230ff,
+  ];
   const pixels = makeGraphicPixels(width, frameHeight * colors.length, 0);
   for (let frame = 0; frame < colors.length; frame += 1) {
     for (let y = 0; y < frameHeight; y += 1) {
@@ -33,14 +50,30 @@ function makeDefaultButtonGraphic(): FlxGraphic {
   return FlxGraphic.fromPixels(pixels, 'flx-button-default');
 }
 
-/** Three-state, deterministic Flixel button with optional toggle behavior. @public */
+/** Deterministic Flixel button with optional toggle and native accessibility hooks. @public */
 export class FlxButton extends FlxSprite {
   static readonly NORMAL = 0;
   static readonly HIGHLIGHT = 1;
   static readonly PRESSED = 2;
+  static readonly DISABLED = 3;
 
   label: FlxText | null;
-  readonly labelOffset = new FlxPoint();
+  /** Label offsets for normal, highlight, pressed, and disabled states. */
+  readonly labelOffsets = [
+    new FlxPoint(-1, 3),
+    new FlxPoint(-1, 3),
+    new FlxPoint(-1, 4),
+    new FlxPoint(-1, 3),
+  ];
+  /** Label alpha multipliers for normal, highlight, pressed, and disabled states. */
+  readonly labelAlphas = [0.8, 1, 0.5, 0.3];
+  /** Primary label offset used by legacy AS3 callers. */
+  readonly labelOffset = this.labelOffsets[0];
+  /**
+   * When true, a press started elsewhere can activate the button if the pointer
+   * is released while hovering over it.
+   */
+  allowSwiping = true;
   onUp: FlxButtonCallback | null;
   onDown: FlxButtonCallback | null = null;
   onOver: FlxButtonCallback | null = null;
@@ -56,13 +89,12 @@ export class FlxButton extends FlxSprite {
   tabIndex = 0;
 
   #on = false;
-  #pointerArmed = false;
-  #highlighted = false;
   #focused = false;
   #pendingFocus: boolean | null = null;
   #queuedAccessibilityActivation = false;
   #accessibleLabelOverride: string | null | undefined;
   #defaultGraphic: FlxGraphic | null;
+  #currentInputId: number | 'mouse' | null = null;
   readonly #pointer = new FlxPoint();
   readonly #globalPointer = new FlxPoint();
 
@@ -73,8 +105,16 @@ export class FlxButton extends FlxSprite {
     onClick: FlxButtonCallback | null = null,
   ) {
     super(x, y);
+    this.scrollFactor.make(0, 0);
     this.#defaultGraphic = makeDefaultButtonGraphic();
-    this.loadGraphic(this.#defaultGraphic, true, false, 80, 20);
+    FlxSprite.prototype.loadGraphic.call(
+      this,
+      this.#defaultGraphic,
+      true,
+      false,
+      80,
+      20,
+    );
     this.label =
       label === null
         ? null
@@ -86,7 +126,6 @@ export class FlxButton extends FlxSprite {
           );
     this.label?.origin.make();
     if (this.label !== null) this.label.scrollFactor = this.scrollFactor;
-    this.labelOffset.make(-1, 3);
     this.onUp = onClick;
     this.allowCollisions = FlxObject.NONE;
   }
@@ -96,47 +135,43 @@ export class FlxButton extends FlxSprite {
       this.#focused = this.#pendingFocus;
       this.#pendingFocus = null;
     }
-    const mouse = FlxG.mouse;
-    const cameras = this.cameras ?? FlxG.cameras;
-    let hovered = false;
-    mouse.getGlobalPosition(this.#globalPointer);
-    for (const camera of this.enabled && mouse.visible ? cameras : []) {
+
+    if (!this.enabled) {
+      this.status = FlxButton.DISABLED;
+      this.#currentInputId = null;
+    } else {
+      let overlapFound = false;
+      const mouse = FlxG.mouse;
+      if (mouse.visible) {
+        overlapFound = this.#checkMouseOverlap() || overlapFound;
+      }
+      for (const touch of FlxG.touches.active) {
+        if (touch.isPrimary) continue;
+        overlapFound = this.#checkTouchOverlap(touch) || overlapFound;
+      }
+
+      const currentInput = this.#currentInput();
+
       if (
-        !camera.exists ||
-        !camera.visible ||
-        !camera.containsScreenPoint(this.#globalPointer)
+        currentInput !== null &&
+        currentInput.justReleased &&
+        overlapFound
       ) {
-        continue;
+        this.#onUpHandler();
       }
-      mouse.getWorldPosition(camera, this.#pointer);
-      this.#pointer.x -= camera.scroll.x * (1 - this.scrollFactor.x);
-      this.#pointer.y -= camera.scroll.y * (1 - this.scrollFactor.y);
-      if (this.overlapsPoint(this.#pointer)) {
-        hovered = true;
-        break;
+
+      if (
+        this.status !== FlxButton.NORMAL &&
+        this.status !== FlxButton.DISABLED &&
+        (!overlapFound ||
+          (currentInput !== null && currentInput.justReleased))
+      ) {
+        this.#onOutHandler();
       }
-    }
 
-    const highlighted = this.enabled && (hovered || this.#focused);
-    if (highlighted && !this.#highlighted) {
-      this.onOver?.();
-      this.soundOver?.play(true);
-    } else if (!highlighted && this.#highlighted) {
-      this.onOut?.();
-      this.soundOut?.play(true);
-    }
-    this.#highlighted = highlighted;
-
-    if (this.enabled && hovered && mouse.justPressed()) {
-      this.#pointerArmed = true;
-      this.onDown?.();
-      this.soundDown?.play(true);
-    }
-
-    if (mouse.justReleased()) {
-      const activate = this.#pointerArmed && hovered && !mouse.justCancelled();
-      this.#pointerArmed = false;
-      if (activate) this.activate();
+      if (this.#focused && this.status === FlxButton.NORMAL) {
+        this.status = FlxButton.HIGHLIGHT;
+      }
     }
 
     if (this.#queuedAccessibilityActivation) {
@@ -144,13 +179,6 @@ export class FlxButton extends FlxSprite {
       this.activate();
     }
 
-    this.status = !this.enabled
-      ? FlxButton.NORMAL
-      : this.#pointerArmed && mouse.pressed()
-        ? FlxButton.PRESSED
-        : highlighted
-          ? FlxButton.HIGHLIGHT
-          : FlxButton.NORMAL;
     this.frame =
       this.#on && this.status === FlxButton.HIGHLIGHT
         ? FlxButton.NORMAL
@@ -236,7 +264,7 @@ export class FlxButton extends FlxSprite {
         : this.status;
   }
 
-  override createRenderHandle(): FlxButtonRenderHandle {
+  override createRenderHandle(): FlxRenderHandle {
     return this.trackRenderHandle((onDestroy) => {
       return new FlxButtonRenderHandle(this, onDestroy);
     });
@@ -255,6 +283,7 @@ export class FlxButton extends FlxSprite {
     this.#accessibleLabelOverride = null;
     this.#queuedAccessibilityActivation = false;
     this.#pendingFocus = null;
+    this.#currentInputId = null;
     for (const sound of new Set([
       this.soundOver,
       this.soundOut,
@@ -269,23 +298,132 @@ export class FlxButton extends FlxSprite {
     this.soundUp = null;
   }
 
+  #currentInput(): FlxButtonInput | null {
+    if (this.#currentInputId === null) return null;
+    if (this.#currentInputId === 'mouse') return this.#mouseInput();
+    const touch = FlxG.touches.get(this.#currentInputId);
+    return touch === null ? null : this.#touchInput(touch);
+  }
+
+  #checkMouseOverlap(): boolean {
+    const mouse = FlxG.mouse;
+    const cameras = this.cameras ?? FlxG.cameras;
+    mouse.getGlobalPosition(this.#globalPointer);
+    for (const camera of cameras) {
+      if (
+        !camera.exists ||
+        !camera.visible ||
+        !camera.containsScreenPoint(this.#globalPointer)
+      ) {
+        continue;
+      }
+      mouse.getWorldPosition(camera, this.#pointer);
+      this.#applyScroll(camera, this.#pointer);
+      if (this.overlapsPoint(this.#pointer)) {
+        this.#updateStatus(this.#mouseInput());
+        return true;
+      }
+    }
+    return false;
+  }
+
+  #checkTouchOverlap(touch: FlxTouch): boolean {
+    const cameras = this.cameras ?? FlxG.cameras;
+    for (const camera of cameras) {
+      if (!camera.exists || !camera.visible) continue;
+      touch.getWorldPosition(camera, this.#pointer);
+      this.#applyScroll(camera, this.#pointer);
+      if (this.overlapsPoint(this.#pointer)) {
+        this.#updateStatus(this.#touchInput(touch));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  #mouseInput(): FlxButtonInput {
+    const mouse = FlxG.mouse;
+    return {
+      id: 'mouse',
+      justCancelled: mouse.justCancelled(),
+      justPressed: mouse.justPressed(),
+      justReleased: mouse.justReleased(),
+      pressed: mouse.pressed(),
+      getWorldPosition: (camera, point) => mouse.getWorldPosition(camera, point),
+    };
+  }
+
+  #touchInput(touch: FlxTouch): FlxButtonInput {
+    return {
+      id: touch.pointerId,
+      justCancelled: touch.justCancelled,
+      justPressed: touch.justPressed,
+      justReleased: touch.justReleased,
+      pressed: touch.pressed,
+      getWorldPosition: (camera, point) => touch.getWorldPosition(camera, point),
+    };
+  }
+
+  #updateStatus(input: FlxButtonInput): void {
+    if (input.justPressed) {
+      this.#currentInputId = input.id;
+      this.#onDownHandler();
+      return;
+    }
+    if (this.status === FlxButton.NORMAL) {
+      if (this.allowSwiping && input.pressed) {
+        this.#currentInputId = input.id;
+        this.#onDownHandler();
+      } else {
+        this.#onOverHandler();
+      }
+    }
+  }
+
+  #onUpHandler(): void {
+    this.status = FlxButton.HIGHLIGHT;
+    this.#currentInputId = null;
+    this.onUp?.();
+    this.soundUp?.play(true);
+  }
+
+  #onDownHandler(): void {
+    this.status = FlxButton.PRESSED;
+    this.onDown?.();
+    this.soundDown?.play(true);
+  }
+
+  #onOverHandler(): void {
+    this.status = FlxButton.HIGHLIGHT;
+    this.onOver?.();
+    this.soundOver?.play(true);
+  }
+
+  #onOutHandler(): void {
+    this.status = FlxButton.NORMAL;
+    this.#currentInputId = null;
+    this.onOut?.();
+    this.soundOut?.play(true);
+  }
+
+  #applyScroll(camera: FlxCamera, point: FlxPoint): void {
+    point.x -= camera.scroll.x * (1 - this.scrollFactor.x);
+    point.y -= camera.scroll.y * (1 - this.scrollFactor.y);
+  }
+
   #syncLabel(): void {
     const label = this.label;
     if (label === null) return;
-    label.x = this.x + this.labelOffset.x;
-    label.y =
-      this.y + this.labelOffset.y + (this.status === FlxButton.PRESSED ? 1 : 0);
+    const statusIndex = Math.min(this.status, this.labelOffsets.length - 1);
+    const offset =
+      this.labelOffsets[statusIndex] ?? this.labelOffsets[0];
+    if (offset === undefined) return;
+    const alphaIndex = Math.min(this.status, this.labelAlphas.length - 1);
+    label.x = this.x + offset.x;
+    label.y = this.y + offset.y;
     label.exists = this.exists;
     label.visible = this.visible;
-    label.alpha =
-      this.alpha *
-      (!this.enabled
-        ? 0.35
-        : this.status === FlxButton.PRESSED
-          ? 0.5
-          : this.status === FlxButton.NORMAL
-            ? 0.8
-            : 1);
+    label.alpha = this.alpha * (this.labelAlphas[alphaIndex] ?? 1);
     label.cameras = this.cameras;
   }
 }

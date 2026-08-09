@@ -1,3 +1,4 @@
+import { FlxPoint } from '../math/flx-point';
 import { FlxBarRenderHandle } from '../rendering/flx-bar-render-handle';
 import { FlxObject } from './flx-object';
 import { FlxSprite } from './flx-sprite';
@@ -11,6 +12,13 @@ export type FlxBarCallback = () => void;
 /** Numeric value provider used by a bound bar. @public */
 export type FlxBarValueProvider = () => number;
 
+/** Parent object followed for position and optional scroll factor. @public */
+export interface FlxBarParentLike {
+  readonly scrollFactor?: FlxPoint;
+  x: number;
+  y: number;
+}
+
 function requireFinite(value: number, name: string): number {
   if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite.`);
   return value;
@@ -20,6 +28,13 @@ function requireDimension(value: number, name: string): number {
   requireFinite(value, name);
   if (value <= 0) throw new RangeError(`${name} must be greater than zero.`);
   return value;
+}
+
+function isBarParent(value: object): value is FlxBarParentLike {
+  return (
+    typeof (value as FlxBarParentLike).x === 'number' &&
+    typeof (value as FlxBarParentLike).y === 'number'
+  );
 }
 
 /**
@@ -42,6 +57,9 @@ export class FlxBar extends FlxSprite {
   emptyCallback: FlxBarCallback | null = null;
   filledCallback: FlxBarCallback | null = null;
   killOnEmpty = false;
+  /** When false, the bar follows its parent position each fixed update. */
+  fixedPosition = true;
+  readonly positionOffset = new FlxPoint();
   #direction: FlxBarFillDirection = FlxBar.LEFT_TO_RIGHT;
   #emptyColor = 0x263248ff;
   #fillColor = 0x4ade80ff;
@@ -79,7 +97,7 @@ export class FlxBar extends FlxSprite {
     this.allowCollisions = FlxObject.NONE;
     this.setRange(minimum, maximum);
     if (parent !== null || variable.length > 0) {
-      this.trackParent(parent, variable);
+      this.setParent(parent, variable);
     }
   }
 
@@ -96,12 +114,32 @@ export class FlxBar extends FlxSprite {
     this.#changed();
   }
 
+  /** Logical bar width in pixels. */
+  get barWidth(): number {
+    return this.width;
+  }
+
+  /** Logical bar height in pixels. */
+  get barHeight(): number {
+    return this.height;
+  }
+
   get minimum(): number {
     return this.#minimum;
   }
 
   get maximum(): number {
     return this.#maximum;
+  }
+
+  /** Bound parent object, when value tracking is active. */
+  get parent(): object | null {
+    return this.#parent;
+  }
+
+  /** Property name read from the bound parent object each fixed update. */
+  get parentVariable(): string {
+    return this.#parentVariable;
   }
 
   get value(): number {
@@ -186,13 +224,57 @@ export class FlxBar extends FlxSprite {
     return this;
   }
 
-  trackParent(parent: object | null, variable: string): this {
+  /**
+   * Bind a parent object and optional property for value tracking.
+   *
+   * When `track` is true the bar also follows the parent position using
+   * `offsetX` and `offsetY`.
+   */
+  setParent(
+    parent: object | null,
+    variable: string,
+    track = false,
+    offsetX = 0,
+    offsetY = 0,
+  ): this {
     if (parent === null && variable.length > 0) {
       throw new TypeError('A bar property binding requires a parent object.');
     }
     this.#parent = parent;
     this.#parentVariable = variable;
     this.#provider = null;
+    if (track) this.#followParentPosition(offsetX, offsetY);
+    const boundValue = this.#readBoundValue();
+    if (boundValue !== null) this.value = boundValue;
+    return this;
+  }
+
+  /**
+   * Bind a parent object property for value tracking, or follow an already-bound
+   * parent's position when the first argument is a numeric offset.
+   */
+  trackParent(offsetX: number, offsetY: number): this;
+  trackParent(parent: object | null, variable: string): this;
+  trackParent(
+    parentOrOffsetX: object | null | number,
+    variableOrOffsetY: string | number,
+  ): this {
+    if (typeof parentOrOffsetX === 'number') {
+      return this.#followParentPosition(
+        parentOrOffsetX,
+        variableOrOffsetY as number,
+      );
+    }
+    return this.setParent(parentOrOffsetX, variableOrOffsetY as string);
+  }
+
+  /** Stop following the parent and remain at the given world position. */
+  stopTrackingParent(posX: number, posY: number): this {
+    requireFinite(posX, 'Bar x');
+    requireFinite(posY, 'Bar y');
+    this.fixedPosition = true;
+    this.x = posX;
+    this.y = posY;
     return this;
   }
 
@@ -206,6 +288,9 @@ export class FlxBar extends FlxSprite {
   override update(): void {
     const boundValue = this.#readBoundValue();
     if (boundValue !== null) this.value = boundValue;
+    if (!this.fixedPosition && this.#parent !== null) {
+      this.#syncParentPosition();
+    }
   }
 
   override createRenderHandle(): FlxBarRenderHandle {
@@ -220,6 +305,35 @@ export class FlxBar extends FlxSprite {
     this.emptyCallback = null;
     this.filledCallback = null;
     super.destroy();
+  }
+
+  #followParentPosition(offsetX: number, offsetY: number): this {
+    if (this.#parent === null) {
+      throw new TypeError('Position tracking requires a parent object.');
+    }
+    requireFinite(offsetX, 'Bar offsetX');
+    requireFinite(offsetY, 'Bar offsetY');
+    this.fixedPosition = false;
+    this.positionOffset.make(offsetX, offsetY);
+    this.#syncParentScrollFactor();
+    return this;
+  }
+
+  #syncParentPosition(): void {
+    const parent = this.#parent;
+    if (parent === null || !isBarParent(parent)) return;
+    this.x = parent.x + this.positionOffset.x;
+    this.y = parent.y + this.positionOffset.y;
+    this.#syncParentScrollFactor();
+  }
+
+  #syncParentScrollFactor(): void {
+    const parent = this.#parent;
+    if (parent === null || !isBarParent(parent)) return;
+    const scrollFactor = parent.scrollFactor;
+    if (scrollFactor === undefined) return;
+    this.scrollFactor.x = scrollFactor.x;
+    this.scrollFactor.y = scrollFactor.y;
   }
 
   #readBoundValue(): number | null {

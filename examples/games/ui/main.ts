@@ -1,5 +1,6 @@
 import { bootGame, type GameApplication } from '../_kit/boot-game';
 import { UiDemoState, type UiDemoSnapshot } from './game';
+import { preloadKenneyUiAtlas } from './kenney-ui';
 
 declare global {
   interface Window {
@@ -21,15 +22,18 @@ const destroyButton = document.querySelector<HTMLButtonElement>(
 window.__FLIXEL_PIXI_UI__ = { destroyed: false, ready: false };
 if (!host) throw new Error('Missing [data-testid="canvas-host"]');
 
-bootGame({
-  backgroundColor: 0x07111f,
-  fpsDisplay: { mode: 'compact' },
-  height: 320,
-  host,
-  initialState: UiDemoState,
-  title: 'UI Authoring',
-  width: 640,
-})
+preloadKenneyUiAtlas()
+  .then(() =>
+    bootGame({
+      backgroundColor: 0x2c3e50,
+      fpsDisplay: { mode: 'compact' },
+      height: 320,
+      host,
+      initialState: UiDemoState,
+      title: 'UI Authoring',
+      width: 640,
+    }),
+  )
   .then((app) => {
     const getState = (): UiDemoState | null =>
       app.game.state instanceof UiDemoState ? app.game.state : null;
@@ -49,7 +53,8 @@ bootGame({
       }
     });
     if (status) {
-      status.textContent = 'UI demo ready — press Tab to focus a game button';
+      status.textContent =
+        'Kenney UI demo ready — Tab to focus buttons, click to change health';
       status.setAttribute('data-state', 'ready');
     }
   })

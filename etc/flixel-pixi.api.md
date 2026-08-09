@@ -752,6 +752,8 @@ export interface FlxAudioService {
 // @public
 export class FlxBar extends FlxSprite {
     constructor(x?: number, y?: number, direction?: FlxBarFillDirection, width?: number, height?: number, parent?: object | null, variable?: string, minimum?: number, maximum?: number, showBorder?: boolean);
+    get barHeight(): number;
+    get barWidth(): number;
     get borderColor(): number;
     // (undocumented)
     static readonly BOTTOM_TO_TOP = 3;
@@ -770,6 +772,7 @@ export class FlxBar extends FlxSprite {
     get fillColor(): number;
     // (undocumented)
     filledCallback: FlxBarCallback | null;
+    fixedPosition: boolean;
     get fraction(): number;
     // (undocumented)
     static readonly HORIZONTAL_INSIDE_OUT = 4;
@@ -783,19 +786,26 @@ export class FlxBar extends FlxSprite {
     get maximum(): number;
     // (undocumented)
     get minimum(): number;
+    get parent(): object | null;
+    get parentVariable(): string;
     get percent(): number;
+    // (undocumented)
+    readonly positionOffset: FlxPoint;
     // (undocumented)
     static readonly RIGHT_TO_LEFT = 1;
     // (undocumented)
     setCallbacks(emptyCallback?: FlxBarCallback | null, filledCallback?: FlxBarCallback | null, killOnEmpty?: boolean): this;
+    setParent(parent: object | null, variable: string, track?: boolean, offsetX?: number, offsetY?: number): this;
     // (undocumented)
     setRange(minimum: number, maximum: number): this;
     // (undocumented)
     setValueProvider(provider: FlxBarValueProvider | null): this;
     // (undocumented)
     get showBorder(): boolean;
+    stopTrackingParent(posX: number, posY: number): this;
     // (undocumented)
     static readonly TOP_TO_BOTTOM = 2;
+    trackParent(offsetX: number, offsetY: number): this;
     // (undocumented)
     trackParent(parent: object | null, variable: string): this;
     // (undocumented)
@@ -814,6 +824,16 @@ export type FlxBarCallback = () => void;
 
 // @public
 export type FlxBarFillDirection = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+// @public
+export interface FlxBarParentLike {
+    // (undocumented)
+    readonly scrollFactor?: FlxPoint;
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+}
 
 // @public
 export class FlxBarRenderHandle implements FlxRenderHandle {
@@ -881,10 +901,13 @@ export class FlxButton extends FlxSprite {
     get accessibleLabel(): string | null;
     set accessibleLabel(value: string | null);
     activate(): boolean;
+    allowSwiping: boolean;
     // (undocumented)
     createRenderHandle(): FlxButtonRenderHandle;
     // (undocumented)
     destroy(): void;
+    // (undocumented)
+    static readonly DISABLED = 3;
     enabled: boolean;
     // (undocumented)
     get focused(): boolean;
@@ -892,8 +915,9 @@ export class FlxButton extends FlxSprite {
     static readonly HIGHLIGHT = 1;
     // (undocumented)
     label: FlxText | null;
-    // (undocumented)
-    readonly labelOffset: FlxPoint;
+    readonly labelAlphas: number[];
+    readonly labelOffset: FlxPoint | undefined;
+    readonly labelOffsets: FlxPoint[];
     // (undocumented)
     static readonly NORMAL = 0;
     // (undocumented)

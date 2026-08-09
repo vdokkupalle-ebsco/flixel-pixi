@@ -36,10 +36,10 @@ test('operates rendered UI through native keyboard accessibility controls', asyn
         width: buttonBounds.width,
       },
       expected: {
-        height: 20 * scale,
-        left: canvasBounds.left + 220 * scale,
-        top: contentTop + 200 * scale,
-        width: 80 * scale,
+        height: 49 * scale,
+        left: canvasBounds.left + 146 * scale,
+        top: contentTop + 182 * scale,
+        width: 170 * scale,
       },
     };
   });

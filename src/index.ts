@@ -112,12 +112,19 @@ export type { FlxAnimationFrameEvent } from './animation/flx-animation-controlle
 export { FlxFrame } from './animation/flx-frame';
 export { FlxFramesCollection } from './animation/flx-frames-collection';
 export type { FlxGridFramesOptions } from './animation/flx-frames-collection';
+export { FlxNineSliceButton } from './objects/flx-nine-slice-button';
+export { FlxNineSliceSprite } from './objects/flx-nine-slice-sprite';
+export type {
+  FlxNineSliceBorderInput,
+  FlxNineSliceBorders,
+} from './objects/flx-nine-slice';
 export { FlxButton } from './objects/flx-button';
 export type { FlxButtonCallback, FlxButtonSound } from './objects/flx-button';
 export { FlxBar } from './objects/flx-bar';
 export type {
   FlxBarCallback,
   FlxBarFillDirection,
+  FlxBarParentLike,
   FlxBarValueProvider,
 } from './objects/flx-bar';
 export { FlxPath } from './objects/flx-path';
@@ -152,6 +159,8 @@ export { FlxSpriteRenderHandle } from './rendering/flx-sprite-render-handle';
 export { FlxSpriteGroupRenderHandle } from './rendering/flx-sprite-group-render-handle';
 export { FlxEmitterRenderHandle } from './rendering/flx-emitter-render-handle';
 export type { FlxEmitterRenderOptions } from './rendering/flx-emitter-render-handle';
+export { FlxNineSliceButtonRenderHandle } from './rendering/flx-nine-slice-button-render-handle';
+export { FlxNineSliceRenderHandle } from './rendering/flx-nine-slice-render-handle';
 export { FlxButtonRenderHandle } from './rendering/flx-button-render-handle';
 export { FlxBarRenderHandle } from './rendering/flx-bar-render-handle';
 export { FlxTextRenderHandle } from './rendering/flx-text-render-handle';

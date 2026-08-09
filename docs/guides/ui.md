@@ -72,8 +72,40 @@ createBrowserGame({
 });
 ```
 
-See the public [`ui` demo](../../examples/games/ui/game.ts) for a bound health
-bar and keyboard-operable damage/heal controls.
+See the public [`ui` demo](../../examples/games/ui/game.ts) for Kenney RPG UI
+sprites (`FlxG.atlas` + `FlxBar` + `FlxButton`) with a bound health bar and
+keyboard-operable damage/heal controls.
+
+## Nine-slice panels and buttons
+
+`FlxNineSliceSprite` and `FlxNineSliceButton` resize through Pixi 9-slice
+geometry so corner and edge art stays crisp. Set border insets, then target
+width/height — do not rely on uniform `scale` for UI chrome:
+
+```ts
+const panel = new FlxNineSliceSprite(16, 16, 380, 228);
+panel.loadNineSliceFrame(atlas, 'panel_beige', 380, 228, {
+  left: 20,
+  top: 20,
+  right: 20,
+  bottom: 20,
+});
+
+const action = new FlxNineSliceButton(24, 200, 'Heal', onHeal);
+action.loadNineSliceGraphic(
+  strip,
+  true,
+  false,
+  190,
+  49,
+  { left: 24, top: 16, right: 24, bottom: 16 },
+  190,
+  49,
+);
+```
+
+Kenney RPG bars in the public demo still use atlas cap/mid/cap strips because
+those assets are authored as horizontal 3-part fills, not full 9-slice tiles.
 
 ## Remaining UI checkpoint
 

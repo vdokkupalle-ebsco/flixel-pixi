@@ -93,9 +93,101 @@ describe('FlxBar', () => {
     expect(() => bar.update()).toThrow(/finite/);
     expect(() => bar.setRange(2, 2)).toThrow(/greater/);
     expect(() => bar.trackParent(null, 'health')).toThrow(/parent/);
-    bar.trackParent({ health: 'full' }, 'health');
-    expect(() => bar.update()).toThrow(/numeric/);
+    expect(() => bar.setParent({ health: 'full' }, 'health')).toThrow(/numeric/);
     bar.destroy();
+  });
+
+  it('follows a parent position and can stop tracking', () => {
+    const parent = {
+      health: 40,
+      scrollFactor: { x: 0, y: 0 },
+      x: 100,
+      y: 200,
+    };
+    const bar = new FlxBar(0, 0, FlxBar.LEFT_TO_RIGHT, 40, 8, parent, 'health')
+      .setParent(parent, 'health', true, 4, -12);
+    bar.update();
+    expect(bar.x).toBe(104);
+    expect(bar.y).toBe(188);
+    expect(bar.percent).toBe(40);
+    parent.x = 120;
+    parent.y = 180;
+    bar.update();
+    expect(bar.x).toBe(124);
+    expect(bar.y).toBe(168);
+    bar.stopTrackingParent(16, 24);
+    parent.x = 200;
+    bar.update();
+    expect(bar.x).toBe(16);
+    expect(bar.y).toBe(24);
+    bar.destroy();
+  });
+});
+
+describe('FlxButton', () => {
+  it('defaults HUD scroll factor and exposes disabled status', () => {
+    const button = new FlxButton();
+    expect(button.scrollFactor.x).toBe(0);
+    expect(button.scrollFactor.y).toBe(0);
+    button.enabled = false;
+    button.update();
+    expect(button.status).toBe(FlxButton.DISABLED);
+    button.destroy();
+  });
+
+  it('activates when a press swipes over the button before release', () => {
+    const context = new FlxContext(320, 160);
+    FlxG.installContext(context);
+    const activated = vi.fn();
+    const button = new FlxButton(40, 30, null, activated);
+    const host = document.createElement('div');
+    const canvas = document.createElement('canvas');
+    canvas.style.objectFit = 'contain';
+    host.appendChild(canvas);
+    document.body.appendChild(host);
+    host.getBoundingClientRect = () => bounds(0, 0, 640, 480);
+    canvas.getBoundingClientRect = () => bounds(0, 0, 640, 480);
+    const input = new FlxInputManager(context, { pointerTarget: canvas });
+
+    canvas.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        clientX: 0,
+        clientY: 0,
+        pointerId: 1,
+      }),
+    );
+    input.updateInput();
+    button.update();
+    expect(activated).not.toHaveBeenCalled();
+
+    canvas.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: 100,
+        clientY: 160,
+        pointerId: 1,
+      }),
+    );
+    input.updateInput();
+    button.update();
+    expect(button.status).toBe(FlxButton.PRESSED);
+
+    canvas.dispatchEvent(
+      new PointerEvent('pointerup', {
+        bubbles: true,
+        clientX: 100,
+        clientY: 160,
+        pointerId: 1,
+      }),
+    );
+    input.updateInput();
+    button.update();
+    expect(activated).toHaveBeenCalledOnce();
+
+    input.destroy();
+    button.destroy();
+    host.remove();
   });
 });
 
