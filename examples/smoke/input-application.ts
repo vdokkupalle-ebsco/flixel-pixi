@@ -36,6 +36,8 @@ export interface InputState {
   pointerX: number;
   pointerY: number;
   simulationSteps: number;
+  swipeDirection: string | null;
+  touchCount: number;
 }
 
 export interface InputApplication {
@@ -243,6 +245,8 @@ export async function createInputApplication(
     pointerX: FlxG.mouse.x,
     pointerY: FlxG.mouse.y,
     simulationSteps,
+    swipeDirection: FlxG.touches.swipes[0]?.direction ?? null,
+    touchCount: FlxG.touches.active.length,
   });
 
   input.updateInput();

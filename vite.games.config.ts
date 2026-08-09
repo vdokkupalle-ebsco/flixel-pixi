@@ -30,6 +30,7 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/containers/index.html',
         ),
+        swipe: resolve(import.meta.dirname, 'examples/games/swipe/index.html'),
         substates: resolve(
           import.meta.dirname,
           'examples/games/substates/index.html',

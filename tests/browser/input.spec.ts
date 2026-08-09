@@ -123,3 +123,44 @@ test('publishes keys, blur releases, pointer capture, and cancellation on steps'
   expect(cancelled?.buttonOn).toBe(true);
   await page.mouse.up();
 });
+
+test('tracks touch pointers and recognizes a swipe on fixed steps', async ({
+  page,
+}) => {
+  await page.goto('/input.html');
+  await expect(page.getByTestId('status')).toHaveText('Input demo ready');
+  await page.evaluate(() => {
+    window.__FLIXEL_PIXI_INPUT__?.pause?.();
+    window.__FLIXEL_PIXI_INPUT__?.reset?.();
+  });
+  const canvas = page.getByTestId('input-canvas-host').locator('canvas');
+  await canvas.evaluate((element) => {
+    const dispatch = (type: string, x: number, pressure: number): void => {
+      element.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          button: type === 'pointerup' ? -1 : 0,
+          clientX: x,
+          clientY: 100,
+          isPrimary: true,
+          pointerId: 21,
+          pointerType: 'touch',
+          pressure,
+        }),
+      );
+    };
+    dispatch('pointerdown', 100, 0.5);
+    dispatch('pointermove', 220, 0.5);
+    dispatch('pointerup', 220, 0);
+  });
+  const pressed = await page.evaluate(() =>
+    window.__FLIXEL_PIXI_INPUT__?.advance?.(1),
+  );
+  expect(pressed?.touchCount).toBe(1);
+  expect(pressed?.swipeDirection).toBeNull();
+  const released = await page.evaluate(() =>
+    window.__FLIXEL_PIXI_INPUT__?.advance?.(1),
+  );
+  expect(released?.touchCount).toBe(0);
+  expect(released?.swipeDirection).toBe('right');
+});

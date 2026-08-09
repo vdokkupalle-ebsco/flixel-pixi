@@ -47,7 +47,7 @@ started merely to match a Haxe class count.
 |     3 |    P0    | State overlays and nested substates             | Complete (`3d71446`)     | Deferred lifecycle, persistence policies, reuse/destruction, signals, render ordering, demo/tests. |
 |     4 |    P0    | Animation and frame model                       | Complete (`8f47307`)     | Controller-based animation and frame collections work without regressing current sprite APIs.      |
 |     5 |    P0    | Container and sprite-group model                | Implemented; uncommitted | Transformable composite objects and groups preserve collision, camera, and lifecycle semantics.    |
-|     6 |    P0    | Input expansion                                 | Planned                  | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
+|     6 |    P0    | Input expansion                                 | In progress              | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
 |     7 |    P1    | UI and text authoring                           | Planned                  | Common HUD/control/input-text needs no application-specific framework code.                        |
 |     8 |    P1    | Atlas and content-pipeline expansion            | Planned                  | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Planned                  | Logical coordinates remain correct through browser/window lifecycle changes.                       |
@@ -182,6 +182,10 @@ Current checkpoint:
   button, gamepad axis, keyboard-axis, and D-pad sources; stable-UID targeting;
   exclusive rebinding; atomic versioned serialization; and compatibility with
   the existing keyboard-only `bind()` helper.
+- Touch slice 3 is implemented locally: concurrent Pointer Event tracking,
+  primary-touch mouse compatibility, step-based swipe recognition,
+  cancellation handling, camera conversion, replay 1.2 snapshots, and a
+  public Fruit Punch swipe demo with cross-browser coverage.
 
 Replay compatibility is mandatory: new authoritative inputs need versioned
 recording or an explicit replay exclusion.

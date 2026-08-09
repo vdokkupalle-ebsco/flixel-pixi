@@ -1,5 +1,6 @@
 import { MouseRecord } from './mouse-record';
 import type { FlxGamepadFrameRecord } from '../input/flx-gamepad';
+import type { FlxTouchFrameRecord } from '../input/flx-touch';
 
 /** Serializable key input state for a single replay frame. @public */
 export interface CodePair {
@@ -13,6 +14,7 @@ export interface FrameRecordData {
   keys?: CodePair[];
   mouse?: { x: number; y: number; button: number; wheel: number } | null;
   gamepads?: FlxGamepadFrameRecord[];
+  touches?: FlxTouchFrameRecord[];
   checksum?: string | null;
 }
 
@@ -23,6 +25,7 @@ export class FrameRecord {
   mouse: MouseRecord | null;
   checksum: string | null;
   gamepads: FlxGamepadFrameRecord[];
+  touches: FlxTouchFrameRecord[];
 
   constructor(
     frame = 0,
@@ -30,12 +33,14 @@ export class FrameRecord {
     mouse: MouseRecord | null = null,
     checksum: string | null = null,
     gamepads: FlxGamepadFrameRecord[] = [],
+    touches: FlxTouchFrameRecord[] = [],
   ) {
     this.frame = frame;
     this.keys = keys;
     this.mouse = mouse;
     this.checksum = checksum;
     this.gamepads = gamepads;
+    this.touches = touches;
   }
 
   /** Serializes the frame record into a plain JSON object. */
@@ -67,6 +72,8 @@ export class FrameRecord {
         uid: gamepad.uid,
       }));
     }
+    if (this.touches.length > 0)
+      data.touches = this.touches.map((touch) => ({ ...touch }));
     return data;
   }
 
@@ -105,6 +112,20 @@ export class FrameRecord {
           uid: Number(gamepad.uid),
         }))
       : [];
+    this.touches = Array.isArray(parsed.touches)
+      ? parsed.touches.map((touch) => ({
+          age: Number(touch.age),
+          cancelled: Boolean(touch.cancelled),
+          isPrimary: Boolean(touch.isPrimary),
+          pointerId: Number(touch.pointerId),
+          pressure: Number(touch.pressure),
+          startX: Number(touch.startX),
+          startY: Number(touch.startY),
+          state: Number(touch.state),
+          x: Number(touch.x),
+          y: Number(touch.y),
+        }))
+      : [];
   }
 
   /** Releases resources associated with this frame record. */
@@ -113,5 +134,6 @@ export class FrameRecord {
     this.mouse = null;
     this.checksum = null;
     this.gamepads = [];
+    this.touches = [];
   }
 }

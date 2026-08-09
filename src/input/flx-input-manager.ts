@@ -2,6 +2,7 @@ import type { FlxContext } from '../core/flx-context';
 import { Keyboard } from './keyboard';
 import { Mouse } from './mouse';
 import { FlxGamepadManager, type FlxGamepadProvider } from './flx-gamepad';
+import { FlxTouchManager, type FlxTouchOptions } from './flx-touch';
 
 /** Service token for deterministic keyboard and pointer input. @public */
 export const FLX_INPUT_SERVICE = Symbol('flixel-pixi.input');
@@ -11,6 +12,7 @@ export interface FlxInputService {
   readonly keys: Keyboard;
   readonly mouse: Mouse;
   readonly gamepads: FlxGamepadManager;
+  readonly touches: FlxTouchManager;
   resetInput(): void;
   updateInput(): void;
 }
@@ -20,6 +22,13 @@ export interface FlxInputManagerOptions {
   readonly keyboardTarget?: Window;
   readonly pointerTarget?: HTMLElement;
   readonly gamepadProvider?: FlxGamepadProvider;
+  readonly touch?: FlxTouchOptions;
+}
+
+interface ActivePointer {
+  readonly button: number;
+  readonly legacyMouse: boolean;
+  readonly touch: boolean;
 }
 
 /** Owns DOM listeners and publishes their events only on simulation steps. @public */
@@ -27,11 +36,12 @@ export class FlxInputManager implements FlxInputService {
   readonly keys = new Keyboard();
   readonly mouse: Mouse;
   readonly gamepads: FlxGamepadManager;
+  readonly touches: FlxTouchManager;
 
   readonly #context: FlxContext;
   readonly #keyboardTarget: Window | null;
   readonly #pointerTarget: HTMLElement | null;
-  readonly #pointerButtons = new Map<number, number>();
+  readonly #activePointers = new Map<number, ActivePointer>();
   #destroyed = false;
 
   constructor(context: FlxContext, options: FlxInputManagerOptions = {}) {
@@ -44,6 +54,7 @@ export class FlxInputManager implements FlxInputService {
     this.#pointerTarget = options.pointerTarget ?? null;
     this.mouse = new Mouse(context);
     this.gamepads = new FlxGamepadManager(options.gamepadProvider);
+    this.touches = new FlxTouchManager(context, options.touch);
     context.setService(FLX_INPUT_SERVICE, this);
     this.#attach();
   }
@@ -53,6 +64,7 @@ export class FlxInputManager implements FlxInputService {
     this.keys.update();
     this.mouse.update();
     this.gamepads.update();
+    this.touches.update();
   }
 
   resetInput(): void {
@@ -60,6 +72,7 @@ export class FlxInputManager implements FlxInputService {
     this.keys.reset();
     this.mouse.reset();
     this.gamepads.reset();
+    this.touches.reset();
   }
 
   destroy(): void {
@@ -72,6 +85,7 @@ export class FlxInputManager implements FlxInputService {
     this.keys.destroy();
     this.mouse.destroy();
     this.gamepads.destroy();
+    this.touches.destroy();
   }
 
   readonly #keyDown = (event: KeyboardEvent): void => {
@@ -84,17 +98,40 @@ export class FlxInputManager implements FlxInputService {
 
   readonly #pointerMove = (event: PointerEvent): void => {
     const point = this.#logicalPoint(event);
-    this.mouse.handlePointerMove({ ...point, pointerId: event.pointerId });
+    if (event.pointerType === 'touch') {
+      this.touches.handlePointerMove({
+        ...point,
+        isPrimary: event.isPrimary,
+        pointerId: event.pointerId,
+        pressure: event.pressure,
+      });
+    }
+    if (event.pointerType !== 'touch' || event.isPrimary)
+      this.mouse.handlePointerMove({ ...point, pointerId: event.pointerId });
   };
 
   readonly #pointerDown = (event: PointerEvent): void => {
     const point = this.#logicalPoint(event);
-    this.#pointerButtons.set(event.pointerId, event.button);
-    this.mouse.handlePointerDown({
-      ...point,
+    const touch = event.pointerType === 'touch';
+    const legacyMouse = !touch || event.isPrimary;
+    this.#activePointers.set(event.pointerId, {
       button: event.button,
-      pointerId: event.pointerId,
+      legacyMouse,
+      touch,
     });
+    if (touch)
+      this.touches.handlePointerDown({
+        ...point,
+        isPrimary: event.isPrimary,
+        pointerId: event.pointerId,
+        pressure: event.pressure,
+      });
+    if (legacyMouse)
+      this.mouse.handlePointerDown({
+        ...point,
+        button: event.button,
+        pointerId: event.pointerId,
+      });
     try {
       this.#pointerTarget?.setPointerCapture(event.pointerId);
     } catch {
@@ -104,38 +141,62 @@ export class FlxInputManager implements FlxInputService {
 
   readonly #pointerUp = (event: PointerEvent): void => {
     const point = this.#logicalPoint(event);
-    this.mouse.handlePointerUp({
-      ...point,
-      button: this.#pointerButtons.get(event.pointerId) ?? event.button,
-      pointerId: event.pointerId,
-    });
-    this.#pointerButtons.delete(event.pointerId);
+    const active = this.#activePointers.get(event.pointerId);
+    if (active?.touch)
+      this.touches.handlePointerUp({
+        ...point,
+        isPrimary: event.isPrimary,
+        pointerId: event.pointerId,
+        pressure: event.pressure,
+      });
+    if (active?.legacyMouse ?? event.pointerType !== 'touch')
+      this.mouse.handlePointerUp({
+        ...point,
+        button: active?.button ?? event.button,
+        pointerId: event.pointerId,
+      });
+    this.#activePointers.delete(event.pointerId);
     this.#releasePointerCapture(event.pointerId);
   };
 
   readonly #pointerCancel = (event: PointerEvent): void => {
     const point = this.#logicalPoint(event);
-    this.mouse.handlePointerCancel({
-      ...point,
-      button:
-        this.#pointerButtons.get(event.pointerId) ??
-        (event.button >= 0 ? event.button : 0),
-      pointerId: event.pointerId,
-    });
-    this.#pointerButtons.delete(event.pointerId);
+    const active = this.#activePointers.get(event.pointerId);
+    if (active?.touch)
+      this.touches.handlePointerCancel({
+        ...point,
+        isPrimary: event.isPrimary,
+        pointerId: event.pointerId,
+        pressure: event.pressure,
+      });
+    if (active?.legacyMouse ?? event.pointerType !== 'touch')
+      this.mouse.handlePointerCancel({
+        ...point,
+        button: active?.button ?? (event.button >= 0 ? event.button : 0),
+        pointerId: event.pointerId,
+      });
+    this.#activePointers.delete(event.pointerId);
     this.#releasePointerCapture(event.pointerId);
   };
 
   readonly #lostPointerCapture = (event: PointerEvent): void => {
-    const button = this.#pointerButtons.get(event.pointerId);
-    if (button === undefined) return;
+    const active = this.#activePointers.get(event.pointerId);
+    if (active === undefined) return;
     const point = this.#logicalPoint(event);
-    this.mouse.handlePointerCancel({
-      ...point,
-      button,
-      pointerId: event.pointerId,
-    });
-    this.#pointerButtons.delete(event.pointerId);
+    if (active.touch)
+      this.touches.handlePointerCancel({
+        ...point,
+        isPrimary: event.isPrimary,
+        pointerId: event.pointerId,
+        pressure: event.pressure,
+      });
+    if (active.legacyMouse)
+      this.mouse.handlePointerCancel({
+        ...point,
+        button: active.button,
+        pointerId: event.pointerId,
+      });
+    this.#activePointers.delete(event.pointerId);
   };
 
   readonly #wheel = (event: WheelEvent): void => {
@@ -143,10 +204,11 @@ export class FlxInputManager implements FlxInputService {
   };
 
   readonly #cancelAll = (): void => {
-    this.#pointerButtons.clear();
+    this.#activePointers.clear();
     this.keys.releaseAll();
     this.mouse.releaseAll(true);
     this.gamepads.reset();
+    this.touches.releaseAll();
   };
 
   readonly #visibilityChange = (): void => {

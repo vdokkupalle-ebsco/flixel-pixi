@@ -2,6 +2,7 @@ import type { CodePair, FrameRecordData } from './frame-record';
 import { FrameRecord } from './frame-record';
 import { MouseRecord } from './mouse-record';
 import type { FlxGamepadFrameRecord } from '../input/flx-gamepad';
+import type { FlxTouchFrameRecord } from '../input/flx-touch';
 
 /** Structure of a serialized FlxReplay JSON file. @public */
 export interface ReplayFileFormat {
@@ -55,8 +56,16 @@ export class FlxReplay {
     mouse: MouseRecord | null = null,
     checksum: string | null = null,
     gamepads: FlxGamepadFrameRecord[] = [],
+    touches: FlxTouchFrameRecord[] = [],
   ): void {
-    const record = new FrameRecord(frameIndex, keys, mouse, checksum, gamepads);
+    const record = new FrameRecord(
+      frameIndex,
+      keys,
+      mouse,
+      checksum,
+      gamepads,
+      touches,
+    );
     this.frames.push(record);
     this.frameCount = this.frames.length;
   }
@@ -87,7 +96,7 @@ export class FlxReplay {
   /** Serializes the replay into a versioned JSON string. */
   save(): string {
     const output: ReplayFileFormat = {
-      version: '1.1',
+      version: '1.2',
       engineVersion: 'flixel-pixi 1.0.0',
       seed: this.seed,
       frameCount: this.frameCount,

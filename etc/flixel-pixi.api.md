@@ -1604,6 +1604,8 @@ export class FlxG {
     // (undocumented)
     static get timeScale(): number;
     static set timeScale(value: number);
+    // (undocumented)
+    static get touches(): FlxTouchManager;
     static readonly vcr: FlxVCR;
     // (undocumented)
     static get visualDebug(): boolean;
@@ -1908,6 +1910,8 @@ export class FlxInputManager implements FlxInputService {
     // (undocumented)
     resetInput(): void;
     // (undocumented)
+    readonly touches: FlxTouchManager;
+    // (undocumented)
     updateInput(): void;
 }
 
@@ -1919,6 +1923,8 @@ export interface FlxInputManagerOptions {
     readonly keyboardTarget?: Window;
     // (undocumented)
     readonly pointerTarget?: HTMLElement;
+    // (undocumented)
+    readonly touch?: FlxTouchOptions;
 }
 
 // @public
@@ -1931,6 +1937,8 @@ export interface FlxInputService {
     readonly mouse: Mouse;
     // (undocumented)
     resetInput(): void;
+    // (undocumented)
+    readonly touches: FlxTouchManager;
     // (undocumented)
     updateInput(): void;
 }
@@ -2506,7 +2514,7 @@ export class FlxReplay {
     frames: FrameRecord[];
     load(data: string | ReplayFileFormat): void;
     playNextFrame(): FrameRecord | null;
-    recordFrame(frameIndex: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null, gamepads?: FlxGamepadFrameRecord[]): void;
+    recordFrame(frameIndex: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null, gamepads?: FlxGamepadFrameRecord[], touches?: FlxTouchFrameRecord[]): void;
     rewind(): void;
     save(): string;
     // (undocumented)
@@ -2911,6 +2919,29 @@ export class FlxSubState extends FlxState {
 export type FlxSubStateCallback = () => void;
 
 // @public
+export interface FlxSwipe {
+    // (undocumented)
+    readonly direction: FlxSwipeDirection;
+    // (undocumented)
+    readonly distance: number;
+    // (undocumented)
+    readonly duration: number;
+    // (undocumented)
+    readonly endX: number;
+    // (undocumented)
+    readonly endY: number;
+    // (undocumented)
+    readonly pointerId: number;
+    // (undocumented)
+    readonly startX: number;
+    // (undocumented)
+    readonly startY: number;
+}
+
+// @public
+export type FlxSwipeDirection = 'down' | 'left' | 'right' | 'up';
+
+// @public
 export class FlxText extends FlxSprite {
     constructor(x: number, y: number, width: number, text?: string | null, embeddedFont?: boolean, renderMode?: FlxTextRenderMode);
     // (undocumented)
@@ -3158,6 +3189,118 @@ export class FlxTimer {
 
 // @public
 export type FlxTimerCallback = (timer: FlxTimer) => void;
+
+// @public
+export class FlxTouch extends FlxPoint {
+    constructor(context: FlxContext, pointerId: number);
+    // (undocumented)
+    age: number;
+    // (undocumented)
+    cancelled: boolean;
+    // (undocumented)
+    getWorldPosition(camera?: FlxCamera, point?: FlxPoint): FlxPoint;
+    // (undocumented)
+    isPrimary: boolean;
+    // (undocumented)
+    get justCancelled(): boolean;
+    // (undocumented)
+    get justPressed(): boolean;
+    // (undocumented)
+    get justReleased(): boolean;
+    // (undocumented)
+    readonly pointerId: number;
+    // (undocumented)
+    get pressed(): boolean;
+    // (undocumented)
+    pressure: number;
+    // (undocumented)
+    startX: number;
+    // (undocumented)
+    startY: number;
+}
+
+// @public
+export interface FlxTouchEventLike {
+    // (undocumented)
+    readonly isPrimary?: boolean;
+    // (undocumented)
+    readonly pointerId: number;
+    // (undocumented)
+    readonly pressure?: number;
+    // (undocumented)
+    readonly x: number;
+    // (undocumented)
+    readonly y: number;
+}
+
+// @public
+export interface FlxTouchFrameRecord {
+    // (undocumented)
+    readonly age: number;
+    // (undocumented)
+    readonly cancelled: boolean;
+    // (undocumented)
+    readonly isPrimary: boolean;
+    // (undocumented)
+    readonly pointerId: number;
+    // (undocumented)
+    readonly pressure: number;
+    // (undocumented)
+    readonly startX: number;
+    // (undocumented)
+    readonly startY: number;
+    // (undocumented)
+    readonly state: number;
+    // (undocumented)
+    readonly x: number;
+    // (undocumented)
+    readonly y: number;
+}
+
+// @public
+export class FlxTouchManager {
+    constructor(context: FlxContext, options?: FlxTouchOptions);
+    // (undocumented)
+    get active(): readonly FlxTouch[];
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get firstActive(): FlxTouch | null;
+    // (undocumented)
+    get(pointerId: number): FlxTouch | null;
+    // (undocumented)
+    handlePointerCancel(event: FlxTouchEventLike): void;
+    // (undocumented)
+    handlePointerDown(event: FlxTouchEventLike): void;
+    // (undocumented)
+    handlePointerMove(event: FlxTouchEventLike): void;
+    // (undocumented)
+    handlePointerUp(event: FlxTouchEventLike): void;
+    // (undocumented)
+    readonly maximumSwipeDuration: number;
+    // (undocumented)
+    readonly minimumSwipeDistance: number;
+    // (undocumented)
+    playback(records: readonly FlxTouchFrameRecord[]): void;
+    // (undocumented)
+    record(): FlxTouchFrameRecord[];
+    // (undocumented)
+    releaseAll(): void;
+    // (undocumented)
+    reset(): void;
+    // (undocumented)
+    get swipes(): readonly FlxSwipe[];
+    // (undocumented)
+    update(): void;
+}
+
+// @public
+export interface FlxTouchOptions {
+    // (undocumented)
+    readonly maximumSwipeDuration?: number;
+    // (undocumented)
+    readonly minimumSwipeDistance?: number;
+}
 
 // @public
 export class FlxTween {
@@ -3434,7 +3577,7 @@ export class FlxWatch {
 
 // @public
 export class FrameRecord {
-    constructor(frame?: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null, gamepads?: FlxGamepadFrameRecord[]);
+    constructor(frame?: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null, gamepads?: FlxGamepadFrameRecord[], touches?: FlxTouchFrameRecord[]);
     // (undocumented)
     checksum: string | null;
     destroy(): void;
@@ -3448,6 +3591,8 @@ export class FrameRecord {
     // (undocumented)
     mouse: MouseRecord | null;
     save(): FrameRecordData;
+    // (undocumented)
+    touches: FlxTouchFrameRecord[];
 }
 
 // @public
@@ -3467,6 +3612,8 @@ export interface FrameRecordData {
         button: number;
         wheel: number;
     } | null;
+    // (undocumented)
+    touches?: FlxTouchFrameRecord[];
 }
 
 // @public

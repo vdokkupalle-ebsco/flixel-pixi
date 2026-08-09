@@ -33,6 +33,20 @@ describe('FlxReplay and determinism', () => {
           uid: 4,
         },
       ],
+      [
+        {
+          age: 2,
+          cancelled: false,
+          isPrimary: true,
+          pointerId: 9,
+          pressure: 0.5,
+          startX: 10,
+          startY: 20,
+          state: 1,
+          x: 30,
+          y: 40,
+        },
+      ],
     );
     const saved = frame.save();
     expect(saved.frame).toBe(1);
@@ -47,6 +61,9 @@ describe('FlxReplay and determinism', () => {
       mapping: 'standard',
       uid: 4,
     });
+    expect(saved.touches?.[0]).toEqual(
+      expect.objectContaining({ pointerId: 9, state: 1, x: 30 }),
+    );
 
     const loadedFrame = new FrameRecord();
     loadedFrame.load(saved);
@@ -54,11 +71,13 @@ describe('FlxReplay and determinism', () => {
     expect(loadedFrame.mouse?.x).toBe(100);
     expect(loadedFrame.checksum).toBe('hash123');
     expect(loadedFrame.gamepads).toEqual(saved.gamepads);
+    expect(loadedFrame.touches).toEqual(saved.touches);
 
     loadedFrame.destroy();
     expect(loadedFrame.keys).toEqual([]);
     expect(loadedFrame.mouse).toBeNull();
     expect(loadedFrame.gamepads).toEqual([]);
+    expect(loadedFrame.touches).toEqual([]);
   });
 
   it('records, saves, loads, and rewinds FlxReplay', () => {
@@ -76,7 +95,7 @@ describe('FlxReplay and determinism', () => {
     const serialized = replay.save();
     expect(serialized).toContain('"seed": 12345');
     expect(serialized).toContain('"frameCount": 2');
-    expect(serialized).toContain('"version": "1.1"');
+    expect(serialized).toContain('"version": "1.2"');
 
     const reloaded = new FlxReplay();
     reloaded.load(serialized);

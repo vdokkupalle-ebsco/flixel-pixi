@@ -80,6 +80,14 @@ export { Keyboard } from './input/keyboard';
 export type { FlxKeyboardEventLike } from './input/keyboard';
 export { Mouse } from './input/mouse';
 export type { FlxMouseRecord, FlxPointerEventLike } from './input/mouse';
+export { FlxTouch, FlxTouchManager } from './input/flx-touch';
+export type {
+  FlxSwipe,
+  FlxSwipeDirection,
+  FlxTouchEventLike,
+  FlxTouchFrameRecord,
+  FlxTouchOptions,
+} from './input/flx-touch';
 export {
   FlxGamepad,
   FlxGamepadButton,

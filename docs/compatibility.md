@@ -147,6 +147,7 @@ publishes them through context-owned input state on fixed simulation steps.
 | `FlxG.keys`, `mouse`, and `resetInput`    | Adapted        | The facade resolves a typed `FlxInputService` from the active context; `FlxGame` installs and advances a headless-capable manager before every state step.                                |
 | Modern HaxeFlixel gamepads                | Adapted        | Web Gamepad snapshots are polled once per fixed step with standard-layout constants, scaled dead zones, stable logical reconnect IDs, injectable providers, and replay 1.1 state.         |
 | Modern HaxeFlixel actions                 | Adapted        | Serializable keyboard, mouse, wheel, gamepad-button, analog-axis, keyboard-axis, and D-pad sources support stable device targeting and exclusive runtime rebinding.                       |
+| Modern HaxeFlixel touches and swipes      | Adapted        | Pointer Events publish concurrent touches at fixed-step boundaries; only the primary touch mirrors the mouse, and logical-distance swipes are recorded in replay 1.2.                     |
 
 See the [historical input evidence](history/porting/input.md) for low-FPS
 transition proofs, mapping notes, cancellation tests, replay snapshots, and

@@ -45,6 +45,34 @@ in-game loading states are covered in [`loading.md`](loading.md).
 Property animation, easing, loop modes, delays, and chains are covered in
 [`tweens.md`](tweens.md).
 
+## Touches and swipes
+
+`FlxG.touches` publishes every touch on simulation steps. Pointer coordinates
+are logical canvas coordinates; use `touch.getWorldPosition(camera)` for world
+interaction. Only the browser's primary touch mirrors `FlxG.mouse`, preserving
+one-finger compatibility without letting a second finger affect mouse buttons.
+
+```ts
+for (const touch of FlxG.touches.active) {
+  if (touch.justPressed) placeMarker(touch.getWorldPosition());
+}
+
+for (const swipe of FlxG.touches.swipes) {
+  if (swipe.direction === 'left') selectNextItem();
+}
+```
+
+Configure swipe thresholds through `FlxInputManagerOptions.touch`; distance is
+in logical pixels and duration is in fixed simulation steps. Cancelled pointers
+never produce swipes.
+
+The public [Fruit Punch demo](../../examples/games/swipe/game.ts) combines
+multi-touch swipes, mouse-drag fallback, deterministic fruit arcs, gesture
+trails, continuous swept-segment hit detection, and animated cut halves.
+Fruit-colored juice bursts preserve the target palette, while deterministic
+bomb launches demonstrate hazardous swipe targets, score penalties, explosion
+particles, and camera shake.
+
 ## Named actions
 
 Bind gameplay intents instead of scattering raw key names:

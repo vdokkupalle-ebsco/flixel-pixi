@@ -10,6 +10,7 @@ import {
   FlxInputManager,
   FlxPoint,
   FlxState,
+  FlxTouchManager,
   Keyboard,
   Mouse,
 } from '../../src';
@@ -165,6 +166,44 @@ describe('Deterministic keyboard input', () => {
 });
 
 describe('Pointer input and camera coordinates', () => {
+  it('tracks concurrent touches and recognizes deterministic swipes', () => {
+    context = new FlxContext(320, 240);
+    const touches = new FlxTouchManager(context, {
+      maximumSwipeDuration: 4,
+      minimumSwipeDistance: 20,
+    });
+    touches.handlePointerDown({
+      isPrimary: true,
+      pointerId: 1,
+      x: 10,
+      y: 20,
+    });
+    touches.handlePointerMove({ pointerId: 1, x: 80, y: 24 });
+    touches.handlePointerUp({ pointerId: 1, x: 80, y: 24 });
+    touches.handlePointerDown({ pointerId: 2, x: 30, y: 40 });
+
+    touches.update();
+    expect(touches.active.map((touch) => touch.pointerId)).toEqual([1, 2]);
+    expect(touches.get(1)?.justPressed).toBe(true);
+    expect(touches.swipes).toHaveLength(0);
+
+    touches.update();
+    expect(touches.get(1)?.justReleased).toBe(true);
+    expect(touches.swipes).toEqual([
+      expect.objectContaining({ direction: 'right', pointerId: 1 }),
+    ]);
+    const snapshot = touches.record();
+    touches.reset();
+    touches.playback(snapshot);
+    expect(touches.get(1)?.justReleased).toBe(true);
+    expect(touches.swipes[0]?.direction).toBe('right');
+
+    touches.handlePointerCancel({ pointerId: 2, x: 30, y: 40 });
+    touches.update();
+    expect(touches.get(2)?.justCancelled).toBe(true);
+    expect(touches.swipes).toHaveLength(0);
+  });
+
   it('round-trips through every camera transform', () => {
     context = new FlxContext(800, 600);
     const camera = context.camera;
@@ -370,6 +409,46 @@ describe('Pointer input and camera coordinates', () => {
     } finally {
       delete (globalThis as { document?: Document }).document;
     }
+  });
+
+  it('tracks every touch while only the primary touch mirrors the mouse', () => {
+    context = new FlxContext(400, 200);
+    const pointerTarget = new FakePointerTarget();
+    input = new FlxInputManager(context, {
+      pointerTarget: pointerTarget as unknown as HTMLElement,
+    });
+    const touch = (
+      type: string,
+      pointerId: number,
+      isPrimary: boolean,
+      clientX: number,
+    ): void => {
+      pointerTarget.dispatchEvent(
+        eventWith<PointerEvent>(type, {
+          button: type === 'pointerup' ? -1 : 0,
+          clientX,
+          clientY: 70,
+          isPrimary,
+          pointerId,
+          pointerType: 'touch',
+          pressure: type === 'pointerup' ? 0 : 0.5,
+        }),
+      );
+    };
+    touch('pointerdown', 11, true, 60);
+    touch('pointerdown', 12, false, 160);
+    input.updateInput();
+    expect(input.touches.active).toHaveLength(2);
+    expect(input.mouse.justPressed()).toBe(true);
+
+    touch('pointerup', 12, false, 180);
+    input.updateInput();
+    expect(input.touches.get(12)?.justReleased).toBe(true);
+    expect(input.mouse.justReleased()).toBe(false);
+
+    touch('pointerup', 11, true, 80);
+    input.updateInput();
+    expect(input.mouse.justReleased()).toBe(true);
   });
 
   it('supports a headless manager with no DOM targets', () => {
