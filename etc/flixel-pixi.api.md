@@ -9,7 +9,7 @@ import { BitmapText } from 'pixi.js';
 import { BLEND_MODES } from 'pixi.js';
 import { Container } from 'pixi.js';
 import { ContainerChild } from 'pixi.js';
-import type { Graphics } from 'pixi.js';
+import { Graphics } from 'pixi.js';
 import { Particle } from 'pixi.js';
 import { ParticleContainer } from 'pixi.js';
 import { Renderer } from 'pixi.js';
@@ -92,6 +92,7 @@ export function createBrowserGame(options: CreateBrowserGameOptions): Promise<Br
 
 // @public
 export interface CreateBrowserGameOptions {
+    accessibility?: boolean;
     assets?: BrowserGameAssetOptions;
     // (undocumented)
     audioBackend?: FlxAudioBackend;
@@ -749,6 +750,96 @@ export interface FlxAudioService {
 }
 
 // @public
+export class FlxBar extends FlxSprite {
+    constructor(x?: number, y?: number, direction?: FlxBarFillDirection, width?: number, height?: number, parent?: object | null, variable?: string, minimum?: number, maximum?: number, showBorder?: boolean);
+    get borderColor(): number;
+    // (undocumented)
+    static readonly BOTTOM_TO_TOP = 3;
+    // (undocumented)
+    createFilledBar(emptyColor?: number, fillColor?: number, showBorder?: boolean, borderColor?: number): this;
+    // (undocumented)
+    createRenderHandle(): FlxBarRenderHandle;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get direction(): FlxBarFillDirection;
+    set direction(value: FlxBarFillDirection);
+    // (undocumented)
+    emptyCallback: FlxBarCallback | null;
+    get emptyColor(): number;
+    get fillColor(): number;
+    // (undocumented)
+    filledCallback: FlxBarCallback | null;
+    get fraction(): number;
+    // (undocumented)
+    static readonly HORIZONTAL_INSIDE_OUT = 4;
+    // (undocumented)
+    static readonly HORIZONTAL_OUTSIDE_IN = 5;
+    // (undocumented)
+    killOnEmpty: boolean;
+    // (undocumented)
+    static readonly LEFT_TO_RIGHT = 0;
+    // (undocumented)
+    get maximum(): number;
+    // (undocumented)
+    get minimum(): number;
+    get percent(): number;
+    // (undocumented)
+    static readonly RIGHT_TO_LEFT = 1;
+    // (undocumented)
+    setCallbacks(emptyCallback?: FlxBarCallback | null, filledCallback?: FlxBarCallback | null, killOnEmpty?: boolean): this;
+    // (undocumented)
+    setRange(minimum: number, maximum: number): this;
+    // (undocumented)
+    setValueProvider(provider: FlxBarValueProvider | null): this;
+    // (undocumented)
+    get showBorder(): boolean;
+    // (undocumented)
+    static readonly TOP_TO_BOTTOM = 2;
+    // (undocumented)
+    trackParent(parent: object | null, variable: string): this;
+    // (undocumented)
+    update(): void;
+    // (undocumented)
+    get value(): number;
+    set value(value: number);
+    // (undocumented)
+    static readonly VERTICAL_INSIDE_OUT = 6;
+    // (undocumented)
+    static readonly VERTICAL_OUTSIDE_IN = 7;
+}
+
+// @public
+export type FlxBarCallback = () => void;
+
+// @public
+export type FlxBarFillDirection = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+// @public
+export class FlxBarRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxBar, onDestroy?: () => void);
+    // (undocumented)
+    readonly background: Sprite;
+    // (undocumented)
+    readonly border: Graphics;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    readonly fill: Sprite;
+    // (undocumented)
+    readonly secondaryFill: Sprite;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
+export type FlxBarValueProvider = () => number;
+
+// @public
 export class FlxBasic {
     // (undocumented)
     active: boolean;
@@ -787,10 +878,16 @@ export type FlxBasicConstructor<T extends FlxBasic = FlxBasic> = new () => T;
 // @public
 export class FlxButton extends FlxSprite {
     constructor(x?: number, y?: number, label?: string | null, onClick?: FlxButtonCallback | null);
+    get accessibleLabel(): string | null;
+    set accessibleLabel(value: string | null);
+    activate(): boolean;
     // (undocumented)
     createRenderHandle(): FlxButtonRenderHandle;
     // (undocumented)
     destroy(): void;
+    enabled: boolean;
+    // (undocumented)
+    get focused(): boolean;
     // (undocumented)
     static readonly HIGHLIGHT = 1;
     // (undocumented)
@@ -824,6 +921,9 @@ export class FlxButton extends FlxSprite {
     soundUp: FlxButtonSound | null;
     // (undocumented)
     status: number;
+    tabIndex: number;
+    get text(): string;
+    set text(value: string);
     // (undocumented)
     update(): void;
 }

@@ -68,6 +68,7 @@ Compatibility is pinned to Flixel commit
 - [Making games (pools, actions, sync)](docs/guides/making-games.md)
 - [Animation and frame collections](docs/guides/animation.md)
 - [Containers and sprite groups](docs/guides/containers.md)
+- [UI bars and accessible buttons](docs/guides/ui.md)
 - [Gamepads](docs/guides/gamepads.md)
 - [Tweens and easing](docs/guides/tweens.md)
 - [Performance guide](docs/guides/performance.md)

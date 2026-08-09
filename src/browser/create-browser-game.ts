@@ -28,6 +28,7 @@ import {
 import { FlxCameraRenderer } from '../rendering/flx-camera-renderer';
 import { syncWorldToRenderer } from '../rendering/flx-world-sync';
 import { getRenderFrameTiming, validateFramerate } from './frame-pacing';
+import { FlxAccessibilityOverlay } from './flx-accessibility-overlay';
 
 /** Declarative asset configuration for browser startup. @public */
 export interface BrowserGameAssetOptions {
@@ -86,6 +87,8 @@ export interface CreateBrowserGameOptions {
   signal?: AbortSignal;
   /** Optional lightweight in-game FPS overlay. Disabled by default. */
   fpsDisplay?: boolean | FlxFpsDisplayOptions;
+  /** Native keyboard and screen-reader controls for supported Flixel UI. Defaults to true. */
+  accessibility?: boolean;
   backgroundColor?: number;
   audioBackend?: FlxAudioBackend;
   zoom?: number;
@@ -156,6 +159,7 @@ export async function createBrowserGame(
     updateFramerate = 60,
     renderFramerate,
     renderInterpolation = true,
+    accessibility = true,
   } = options;
 
   validateFramerate('updateFramerate', updateFramerate);
@@ -200,7 +204,7 @@ export async function createBrowserGame(
       resources.appInitialized = true;
       throwIfAborted(loading.signal);
       resources.app.canvas.style.cssText =
-        'width:100%;height:100%;display:block;object-fit:contain';
+        'width:100%;height:100%;display:block;object-fit:contain;object-position:center center';
       host.prepend(resources.app.canvas);
       loading.report({
         message: 'Renderer ready.',
@@ -266,6 +270,7 @@ export async function createBrowserGame(
         ),
         preloaderCompletion,
         renderInterpolation,
+        accessibility,
         unsubscribeObserver,
       );
       unsubscribeView?.();
@@ -389,6 +394,7 @@ function startApplication(
   fpsDisplayOptions: FlxFpsDisplayOptions | null,
   preloaderCompletion: Promise<void>,
   renderInterpolation: boolean,
+  accessibilityEnabled: boolean,
   unsubscribeObserver?: () => void,
 ): BrowserGameApplication {
   const frameListeners = new Set<(frame: BrowserGameFrame) => void>();
@@ -400,6 +406,15 @@ function startApplication(
   let simulationStepsSinceRender = 0;
   let animationFrame = 0;
   let fpsDisplay: FlxFpsDisplay | null = null;
+  const accessibility = accessibilityEnabled
+    ? new FlxAccessibilityOverlay(
+        host,
+        app.canvas,
+        renderer,
+        game.context.width,
+        game.context.height,
+      )
+    : null;
 
   const mountFpsDisplay = (): void => {
     if (!destroyed && fpsDisplayOptions) {
@@ -441,6 +456,7 @@ function startApplication(
       game.context.cameras,
       renderInterpolation ? game.interpolationAlpha : 1,
     );
+    accessibility?.sync();
     frameCount += 1;
     const event = {
       elapsedMS: actualRenderElapsedMS,
@@ -481,6 +497,7 @@ function startApplication(
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       fpsDisplay?.destroy();
       fpsDisplay = null;
+      accessibility?.destroy();
       unsubscribeObserver?.();
       preloader?.destroy();
       loading.destroy();

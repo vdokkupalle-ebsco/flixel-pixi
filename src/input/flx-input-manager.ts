@@ -3,6 +3,7 @@ import { Keyboard } from './keyboard';
 import { Mouse } from './mouse';
 import { FlxGamepadManager, type FlxGamepadProvider } from './flx-gamepad';
 import { FlxTouchManager, type FlxTouchOptions } from './flx-touch';
+import { getDomViewport } from './flx-dom-viewport';
 
 /** Service token for deterministic keyboard and pointer input. @public */
 export const FLX_INPUT_SERVICE = Symbol('flixel-pixi.input');
@@ -266,18 +267,20 @@ export class FlxInputManager implements FlxInputService {
   #logicalPoint(event: MouseEvent): { x: number; y: number } {
     const pointer = this.#pointerTarget;
     if (pointer === null) return { x: event.clientX, y: event.clientY };
-    const bounds = pointer.getBoundingClientRect();
+    const viewport = getDomViewport(
+      pointer,
+      this.#context.width,
+      this.#context.height,
+    );
     return {
       x:
-        bounds.width === 0
+        viewport.scaleX === 0
           ? 0
-          : ((event.clientX - bounds.left) * this.#context.width) /
-            bounds.width,
+          : (event.clientX - viewport.left) / viewport.scaleX,
       y:
-        bounds.height === 0
+        viewport.scaleY === 0
           ? 0
-          : ((event.clientY - bounds.top) * this.#context.height) /
-            bounds.height,
+          : (event.clientY - viewport.top) / viewport.scaleY,
     };
   }
 

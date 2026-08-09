@@ -116,6 +116,11 @@ export class FlxCameraRenderer implements FlxCameraHost {
     return this.#entries.keys();
   }
 
+  /** Logical cameras in render order. @internal */
+  get cameras(): readonly FlxCamera[] {
+    return this.#context.cameras;
+  }
+
   get renderTargetBytes(): number {
     let bytes = 0;
     for (const view of this.#views.values()) {

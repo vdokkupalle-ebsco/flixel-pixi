@@ -40,24 +40,24 @@ started merely to match a Haxe class count.
 
 ## Current checkpoint order
 
-| Order | Priority | Checkpoint                                      | Status                   | Exit condition                                                                                     |
-| ----: | :------: | ----------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
-|     1 |    P0    | Core tweening and easing                        | Complete (`5d3cbbf`)     | Deterministic manager, easing families, options, chaining, target control, unit coverage.          |
-|     2 |    P0    | Specialized tweens, motion, paths, and showcase | Complete (`0292702`)     | Misc/motion tween families, documentation, public demo, unit and browser coverage.                 |
-|     3 |    P0    | State overlays and nested substates             | Complete (`3d71446`)     | Deferred lifecycle, persistence policies, reuse/destruction, signals, render ordering, demo/tests. |
-|     4 |    P0    | Animation and frame model                       | Complete (`8f47307`)     | Controller-based animation and frame collections work without regressing current sprite APIs.      |
-|     5 |    P0    | Container and sprite-group model                | Implemented; uncommitted | Transformable composite objects and groups preserve collision, camera, and lifecycle semantics.    |
-|     6 |    P0    | Input expansion                                 | In progress              | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
-|     7 |    P1    | UI and text authoring                           | Planned                  | Common HUD/control/input-text needs no application-specific framework code.                        |
-|     8 |    P1    | Atlas and content-pipeline expansion            | Planned                  | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
-|     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Planned                  | Logical coordinates remain correct through browser/window lifecycle changes.                       |
-|    10 |    P1    | Audio organization and system UX                | Planned                  | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
-|    11 |    P2    | Advanced rendering extensions                   | Planned                  | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
-|    12 |    P2    | Debugger and runtime inspection                 | Planned                  | High-value console, interaction, and graphing workflows work without production overhead.          |
-|    13 |    P2    | Utilities and frontend normalization            | Planned                  | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
-|    14 |    P3    | Optional platform capabilities                  | Demand-driven            | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
-|    15 |    P0    | External compatibility validation               | Required before 1.0      | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
-|    16 |    P0    | Release hardening and 1.0 candidate             | Required before 1.0      | The support matrix, budgets, package artifact, provenance, and release gates pass.                 |
+| Order | Priority | Checkpoint                                      | Status               | Exit condition                                                                                     |
+| ----: | :------: | ----------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------- |
+|     1 |    P0    | Core tweening and easing                        | Complete (`5d3cbbf`) | Deterministic manager, easing families, options, chaining, target control, unit coverage.          |
+|     2 |    P0    | Specialized tweens, motion, paths, and showcase | Complete (`0292702`) | Misc/motion tween families, documentation, public demo, unit and browser coverage.                 |
+|     3 |    P0    | State overlays and nested substates             | Complete (`3d71446`) | Deferred lifecycle, persistence policies, reuse/destruction, signals, render ordering, demo/tests. |
+|     4 |    P0    | Animation and frame model                       | Complete (`8f47307`) | Controller-based animation and frame collections work without regressing current sprite APIs.      |
+|     5 |    P0    | Container and sprite-group model                | Complete (`070469f`) | Transformable composite objects and groups preserve collision, camera, and lifecycle semantics.    |
+|     6 |    P0    | Input expansion                                 | Complete (`f197d9f`) | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
+|     7 |    P1    | UI and text authoring                           | In progress          | Common HUD/control/input-text needs no application-specific framework code.                        |
+|     8 |    P1    | Atlas and content-pipeline expansion            | Planned              | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
+|     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Planned              | Logical coordinates remain correct through browser/window lifecycle changes.                       |
+|    10 |    P1    | Audio organization and system UX                | Planned              | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
+|    11 |    P2    | Advanced rendering extensions                   | Planned              | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
+|    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
+|    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
+|    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
+|    15 |    P0    | External compatibility validation               | Required before 1.0  | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
+|    16 |    P0    | Release hardening and 1.0 candidate             | Required before 1.0  | The support matrix, budgets, package artifact, provenance, and release gates pass.                 |
 
 Only one feature checkpoint should normally be active. Release hardening may
 run continuously alongside feature work.
@@ -172,7 +172,7 @@ Planned order:
 4. Motion sensors only after permission, privacy, fallback, and test strategy
    are approved.
 
-Current checkpoint:
+Completed checkpoint:
 
 - Gamepad slice 1 is implemented locally: one provider poll per fixed step,
   standard button constants, digital transitions, scaled dead zones, stable
@@ -208,6 +208,31 @@ Priorities:
 
 All controls require keyboard operation, pointer/touch behavior, focus rules,
 screen-reader labeling where applicable, and camera/HUD placement tests.
+
+Compatibility decisions:
+
+- **Adapted:** `FlxBar` retains numeric ranges, parent/property binding,
+  callbacks, and eight fill directions while Pixi owns texture-free fill
+  geometry.
+- **Adapted for the browser:** rendered `FlxButton` instances project to native
+  semantic DOM buttons because camera render textures hide individual controls
+  from Pixi's stage accessibility traversal.
+- **Exact in deterministic intent:** DOM focus and activation are queued and
+  consumed on fixed updates; pointer/touch remains on the canvas input path.
+
+Current slice:
+
+- `FlxBar`, renderer-owned filled bars, range callbacks, providers, and parent
+  bindings are implemented with unit coverage.
+- `FlxButton` exposes text, enabled, focus, accessibility label/tab order, and
+  shared activation behavior. The public browser boot path owns the native DOM
+  bridge and lifecycle.
+- The public UI demo and Chromium test cover camera placement, semantic labels,
+  disabled state, Enter/Space activation, and cleanup.
+
+Remaining slices: BMFont parsing/ownership, DOM/IME text input, and virtual
+controls. See [`guides/ui.md`](guides/ui.md) and
+[`adr/0017-native-accessibility-over-render-textures.md`](adr/0017-native-accessibility-over-render-textures.md).
 
 ### Atlas and content-pipeline expansion
 

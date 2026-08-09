@@ -114,6 +114,12 @@ export { FlxFramesCollection } from './animation/flx-frames-collection';
 export type { FlxGridFramesOptions } from './animation/flx-frames-collection';
 export { FlxButton } from './objects/flx-button';
 export type { FlxButtonCallback, FlxButtonSound } from './objects/flx-button';
+export { FlxBar } from './objects/flx-bar';
+export type {
+  FlxBarCallback,
+  FlxBarFillDirection,
+  FlxBarValueProvider,
+} from './objects/flx-bar';
 export { FlxPath } from './objects/flx-path';
 export { FlxTimer } from './objects/flx-timer';
 export type { FlxTimerCallback } from './objects/flx-timer';
@@ -147,6 +153,7 @@ export { FlxSpriteGroupRenderHandle } from './rendering/flx-sprite-group-render-
 export { FlxEmitterRenderHandle } from './rendering/flx-emitter-render-handle';
 export type { FlxEmitterRenderOptions } from './rendering/flx-emitter-render-handle';
 export { FlxButtonRenderHandle } from './rendering/flx-button-render-handle';
+export { FlxBarRenderHandle } from './rendering/flx-bar-render-handle';
 export { FlxTextRenderHandle } from './rendering/flx-text-render-handle';
 export type { FlxPixiTextNode } from './rendering/flx-text-render-handle';
 export { FlxTilemapRenderHandle } from './rendering/flx-tilemap-render-handle';

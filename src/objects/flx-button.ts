@@ -50,10 +50,18 @@ export class FlxButton extends FlxSprite {
   soundOut: FlxButtonSound | null = null;
   soundDown: FlxButtonSound | null = null;
   soundUp: FlxButtonSound | null = null;
+  /** Whether pointer and accessibility activation are accepted. */
+  enabled = true;
+  /** Native keyboard tab order used by the browser accessibility bridge. */
+  tabIndex = 0;
 
   #on = false;
   #pointerArmed = false;
-  #hovered = false;
+  #highlighted = false;
+  #focused = false;
+  #pendingFocus: boolean | null = null;
+  #queuedAccessibilityActivation = false;
+  #accessibleLabelOverride: string | null | undefined;
   #defaultGraphic: FlxGraphic | null;
   readonly #pointer = new FlxPoint();
   readonly #globalPointer = new FlxPoint();
@@ -84,11 +92,15 @@ export class FlxButton extends FlxSprite {
   }
 
   override update(): void {
+    if (this.#pendingFocus !== null) {
+      this.#focused = this.#pendingFocus;
+      this.#pendingFocus = null;
+    }
     const mouse = FlxG.mouse;
     const cameras = this.cameras ?? FlxG.cameras;
     let hovered = false;
     mouse.getGlobalPosition(this.#globalPointer);
-    for (const camera of mouse.visible ? cameras : []) {
+    for (const camera of this.enabled && mouse.visible ? cameras : []) {
       if (
         !camera.exists ||
         !camera.visible ||
@@ -105,16 +117,17 @@ export class FlxButton extends FlxSprite {
       }
     }
 
-    if (hovered && !this.#hovered) {
+    const highlighted = this.enabled && (hovered || this.#focused);
+    if (highlighted && !this.#highlighted) {
       this.onOver?.();
       this.soundOver?.play(true);
-    } else if (!hovered && this.#hovered) {
+    } else if (!highlighted && this.#highlighted) {
       this.onOut?.();
       this.soundOut?.play(true);
     }
-    this.#hovered = hovered;
+    this.#highlighted = highlighted;
 
-    if (hovered && mouse.justPressed()) {
+    if (this.enabled && hovered && mouse.justPressed()) {
       this.#pointerArmed = true;
       this.onDown?.();
       this.soundDown?.play(true);
@@ -123,16 +136,19 @@ export class FlxButton extends FlxSprite {
     if (mouse.justReleased()) {
       const activate = this.#pointerArmed && hovered && !mouse.justCancelled();
       this.#pointerArmed = false;
-      if (activate) {
-        this.onUp?.();
-        this.soundUp?.play(true);
-      }
+      if (activate) this.activate();
     }
 
-    this.status =
-      this.#pointerArmed && mouse.pressed()
+    if (this.#queuedAccessibilityActivation) {
+      this.#queuedAccessibilityActivation = false;
+      this.activate();
+    }
+
+    this.status = !this.enabled
+      ? FlxButton.NORMAL
+      : this.#pointerArmed && mouse.pressed()
         ? FlxButton.PRESSED
-        : hovered
+        : highlighted
           ? FlxButton.HIGHLIGHT
           : FlxButton.NORMAL;
     this.frame =
@@ -140,6 +156,59 @@ export class FlxButton extends FlxSprite {
         ? FlxButton.NORMAL
         : this.status;
     this.#syncLabel();
+  }
+
+  /** Human-visible label text, independent from the accessibility override. */
+  get text(): string {
+    return this.label?.text ?? '';
+  }
+
+  set text(value: string) {
+    if (this.label === null) {
+      this.label = new FlxText(this.x, this.y, this.width, value).setFormat(
+        'Arial',
+        11,
+        0xf7f9ff,
+        'center',
+      );
+      this.label.origin.make();
+      this.label.scrollFactor = this.scrollFactor;
+    } else {
+      this.label.text = value;
+    }
+  }
+
+  /** Native accessibility name. Defaults to current text; null omits the DOM control. */
+  get accessibleLabel(): string | null {
+    return this.#accessibleLabelOverride === undefined
+      ? (this.label?.text ?? null)
+      : this.#accessibleLabelOverride;
+  }
+
+  set accessibleLabel(value: string | null) {
+    this.#accessibleLabelOverride = value;
+  }
+
+  get focused(): boolean {
+    return this.#focused;
+  }
+
+  /** Activate the button through the same callback/sound path as pointer input. */
+  activate(): boolean {
+    if (!this.enabled || !this.exists || !this.visible) return false;
+    this.onUp?.();
+    this.soundUp?.play(true);
+    return true;
+  }
+
+  /** @internal */
+  queueAccessibilityActivation(): void {
+    this.#queuedAccessibilityActivation = true;
+  }
+
+  /** @internal */
+  queueAccessibilityFocus(focused: boolean): void {
+    this.#pendingFocus = focused;
   }
 
   setSounds(
@@ -183,6 +252,9 @@ export class FlxButton extends FlxSprite {
     this.onDown = null;
     this.onOver = null;
     this.onOut = null;
+    this.#accessibleLabelOverride = null;
+    this.#queuedAccessibilityActivation = false;
+    this.#pendingFocus = null;
     for (const sound of new Set([
       this.soundOver,
       this.soundOut,
@@ -207,11 +279,13 @@ export class FlxButton extends FlxSprite {
     label.visible = this.visible;
     label.alpha =
       this.alpha *
-      (this.status === FlxButton.PRESSED
-        ? 0.5
-        : this.status === FlxButton.NORMAL
-          ? 0.8
-          : 1);
+      (!this.enabled
+        ? 0.35
+        : this.status === FlxButton.PRESSED
+          ? 0.5
+          : this.status === FlxButton.NORMAL
+            ? 0.8
+            : 1);
     label.cameras = this.cameras;
   }
 }
