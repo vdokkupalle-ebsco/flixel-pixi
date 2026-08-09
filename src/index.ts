@@ -131,6 +131,28 @@ export type {
   FlxTweenType,
 } from './tweens/flx-tween';
 export { FlxTweenManager } from './tweens/flx-tween-manager';
+export {
+  FlxAngleTween,
+  FlxColorTween,
+  FlxFlickerTween,
+  FlxShakeTween,
+} from './tweens/flx-tween-misc';
+export {
+  FlxCircularMotion,
+  FlxCubicMotion,
+  FlxLinearMotion,
+  FlxLinearPath,
+  FlxMotion,
+  FlxQuadMotion,
+  FlxQuadPath,
+} from './tweens/flx-tween-motion';
+export type {
+  FlxColorTweenTarget,
+  FlxFlickerTweenOptions,
+  FlxTweenAxes,
+  FlxTweenColor,
+  FlxTweenColorValue,
+} from './tweens/flx-tween-misc';
 
 // --- Audio ---
 export { FLX_AUDIO_SERVICE } from './audio/flx-audio-backend';

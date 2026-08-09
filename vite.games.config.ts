@@ -18,6 +18,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/action/index.html',
         ),
+        tweens: resolve(
+          import.meta.dirname,
+          'examples/games/tweens/index.html',
+        ),
         external: resolve(
           import.meta.dirname,
           'examples/games/external/index.html',

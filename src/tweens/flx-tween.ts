@@ -1,6 +1,28 @@
 import { FlxG } from '../core/flx-g';
 import type { FlxEaseFunction } from './flx-ease';
 import { FlxTweenManager } from './flx-tween-manager';
+import type {
+  FlxAngleTween,
+  FlxColorTween,
+  FlxColorTweenTarget,
+  FlxFlickerTween,
+  FlxFlickerTweenOptions,
+  FlxShakeTween,
+  FlxTweenAxes,
+  FlxTweenColorValue,
+} from './flx-tween-misc';
+import type { FlxBasic } from '../core/flx-basic';
+import type { FlxObject } from '../objects/flx-object';
+import type { FlxSprite } from '../objects/flx-sprite';
+import type { PointLike } from '../math/flx-point';
+import type {
+  FlxCircularMotion,
+  FlxCubicMotion,
+  FlxLinearMotion,
+  FlxLinearPath,
+  FlxQuadMotion,
+  FlxQuadPath,
+} from './flx-tween-motion';
 
 /** Tween completion behavior. @public */
 export type FlxTweenType =
@@ -119,6 +141,199 @@ export class FlxTween {
       duration,
       options,
       tweenFunction,
+    );
+  }
+
+  static angle(
+    sprite: FlxObject | null,
+    fromAngle: number,
+    toAngle: number,
+    duration = 1,
+    options: FlxTweenOptions = {},
+  ): FlxAngleTween {
+    return FlxTween.globalManager.angle(
+      sprite,
+      fromAngle,
+      toAngle,
+      duration,
+      options,
+    );
+  }
+
+  static color(
+    sprite: FlxColorTweenTarget | null,
+    duration: number,
+    fromColor: FlxTweenColorValue,
+    toColor: FlxTweenColorValue,
+    options: FlxTweenOptions = {},
+  ): FlxColorTween {
+    return FlxTween.globalManager.color(
+      sprite,
+      duration,
+      fromColor,
+      toColor,
+      options,
+    );
+  }
+
+  static flicker(
+    basic: FlxBasic,
+    duration = 1,
+    period = 0.08,
+    options: FlxFlickerTweenOptions = {},
+  ): FlxFlickerTween {
+    return FlxTween.globalManager.flicker(basic, duration, period, options);
+  }
+
+  static isFlickering(basic: FlxBasic): boolean {
+    return FlxTween.globalManager.isFlickering(basic);
+  }
+
+  static shake(
+    sprite: FlxSprite,
+    intensity = 0.05,
+    duration = 1,
+    axes: FlxTweenAxes = 'xy',
+    options: FlxTweenOptions = {},
+  ): FlxShakeTween {
+    return FlxTween.globalManager.shake(
+      sprite,
+      intensity,
+      duration,
+      axes,
+      options,
+    );
+  }
+
+  static linearMotion(
+    object: FlxObject,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxLinearMotion {
+    return FlxTween.globalManager.linearMotion(
+      object,
+      fromX,
+      fromY,
+      toX,
+      toY,
+      durationOrSpeed,
+      useDuration,
+      options,
+    );
+  }
+
+  static quadMotion(
+    object: FlxObject,
+    fromX: number,
+    fromY: number,
+    controlX: number,
+    controlY: number,
+    toX: number,
+    toY: number,
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxQuadMotion {
+    return FlxTween.globalManager.quadMotion(
+      object,
+      fromX,
+      fromY,
+      controlX,
+      controlY,
+      toX,
+      toY,
+      durationOrSpeed,
+      useDuration,
+      options,
+    );
+  }
+
+  static cubicMotion(
+    object: FlxObject,
+    fromX: number,
+    fromY: number,
+    controlAX: number,
+    controlAY: number,
+    controlBX: number,
+    controlBY: number,
+    toX: number,
+    toY: number,
+    duration = 1,
+    options: FlxTweenOptions = {},
+  ): FlxCubicMotion {
+    return FlxTween.globalManager.cubicMotion(
+      object,
+      fromX,
+      fromY,
+      controlAX,
+      controlAY,
+      controlBX,
+      controlBY,
+      toX,
+      toY,
+      duration,
+      options,
+    );
+  }
+
+  static circularMotion(
+    object: FlxObject,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    angle: number,
+    clockwise: boolean,
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxCircularMotion {
+    return FlxTween.globalManager.circularMotion(
+      object,
+      centerX,
+      centerY,
+      radius,
+      angle,
+      clockwise,
+      durationOrSpeed,
+      useDuration,
+      options,
+    );
+  }
+
+  static linearPath(
+    object: FlxObject,
+    points: readonly PointLike[],
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxLinearPath {
+    return FlxTween.globalManager.linearPath(
+      object,
+      points,
+      durationOrSpeed,
+      useDuration,
+      options,
+    );
+  }
+
+  static quadPath(
+    object: FlxObject,
+    points: readonly PointLike[],
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxQuadPath {
+    return FlxTween.globalManager.quadPath(
+      object,
+      points,
+      durationOrSpeed,
+      useDuration,
+      options,
     );
   }
 
@@ -306,6 +521,11 @@ export class FlxTween {
     return undefined;
   }
 
+  /** @internal */
+  protected onEnd(): void {
+    return undefined;
+  }
+
   #begin(): void {
     if (this.#running) return;
     this.#running = true;
@@ -315,6 +535,7 @@ export class FlxTween {
   #end(): void {
     this.active = false;
     this.finished = true;
+    this.onEnd();
     if (this.#chained.length === 0) return;
     const [next, ...remaining] = this.#chained;
     this.#chained.length = 0;

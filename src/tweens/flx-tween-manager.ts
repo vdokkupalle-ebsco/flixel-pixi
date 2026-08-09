@@ -6,6 +6,27 @@ import {
   type FlxTweenOptions,
   FlxVarTween,
 } from './flx-tween';
+import type { FlxObject } from '../objects/flx-object';
+import type { FlxSprite } from '../objects/flx-sprite';
+import type { PointLike } from '../math/flx-point';
+import {
+  FlxAngleTween,
+  FlxColorTween,
+  type FlxColorTweenTarget,
+  FlxFlickerTween,
+  type FlxFlickerTweenOptions,
+  FlxShakeTween,
+  type FlxTweenAxes,
+  type FlxTweenColorValue,
+} from './flx-tween-misc';
+import {
+  FlxCircularMotion,
+  FlxCubicMotion,
+  FlxLinearMotion,
+  FlxLinearPath,
+  FlxQuadMotion,
+  FlxQuadPath,
+} from './flx-tween-motion';
 
 /** Owns and advances deterministic game-time tweens. @public */
 export class FlxTweenManager extends FlxBasic {
@@ -59,6 +80,191 @@ export class FlxTweenManager extends FlxBasic {
         this,
       ),
     );
+  }
+
+  angle(
+    sprite: FlxObject | null,
+    fromAngle: number,
+    toAngle: number,
+    duration = 1,
+    options: FlxTweenOptions = {},
+  ): FlxAngleTween {
+    return this.add(
+      new FlxAngleTween(options, this).tween(
+        fromAngle,
+        toAngle,
+        duration,
+        sprite,
+      ),
+    );
+  }
+
+  color(
+    sprite: FlxColorTweenTarget | null,
+    duration: number,
+    fromColor: FlxTweenColorValue,
+    toColor: FlxTweenColorValue,
+    options: FlxTweenOptions = {},
+  ): FlxColorTween {
+    return this.add(
+      new FlxColorTween(options, this).tween(
+        duration,
+        fromColor,
+        toColor,
+        sprite,
+      ),
+    );
+  }
+
+  flicker(
+    basic: FlxBasic,
+    duration = 1,
+    period = 0.08,
+    options: FlxFlickerTweenOptions = {},
+  ): FlxFlickerTween {
+    return this.add(
+      new FlxFlickerTween(options, this).tween(basic, duration, period),
+    );
+  }
+
+  isFlickering(basic: FlxBasic): boolean {
+    return this.#tweens.some(
+      (tween) => tween instanceof FlxFlickerTween && tween.basic === basic,
+    );
+  }
+
+  shake(
+    sprite: FlxSprite,
+    intensity = 0.05,
+    duration = 1,
+    axes: FlxTweenAxes = 'xy',
+    options: FlxTweenOptions = {},
+  ): FlxShakeTween {
+    return this.add(
+      new FlxShakeTween(options, this).tween(sprite, intensity, duration, axes),
+    );
+  }
+
+  linearMotion(
+    object: FlxObject,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxLinearMotion {
+    const tween = new FlxLinearMotion(options, this).setMotion(
+      fromX,
+      fromY,
+      toX,
+      toY,
+      durationOrSpeed,
+      useDuration,
+    );
+    return this.add(tween.setObject(object));
+  }
+
+  quadMotion(
+    object: FlxObject,
+    fromX: number,
+    fromY: number,
+    controlX: number,
+    controlY: number,
+    toX: number,
+    toY: number,
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxQuadMotion {
+    const tween = new FlxQuadMotion(options, this).setMotion(
+      fromX,
+      fromY,
+      controlX,
+      controlY,
+      toX,
+      toY,
+      durationOrSpeed,
+      useDuration,
+    );
+    return this.add(tween.setObject(object));
+  }
+
+  cubicMotion(
+    object: FlxObject,
+    fromX: number,
+    fromY: number,
+    controlAX: number,
+    controlAY: number,
+    controlBX: number,
+    controlBY: number,
+    toX: number,
+    toY: number,
+    duration = 1,
+    options: FlxTweenOptions = {},
+  ): FlxCubicMotion {
+    const tween = new FlxCubicMotion(options, this).setMotion(
+      fromX,
+      fromY,
+      controlAX,
+      controlAY,
+      controlBX,
+      controlBY,
+      toX,
+      toY,
+      duration,
+    );
+    return this.add(tween.setObject(object));
+  }
+
+  circularMotion(
+    object: FlxObject,
+    centerX: number,
+    centerY: number,
+    radius: number,
+    angle: number,
+    clockwise: boolean,
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxCircularMotion {
+    const tween = new FlxCircularMotion(options, this).setMotion(
+      centerX,
+      centerY,
+      radius,
+      angle,
+      clockwise,
+      durationOrSpeed,
+      useDuration,
+    );
+    return this.add(tween.setObject(object));
+  }
+
+  linearPath(
+    object: FlxObject,
+    points: readonly PointLike[],
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxLinearPath {
+    const tween = new FlxLinearPath(options, this);
+    for (const point of points) tween.addPoint(point.x, point.y);
+    tween.setMotion(durationOrSpeed, useDuration);
+    return this.add(tween.setObject(object));
+  }
+
+  quadPath(
+    object: FlxObject,
+    points: readonly PointLike[],
+    durationOrSpeed = 1,
+    useDuration = true,
+    options: FlxTweenOptions = {},
+  ): FlxQuadPath {
+    const tween = new FlxQuadPath(options, this);
+    for (const point of points) tween.addPoint(point.x, point.y);
+    tween.setMotion(durationOrSpeed, useDuration);
+    return this.add(tween.setObject(object));
   }
 
   /** @internal */

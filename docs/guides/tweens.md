@@ -35,6 +35,58 @@ FlxTween.num(0, 100, 1.5, { ease: FlxEase.sineOut }, (value) => {
 });
 ```
 
+## Specialized effects
+
+```ts
+FlxTween.angle(sprite, -15, 15, 0.4, {
+  type: FlxTween.PINGPONG,
+  ease: FlxEase.sineInOut,
+});
+
+FlxTween.color(sprite, 0.6, 0xffcc00, { color: 0x3366ff, alpha: 0.25 });
+FlxTween.flicker(player, 1, 0.08, { endVisibility: true });
+FlxTween.shake(player, 0.04, 0.3, 'xy');
+```
+
+Numeric colors up to `0xffffff` follow Pixi's RGB convention and are opaque.
+Use `{ color, alpha }` when an endpoint needs a normalized alpha value. Packed
+`0xAARRGGBB` numbers are also accepted when the high alpha byte is non-zero.
+Shake randomness comes from the game context, so replays with the same seed and
+fixed steps produce the same offsets.
+
+## Motion and paths
+
+Motion tweens temporarily mark their target object as `immovable`, write its
+world position on fixed steps, and restore the previous `immovable` value when
+they finish or are cancelled.
+
+```ts
+FlxTween.linearMotion(enemy, 20, 80, 220, 80, 2, true, {
+  ease: FlxEase.quadInOut,
+});
+
+FlxTween.quadMotion(enemy, 20, 80, 120, 10, 220, 80, 180, false);
+
+FlxTween.circularMotion(orb, 160, 90, 48, 0, true, 2);
+
+FlxTween.linearPath(
+  platform,
+  [
+    { x: 40, y: 180 },
+    { x: 240, y: 180 },
+    { x: 240, y: 80 },
+  ],
+  120,
+  false,
+  { type: FlxTween.PINGPONG },
+);
+```
+
+The `durationOrSpeed` argument is interpreted as seconds when `useDuration` is
+`true`. When it is `false`, it is pixels per second. `linearPath` and
+`quadPath` weight segments by distance, preventing short and long segments from
+consuming equal time.
+
 ## Completion modes
 
 - `FlxTween.ONESHOT` is the default. It completes and removes itself.

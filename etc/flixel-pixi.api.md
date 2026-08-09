@@ -234,6 +234,18 @@ export class FlxActions {
 }
 
 // @public
+export class FlxAngleTween extends FlxTween {
+    // (undocumented)
+    angle: number;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    sprite: FlxObject | null;
+    // (undocumented)
+    tween(fromAngle: number, toAngle: number, duration: number, sprite?: FlxObject | null): this;
+}
+
+// @public
 export class FlxAnim {
     constructor(name: string, frames: readonly number[], frameRate?: number, looped?: boolean, defaultSpeed?: number);
     readonly defaultLooped: boolean;
@@ -799,6 +811,36 @@ export interface FlxCameraView {
 }
 
 // @public
+export class FlxCircularMotion extends FlxMotion {
+    // (undocumented)
+    angle: number;
+    // (undocumented)
+    circumference: number;
+    // (undocumented)
+    setMotion(centerX: number, centerY: number, radius: number, angle: number, clockwise: boolean, durationOrSpeed?: number, useDuration?: boolean): this;
+}
+
+// @public
+export class FlxColorTween extends FlxTween {
+    // (undocumented)
+    color: number;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    sprite: FlxColorTweenTarget | null;
+    // (undocumented)
+    tween(duration: number, fromColor: FlxTweenColorValue, toColor: FlxTweenColorValue, sprite?: FlxColorTweenTarget | null): this;
+}
+
+// @public
+export interface FlxColorTweenTarget {
+    // (undocumented)
+    alpha: number;
+    // (undocumented)
+    color: number;
+}
+
+// @public
 export class FlxContext {
     constructor(width: number, height: number, seed?: number);
     // (undocumented)
@@ -879,6 +921,12 @@ export class FlxContext {
     worldBounds: FlxRect;
     // (undocumented)
     worldDivisions: number;
+}
+
+// @public
+export class FlxCubicMotion extends FlxMotion {
+    // (undocumented)
+    setMotion(fromX: number, fromY: number, controlAX: number, controlAY: number, controlBX: number, controlBY: number, toX: number, toY: number, duration?: number): this;
 }
 
 // @public
@@ -1084,6 +1132,37 @@ export interface FlxEmitterRenderOptions {
     optimized?: boolean;
     // (undocumented)
     roundPixels?: boolean;
+}
+
+// @public
+export class FlxFlickerTween extends FlxTween {
+    constructor(options?: FlxFlickerTweenOptions, manager?: FlxTweenManager);
+    // (undocumented)
+    basic: FlxBasic | null;
+    // (undocumented)
+    static defaultTweenFunction(tween: FlxFlickerTween): boolean;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    endVisibility: boolean;
+    // (undocumented)
+    period: number;
+    // (undocumented)
+    ratio: number;
+    // (undocumented)
+    tween(basic: FlxBasic, duration: number, period: number): this;
+    // (undocumented)
+    tweenFunction: (tween: FlxFlickerTween) => boolean;
+}
+
+// @public
+export interface FlxFlickerTweenOptions extends FlxTweenOptions {
+    // (undocumented)
+    endVisibility?: boolean;
+    // (undocumented)
+    ratio?: number;
+    // (undocumented)
+    tweenFunction?: (tween: FlxFlickerTween) => boolean;
 }
 
 // @public
@@ -1456,6 +1535,28 @@ export interface FlxKeyRecord {
 }
 
 // @public
+export class FlxLinearMotion extends FlxMotion {
+    // (undocumented)
+    distance: number;
+    // (undocumented)
+    setMotion(fromX: number, fromY: number, toX: number, toY: number, durationOrSpeed?: number, useDuration?: boolean): this;
+}
+
+// @public
+export class FlxLinearPath extends FlxMotion {
+    // (undocumented)
+    addPoint(x?: number, y?: number): this;
+    // (undocumented)
+    distance: number;
+    // (undocumented)
+    getPoint(index?: number): PointLike;
+    // (undocumented)
+    readonly points: PointLike[];
+    // (undocumented)
+    setMotion(durationOrSpeed?: number, useDuration?: boolean): this;
+}
+
+// @public
 export interface FlxLoadingBundleOptions extends Omit<FlxLoadingTaskOptions, 'stage'> {
     // (undocumented)
     stage?: 'assets' | 'custom';
@@ -1550,6 +1651,20 @@ export class FlxLog {
     // (undocumented)
     static readonly MAX_ENTRIES = 1024;
     warn(message: string): void;
+}
+
+// @public
+export class FlxMotion extends FlxTween {
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    object: FlxObject | null;
+    // (undocumented)
+    setObject(object: FlxObject): this;
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
 }
 
 // @public
@@ -1858,6 +1973,28 @@ export type FlxPreloaderViewFactory = (context: FlxPreloaderViewContext) => FlxP
 export type FlxProcessCallback = (first: FlxObject, second: FlxObject) => boolean;
 
 // @public
+export class FlxQuadMotion extends FlxMotion {
+    // (undocumented)
+    distance: number;
+    // (undocumented)
+    setMotion(fromX: number, fromY: number, controlX: number, controlY: number, toX: number, toY: number, durationOrSpeed?: number, useDuration?: boolean): this;
+}
+
+// @public
+export class FlxQuadPath extends FlxMotion {
+    // (undocumented)
+    addPoint(x?: number, y?: number): this;
+    // (undocumented)
+    distance: number;
+    // (undocumented)
+    getPoint(index?: number): PointLike;
+    // (undocumented)
+    readonly points: PointLike[];
+    // (undocumented)
+    setMotion(durationOrSpeed?: number, useDuration?: boolean): this;
+}
+
+// @public
 export class FlxQuadTree extends FlxRect {
     constructor(x: number, y: number, width: number, height: number, parent?: FlxQuadTree | null);
     // (undocumented)
@@ -1986,6 +2123,20 @@ export type FlxSaveResult = {
     error: 'async' | 'quota' | 'serialization' | 'unknown';
     message: string;
 };
+
+// @public
+export class FlxShakeTween extends FlxTween {
+    // (undocumented)
+    axes: FlxTweenAxes;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    intensity: number;
+    // (undocumented)
+    sprite: FlxSprite | null;
+    // (undocumented)
+    tween(sprite: FlxSprite, intensity?: number, duration?: number, axes?: FlxTweenAxes): this;
+}
 
 // @public
 export class FlxSound extends FlxBasic {
@@ -2419,6 +2570,8 @@ export class FlxTween {
     // (undocumented)
     active: boolean;
     // (undocumented)
+    static angle(sprite: FlxObject | null, fromAngle: number, toAngle: number, duration?: number, options?: FlxTweenOptions): FlxAngleTween;
+    // (undocumented)
     static readonly BACKWARD: FlxTweenType;
     // (undocumented)
     backward: boolean;
@@ -2429,7 +2582,13 @@ export class FlxTween {
     // (undocumented)
     static cancelTweensOf(target: object, fieldPaths?: readonly string[]): void;
     // (undocumented)
+    static circularMotion(object: FlxObject, centerX: number, centerY: number, radius: number, angle: number, clockwise: boolean, durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxCircularMotion;
+    // (undocumented)
+    static color(sprite: FlxColorTweenTarget | null, duration: number, fromColor: FlxTweenColorValue, toColor: FlxTweenColorValue, options?: FlxTweenOptions): FlxColorTween;
+    // (undocumented)
     static completeTweensOf(target: object, fieldPaths?: readonly string[]): void;
+    // (undocumented)
+    static cubicMotion(object: FlxObject, fromX: number, fromY: number, controlAX: number, controlAY: number, controlBX: number, controlBY: number, toX: number, toY: number, duration?: number, options?: FlxTweenOptions): FlxCubicMotion;
     // (undocumented)
     destroy(): void;
     // (undocumented)
@@ -2441,9 +2600,17 @@ export class FlxTween {
     // (undocumented)
     finished: boolean;
     // (undocumented)
+    static flicker(basic: FlxBasic, duration?: number, period?: number, options?: FlxFlickerTweenOptions): FlxFlickerTween;
+    // (undocumented)
     framerate: number;
     // (undocumented)
     static get globalManager(): FlxTweenManager;
+    // (undocumented)
+    static isFlickering(basic: FlxBasic): boolean;
+    // (undocumented)
+    static linearMotion(object: FlxObject, fromX: number, fromY: number, toX: number, toY: number, durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxLinearMotion;
+    // (undocumented)
+    static linearPath(object: FlxObject, points: readonly PointLike[], durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxLinearPath;
     // (undocumented)
     get loopDelay(): number;
     set loopDelay(value: number);
@@ -2469,7 +2636,13 @@ export class FlxTween {
     // (undocumented)
     static readonly PINGPONG: FlxTweenType;
     // (undocumented)
+    static quadMotion(object: FlxObject, fromX: number, fromY: number, controlX: number, controlY: number, toX: number, toY: number, durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxQuadMotion;
+    // (undocumented)
+    static quadPath(object: FlxObject, points: readonly PointLike[], durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxQuadPath;
+    // (undocumented)
     scale: number;
+    // (undocumented)
+    static shake(sprite: FlxSprite, intensity?: number, duration?: number, axes?: FlxTweenAxes, options?: FlxTweenOptions): FlxShakeTween;
     // (undocumented)
     start(): this;
     // (undocumented)
@@ -2488,23 +2661,62 @@ export class FlxTween {
 }
 
 // @public
+export type FlxTweenAxes = 'x' | 'y' | 'xy' | Readonly<{
+    x: boolean;
+    y: boolean;
+}>;
+
+// @public
 export type FlxTweenCallback = (tween: FlxTween) => void;
+
+// @public
+export interface FlxTweenColor {
+    // (undocumented)
+    alpha: number;
+    // (undocumented)
+    color: number;
+}
+
+// @public
+export type FlxTweenColorValue = number | Readonly<FlxTweenColor>;
 
 // @public
 export class FlxTweenManager extends FlxBasic {
     constructor();
     // (undocumented)
+    angle(sprite: FlxObject | null, fromAngle: number, toAngle: number, duration?: number, options?: FlxTweenOptions): FlxAngleTween;
+    // (undocumented)
     cancelTweensOf(target: object, fieldPaths?: readonly string[]): void;
     // (undocumented)
+    circularMotion(object: FlxObject, centerX: number, centerY: number, radius: number, angle: number, clockwise: boolean, durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxCircularMotion;
+    // (undocumented)
     clear(): void;
+    // (undocumented)
+    color(sprite: FlxColorTweenTarget | null, duration: number, fromColor: FlxTweenColorValue, toColor: FlxTweenColorValue, options?: FlxTweenOptions): FlxColorTween;
     // (undocumented)
     completeTweensOf(target: object, fieldPaths?: readonly string[]): void;
     // (undocumented)
     containsTweensOf(target: object, fieldPaths?: readonly string[]): boolean;
     // (undocumented)
+    cubicMotion(object: FlxObject, fromX: number, fromY: number, controlAX: number, controlAY: number, controlBX: number, controlBY: number, toX: number, toY: number, duration?: number, options?: FlxTweenOptions): FlxCubicMotion;
+    // (undocumented)
     destroy(): void;
     // (undocumented)
+    flicker(basic: FlxBasic, duration?: number, period?: number, options?: FlxFlickerTweenOptions): FlxFlickerTween;
+    // (undocumented)
+    isFlickering(basic: FlxBasic): boolean;
+    // (undocumented)
+    linearMotion(object: FlxObject, fromX: number, fromY: number, toX: number, toY: number, durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxLinearMotion;
+    // (undocumented)
+    linearPath(object: FlxObject, points: readonly PointLike[], durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxLinearPath;
+    // (undocumented)
     num(fromValue: number, toValue: number, duration?: number, options?: FlxTweenOptions, tweenFunction?: (value: number) => void): FlxNumTween;
+    // (undocumented)
+    quadMotion(object: FlxObject, fromX: number, fromY: number, controlX: number, controlY: number, toX: number, toY: number, durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxQuadMotion;
+    // (undocumented)
+    quadPath(object: FlxObject, points: readonly PointLike[], durationOrSpeed?: number, useDuration?: boolean, options?: FlxTweenOptions): FlxQuadPath;
+    // (undocumented)
+    shake(sprite: FlxSprite, intensity?: number, duration?: number, axes?: FlxTweenAxes, options?: FlxTweenOptions): FlxShakeTween;
     // (undocumented)
     tween<T extends object>(target: T, values: Record<string, number>, duration?: number, options?: FlxTweenOptions): FlxVarTween<T>;
     // (undocumented)
