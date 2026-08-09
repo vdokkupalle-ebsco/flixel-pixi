@@ -18,6 +18,9 @@ test('polls browser gamepads on steps and preserves reconnect identity', async (
     'ready',
     { timeout: 10_000 },
   );
+  const initialBursts = await page.evaluate(
+    () => window.__FLIXEL_PIXI_ACTION__?.bursts?.() ?? 0,
+  );
 
   await page.evaluate(() => {
     Reflect.set(window, '__TEST_GAMEPADS__', [
@@ -38,6 +41,11 @@ test('polls browser gamepads on steps and preserves reconnect identity', async (
       page.evaluate(() => window.__FLIXEL_PIXI_ACTION__?.gamepad?.() ?? null),
     )
     .toMatchObject({ axis: 1, index: 0, pressed: true, uid: 0 });
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.__FLIXEL_PIXI_ACTION__?.bursts?.() ?? 0),
+    )
+    .toBeGreaterThan(initialBursts);
 
   await page.evaluate(() => Reflect.set(window, '__TEST_GAMEPADS__', []));
   await expect

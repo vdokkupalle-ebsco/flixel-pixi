@@ -60,6 +60,40 @@ if (FlxG.actions.justPressed('jump')) {
 
 `FlxG.keys` still works and remains the source of truth for replay/key names.
 
+Mixed-device actions use serializable structural sources:
+
+```ts
+import { FlxG, FlxGamepadButton } from 'flixel-pixi';
+
+FlxG.actions.bindSources(
+  'jump',
+  { device: 'keyboard', key: 'SPACE' },
+  { device: 'mouse', button: 0 },
+  { device: 'gamepad-button', button: FlxGamepadButton.A },
+);
+
+FlxG.actions.bindSources(
+  'move-x',
+  { device: 'keyboard-axis', negative: 'A', positive: 'D' },
+  { device: 'gamepad-axis', axis: 0 },
+);
+
+player.acceleration.x = FlxG.actions.value('move-x') * 900;
+```
+
+`rebind()` assigns one source and removes the same source from other actions by
+default, avoiding accidental conflicts. Pass `{ exclusive: false }` to share a
+control deliberately. Binding profiles are JSON-safe and validated atomically:
+
+```ts
+save.data.controls = FlxG.actions.save();
+FlxG.actions.load(save.data.controls);
+```
+
+Gamepad sources may target `'first'` (the default), `'all'`, or one stable
+numeric gamepad UID. When several analog sources are active, `value()` returns
+the strongest magnitude; source order breaks equal ties.
+
 ## Managing object pools
 
 Avoid per-spawn allocation with `FlxGroup.recycle()`:

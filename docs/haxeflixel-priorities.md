@@ -177,8 +177,11 @@ Current checkpoint:
 - Gamepad slice 1 is implemented locally: one provider poll per fixed step,
   standard button constants, digital transitions, scaled dead zones, stable
   logical IDs across unambiguous reconnects, injectable headless snapshots,
-  and replay 1.1 records. Vendor mapping tables and the cross-device action
-  layer remain part of the next slices.
+  and replay 1.1 records. Vendor-specific mapping tables remain a later slice.
+- Action slice 2 is implemented locally: typed keyboard, mouse, wheel, gamepad
+  button, gamepad axis, keyboard-axis, and D-pad sources; stable-UID targeting;
+  exclusive rebinding; atomic versioned serialization; and compatibility with
+  the existing keyboard-only `bind()` helper.
 
 Replay compatibility is mandatory: new authoritative inputs need versioned
 recording or an explicit replay exclusion.

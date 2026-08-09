@@ -224,13 +224,118 @@ export const FLX_STORAGE_SERVICE: unique symbol;
 export const FLX_WATCH_SERVICE: unique symbol;
 
 // @public
+export interface FlxActionBindingsData {
+    // (undocumented)
+    readonly bindings: readonly {
+        readonly action: string;
+        readonly sources: readonly FlxActionSource[];
+    }[];
+    // (undocumented)
+    readonly version: 1;
+}
+
+// @public
+export interface FlxActionGamepadAxisSource {
+    // (undocumented)
+    readonly axis: number;
+    // (undocumented)
+    readonly deadZone?: number;
+    // (undocumented)
+    readonly device: 'gamepad-axis';
+    // (undocumented)
+    readonly gamepad?: FlxActionGamepadTarget;
+    // (undocumented)
+    readonly scale?: number;
+}
+
+// @public
+export interface FlxActionGamepadButtonAxisSource {
+    // (undocumented)
+    readonly device: 'gamepad-button-axis';
+    // (undocumented)
+    readonly gamepad?: FlxActionGamepadTarget;
+    // (undocumented)
+    readonly negative: number;
+    // (undocumented)
+    readonly positive: number;
+    // (undocumented)
+    readonly scale?: number;
+}
+
+// @public
+export interface FlxActionGamepadButtonSource {
+    // (undocumented)
+    readonly button: number;
+    // (undocumented)
+    readonly device: 'gamepad-button';
+    // (undocumented)
+    readonly gamepad?: FlxActionGamepadTarget;
+}
+
+// @public
+export type FlxActionGamepadTarget = 'first' | 'all' | number;
+
+// @public
+export interface FlxActionKeyboardAxisSource {
+    // (undocumented)
+    readonly device: 'keyboard-axis';
+    // (undocumented)
+    readonly negative: string;
+    // (undocumented)
+    readonly positive: string;
+    // (undocumented)
+    readonly scale?: number;
+}
+
+// @public
+export interface FlxActionKeyboardSource {
+    // (undocumented)
+    readonly device: 'keyboard';
+    // (undocumented)
+    readonly key: string;
+}
+
+// @public
+export interface FlxActionMouseSource {
+    // (undocumented)
+    readonly button: number;
+    // (undocumented)
+    readonly device: 'mouse';
+}
+
+// @public
+export interface FlxActionRebindOptions {
+    // (undocumented)
+    readonly exclusive?: boolean;
+}
+
+// @public
 export class FlxActions {
+    addSource(action: string, source: FlxActionSource, options?: FlxActionRebindOptions): void;
     bind(action: string, ...keys: string[]): void;
+    bindSources(action: string, ...sources: readonly FlxActionSource[]): void;
+    getSources(action: string): readonly FlxActionSource[];
     justPressed(action: string): boolean;
     justReleased(action: string): boolean;
+    load(data: FlxActionBindingsData | string): void;
     pressed(action: string): boolean;
+    rebind(action: string, source: FlxActionSource, options?: FlxActionRebindOptions): void;
+    removeSource(action: string, source: FlxActionSource): boolean;
     reset(): void;
+    save(): FlxActionBindingsData;
     unbind(action: string): void;
+    value(action: string): number;
+}
+
+// @public
+export type FlxActionSource = FlxActionKeyboardSource | FlxActionMouseSource | FlxActionWheelSource | FlxActionGamepadButtonSource | FlxActionKeyboardAxisSource | FlxActionGamepadAxisSource | FlxActionGamepadButtonAxisSource;
+
+// @public
+export interface FlxActionWheelSource {
+    // (undocumented)
+    readonly device: 'wheel';
+    // (undocumented)
+    readonly direction: -1 | 1;
 }
 
 // @public

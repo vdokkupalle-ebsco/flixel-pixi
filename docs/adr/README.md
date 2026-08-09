@@ -30,3 +30,4 @@ and storage backends with gesture-unlock queuing and versioned save slots.
 | [0012](0012-replay-and-determinism.md)                    | Fixed-step versioned replay and diagnostics                | Accepted |
 | [0013](0013-container-coordinate-and-render-ownership.md) | World-authoritative composites with adapter-owned branches | Accepted |
 | [0014](0014-step-polled-gamepads-and-stable-identity.md)  | Fixed-step gamepads with stable logical device IDs         | Accepted |
+| [0015](0015-serializable-multi-source-actions.md)         | Serializable keyboard, pointer, and gamepad actions        | Accepted |

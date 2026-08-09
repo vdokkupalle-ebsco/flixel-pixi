@@ -244,6 +244,19 @@ export type {
 } from './debugger/flx-debugger';
 
 export { FlxActions } from './input/flx-actions';
+export type {
+  FlxActionBindingsData,
+  FlxActionGamepadAxisSource,
+  FlxActionGamepadButtonSource,
+  FlxActionGamepadButtonAxisSource,
+  FlxActionGamepadTarget,
+  FlxActionKeyboardAxisSource,
+  FlxActionKeyboardSource,
+  FlxActionMouseSource,
+  FlxActionRebindOptions,
+  FlxActionSource,
+  FlxActionWheelSource,
+} from './input/flx-actions';
 
 // --- Loading ---
 

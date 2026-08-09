@@ -73,6 +73,32 @@ export class ActionState extends FlxState {
     this.hud.scrollFactor.y = 0;
     this.add(this.hud);
 
+    FlxG.actions.bindSources(
+      'move-x',
+      { device: 'keyboard-axis', negative: 'LEFT', positive: 'RIGHT' },
+      { axis: 0, device: 'gamepad-axis' },
+      {
+        device: 'gamepad-button-axis',
+        negative: FlxGamepadButton.DPAD_LEFT,
+        positive: FlxGamepadButton.DPAD_RIGHT,
+      },
+    );
+    FlxG.actions.bindSources(
+      'move-y',
+      { device: 'keyboard-axis', negative: 'UP', positive: 'DOWN' },
+      { axis: 1, device: 'gamepad-axis' },
+      {
+        device: 'gamepad-button-axis',
+        negative: FlxGamepadButton.DPAD_UP,
+        positive: FlxGamepadButton.DPAD_DOWN,
+      },
+    );
+    FlxG.actions.bindSources(
+      'burst',
+      { device: 'keyboard', key: 'Z' },
+      { button: FlxGamepadButton.A, device: 'gamepad-button' },
+    );
+
     const mini = new FlxCamera(480, 16, 144, 108, 0.35);
     mini.bgColor = 0xff1e1b4b;
     FlxG.addCamera(mini);
@@ -97,21 +123,9 @@ export class ActionState extends FlxState {
   }
 
   override update(): void {
-    this.player.acceleration.x = 0;
-    this.player.acceleration.y = 0;
-    if (FlxG.keys.pressed('LEFT')) this.player.acceleration.x = -1100;
-    if (FlxG.keys.pressed('RIGHT')) this.player.acceleration.x = 1100;
-    if (FlxG.keys.pressed('UP')) this.player.acceleration.y = -1100;
-    if (FlxG.keys.pressed('DOWN')) this.player.acceleration.y = 1100;
-
     const gamepad = FlxG.gamepads.firstActive;
-    if (gamepad !== null) {
-      const axisX = gamepad.getAxis(0);
-      const axisY = gamepad.getAxis(1);
-      if (axisX !== 0) this.player.acceleration.x = axisX * 1100;
-      if (axisY !== 0) this.player.acceleration.y = axisY * 1100;
-      if (gamepad.justPressed(FlxGamepadButton.A)) this.burst();
-    }
+    this.player.acceleration.x = FlxG.actions.value('move-x') * 1100;
+    this.player.acceleration.y = FlxG.actions.value('move-y') * 1100;
 
     if (this.player.x < 0) this.player.x = 0;
     if (this.player.y < 0) this.player.y = 0;
@@ -122,7 +136,7 @@ export class ActionState extends FlxState {
       this.player.y = FlxG.height - this.player.height;
     }
 
-    if (FlxG.keys.justPressed('Z')) this.burst();
+    if (FlxG.actions.justPressed('burst')) this.burst();
 
     const vcr = FlxG.vcr.recording
       ? 'REC'

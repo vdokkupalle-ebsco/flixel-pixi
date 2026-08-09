@@ -418,7 +418,30 @@ export class KenneyPlayState extends FlxState {
     credit.scrollFactor.make(0, 0);
     this.add(credit);
 
-    FlxG.actions.bind('jump', 'SPACE', 'W', 'UP');
+    FlxG.actions.bindSources(
+      'move-x',
+      { device: 'keyboard-axis', negative: 'LEFT', positive: 'RIGHT' },
+      { device: 'keyboard-axis', negative: 'A', positive: 'D' },
+      { axis: 0, device: 'gamepad-axis' },
+      {
+        device: 'gamepad-button-axis',
+        negative: FlxGamepadButton.DPAD_LEFT,
+        positive: FlxGamepadButton.DPAD_RIGHT,
+      },
+    );
+    FlxG.actions.bindSources(
+      'jump',
+      { device: 'keyboard', key: 'SPACE' },
+      { device: 'keyboard', key: 'W' },
+      { device: 'keyboard', key: 'UP' },
+      { button: FlxGamepadButton.A, device: 'gamepad-button' },
+    );
+    FlxG.actions.bindSources(
+      'restart',
+      { device: 'keyboard', key: 'R' },
+      { button: FlxGamepadButton.A, device: 'gamepad-button' },
+      { button: FlxGamepadButton.START, device: 'gamepad-button' },
+    );
     FlxG.camera.setBounds(0, 0, MAP_W * TILE, MAP_H * TILE);
     FlxG.camera.follow(this.player, FlxCamera.STYLE_PLATFORMER);
     this.map.follow(FlxG.camera, 0, true);
@@ -428,18 +451,8 @@ export class KenneyPlayState extends FlxState {
   override update(): void {
     this.#wrapBackgrounds();
 
-    const gamepad = FlxG.gamepads.firstActive;
-    const gamepadJumpPressed =
-      gamepad?.justPressed(FlxGamepadButton.A) ?? false;
-    const gamepadJumpReleased =
-      gamepad?.justReleased(FlxGamepadButton.A) ?? false;
-
     if (this.status !== 'play') {
-      if (
-        FlxG.keys.justPressed('R') ||
-        gamepadJumpPressed ||
-        gamepad?.justPressed(FlxGamepadButton.START) === true
-      ) {
+      if (FlxG.actions.justPressed('restart')) {
         FlxG.switchState(new KenneyPlayState());
       }
       this.#updateHud();
@@ -472,20 +485,14 @@ export class KenneyPlayState extends FlxState {
       else this.#framesGoingDown = 0;
     }
 
-    if (FlxG.actions.justPressed('jump') || gamepadJumpPressed) {
+    if (FlxG.actions.justPressed('jump')) {
       this.#jumpBuffer = JUMP_BUFFER;
     } else {
       this.#jumpBuffer = Math.max(0, this.#jumpBuffer - dt);
     }
 
     this.player.acceleration.x = 0;
-    const keyboardLeft = FlxG.keys.pressed('LEFT') || FlxG.keys.pressed('A');
-    const keyboardRight = FlxG.keys.pressed('RIGHT') || FlxG.keys.pressed('D');
-    let moveX = gamepad?.getAxis(0) ?? 0;
-    const dpadLeft = gamepad?.pressed(FlxGamepadButton.DPAD_LEFT) ?? false;
-    const dpadRight = gamepad?.pressed(FlxGamepadButton.DPAD_RIGHT) ?? false;
-    if (dpadLeft !== dpadRight) moveX = dpadLeft ? -1 : 1;
-    if (keyboardLeft !== keyboardRight) moveX = keyboardLeft ? -1 : 1;
+    const moveX = FlxG.actions.value('move-x');
     const left = moveX < 0;
     const right = moveX > 0;
     const accel = grounded ? MOVE_ACCEL : atApex ? APEX_TURN_ACCEL : AIR_ACCEL;
@@ -506,7 +513,7 @@ export class KenneyPlayState extends FlxState {
 
     if (
       this.#jumpHeld &&
-      (FlxG.actions.justReleased('jump') || gamepadJumpReleased) &&
+      FlxG.actions.justReleased('jump') &&
       !grounded &&
       this.player.velocity.y < 0
     ) {
