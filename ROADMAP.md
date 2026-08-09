@@ -3,6 +3,22 @@
 The AS3-to-TypeScript engine port is feature-complete enough for stabilization.
 Current work is organized by release outcomes rather than chronological milestones.
 
+## Modern HaxeFlixel parity
+
+Modern authoring improvements discovered from HaxeFlixel are tracked in the
+[HaxeFlixel parity priorities](docs/haxeflixel-priorities.md). That document is
+the ordered feature backlog and records completed, active, planned, deferred,
+and unsupported work. This roadmap remains the release-outcome view; avoid
+duplicating the detailed parity list here.
+
+The immediate sequence is:
+
+1. finish and commit state overlays/substates;
+2. implement the animation and frame model;
+3. define transformable containers/sprite groups;
+4. expand gamepad, action, and touch input;
+5. validate priorities through a pinned external game port.
+
 ## Implemented engine capabilities
 
 - Fixed-step lifecycle, state management, groups, math, and deterministic RNG.

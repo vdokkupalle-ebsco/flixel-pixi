@@ -56,6 +56,10 @@ export { FlxGroup } from './core/flx-group';
 export type { FlxBasicConstructor } from './core/flx-group';
 export { FlxState } from './core/flx-state';
 export type { FlxStateConstructor } from './core/flx-state';
+export { FlxSubState } from './core/flx-sub-state';
+export type { FlxSubStateCallback } from './core/flx-sub-state';
+export { FlxSignal } from './core/flx-signal';
+export type { FlxSignalListener } from './core/flx-signal';
 export { FlxQuadTree } from './collision/flx-quadtree';
 export type {
   FlxOverlapCallback,

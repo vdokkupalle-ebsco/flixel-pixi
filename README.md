@@ -61,6 +61,7 @@ Compatibility is pinned to Flixel commit
 766 public members, and 14,928 source lines under `org/flixel`.
 
 - [Compatibility ledger](docs/compatibility.md)
+- [HaxeFlixel parity priorities](docs/haxeflixel-priorities.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Lifecycle guide](docs/guides/lifecycle.md)
 - [Loading and preloader guide](docs/guides/loading.md)

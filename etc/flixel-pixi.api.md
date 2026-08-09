@@ -2139,6 +2139,23 @@ export class FlxShakeTween extends FlxTween {
 }
 
 // @public
+export class FlxSignal<T> {
+    // (undocumented)
+    add(listener: FlxSignalListener<T>): FlxSignalListener<T>;
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    dispatch(value: T): void;
+    // (undocumented)
+    remove(listener: FlxSignalListener<T>): boolean;
+}
+
+// @public
+export type FlxSignalListener<T> = (value: T) => void;
+
+// @public
 export class FlxSound extends FlxBasic {
     amplitude: number;
     amplitudeLeft: number;
@@ -2291,7 +2308,26 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
 // @public
 export class FlxState extends FlxGroup {
     // (undocumented)
+    closeSubState(): void;
+    // (undocumented)
     create(): void;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    destroySubStates: boolean;
+    // (undocumented)
+    draw(): void;
+    // (undocumented)
+    openSubState(subState: FlxSubState): void;
+    // (undocumented)
+    persistentDraw: boolean;
+    // (undocumented)
+    persistentUpdate: boolean;
+    resetSubState(): void;
+    // (undocumented)
+    subState: FlxSubState | null;
+    get subStateClosed(): FlxSignal<FlxSubState>;
+    get subStateOpened(): FlxSignal<FlxSubState>;
 }
 
 // @public
@@ -2314,6 +2350,20 @@ export interface FlxStorageBackend {
     read(key: string): Record<string, unknown> | null;
     write(key: string, data: Record<string, unknown>): FlxSaveResult;
 }
+
+// @public
+export class FlxSubState extends FlxState {
+    close(): void;
+    // (undocumented)
+    closeCallback: FlxSubStateCallback | null;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    openCallback: FlxSubStateCallback | null;
+}
+
+// @public
+export type FlxSubStateCallback = () => void;
 
 // @public
 export class FlxText extends FlxSprite {

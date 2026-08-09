@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { FlxGame } from '../../src/core/flx-game';
 import { FlxState } from '../../src/core/flx-state';
+import { FlxSubState } from '../../src/core/flx-sub-state';
 import { FlxSprite } from '../../src/objects/flx-sprite';
 import { FlxCameraRenderer } from '../../src/rendering/flx-camera-renderer';
 import { syncWorldToRenderer } from '../../src/rendering/flx-world-sync';
@@ -120,5 +121,37 @@ describe('syncWorldToRenderer', () => {
     expect(game.context.renderablesDirty).toBe(true);
     syncWorldToRenderer(game, renderer);
     expect(renderer.registeredObjectCount).toBe(0);
+  });
+
+  it('composes persistent parent and nested substate renderables', () => {
+    game = new FlxGame(640, 480, emptyState());
+    game.step();
+    const renderer = new FlxCameraRenderer(
+      fakeRenderer(),
+      new Container(),
+      game.context,
+    );
+    const state = requireState(game);
+    const parentSprite = state.add(new FlxSprite(0, 0));
+    const overlay = new FlxSubState();
+    const overlaySprite = overlay.add(new FlxSprite(0, 0));
+
+    state.openSubState(overlay);
+    game.step();
+    syncWorldToRenderer(game, renderer);
+    expect(Array.from(renderer.registeredObjects)).toEqual([
+      parentSprite,
+      overlaySprite,
+    ]);
+
+    state.persistentDraw = false;
+    game.context.markRenderablesDirty();
+    syncWorldToRenderer(game, renderer);
+    expect(Array.from(renderer.registeredObjects)).toEqual([overlaySprite]);
+
+    overlay.close();
+    game.step();
+    syncWorldToRenderer(game, renderer);
+    expect(Array.from(renderer.registeredObjects)).toEqual([parentSprite]);
   });
 });

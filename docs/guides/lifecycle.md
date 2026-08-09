@@ -53,6 +53,40 @@ If you cannot use `createBrowserGame`:
 - `FlxG.switchState(new NextState())` queues an atomic swap at the next step boundary.
 - World sync picks up the new state's members on the following frames.
 
+## Substates and overlays
+
+Use `FlxSubState` for pause menus, modal screens, and overlays that should not
+replace the current state. Opening and closing are deferred to a safe update
+boundary, so a substate can request its own close without mutating the active
+state stack during traversal.
+
+```ts
+import { FlxState, FlxSubState } from 'flixel-pixi';
+
+class PauseMenu extends FlxSubState {
+  override update(): void {
+    // Close from a button or input action.
+    if (shouldResume()) this.close();
+  }
+}
+
+class PlayState extends FlxState {
+  override create(): void {
+    this.openSubState(new PauseMenu());
+  }
+}
+```
+
+The parent defaults match HaxeFlixel: `persistentUpdate` is `false`, so gameplay
+pauses under the overlay; `persistentDraw` is `true`, so it remains visible.
+Set either property on the parent before opening the substate to change that
+behavior. Substates can open nested substates, and `openCallback`,
+`closeCallback`, `subStateOpened`, and `subStateClosed` expose lifecycle events.
+
+Closed substates are destroyed by default. Set `destroySubStates = false` on
+the parent when you intentionally want to retain and reopen the same instance;
+its `create()` hook runs only once.
+
 ## Destroy
 
 `app.destroy()` from `createBrowserGame` (or an equivalent teardown) should:

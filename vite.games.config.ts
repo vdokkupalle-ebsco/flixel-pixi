@@ -22,6 +22,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/tweens/index.html',
         ),
+        substates: resolve(
+          import.meta.dirname,
+          'examples/games/substates/index.html',
+        ),
         external: resolve(
           import.meta.dirname,
           'examples/games/external/index.html',

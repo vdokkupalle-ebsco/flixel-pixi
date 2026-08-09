@@ -1,6 +1,7 @@
 import type { FlxBasic } from '../core/flx-basic';
 import { FlxGroup } from '../core/flx-group';
 import type { FlxGame } from '../core/flx-game';
+import type { FlxState } from '../core/flx-state';
 import { FlxEmitter } from '../objects/flx-emitter';
 import { FlxSprite } from '../objects/flx-sprite';
 import { FlxTilemap } from '../tilemap/flx-tilemap';
@@ -25,6 +26,14 @@ export function collectRenderables(root: FlxBasic, out: FlxRenderable[]): void {
   }
 }
 
+/** Collects one state stack in back-to-front render order. */
+function collectStateRenderables(state: FlxState, out: FlxRenderable[]): void {
+  if (state.persistentDraw || state.subState === null) {
+    collectRenderables(state, out);
+  }
+  if (state.subState !== null) collectStateRenderables(state.subState, out);
+}
+
 /**
  * Synchronize renderer entries with the active state's renderables.
  * Adds missing objects; removes entries for objects no longer in the tree.
@@ -38,7 +47,7 @@ export function syncWorldToRenderer(
 ): void {
   const state = game.state;
   const desired: FlxRenderable[] = [];
-  if (state !== null) collectRenderables(state, desired);
+  if (state !== null) collectStateRenderables(state, desired);
 
   const desiredSet = new Set(desired);
 

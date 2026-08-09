@@ -153,7 +153,7 @@ export class FlxGame implements FlxStateRuntime {
     if (!this.context.paused || FlxG.vcr.stepRequested) {
       FlxG.vcr.stepRequested = false;
       this.context.updatePlugins();
-      this.#state?.update();
+      this.#state?.tryUpdate();
       this.audio.updateSounds(this.context.elapsed);
       this.context.updateCameras();
     }
