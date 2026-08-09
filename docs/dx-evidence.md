@@ -1,9 +1,9 @@
 # Game Maker DX Evidence Report
 
 - Status: Implemented (working tree → commit with this note)
-- Spec: [`docs/superpowers/specs/2026-08-07-game-maker-dx-design.md`](superpowers/specs/2026-08-07-game-maker-dx-design.md)
-- Plan: [`docs/superpowers/plans/2026-08-07-game-maker-dx.md`](superpowers/plans/2026-08-07-game-maker-dx.md)
-- Not a C13 / 1.0 claim
+- Spec: [`docs/history/implementation-plans/specs/2026-08-07-game-maker-dx-design.md`](history/implementation-plans/specs/2026-08-07-game-maker-dx-design.md)
+- Plan: [`docs/history/implementation-plans/plans/2026-08-07-game-maker-dx.md`](history/implementation-plans/plans/2026-08-07-game-maker-dx.md)
+- Scope: developer experience only; not a 1.0 release claim
 
 ## Deliverables
 
@@ -34,10 +34,10 @@
 
 ### 5. Docs rollup
 
-- Lifecycle, making-games, extensions, README, PORTING_PLAN DX blurb
+- Lifecycle, making-games, extensions, README, and roadmap integration
 
 ## Verification
 
 - `npx vitest run` (unit)
 - `npm run check:games-imports`
-- `npx playwright test tests/browser/phase12.spec.ts --project=chromium`
+- `npx playwright test tests/browser/sample-games.spec.ts --project=chromium`

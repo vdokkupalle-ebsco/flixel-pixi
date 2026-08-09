@@ -40,7 +40,7 @@ export class ActionState extends FlxState {
     super.create();
     FlxG.camera.bgColor = 0xff111827;
 
-    this.save.bind('phase12_action', {
+    this.save.bind('sample-games_action', {
       version: 1,
       backend: new LocalStorageBackend(),
     });

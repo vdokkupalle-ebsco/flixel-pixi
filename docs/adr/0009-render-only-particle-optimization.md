@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-06
-- Phase: 8
+- Capability: effects rendering
 
 ## Context
 

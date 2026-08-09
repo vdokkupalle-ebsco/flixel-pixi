@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi platform services</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div>
+          <h1>Audio and persistent storage</h1>
+          <p
+            id="status"
+            class="status"
+            data-testid="status"
+            data-state="loading"
+          >
+            Initializing platform services...
+          </p>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="destroy" disabled>Destroy</button>
+        </div>
+      </header>
+
+      <main class="workbench">
+        <section class="stage">
+          <div
+            data-testid="platform-services-canvas-host"
+            class="canvas-host"
+          ></div>
+        </section>
+
+        <section
+          class="controls"
+          style="
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #1a202c;
+            border-radius: 8px;
+          "
+        >
+          <h3>Audio & Save Interactive Controls</h3>
+          <div
+            style="
+              display: flex;
+              gap: 0.5rem;
+              flex-wrap: wrap;
+              margin-bottom: 1rem;
+            "
+          >
+            <button type="button" id="btn-coin" data-action="add-coin">
+              💰 Add Coin (+1)
+            </button>
+            <button
+              type="button"
+              id="btn-sound-coin"
+              data-action="play-coin-sfx"
+            >
+              🔊 Play Coin SFX
+            </button>
+            <button
+              type="button"
+              id="btn-sound-jump"
+              data-action="play-jump-sfx"
+            >
+              🚀 Play Jump SFX
+            </button>
+            <button type="button" id="btn-music" data-action="toggle-music">
+              🎵 Toggle Music Loop
+            </button>
+            <button type="button" id="btn-reset-save" data-action="reset-save">
+              🗑️ Reset Save Slot
+            </button>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              gap: 1rem;
+              align-items: center;
+              margin-top: 0.5rem;
+            "
+          >
+            <label for="vol-slider" style="font-weight: bold"
+              >Volume: <span id="vol-display">50%</span></label
+            >
+            <input
+              type="range"
+              id="vol-slider"
+              min="0"
+              max="100"
+              value="50"
+              style="flex: 1; max-width: 200px"
+            />
+            <button type="button" id="btn-mute">🔇 Mute: OFF</button>
+          </div>
+        </section>
+
+        <section class="meta" style="margin-top: 1rem">
+          <h2>State & Save Metrics</h2>
+          <div data-testid="platform-services-metrics"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./platform-services-main.ts"></script>
+  </body>
+</html>

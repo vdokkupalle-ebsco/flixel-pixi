@@ -121,7 +121,7 @@ export { FlxTilemapRenderHandle } from './rendering/flx-tilemap-render-handle';
 export { TimerManager } from './plugin/timer-manager';
 export { DebugPathDisplay } from './plugin/debug-path-display';
 
-// --- Phase 9: Audio ---
+// --- Audio ---
 export { FLX_AUDIO_SERVICE } from './audio/flx-audio-backend';
 export type {
   FlxAudioBackend,
@@ -133,7 +133,7 @@ export type { FlxAudioService } from './audio/flx-audio-manager';
 export { NullAudioBackend } from './audio/null-audio-backend';
 export { WebAudioBackend } from './audio/web-audio-backend';
 
-// --- Phase 9: Save ---
+// --- Persistent storage ---
 export { FLX_STORAGE_SERVICE } from './storage/flx-storage-backend';
 export type {
   FlxAsyncStorageBackend,
@@ -146,7 +146,7 @@ export { NullStorageBackend } from './storage/null-storage-backend';
 export { LocalStorageBackend } from './storage/local-storage-backend';
 export { IndexedDBBackend } from './storage/indexed-db-backend';
 
-// --- Phase 10: Replay & Deterministic Verification ---
+// --- Replay and deterministic verification ---
 export { MouseRecord } from './replay/mouse-record';
 export { FrameRecord } from './replay/frame-record';
 export type { CodePair, FrameRecordData } from './replay/frame-record';
@@ -158,7 +158,7 @@ export {
 } from './replay/as3-replay-adapter';
 export type { FlxVCR } from './replay/flx-vcr';
 
-// --- Phase 11: Debugger & Preloader ---
+// --- Debugger and preloader ---
 export { DebugChannel } from './debugger/debug-channel';
 export type { DebugEvents, DebugEventType } from './debugger/debug-channel';
 export { FlxLog, FLX_LOG_SERVICE } from './debugger/flx-log';

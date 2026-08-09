@@ -10,7 +10,7 @@ import {
   MouseRecord,
 } from '../../src';
 
-describe('Phase 10 — FlxReplay & Determinism', () => {
+describe('FlxReplay and determinism', () => {
   it('creates and serializes MouseRecord and FrameRecord', () => {
     const mouse = new MouseRecord(100.4, 200.7, 1, -2);
     expect(mouse.x).toBe(100);

@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-06
-- Accepted: 2026-08-06 (Phase 3 collision oracle)
+- Accepted: 2026-08-06 (collision oracle)
 
 ## Context
 

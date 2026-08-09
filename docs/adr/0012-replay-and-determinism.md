@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-06
-- Accepted: 2026-08-06 (Phase 10 replay spike)
+- Accepted: 2026-08-06 (replay spike)
 
 ## Context
 

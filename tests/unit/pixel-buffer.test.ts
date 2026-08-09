@@ -8,7 +8,7 @@ import {
   stampPixels,
 } from '../../src/compat/pixel-buffer';
 
-describe('Phase 1 pixel compatibility primitives', () => {
+describe('Pixel compatibility primitives', () => {
   it('creates solid graphics and selects independent animation frames', () => {
     const sheet = makeGraphicPixels(4, 2, 0x112233ff);
     sheet.data[2] = 0xaabbccff;

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * C12 guard: examples/games may only import the engine via the public package
+ * Public API guard: examples/games may only import the engine via the public package
  * entry (or the repo root `src` / `src/index` re-export), never deep modules.
  */
 import { readdir, readFile } from 'node:fs/promises';
@@ -64,7 +64,7 @@ for (const file of files) {
 }
 
 if (violations.length > 0) {
-  console.error('C12 public-import guard failed:\n');
+  console.error('Sample-game public-import guard failed:\n');
   for (const v of violations) {
     console.error(`  ${v.file}\n    → ${v.specifier}`);
   }
@@ -75,5 +75,5 @@ if (violations.length > 0) {
 }
 
 console.log(
-  `C12 public-import guard passed (${files.length} files under examples/games).`,
+  `Sample-game public-import guard passed (${files.length} files under examples/games).`,
 );

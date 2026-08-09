@@ -20,7 +20,7 @@ afterEach(() => {
   FlxG.clearContext(context);
 });
 
-describe('Phase 5 FlxCamera follow and bounds', () => {
+describe('FlxCamera follow and bounds', () => {
   it('focuses on a target and configures every AS3 dead-zone preset', () => {
     const camera = new FlxCamera(0, 0, 160, 90);
     const target = new FlxObject(100, 50, 20, 10);
@@ -86,7 +86,7 @@ describe('Phase 5 FlxCamera follow and bounds', () => {
   });
 });
 
-describe('Phase 5 FlxCamera effects and transforms', () => {
+describe('FlxCamera effects and transforms', () => {
   it('advances flash, fade, and directional shake deterministically', () => {
     const camera = new FlxCamera(0, 0, 200, 100);
     let flashes = 0;
@@ -242,7 +242,7 @@ describe('Phase 5 FlxCamera effects and transforms', () => {
   });
 });
 
-describe('Phase 5 FlxG camera facade', () => {
+describe('Camera FlxG camera facade', () => {
   it('adds, selects, removes, and resets cameras through the context', () => {
     const original = FlxG.camera;
     const secondary = FlxG.addCamera(new FlxCamera(160, 0, 160, 180));

@@ -41,7 +41,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:perf": "PHASE13_PERF_GATES=1 playwright test tests/browser/phase13.spec.ts --project=chromium --workers=1",
+    "test:perf": "RENDER_PERF_GATES=1 playwright test tests/browser/performance-soak.spec.ts --project=chromium --workers=1",
     "bench": "vitest bench --run --outputJson=reports/benchmarks.json",
     "api:update": "npm run build:types && api-extractor run --local --verbose",
     "api:check": "npm run build:types && api-extractor run --verbose",

@@ -88,26 +88,26 @@ button:disabled {
   display: block;
 }
 
-.phase-one {
+.rendering {
   width: min(960px, calc(100vw - 32px));
 }
 
-.phase-one-canvas {
+.rendering-canvas {
   height: auto;
   min-height: 0;
   background: #111722;
 }
 
-.phase-one-canvas canvas {
+.rendering-canvas canvas {
   width: 100%;
   height: auto;
 }
 
-.phase-four {
+.sprites-text {
   width: min(720px, calc(100vw - 32px));
 }
 
-.phase-four-canvas {
+.sprites-text-canvas {
   width: 480px;
   height: 240px;
   min-height: 0;
@@ -115,11 +115,11 @@ button:disabled {
   background: #111722;
 }
 
-.phase-five {
+.cameras {
   width: min(880px, calc(100vw - 32px));
 }
 
-.phase-five-canvas {
+.cameras-canvas {
   width: 800px;
   height: 280px;
   min-height: 0;
@@ -127,12 +127,12 @@ button:disabled {
   background: #10131a;
 }
 
-.phase-five-canvas canvas {
+.cameras-canvas canvas {
   width: 100%;
   height: auto;
 }
 
-.phase-ten-canvas {
+.replay-canvas {
   width: 100%;
   height: 480px;
   min-height: 360px;
@@ -140,17 +140,17 @@ button:disabled {
   background: #1e293b;
 }
 
-.phase-ten-canvas canvas {
+.replay-canvas canvas {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.phase-six {
+.tilemaps {
   width: min(880px, calc(100vw - 32px));
 }
 
-.phase-six-canvas {
+.tilemaps-canvas {
   width: 800px;
   height: 300px;
   min-height: 0;
@@ -158,16 +158,16 @@ button:disabled {
   background: #10131a;
 }
 
-.phase-six-canvas canvas {
+.tilemaps-canvas canvas {
   width: 100%;
   height: auto;
 }
 
-.phase-seven {
+.input {
   width: min(880px, calc(100vw - 32px));
 }
 
-.phase-seven-canvas {
+.input-canvas {
   width: 800px;
   height: 420px;
   min-height: 0;
@@ -175,17 +175,17 @@ button:disabled {
   background: #10131a;
 }
 
-.phase-seven-canvas canvas {
+.input-canvas canvas {
   width: 100%;
   height: auto;
   outline: none;
 }
 
-.phase-eight {
+.effects {
   width: min(880px, calc(100vw - 32px));
 }
 
-.phase-eight-canvas {
+.effects-canvas {
   width: 800px;
   height: 420px;
   min-height: 0;
@@ -193,7 +193,7 @@ button:disabled {
   background: #0b1020;
 }
 
-.phase-eight-canvas canvas {
+.effects-canvas canvas {
   width: 100%;
   height: auto;
 }

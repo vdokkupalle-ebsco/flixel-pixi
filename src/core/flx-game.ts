@@ -18,7 +18,7 @@ import { DebugChannel } from '../debugger/debug-channel';
 import { FlxLog, FLX_LOG_SERVICE } from '../debugger/flx-log';
 import { FlxWatch, FLX_WATCH_SERVICE } from '../debugger/flx-watch';
 
-/** Headless Phase 2 game controller and atomic state boundary. @public */
+/** Headless game controller and atomic state boundary. @public */
 export class FlxGame implements FlxStateRuntime {
   readonly context: FlxContext;
   readonly zoom: number;

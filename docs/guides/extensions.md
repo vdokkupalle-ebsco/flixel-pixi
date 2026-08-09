@@ -4,7 +4,7 @@ How to extend `flixel-pixi` without forking the core.
 
 ## Plugins
 
-`FlxG.addPlugin` / `getPlugin` / `removePlugin` register `FlxBasic` plugins updated/drawn by `FlxContext` (Phase 8). Prefer plugins for timers, debug overlays, and cross-state systems.
+`FlxG.addPlugin` / `getPlugin` / `removePlugin` register `FlxBasic` plugins updated/drawn by `FlxContext` (Effects). Prefer plugins for timers, debug overlays, and cross-state systems.
 
 ## Render handles
 

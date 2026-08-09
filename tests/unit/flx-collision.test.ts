@@ -28,7 +28,7 @@ function movingObject(
   return object;
 }
 
-describe('Phase 3 AS3 collision separation oracle', () => {
+describe('AS3 collision separation oracle', () => {
   it('does not separate stationary or mutually immovable overlaps', () => {
     const first = new FlxObject(0, 0, 10, 10);
     const second = new FlxObject(5, 5, 10, 10);
@@ -148,7 +148,7 @@ describe('Phase 3 AS3 collision separation oracle', () => {
   });
 });
 
-describe('Phase 3 quadtree and FlxG overlap traversal', () => {
+describe('Quadtree and FlxG overlap traversal', () => {
   it('executes dual-list callbacks only for accepted swept overlaps', () => {
     const first = movingObject(20, 10, 0, 10);
     const second = movingObject(10, 10, 10, 10);

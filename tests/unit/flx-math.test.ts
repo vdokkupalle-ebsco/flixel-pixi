@@ -14,7 +14,7 @@ afterEach(() => {
   FlxG.clearContext();
 });
 
-describe('Phase 2 math and deterministic utilities', () => {
+describe('Headless core math and deterministic utilities', () => {
   it('copies and reuses structural point values', () => {
     const point = new FlxPoint(1, 2);
     const target = { x: 0, y: 0 };

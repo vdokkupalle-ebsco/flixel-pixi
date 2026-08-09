@@ -1,7 +1,7 @@
 /**
  * External port target: minimal mechanics inspired by Adam Saltsman's Mode
  * (Flixel demo, MIT). Original Flash assets are NOT copied — procedural
- * graphics only. See docs/phase12-external-gap.md.
+ * graphics only. See docs/sample-games-external-gap.md.
  */
 import {
   FlxButton,

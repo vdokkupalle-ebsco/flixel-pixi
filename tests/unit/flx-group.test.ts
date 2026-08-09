@@ -16,7 +16,7 @@ class PoolObject extends FlxBasic {
   }
 }
 
-describe('Phase 2 lifecycle and groups', () => {
+describe('Headless core lifecycle and groups', () => {
   it('preserves basic lifecycle flags and headless draw accounting', () => {
     const basic = new FlxBasic();
     FlxBasic.activeCount = 0;

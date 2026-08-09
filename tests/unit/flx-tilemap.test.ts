@@ -40,7 +40,7 @@ afterEach(() => {
   FlxG.clearContext(context);
 });
 
-describe('Phase 6 tilemap data and autotiling', () => {
+describe('Tilemap data and autotiling', () => {
   it('parses, exports, queries, offsets, and mutates OFF maps', () => {
     const graphic = tileset();
     const map = new FlxTilemap();
@@ -247,7 +247,7 @@ describe('Phase 6 tilemap data and autotiling', () => {
   });
 });
 
-describe('Phase 6 tile collision, callbacks, rays, and paths', () => {
+describe('Tilemap tile collision, callbacks, rays, and paths', () => {
   it('supports collision properties, one-way tiles, and callback map indices', () => {
     const graphic = tileset();
     const map = new FlxTilemap().loadMap('0,0,0\n0,1,0\n0,0,0', graphic, 8, 8);
@@ -385,7 +385,7 @@ describe('Phase 6 tile collision, callbacks, rays, and paths', () => {
   });
 });
 
-describe('Phase 6 dirty chunk rendering', () => {
+describe('Tilemap dirty chunk rendering', () => {
   it('rebuilds only visible dirty chunks across camera passes', () => {
     const graphic = tileset();
     const map = new FlxTilemap().loadMap(

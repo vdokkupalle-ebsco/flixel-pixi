@@ -29,7 +29,7 @@ afterEach(() => {
   FlxG.clearContext();
 });
 
-describe('Phase 8 timers and plugins', () => {
+describe('Timers and plugins', () => {
   it('fires catch-up loops deterministically and stops before the final callback', () => {
     const manager = context.addPlugin(new TimerManager());
     const callbackStates: boolean[] = [];

@@ -80,7 +80,7 @@ describe('upstream compatibility inventory', () => {
         manifestMembers,
       );
       expect(section, `${entry.qualifiedName} final classification`).toMatch(
-        /- Phase [^\n]+ status: (?:Exact|Adapted|Emulated|Deprecated|Unsupported)\b/,
+        /- Compatibility status: (?:Exact|Adapted|Emulated|Deprecated|Unsupported)\b/,
       );
     }
   });

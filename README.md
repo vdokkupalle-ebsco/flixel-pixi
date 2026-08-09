@@ -3,12 +3,10 @@
 `flixel-pixi` is a TypeScript port of Adam Saltsman's original ActionScript 3
 Flixel engine, using PixiJS v8 as its browser rendering foundation.
 
-The repository includes the Phase 12 samples, API ledger, and guides, and is in
-the **Phase 13 stabilization pass**. Checkpoint C12 is reopened only for a true
-external source-port exercise; the existing Mode Lite example is an original
-compatibility sample, not evidence of a source port. Playable public-API games
-live under `examples/games/`; phase smoke labs remain under `examples/smoke/`.
-See [PORTING_PLAN.md](PORTING_PLAN.md).
+The engine includes playable public-API samples, a complete upstream API ledger,
+and capability-focused browser demos. It is currently in pre-1.0 stabilization.
+The remaining feature-validation work is a genuine external source-port and an
+independent clean-room documentation review. See [ROADMAP.md](ROADMAP.md).
 
 ## Prerequisites
 
@@ -37,10 +35,10 @@ npm install
 npm run dev
 ```
 
-The smoke example starts on Vite's displayed local URL. Open `/phase8.html` for
-the live deterministic particle/timer/plugin lab; `/phase7.html` retains the
-keyboard/pointer/button lab, `/phase6.html` retains the animated two-camera
-tilemap, and `/` retains the minimal Pixi lifecycle smoke test.
+The demo index starts on Vite's displayed local URL. Capability routes include
+`/rendering.html`, `/sprites-text.html`, `/cameras.html`, `/tilemaps.html`,
+`/input.html`, `/effects.html`, `/platform-services.html`, `/replay.html`, and
+`/debugger.html`. The root route remains the minimal Pixi lifecycle smoke test.
 
 Useful commands:
 
@@ -70,23 +68,11 @@ Compatibility is pinned to Flixel commit
 - [Browser guide](docs/guides/browser.md)
 - [Debugging guide](docs/guides/debugging.md)
 - [Extension points](docs/guides/extensions.md)
-- [Game-maker DX evidence](docs/dx-evidence.md)
-- [Phase 1 evidence and C1 verdict](docs/phase1-evidence.md)
-- [Phase 2 evidence and C2 verdict](docs/phase2-evidence.md)
-- [Phase 3 evidence and C3 verdict](docs/phase3-evidence.md)
-- [Phase 4 evidence and C4 verdict](docs/phase4-evidence.md)
-- [Phase 5 evidence and C5 verdict](docs/phase5-evidence.md)
-- [Phase 6 evidence and C6 verdict](docs/phase6-evidence.md)
-- [Phase 7 evidence and C7 verdict](docs/phase7-evidence.md)
-- [Phase 8 evidence and C8 verdict](docs/phase8-evidence.md)
-- [Phase 9 evidence and C9 verdict](docs/phase9-evidence.md)
-- [Phase 10 evidence and C10 verdict](docs/phase10-evidence.md)
-- [Phase 11 evidence and C11 verdict](docs/phase11-evidence.md)
-- [Phase 12 evidence and current C12 verdict](docs/phase12-evidence.md)
-- [Phase 13 hardening evidence](docs/phase13-evidence.md)
+- [Game-maker developer-experience evidence](docs/dx-evidence.md)
+- [Historical port evidence](docs/history/porting/README.md)
+- [Current roadmap](ROADMAP.md)
 - [Browser support policy](docs/browser-support.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
-- [Detailed port plan](PORTING_PLAN.md)
 
 ## License
 

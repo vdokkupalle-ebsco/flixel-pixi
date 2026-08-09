@@ -125,7 +125,7 @@ function renderMarkdown(manifest) {
       `- Public API (${entry.members.length}): ${members || '_none_'}`,
     );
     lines.push(
-      '- Phase 0 status: inventoried; implementation is scheduled by the port plan.',
+      '- Compatibility status: inventoried; implementation is tracked in the roadmap.',
     );
     lines.push('');
   }

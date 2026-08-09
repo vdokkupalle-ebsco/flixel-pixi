@@ -36,7 +36,7 @@ function configuredEmitter(quantity = 8): FlxEmitter {
   return emitter;
 }
 
-describe('Phase 8 particles and emitters', () => {
+describe('Particles and emitters', () => {
   it('produces repeatable seeded burst order and launch conditions', () => {
     const capture = (): number[][] => {
       FlxG.globalSeed = 0.375;

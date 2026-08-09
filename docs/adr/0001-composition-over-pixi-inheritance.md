@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-06
-- Accepted: 2026-08-06 (Phase 0 architecture review)
+- Accepted: 2026-08-06 (Foundation architecture review)
 
 ## Context
 
@@ -22,5 +22,5 @@ simulation updates.
 
 Headless tests do not require a DOM or GPU, and collision cannot accidentally
 depend on rendered transforms. The renderer needs an explicit registry and
-synchronization boundary. The C1 camera spike must validate that this approach
+synchronization boundary. The camera-rendering spike must validate that this approach
 supports multi-camera rendering without duplicating gameplay objects.

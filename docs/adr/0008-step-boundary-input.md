@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-06
-- Accepted: 2026-08-06 (Phase 7 input oracle)
+- Accepted: 2026-08-06 (input oracle)
 
 ## Context
 

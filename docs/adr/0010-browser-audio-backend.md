@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-06
-- Accepted: 2026-08-06 (Phase 9 audio spike)
+- Accepted: 2026-08-06 (Platform services audio spike)
 
 ## Context
 

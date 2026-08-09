@@ -31,13 +31,13 @@ import {
   stampPixels,
 } from '../../src/compat/pixel-buffer';
 
-describe('Phase 0 benchmark reporting', () => {
+describe('Foundation benchmark reporting', () => {
   bench('read frozen upstream metadata', () => {
     void upstreamBaseline.commit;
   });
 });
 
-describe('Phase 1 risk-spike benchmarks', () => {
+describe('Rendering risk-spike benchmarks', () => {
   bench('600 fixed simulation steps at 120 Hz display cadence', () => {
     const clock = new FixedStepAccumulator();
     let position = 0;
@@ -74,7 +74,7 @@ describe('Phase 1 risk-spike benchmarks', () => {
   });
 });
 
-describe('Phase 2 headless-core benchmarks', () => {
+describe('Headless-core benchmarks', () => {
   bench('generate 10,000 deterministic random values', () => {
     const random = new FlxRandom(0.5);
     for (let index = 0; index < 10_000; index += 1) random.next();
@@ -96,7 +96,7 @@ for (let index = 0; index < 2_000; index += 1) {
   collisionStressGroup.add(new FlxObject(column * 8, row * 8, 4, 4));
 }
 
-describe('Phase 3 collision benchmarks', () => {
+describe('Collision benchmarks', () => {
   bench('broad-phase 2,000 sparse AABBs', () => {
     const tree = new FlxQuadTree(0, 0, 400, 320);
     tree.load(collisionStressGroup);
@@ -122,7 +122,7 @@ describe('Phase 3 collision benchmarks', () => {
 const renderSyncSprite = new FlxSprite(20, 30).makeGraphic(16, 16, 0x7bdff2ff);
 const renderSyncHandle = renderSyncSprite.createRenderHandle();
 
-describe('Phase 4 sprite adapter benchmarks', () => {
+describe('Sprite adapter benchmarks', () => {
   bench('10,000 sprite render-handle synchronizations', () => {
     for (let index = 0; index < 10_000; index += 1) {
       renderSyncSprite.x = index & 255;
@@ -146,7 +146,7 @@ const worldPoint = new FlxPoint(720, 380);
 const screenPoint = new FlxPoint();
 const restoredPoint = new FlxPoint();
 
-describe('Phase 5 camera benchmarks', () => {
+describe('Camera benchmarks', () => {
   bench('10,000 bounded platformer follow updates', () => {
     for (let index = 0; index < 10_000; index += 1) {
       cameraStressTarget.x = 400 + (index % 800);
@@ -166,7 +166,7 @@ describe('Phase 5 camera benchmarks', () => {
 
 const tilemapStressGraphic = FlxGraphic.fromPixels(
   makeGraphicPixels(16, 8, 0x476986ff),
-  'phase6-benchmark-tiles',
+  'tilemaps-benchmark-tiles',
 );
 const tilemapStressData = new Array<number>(128 * 128).fill(0);
 for (let x = 0; x < 128; x += 1) {
@@ -182,7 +182,7 @@ const tilemapStressHandle = new FlxTilemapRenderHandle(tilemapStress, 16);
 const tilemapStressCamera = new FlxCamera(0, 0, 320, 240);
 tilemapStressHandle.sync(tilemapStressCamera);
 
-describe('Phase 6 tilemap benchmarks', () => {
+describe('Tilemap benchmarks', () => {
   bench('1,000 targeted dirty-chunk tile mutations', () => {
     for (let index = 0; index < 1_000; index += 1) {
       tilemapStress.setTile(index & 15, 0, index & 1);
@@ -206,7 +206,7 @@ const inputStressKeys = new Keyboard();
 const inputStressContext = new FlxContext(800, 450);
 const inputStressMouse = new Mouse(inputStressContext);
 
-describe('Phase 7 input benchmarks', () => {
+describe('Input benchmarks', () => {
   bench('10,000 queued keyboard press/release step pairs', () => {
     for (let index = 0; index < 10_000; index += 1) {
       inputStressKeys.handleKeyDown({ code: 'KeyA' });
@@ -240,7 +240,7 @@ const effectsStressHandle = new FlxEmitterRenderHandle(effectsStressEmitter, {
   optimized: true,
 });
 
-describe('Phase 8 effects benchmarks', () => {
+describe('Effects benchmarks', () => {
   bench('3,600 fixed steps through a stable 256-particle pool', () => {
     FlxG.globalSeed = 0.375;
     for (const particle of effectsStressEmitter.members) particle?.kill();

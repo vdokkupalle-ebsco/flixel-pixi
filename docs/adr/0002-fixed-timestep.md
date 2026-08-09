@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-06
-- Accepted: 2026-08-06 (Phase 0 architecture review)
+- Accepted: 2026-08-06 (Foundation architecture review)
 
 ## Context
 

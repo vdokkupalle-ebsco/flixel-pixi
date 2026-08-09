@@ -2,17 +2,17 @@
 
 Architecture decisions use the following states:
 
-- **Proposed**: documented but still open to Phase 1 evidence.
+- **Proposed**: documented but still open to validation evidence.
 - **Accepted**: the implementation may depend on the decision.
 - **Superseded**: retained for history with a link to its replacement.
 
-The Phase 0 architecture review was completed on 2026-08-06. All six records
-are accepted as the basis for Phase 1. Camera implementation details and pixel
-API classifications were locked by the measured C1 spike. Phase 3 added the
-reentrant quadtree callback contract, and Phase 7 locked browser input to
-simulation-step boundaries. Phase 8 keeps particle optimization render-only and
-locks mutation-safe plugin ordering. Phase 9 adds replaceable audio and storage
-backends with gesture-unlock queuing and versioned save slots.
+The initial architecture review was completed on 2026-08-06. All six records
+are accepted as the basis for the port. Camera implementation details and pixel
+API classifications were locked by the measured rendering spike. Collision work
+added the reentrant quadtree callback contract, and input handling was locked to
+simulation-step boundaries. Effects keep particle optimization render-only and
+use mutation-safe plugin ordering. Platform services provide replaceable audio
+and storage backends with gesture-unlock queuing and versioned save slots.
 
 | ADR                                               | Decision                                         | Status   |
 | ------------------------------------------------- | ------------------------------------------------ | -------- |

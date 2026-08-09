@@ -19,7 +19,7 @@ Web Audio support are outside scope.
 
 ## CI lanes
 
-Phase 7 runs the complete verification suite on Node 22 plus Chromium, Firefox,
+CI runs the complete verification suite on Node 22 plus Chromium, Firefox,
 and WebKit:
 
 - formatting and linting;
@@ -31,7 +31,7 @@ and WebKit:
 - bundle-size JSON generation;
 - Playwright browser smoke test.
 
-Firefox and WebKit became blocking at the Phase 4 sprite checkpoint. Edge is
+Firefox and WebKit are blocking for the sprites-and-text browser suite. Edge is
 covered by the Chromium engine lane until the release-candidate matrix adds a
 native Edge job. Real-device/mobile Safari and WebGPU lanes become blocking
 before the 1.0 release gate.
@@ -39,7 +39,7 @@ before the 1.0 release gate.
 ## Reports
 
 CI uploads coverage, API model, benchmark, bundle-size, and Playwright reports.
-Phase 7 adds committed input-lab baselines plus real keyboard, pointer capture,
-blur-release, and touch-style cancellation assertions. These extend the Phase 6
+The input suite adds committed baselines plus real keyboard, pointer capture,
+blur-release, and touch-style cancellation assertions. These complement the
 multi-camera tilemap baselines and large-map benchmarks. Real-device/mobile
 Safari and touch-latency budgets remain release-gate work.

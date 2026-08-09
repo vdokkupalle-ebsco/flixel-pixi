@@ -21,7 +21,7 @@ function installStep(elapsed: number): FlxContext {
   return context;
 }
 
-describe('Phase 3 FlxPath and authoritative motion', () => {
+describe('FlxPath and authoritative motion', () => {
   it('edits path nodes with copy/reference and clamped index semantics', () => {
     const source = new FlxPoint(10, 20);
     const path = new FlxPath();
@@ -231,7 +231,7 @@ describe('Phase 3 FlxPath and authoritative motion', () => {
   });
 });
 
-describe('Phase 3 FlxObject queries and state helpers', () => {
+describe('FlxObject queries and state helpers', () => {
   it('uses strict AABB and point boundaries across nested groups', () => {
     const object = new FlxObject(0, 0, 10, 10);
     const touchingEdge = new FlxObject(10, 0, 5, 5);

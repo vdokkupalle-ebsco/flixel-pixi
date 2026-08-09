@@ -70,7 +70,7 @@ afterEach(() => {
   context = null;
 });
 
-describe('Phase 7 deterministic keyboard input', () => {
+describe('Deterministic keyboard input', () => {
   it('publishes each transition for exactly one simulation step', () => {
     const keys = new Keyboard();
     keys.handleKeyDown({ code: 'KeyA' });
@@ -164,7 +164,7 @@ describe('Phase 7 deterministic keyboard input', () => {
   });
 });
 
-describe('Phase 7 pointer input and camera coordinates', () => {
+describe('Pointer input and camera coordinates', () => {
   it('round-trips through every camera transform', () => {
     context = new FlxContext(800, 600);
     const camera = context.camera;
@@ -383,7 +383,7 @@ describe('Phase 7 pointer input and camera coordinates', () => {
   });
 });
 
-describe('Phase 7 FlxButton', () => {
+describe('FlxButton', () => {
   it('runs hover/down/up hooks, sound hooks, and toggle visuals', () => {
     context = new FlxContext(320, 240);
     FlxG.installContext(context);

@@ -44,7 +44,7 @@ afterEach(() => {
   FlxG.clearContext(context);
 });
 
-describe('Phase 5 Pixi camera render passes', () => {
+describe('Pixi camera render passes', () => {
   it('routes one logical world through ordered camera targets', () => {
     const primary = context.camera;
     primary.scroll.make(4.9, 5.9);

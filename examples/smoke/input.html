@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi input</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="input">
+      <header>
+        <div>
+          <p class="eyebrow">Input</p>
+          <h1>Keyboard, pointer, and buttons</h1>
+        </div>
+        <button type="button" data-action="destroy" disabled>
+          Destroy application
+        </button>
+      </header>
+      <p class="status" data-testid="status">Initializing input…</p>
+      <div
+        class="canvas-host input-canvas"
+        data-testid="input-canvas-host"
+      ></div>
+      <div data-testid="input-metrics" hidden></div>
+    </main>
+    <script type="module" src="/input-main.ts"></script>
+  </body>
+</html>

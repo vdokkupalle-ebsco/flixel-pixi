@@ -11,7 +11,7 @@ afterEach(() => {
   FlxG.clearContext();
 });
 
-describe('Phase 2 context facade and atomic state switching', () => {
+describe('Headless core context facade and atomic state switching', () => {
   it('switches states only at a safe step boundary', () => {
     const trace: string[] = [];
     class SecondState extends FlxState {
@@ -238,7 +238,7 @@ describe('Phase 2 context facade and atomic state switching', () => {
     expect(() => context.resetState()).toThrow('No game runtime');
   });
 
-  it('runs C2 core without DOM, canvas, or Pixi globals', () => {
+  it('runs the headless core without DOM, canvas, or Pixi globals', () => {
     expect('document' in globalThis).toBe(false);
     expect('HTMLCanvasElement' in globalThis).toBe(false);
     const group = new FlxState();

@@ -2,7 +2,7 @@
 
 ## Debugger overlay
 
-`FlxDebugger` is an optional DOM UI (Phase 11):
+`FlxDebugger` is an optional DOM UI:
 
 - **Log** — `FlxG.log.add(message, color?)`
 - **Watch** — `FlxG.watch.add(object, field, label?)`
@@ -18,6 +18,7 @@ Keyboard: arrow keys move between tabs; controls expose `aria-*` labels for assi
 
 `FlxPreloader` shows an accessible loading screen (`role="status"`). Call `setProgress` while loading, then `complete()` to fade out and remove it. Error + retry hooks are available for failed asset loads.
 
-## Smoke labs
+## Interactive demo
 
-Phase labs under `examples/smoke/phase11.html` remain the debugger workbench. Production games should omit debugger imports so the overlay tree-shakes away.
+`examples/smoke/debugger.html` is the debugger workbench. Production games
+should omit debugger imports so the overlay tree-shakes away.
