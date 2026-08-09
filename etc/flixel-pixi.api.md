@@ -23,15 +23,28 @@ import { Texture } from 'pixi.js';
 export interface BrowserGameApplication {
     // (undocumented)
     readonly app: Application;
+    readonly assets: FlxAssets;
     // (undocumented)
     destroy(): void;
     readonly frameCount: number;
     // (undocumented)
     readonly game: FlxGame;
+    readonly loading: FlxLoadingSession;
     onFrame(callback: (frame: BrowserGameFrame) => void): () => void;
     // (undocumented)
     readonly renderer: FlxCameraRenderer;
+    readonly renderFramerate: number | undefined;
     syncRenderer(): void;
+    readonly updateFramerate: number;
+}
+
+// @public
+export interface BrowserGameAssetOptions {
+    backgroundBundles?: string | string[];
+    bundles?: FlxAssetBundle[];
+    init?: FlxAssetInitOptions;
+    initialBundles?: string | string[];
+    service?: FlxAssets;
 }
 
 // @public
@@ -39,6 +52,22 @@ export interface BrowserGameFrame {
     readonly elapsedMS: number;
     readonly frameCount: number;
     readonly simulationSteps: number;
+}
+
+// @public
+export interface BrowserGamePreloadContext {
+    // (undocumented)
+    readonly assets: FlxAssets;
+    loadBundle<T = Record<string, unknown>>(name: string | string[], message?: string): Promise<T>;
+    report(progress: number | null, message?: string): void;
+    // (undocumented)
+    readonly signal: AbortSignal;
+}
+
+// @public
+export interface BrowserGamePreloaderOptions extends FlxPreloaderOptions {
+    createView?: FlxPreloaderViewFactory;
+    retry?: boolean;
 }
 
 // @public
@@ -63,20 +92,28 @@ export function createBrowserGame(options: CreateBrowserGameOptions): Promise<Br
 
 // @public
 export interface CreateBrowserGameOptions {
+    assets?: BrowserGameAssetOptions;
     // (undocumented)
     audioBackend?: FlxAudioBackend;
     // (undocumented)
     backgroundColor?: number;
+    fpsDisplay?: boolean | FlxFpsDisplayOptions;
     // (undocumented)
     height?: number;
     // (undocumented)
     host: HTMLElement;
     // (undocumented)
     initialState: FlxStateConstructor;
-    // (undocumented)
+    onLoadingSnapshot?: (snapshot: FlxLoadingSnapshot) => void;
+    preload?: (context: BrowserGamePreloadContext) => Promise<void> | void;
+    preloader?: false | BrowserGamePreloaderOptions;
+    renderFramerate?: number;
+    // @deprecated (undocumented)
     showPreloader?: boolean;
-    // (undocumented)
+    signal?: AbortSignal;
+    // @deprecated (undocumented)
     title?: string;
+    updateFramerate?: number;
     // (undocumented)
     width?: number;
     // (undocumented)
@@ -969,6 +1006,45 @@ export interface FlxEmitterRenderOptions {
 }
 
 // @public
+export class FlxFpsDisplay {
+    constructor(options?: FlxFpsDisplayOptions);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get fps(): number;
+    recordFrame(elapsedMS: number): void;
+    reset(): void;
+}
+
+// @public
+export interface FlxFpsDisplayOptions {
+    className?: string;
+    container?: HTMLElement;
+    placement?: 'host' | 'viewport';
+    position?: FlxFpsDisplayPosition;
+    targetFramerate?: number;
+    theme?: FlxFpsDisplayTheme;
+    updateIntervalMs?: number;
+}
+
+// @public
+export type FlxFpsDisplayPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+// @public
+export interface FlxFpsDisplayTheme {
+    // (undocumented)
+    background?: string;
+    // (undocumented)
+    critical?: string;
+    // (undocumented)
+    good?: string;
+    // (undocumented)
+    text?: string;
+    // (undocumented)
+    warning?: string;
+}
+
+// @public
 export class FlxG {
     // (undocumented)
     static get actions(): FlxActions;
@@ -1299,6 +1375,92 @@ export interface FlxKeyRecord {
 }
 
 // @public
+export interface FlxLoadingBundleOptions extends Omit<FlxLoadingTaskOptions, 'stage'> {
+    // (undocumented)
+    stage?: 'assets' | 'custom';
+}
+
+// @public
+export class FlxLoadingError extends Error {
+    constructor(stage: FlxLoadingStage, message: string, retryable?: boolean, options?: {
+        cause?: unknown;
+    });
+    // (undocumented)
+    readonly retryable: boolean;
+    // (undocumented)
+    readonly stage: FlxLoadingStage;
+}
+
+// @public
+export class FlxLoadingSession {
+    constructor(parentSignal?: AbortSignal);
+    cancel(message?: string): void;
+    complete(message?: string): void;
+    // (undocumented)
+    destroy(): void;
+    fail(error: FlxLoadingError, retry?: () => void): void;
+    loadBundle<T = Record<string, unknown>>(assets: FlxAssets, name: string | string[], options: FlxLoadingBundleOptions): Promise<T>;
+    report(update: FlxLoadingUpdate): void;
+    // (undocumented)
+    get signal(): AbortSignal;
+    // (undocumented)
+    get snapshot(): FlxLoadingSnapshot;
+    start(stage?: FlxLoadingStage, message?: string, progress?: number | null): void;
+    subscribe(listener: (snapshot: FlxLoadingSnapshot) => void): () => void;
+    task<T>(options: FlxLoadingTaskOptions, action: (context: FlxLoadingTaskContext) => Promise<T> | T): Promise<T>;
+}
+
+// @public
+export interface FlxLoadingSnapshot {
+    // (undocumented)
+    readonly error?: FlxLoadingError;
+    // (undocumented)
+    readonly message: string;
+    readonly progress: number | null;
+    // (undocumented)
+    readonly retry?: () => void;
+    // (undocumented)
+    readonly stage: FlxLoadingStage;
+    // (undocumented)
+    readonly state: FlxLoadingState;
+}
+
+// @public
+export type FlxLoadingStage = 'idle' | 'renderer' | 'assets' | 'game' | 'first-frame' | 'interaction' | 'complete' | 'custom';
+
+// @public
+export type FlxLoadingState = 'idle' | 'loading' | 'ready' | 'error' | 'cancelled';
+
+// @public
+export interface FlxLoadingTaskContext {
+    report(progress: number, message?: string): void;
+    // (undocumented)
+    readonly signal: AbortSignal;
+}
+
+// @public
+export interface FlxLoadingTaskOptions {
+    // (undocumented)
+    endProgress?: number;
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    stage?: FlxLoadingStage;
+    // (undocumented)
+    startProgress?: number;
+}
+
+// @public
+export interface FlxLoadingUpdate {
+    // (undocumented)
+    message?: string;
+    // (undocumented)
+    progress?: number | null;
+    // (undocumented)
+    stage?: FlxLoadingStage;
+}
+
+// @public
 export class FlxLog {
     add(message: string, color?: number): void;
     clear(): void;
@@ -1538,22 +1700,69 @@ export interface FlxPointerEventLike {
 }
 
 // @public
-export class FlxPreloader {
+export class FlxPreloader implements FlxPreloaderView {
     constructor(options?: FlxPreloaderOptions);
-    complete(): void;
+    complete(): Promise<void>;
     destroy(): void;
     onRetry(handler: () => void): void;
     setProgress(percent: number, statusText?: string): void;
     showError(message: string): void;
     // (undocumented)
     get state(): PreloaderState;
+    update(snapshot: FlxLoadingSnapshot): void;
 }
 
 // @public
 export interface FlxPreloaderOptions {
+    className?: string;
     container?: HTMLElement;
+    footer?: () => HTMLElement;
+    header?: () => HTMLElement;
+    minimumVisibleMs?: number;
+    placement?: 'host' | 'viewport';
+    progress?: 'bar' | 'spinner' | 'none';
+    retryLabel?: string;
+    showDelayMs?: number;
+    subtitle?: string;
+    theme?: FlxPreloaderTheme;
     title?: string;
+    transitionMs?: number;
 }
+
+// @public
+export interface FlxPreloaderTheme {
+    // (undocumented)
+    accent?: string;
+    // (undocumented)
+    background?: string;
+    // (undocumented)
+    error?: string;
+    // (undocumented)
+    mutedText?: string;
+    // (undocumented)
+    text?: string;
+}
+
+// @public
+export interface FlxPreloaderView {
+    // (undocumented)
+    complete(): Promise<void>;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    update(snapshot: FlxLoadingSnapshot): void;
+}
+
+// @public
+export interface FlxPreloaderViewContext {
+    // (undocumented)
+    readonly container: HTMLElement;
+    // (undocumented)
+    readonly options: FlxPreloaderOptions;
+}
+
+// @public
+export type FlxPreloaderViewFactory = (context: FlxPreloaderViewContext) => FlxPreloaderView;
 
 // @public
 export type FlxProcessCallback = (first: FlxObject, second: FlxObject) => boolean;
@@ -2629,7 +2838,7 @@ export interface PointLike {
 }
 
 // @public
-export type PreloaderState = 'loading' | 'ready' | 'error';
+export type PreloaderState = 'loading' | 'ready' | 'error' | 'cancelled';
 
 // @public
 export interface RectangleLike {
@@ -2661,6 +2870,9 @@ export interface ReplayFileFormat {
 
 // @public
 export function syncWorldToRenderer(game: FlxGame, renderer: FlxCameraRenderer): void;
+
+// @public
+export function throwIfAborted(signal: AbortSignal): void;
 
 // @public
 export class TimerManager extends FlxBasic {

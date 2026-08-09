@@ -63,6 +63,7 @@ Compatibility is pinned to Flixel commit
 - [Compatibility ledger](docs/compatibility.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Lifecycle guide](docs/guides/lifecycle.md)
+- [Loading and preloader guide](docs/guides/loading.md)
 - [Making games (pools, actions, sync)](docs/guides/making-games.md)
 - [Performance guide](docs/guides/performance.md)
 - [Browser guide](docs/guides/browser.md)

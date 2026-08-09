@@ -4,6 +4,7 @@ import { DebugChannel } from '../../src/debugger/debug-channel';
 import { FlxLog } from '../../src/debugger/flx-log';
 import { FlxWatch } from '../../src/debugger/flx-watch';
 import { FlxPreloader } from '../../src/debugger/flx-preloader';
+import { FlxLoadingError } from '../../src/loading/flx-loading';
 
 // ─── DebugChannel ─────────────────────────────────────────────────────────────
 
@@ -152,12 +153,15 @@ describe('FlxPreloader', () => {
     p.destroy();
   });
 
-  it('transitions to ready state on complete()', () => {
+  it('transitions to ready state on complete()', async () => {
     vi.useFakeTimers();
     const container = document.createElement('div');
     const p = new FlxPreloader({ container });
-    p.complete();
+    const completion = p.complete();
     expect(p.state).toBe('ready');
+    await vi.runAllTimersAsync();
+    await completion;
+    expect(container.querySelector('[data-testid="flx-preloader"]')).toBeNull();
     vi.useRealTimers();
   });
 
@@ -176,6 +180,203 @@ describe('FlxPreloader', () => {
       p.setProgress(-50, 'test');
       p.setProgress(200, 'test');
     }).not.toThrow();
+    p.destroy();
+  });
+
+  it('supports theme tokens, CSS hooks, slots, and host placement', () => {
+    const container = document.createElement('div');
+    const p = new FlxPreloader({
+      className: 'branded-loader compact',
+      container,
+      footer: () => document.createElement('small'),
+      header: () => document.createElement('strong'),
+      placement: 'host',
+      subtitle: 'Loading a tiny world',
+      theme: {
+        accent: '#ff00aa',
+        background: '#010203',
+        error: '#ff0000',
+        mutedText: '#888888',
+        text: '#ffffff',
+      },
+      title: 'Brand',
+      transitionMs: 0,
+    });
+
+    const root = container.querySelector<HTMLElement>('.flx-preloader');
+    expect(root?.classList.contains('branded-loader')).toBe(true);
+    expect(root?.classList.contains('compact')).toBe(true);
+    expect(root?.style.getPropertyValue('--flx-preloader-accent')).toBe(
+      '#ff00aa',
+    );
+    expect(root?.querySelector('.flx-preloader__brand')).not.toBeNull();
+    expect(root?.querySelector('.flx-preloader__footer')).not.toBeNull();
+    expect(root?.textContent).toContain('Loading a tiny world');
+    p.destroy();
+  });
+
+  it('does not mount when boot finishes before the show delay', async () => {
+    vi.useFakeTimers();
+    const container = document.createElement('div');
+    const p = new FlxPreloader({ container, showDelayMs: 150 });
+    expect(container.children).toHaveLength(0);
+    await p.complete();
+    await vi.runAllTimersAsync();
+    expect(container.children).toHaveLength(0);
+    vi.useRealTimers();
+  });
+
+  it('renders shared error snapshots and invokes retry', () => {
+    const container = document.createElement('div');
+    const retry = vi.fn();
+    const p = new FlxPreloader({ container, transitionMs: 0 });
+    p.update({
+      error: new FlxLoadingError('assets', 'Could not load player atlas', true),
+      message: 'Could not load player atlas',
+      progress: null,
+      retry,
+      stage: 'assets',
+      state: 'error',
+    });
+
+    expect(p.state).toBe('error');
+    expect(container.textContent).toContain('Could not load player atlas');
+    container
+      .querySelector<HTMLButtonElement>('.flx-preloader__retry')
+      ?.click();
+    expect(retry).toHaveBeenCalledOnce();
+    p.destroy();
+  });
+
+  it('mounts after a delay and honors minimum visibility', async () => {
+    vi.useFakeTimers();
+    const container = document.createElement('div');
+    const p = new FlxPreloader({
+      container,
+      minimumVisibleMs: 200,
+      showDelayMs: 100,
+      transitionMs: 100,
+    });
+
+    await vi.advanceTimersByTimeAsync(99);
+    expect(container.children).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(container.querySelector('.flx-preloader')).not.toBeNull();
+
+    const completion = p.complete();
+    await vi.runAllTimersAsync();
+    await completion;
+    expect(container.children).toHaveLength(0);
+    vi.useRealTimers();
+  });
+
+  it('supports reduced-motion spinner and hidden-progress modes', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true })),
+    );
+    const spinnerContainer = document.createElement('div');
+    const spinner = new FlxPreloader({
+      container: spinnerContainer,
+      progress: 'spinner',
+    });
+    expect(
+      spinnerContainer.querySelector<HTMLElement>('.flx-preloader__spinner')
+        ?.style.animation,
+    ).toBe('none');
+    expect(
+      spinnerContainer.querySelector<HTMLElement>('.flx-preloader__progress')
+        ?.style.display,
+    ).toBe('none');
+    spinner.destroy();
+
+    const hiddenContainer = document.createElement('div');
+    const hidden = new FlxPreloader({
+      container: hiddenContainer,
+      progress: 'none',
+    });
+    expect(
+      hiddenContainer.querySelector<HTMLElement>('.flx-preloader__progress')
+        ?.style.display,
+    ).toBe('none');
+    hidden.destroy();
+    vi.unstubAllGlobals();
+  });
+
+  it('renders indeterminate progress and removes itself on cancellation', () => {
+    const container = document.createElement('div');
+    const p = new FlxPreloader({ container });
+    p.update({
+      message: 'Starting renderer',
+      progress: null,
+      stage: 'renderer',
+      state: 'loading',
+    });
+    expect(
+      container
+        .querySelector<HTMLProgressElement>('.flx-preloader__progress')
+        ?.hasAttribute('value'),
+    ).toBe(false);
+    p.update({
+      message: 'Halfway',
+      progress: 0.5,
+      stage: 'assets',
+      state: 'loading',
+    });
+    expect(
+      container.querySelector<HTMLProgressElement>('.flx-preloader__progress')
+        ?.value,
+    ).toBe(50);
+    p.update({
+      message: 'Cancelled',
+      progress: 0.5,
+      stage: 'assets',
+      state: 'cancelled',
+    });
+    expect(p.state).toBe('cancelled');
+    expect(container.children).toHaveLength(0);
+  });
+
+  it('retains the legacy retry registration and error flow', () => {
+    const container = document.createElement('div');
+    const retry = vi.fn();
+    const p = new FlxPreloader({ container });
+    p.onRetry(retry);
+    const button = container.querySelector<HTMLButtonElement>(
+      '.flx-preloader__retry',
+    );
+    expect(button?.style.display).toBe('none');
+    p.showError('Legacy failure');
+    expect(button?.style.display).toBe('block');
+    button?.click();
+    expect(retry).toHaveBeenCalledOnce();
+    p.destroy();
+  });
+
+  it('supports a terminal legacy error without retry', () => {
+    const container = document.createElement('div');
+    const p = new FlxPreloader({ container });
+    p.setProgress(25);
+    p.showError('Terminal failure');
+    const button = container.querySelector<HTMLButtonElement>(
+      '.flx-preloader__retry',
+    );
+    expect(button?.style.display).toBe('none');
+    expect(container.textContent).toContain('Terminal failure');
+    p.destroy();
+  });
+
+  it('uses viewport placement by default when mounted to the document body', () => {
+    const p = new FlxPreloader({ transitionMs: 0 });
+    const root = document.body.querySelector<HTMLElement>('.flx-preloader');
+    expect(root?.style.position).toBe('fixed');
+    p.update({
+      message: 'Ready from snapshot',
+      progress: 1,
+      stage: 'complete',
+      state: 'ready',
+    });
+    expect(p.state).toBe('ready');
     p.destroy();
   });
 });

@@ -22,6 +22,10 @@ const app = await createBrowserGame({
 In-repo samples may still import `bootGame` from `examples/games/_kit/boot-game.ts`,
 which re-exports `createBrowserGame`.
 
+The helper also owns the bootstrap loading session: renderer initialization,
+critical bundles, custom preparation, game creation, and the first rendered
+frame. See [`loading.md`](loading.md) for customization and in-game loading.
+
 Import engine types only from the package root (`flixel-pixi` or the repo `src`
 barrel). Do not import `src/core/...` from game code.
 

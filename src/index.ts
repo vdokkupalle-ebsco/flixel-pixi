@@ -168,8 +168,18 @@ export type { WatchEntry, WatchSnapshot } from './debugger/flx-watch';
 export { FlxPreloader } from './debugger/flx-preloader';
 export type {
   FlxPreloaderOptions,
+  FlxPreloaderTheme,
+  FlxPreloaderView,
+  FlxPreloaderViewContext,
+  FlxPreloaderViewFactory,
   PreloaderState,
 } from './debugger/flx-preloader';
+export { FlxFpsDisplay } from './debugger/flx-fps-display';
+export type {
+  FlxFpsDisplayOptions,
+  FlxFpsDisplayPosition,
+  FlxFpsDisplayTheme,
+} from './debugger/flx-fps-display';
 export { FlxDebugger } from './debugger/flx-debugger';
 export type {
   FlxDebuggerOptions,
@@ -178,12 +188,32 @@ export type {
 
 export { FlxActions } from './input/flx-actions';
 
+// --- Loading ---
+
+export {
+  FlxLoadingError,
+  FlxLoadingSession,
+  throwIfAborted,
+} from './loading/flx-loading';
+export type {
+  FlxLoadingBundleOptions,
+  FlxLoadingSnapshot,
+  FlxLoadingStage,
+  FlxLoadingState,
+  FlxLoadingTaskContext,
+  FlxLoadingTaskOptions,
+  FlxLoadingUpdate,
+} from './loading/flx-loading';
+
 // --- Game Maker DX ---
 
 export { createBrowserGame } from './browser/create-browser-game';
 export type {
-  BrowserGameFrame,
   BrowserGameApplication,
+  BrowserGameAssetOptions,
+  BrowserGameFrame,
+  BrowserGamePreloadContext,
+  BrowserGamePreloaderOptions,
   CreateBrowserGameOptions,
 } from './browser/create-browser-game';
 export {

@@ -11,14 +11,36 @@ import { createBrowserGame, FlxG, FlxState } from 'flixel-pixi';
 const app = await createBrowserGame({
   host,
   initialState: PlayState,
+  updateFramerate: 60,
+  renderFramerate: 60,
 });
 ```
+
+`updateFramerate` controls the deterministic simulation rate and defaults to 60. `renderFramerate` is an optional visual cap; omit it to render at the
+browser display's refresh rate. They are independent, so a game can update at
+60 Hz while rendering at 30 FPS.
+
+Enable the lightweight in-game FPS display when profiling a game:
+
+```ts
+createBrowserGame({
+  // ...
+  fpsDisplay: true,
+});
+```
+
+It defaults to the top-right of the game host. Pass an options object to choose
+another corner, sampling interval, CSS classes, or theme colors. The display is
+DOM-based, adds no Pixi draw calls, and is removed by `app.destroy()`.
 
 `createBrowserGame` runs **incremental world sync** every frame, so sprites
 added with `this.add(...)` during play are registered automatically.
 
 In-repo samples can keep using `bootGame` from `examples/games/_kit/` — it is the
 same helper.
+
+Critical assets, custom preloading, branded bootstrap screens, retry, and
+in-game loading states are covered in [`loading.md`](loading.md).
 
 ## Named actions
 

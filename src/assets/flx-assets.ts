@@ -73,7 +73,12 @@ export interface FlxAssetBackend {
 
 class PixiAssetBackend implements FlxAssetBackend {
   async init(options: FlxAssetInitOptions = {}): Promise<void> {
-    pixiInitialization ??= Assets.init(options as AssetInitOptions);
+    pixiInitialization ??= Assets.init(options as AssetInitOptions).catch(
+      (error: unknown) => {
+        pixiInitialization = null;
+        throw error;
+      },
+    );
     await pixiInitialization;
   }
 

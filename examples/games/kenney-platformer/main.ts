@@ -13,6 +13,8 @@ declare global {
       status?: () => 'play' | 'won' | 'lost';
       playerY?: () => number;
       onFloor?: () => boolean;
+      loadingStages?: () => string[];
+      preloadAttempts?: () => number;
     };
   }
 }
@@ -30,19 +32,50 @@ if (!host) {
 }
 
 const audioBackend = new WebAudioBackend();
+const loadingStages: string[] = [];
+const failFirstPreload = new URLSearchParams(window.location.search).has(
+  'fail-preload-once',
+);
+let preloadAttempts = 0;
 
-preloadKenneyAssets()
-  .then(() =>
-    bootGame({
-      host,
-      initialState: KenneyPlayState,
-      width: 640,
-      height: 480,
-      title: 'Kenney Platformer',
-      showPreloader: true,
-      audioBackend,
-    }),
-  )
+bootGame({
+  host,
+  initialState: KenneyPlayState,
+  width: 640,
+  height: 480,
+  updateFramerate: 60,
+  renderFramerate: 60,
+  fpsDisplay: {
+    position: 'top-right',
+    theme: {
+      good: '#4ade80',
+      warning: '#facc15',
+    },
+  },
+  audioBackend,
+  preloader: {
+    title: 'Kenney Platformer',
+    subtitle: 'Preparing the platforming adventure…',
+    className: 'kenney-preloader',
+    theme: {
+      accent: '#facc15',
+      background: '#172554',
+    },
+  },
+  onLoadingSnapshot(snapshot) {
+    loadingStages.push(snapshot.stage);
+  },
+  async preload({ report }) {
+    preloadAttempts += 1;
+    if (failFirstPreload && preloadAttempts === 1) {
+      report(null, 'Simulating an asset failure…');
+      throw new Error('Simulated startup asset failure.');
+    }
+    report(null, 'Loading platformer artwork…');
+    await preloadKenneyAssets();
+    report(1, 'Artwork ready.');
+  },
+})
   .then((app) => {
     void audioBackend.unlockAudio();
 
@@ -73,6 +106,12 @@ preloadKenneyAssets()
           (state.player.touching & 0x1000) !== 0 ||
           (state.player.wasTouching & 0x1000) !== 0
         );
+      },
+      loadingStages() {
+        return [...loadingStages];
+      },
+      preloadAttempts() {
+        return preloadAttempts;
       },
     };
 
