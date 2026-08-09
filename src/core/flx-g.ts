@@ -14,6 +14,7 @@ import {
 } from '../input/flx-input-manager';
 import type { Keyboard } from '../input/keyboard';
 import type { Mouse } from '../input/mouse';
+import type { FlxGamepadManager } from '../input/flx-gamepad';
 import { FlxObject } from '../objects/flx-object';
 import type { FlxSave } from '../storage/flx-save';
 import { FLX_STORAGE_SERVICE } from '../storage/flx-storage-backend';
@@ -119,6 +120,10 @@ export class FlxG {
 
   static get mouse(): Mouse {
     return FlxG.#input.mouse;
+  }
+
+  static get gamepads(): FlxGamepadManager {
+    return FlxG.#input.gamepads;
   }
 
   static get elapsed(): number {

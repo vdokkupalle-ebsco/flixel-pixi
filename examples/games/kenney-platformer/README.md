@@ -15,6 +15,8 @@ Open [http://127.0.0.1:4174/kenney-platformer/](http://127.0.0.1:4174/kenney-pla
 - **`←` / `→` or `A` / `D`**: Move left / right
 - **`SPACE` or `W` / `UP`**: Jump
 - **`R`**: Restart after win / game over
+- **Gamepad left stick or D-pad**: Move left / right
+- **Gamepad A**: Jump; press A or Start to restart after win / game over
 
 ## Architecture & Features
 

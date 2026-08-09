@@ -1,6 +1,7 @@
 import type { FlxContext } from '../core/flx-context';
 import { Keyboard } from './keyboard';
 import { Mouse } from './mouse';
+import { FlxGamepadManager, type FlxGamepadProvider } from './flx-gamepad';
 
 /** Service token for deterministic keyboard and pointer input. @public */
 export const FLX_INPUT_SERVICE = Symbol('flixel-pixi.input');
@@ -9,6 +10,7 @@ export const FLX_INPUT_SERVICE = Symbol('flixel-pixi.input');
 export interface FlxInputService {
   readonly keys: Keyboard;
   readonly mouse: Mouse;
+  readonly gamepads: FlxGamepadManager;
   resetInput(): void;
   updateInput(): void;
 }
@@ -17,12 +19,14 @@ export interface FlxInputService {
 export interface FlxInputManagerOptions {
   readonly keyboardTarget?: Window;
   readonly pointerTarget?: HTMLElement;
+  readonly gamepadProvider?: FlxGamepadProvider;
 }
 
 /** Owns DOM listeners and publishes their events only on simulation steps. @public */
 export class FlxInputManager implements FlxInputService {
   readonly keys = new Keyboard();
   readonly mouse: Mouse;
+  readonly gamepads: FlxGamepadManager;
 
   readonly #context: FlxContext;
   readonly #keyboardTarget: Window | null;
@@ -39,6 +43,7 @@ export class FlxInputManager implements FlxInputService {
     this.#keyboardTarget = options.keyboardTarget ?? null;
     this.#pointerTarget = options.pointerTarget ?? null;
     this.mouse = new Mouse(context);
+    this.gamepads = new FlxGamepadManager(options.gamepadProvider);
     context.setService(FLX_INPUT_SERVICE, this);
     this.#attach();
   }
@@ -47,12 +52,14 @@ export class FlxInputManager implements FlxInputService {
     this.#assertUsable();
     this.keys.update();
     this.mouse.update();
+    this.gamepads.update();
   }
 
   resetInput(): void {
     this.#assertUsable();
     this.keys.reset();
     this.mouse.reset();
+    this.gamepads.reset();
   }
 
   destroy(): void {
@@ -64,6 +71,7 @@ export class FlxInputManager implements FlxInputService {
     }
     this.keys.destroy();
     this.mouse.destroy();
+    this.gamepads.destroy();
   }
 
   readonly #keyDown = (event: KeyboardEvent): void => {
@@ -138,6 +146,7 @@ export class FlxInputManager implements FlxInputService {
     this.#pointerButtons.clear();
     this.keys.releaseAll();
     this.mouse.releaseAll(true);
+    this.gamepads.reset();
   };
 
   readonly #visibilityChange = (): void => {

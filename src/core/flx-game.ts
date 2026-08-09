@@ -130,6 +130,7 @@ export class FlxGame implements FlxStateRuntime {
           if (record.mouse !== null && record.mouse !== undefined) {
             this.input.mouse.playback(record.mouse);
           }
+          this.input.gamepads.playback(record.gamepads ?? []);
         }
         if (FlxG.vcr.replay.finished) {
           FlxG.stopReplay();
@@ -140,10 +141,13 @@ export class FlxGame implements FlxStateRuntime {
       if (FlxG.vcr.recording && FlxG.vcr.replay !== null) {
         const keyRec = this.input.keys.record();
         const mouseRec = this.input.mouse.record();
+        const gamepadRec = this.input.gamepads.record();
         FlxG.vcr.replay.recordFrame(
           FlxG.vcr.replay.frameCount,
           keyRec ?? [],
           mouseRec,
+          null,
+          gamepadRec,
         );
       }
     }

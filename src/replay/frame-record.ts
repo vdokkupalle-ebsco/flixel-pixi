@@ -1,4 +1,5 @@
 import { MouseRecord } from './mouse-record';
+import type { FlxGamepadFrameRecord } from '../input/flx-gamepad';
 
 /** Serializable key input state for a single replay frame. @public */
 export interface CodePair {
@@ -11,6 +12,7 @@ export interface FrameRecordData {
   frame: number;
   keys?: CodePair[];
   mouse?: { x: number; y: number; button: number; wheel: number } | null;
+  gamepads?: FlxGamepadFrameRecord[];
   checksum?: string | null;
 }
 
@@ -20,17 +22,20 @@ export class FrameRecord {
   keys: CodePair[];
   mouse: MouseRecord | null;
   checksum: string | null;
+  gamepads: FlxGamepadFrameRecord[];
 
   constructor(
     frame = 0,
     keys: CodePair[] = [],
     mouse: MouseRecord | null = null,
     checksum: string | null = null,
+    gamepads: FlxGamepadFrameRecord[] = [],
   ) {
     this.frame = frame;
     this.keys = keys;
     this.mouse = mouse;
     this.checksum = checksum;
+    this.gamepads = gamepads;
   }
 
   /** Serializes the frame record into a plain JSON object. */
@@ -51,6 +56,16 @@ export class FrameRecord {
     }
     if (this.checksum !== null) {
       data.checksum = this.checksum;
+    }
+    if (this.gamepads.length > 0) {
+      data.gamepads = this.gamepads.map((gamepad) => ({
+        axes: [...gamepad.axes],
+        buttons: gamepad.buttons.map((button) => ({ ...button })),
+        id: gamepad.id,
+        index: gamepad.index,
+        mapping: gamepad.mapping,
+        uid: gamepad.uid,
+      }));
     }
     return data;
   }
@@ -77,6 +92,19 @@ export class FrameRecord {
       this.mouse = null;
     }
     this.checksum = parsed.checksum ?? null;
+    this.gamepads = Array.isArray(parsed.gamepads)
+      ? parsed.gamepads.map((gamepad) => ({
+          axes: gamepad.axes.map(Number),
+          buttons: gamepad.buttons.map((button) => ({
+            state: Number(button.state),
+            value: Number(button.value),
+          })),
+          id: String(gamepad.id),
+          index: Number(gamepad.index),
+          mapping: String(gamepad.mapping),
+          uid: Number(gamepad.uid),
+        }))
+      : [];
   }
 
   /** Releases resources associated with this frame record. */
@@ -84,5 +112,6 @@ export class FrameRecord {
     this.keys = [];
     this.mouse = null;
     this.checksum = null;
+    this.gamepads = [];
   }
 }

@@ -3,6 +3,7 @@ import {
   FlxEmitter,
   FlxG,
   FlxGraphic,
+  FlxGamepadButton,
   FlxSave,
   FlxSprite,
   FlxState,
@@ -103,6 +104,15 @@ export class ActionState extends FlxState {
     if (FlxG.keys.pressed('UP')) this.player.acceleration.y = -1100;
     if (FlxG.keys.pressed('DOWN')) this.player.acceleration.y = 1100;
 
+    const gamepad = FlxG.gamepads.firstActive;
+    if (gamepad !== null) {
+      const axisX = gamepad.getAxis(0);
+      const axisY = gamepad.getAxis(1);
+      if (axisX !== 0) this.player.acceleration.x = axisX * 1100;
+      if (axisY !== 0) this.player.acceleration.y = axisY * 1100;
+      if (gamepad.justPressed(FlxGamepadButton.A)) this.burst();
+    }
+
     if (this.player.x < 0) this.player.x = 0;
     if (this.player.y < 0) this.player.y = 0;
     if (this.player.x > FlxG.width - this.player.width) {
@@ -119,7 +129,8 @@ export class ActionState extends FlxState {
       : FlxG.vcr.replaying
         ? 'REPLAY'
         : 'idle';
-    this.hud.text = `bursts ${this.bursts} (saved) · vcr ${vcr} · cams ${FlxG.cameras.length}`;
+    const padLabel = gamepad === null ? 'none' : `#${gamepad.uid}`;
+    this.hud.text = `bursts ${this.bursts} (saved) · vcr ${vcr} · pad ${padLabel} · cams ${FlxG.cameras.length}`;
 
     super.update();
   }

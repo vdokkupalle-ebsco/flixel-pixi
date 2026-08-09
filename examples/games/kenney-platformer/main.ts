@@ -12,6 +12,8 @@ declare global {
       coins?: () => number;
       status?: () => 'play' | 'won' | 'lost';
       playerY?: () => number;
+      playerX?: () => number;
+      gamepad?: () => { index: number; uid: number } | null;
       onFloor?: () => boolean;
       loadingStages?: () => string[];
       preloadAttempts?: () => number;
@@ -98,6 +100,16 @@ bootGame({
       playerY() {
         const state = app.game.state;
         return state instanceof KenneyPlayState ? state.player.y : NaN;
+      },
+      playerX() {
+        const state = app.game.state;
+        return state instanceof KenneyPlayState ? state.player.x : NaN;
+      },
+      gamepad() {
+        const gamepad = app.game.input.gamepads.firstActive;
+        return gamepad === null
+          ? null
+          : { index: gamepad.index, uid: gamepad.uid };
       },
       onFloor() {
         const state = app.game.state;

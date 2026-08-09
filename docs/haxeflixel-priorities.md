@@ -172,6 +172,14 @@ Planned order:
 4. Motion sensors only after permission, privacy, fallback, and test strategy
    are approved.
 
+Current checkpoint:
+
+- Gamepad slice 1 is implemented locally: one provider poll per fixed step,
+  standard button constants, digital transitions, scaled dead zones, stable
+  logical IDs across unambiguous reconnects, injectable headless snapshots,
+  and replay 1.1 records. Vendor mapping tables and the cross-device action
+  layer remain part of the next slices.
+
 Replay compatibility is mandatory: new authoritative inputs need versioned
 recording or an explicit replay exclusion.
 

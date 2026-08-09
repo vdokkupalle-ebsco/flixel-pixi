@@ -14,6 +14,12 @@ declare global {
       record?: () => void;
       stopRecord?: () => void;
       playReplay?: () => void;
+      gamepad?: () => {
+        axis: number;
+        index: number;
+        pressed: boolean;
+        uid: number;
+      } | null;
     };
   }
 }
@@ -79,6 +85,17 @@ bootGame({
           FlxG.loadReplay(FlxG.vcr.replay, new ActionState());
           app.syncRenderer();
         }
+      },
+      gamepad() {
+        const pad = FlxG.gamepads.firstActive;
+        return pad === null
+          ? null
+          : {
+              axis: pad.getAxis(0),
+              index: pad.index,
+              pressed: pad.pressed(0),
+              uid: pad.uid,
+            };
       },
     };
 

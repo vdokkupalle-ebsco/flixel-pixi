@@ -80,6 +80,17 @@ export { Keyboard } from './input/keyboard';
 export type { FlxKeyboardEventLike } from './input/keyboard';
 export { Mouse } from './input/mouse';
 export type { FlxMouseRecord, FlxPointerEventLike } from './input/mouse';
+export {
+  FlxGamepad,
+  FlxGamepadButton,
+  FlxGamepadManager,
+} from './input/flx-gamepad';
+export type {
+  FlxGamepadButtonLike,
+  FlxGamepadFrameRecord,
+  FlxGamepadLike,
+  FlxGamepadProvider,
+} from './input/flx-gamepad';
 export { FLX_INPUT_SERVICE, FlxInputManager } from './input/flx-input-manager';
 export type {
   FlxInputManagerOptions,

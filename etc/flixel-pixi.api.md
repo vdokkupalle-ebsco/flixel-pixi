@@ -1408,6 +1408,8 @@ export class FlxG {
     // (undocumented)
     static flash(color?: number, duration?: number, onComplete?: FlxCameraEffectCallback | null, force?: boolean): void;
     // (undocumented)
+    static get gamepads(): FlxGamepadManager;
+    // (undocumented)
     static getLibraryName(): string;
     // (undocumented)
     static getPlugin<T extends FlxBasic>(pluginClass: FlxPluginConstructor<T>): T | null;
@@ -1555,6 +1557,149 @@ export class FlxGame implements FlxStateRuntime {
 }
 
 // @public
+export class FlxGamepad {
+    // (undocumented)
+    get axisCount(): number;
+    // (undocumented)
+    axisPressed(axis: number, direction: -1 | 1, threshold?: number): boolean;
+    // (undocumented)
+    get buttonCount(): number;
+    // (undocumented)
+    connected: boolean;
+    // (undocumented)
+    deadZone: number;
+    // (undocumented)
+    getAxis(axis: number, deadZone?: number): number;
+    // (undocumented)
+    getButtonValue(button: number): number;
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    get index(): number;
+    // (undocumented)
+    justPressed(button: number): boolean;
+    // (undocumented)
+    justReleased(button: number): boolean;
+    // (undocumented)
+    readonly mapping: string;
+    // (undocumented)
+    pressed(button: number): boolean;
+    // (undocumented)
+    readonly uid: number;
+}
+
+// @public
+export enum FlxGamepadButton {
+    // (undocumented)
+    A = 0,
+    // (undocumented)
+    B = 1,
+    // (undocumented)
+    BACK = 8,
+    // (undocumented)
+    DPAD_DOWN = 13,
+    // (undocumented)
+    DPAD_LEFT = 14,
+    // (undocumented)
+    DPAD_RIGHT = 15,
+    // (undocumented)
+    DPAD_UP = 12,
+    // (undocumented)
+    HOME = 16,
+    // (undocumented)
+    LEFT_SHOULDER = 4,
+    // (undocumented)
+    LEFT_STICK = 10,
+    // (undocumented)
+    LEFT_TRIGGER = 6,
+    // (undocumented)
+    RIGHT_SHOULDER = 5,
+    // (undocumented)
+    RIGHT_STICK = 11,
+    // (undocumented)
+    RIGHT_TRIGGER = 7,
+    // (undocumented)
+    START = 9,
+    // (undocumented)
+    X = 2,
+    // (undocumented)
+    Y = 3
+}
+
+// @public
+export interface FlxGamepadButtonLike {
+    // (undocumented)
+    readonly pressed: boolean;
+    // (undocumented)
+    readonly touched?: boolean;
+    // (undocumented)
+    readonly value: number;
+}
+
+// @public
+export interface FlxGamepadFrameRecord {
+    // (undocumented)
+    readonly axes: number[];
+    // (undocumented)
+    readonly buttons: {
+        state: number;
+        value: number;
+    }[];
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly index: number;
+    // (undocumented)
+    readonly mapping: string;
+    // (undocumented)
+    readonly uid: number;
+}
+
+// @public
+export interface FlxGamepadLike {
+    // (undocumented)
+    readonly axes: readonly number[];
+    // (undocumented)
+    readonly buttons: readonly FlxGamepadButtonLike[];
+    // (undocumented)
+    readonly connected: boolean;
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly index: number;
+    // (undocumented)
+    readonly mapping?: string;
+    // (undocumented)
+    readonly timestamp?: number;
+}
+
+// @public
+export class FlxGamepadManager {
+    constructor(provider?: FlxGamepadProvider);
+    // (undocumented)
+    get connected(): readonly FlxGamepad[];
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get firstActive(): FlxGamepad | null;
+    // (undocumented)
+    getByID(uid: number): FlxGamepad | null;
+    // (undocumented)
+    getByIndex(index: number): FlxGamepad | null;
+    // (undocumented)
+    playback(records: readonly FlxGamepadFrameRecord[]): void;
+    // (undocumented)
+    record(): FlxGamepadFrameRecord[];
+    // (undocumented)
+    reset(): void;
+    // (undocumented)
+    update(): void;
+}
+
+// @public
+export type FlxGamepadProvider = () => readonly (FlxGamepadLike | null)[];
+
+// @public
 export class FlxGraphic {
     constructor(texture: Texture, options?: {
         ownsTexture?: boolean;
@@ -1650,6 +1795,8 @@ export class FlxInputManager implements FlxInputService {
     // (undocumented)
     destroy(): void;
     // (undocumented)
+    readonly gamepads: FlxGamepadManager;
+    // (undocumented)
     readonly keys: Keyboard;
     // (undocumented)
     readonly mouse: Mouse;
@@ -1662,6 +1809,8 @@ export class FlxInputManager implements FlxInputService {
 // @public
 export interface FlxInputManagerOptions {
     // (undocumented)
+    readonly gamepadProvider?: FlxGamepadProvider;
+    // (undocumented)
     readonly keyboardTarget?: Window;
     // (undocumented)
     readonly pointerTarget?: HTMLElement;
@@ -1669,6 +1818,8 @@ export interface FlxInputManagerOptions {
 
 // @public
 export interface FlxInputService {
+    // (undocumented)
+    readonly gamepads: FlxGamepadManager;
     // (undocumented)
     readonly keys: Keyboard;
     // (undocumented)
@@ -2250,7 +2401,7 @@ export class FlxReplay {
     frames: FrameRecord[];
     load(data: string | ReplayFileFormat): void;
     playNextFrame(): FrameRecord | null;
-    recordFrame(frameIndex: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null): void;
+    recordFrame(frameIndex: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null, gamepads?: FlxGamepadFrameRecord[]): void;
     rewind(): void;
     save(): string;
     // (undocumented)
@@ -3178,12 +3329,14 @@ export class FlxWatch {
 
 // @public
 export class FrameRecord {
-    constructor(frame?: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null);
+    constructor(frame?: number, keys?: CodePair[], mouse?: MouseRecord | null, checksum?: string | null, gamepads?: FlxGamepadFrameRecord[]);
     // (undocumented)
     checksum: string | null;
     destroy(): void;
     // (undocumented)
     frame: number;
+    // (undocumented)
+    gamepads: FlxGamepadFrameRecord[];
     // (undocumented)
     keys: CodePair[];
     load(data: string | FrameRecordData): void;
@@ -3198,6 +3351,8 @@ export interface FrameRecordData {
     checksum?: string | null;
     // (undocumented)
     frame: number;
+    // (undocumented)
+    gamepads?: FlxGamepadFrameRecord[];
     // (undocumented)
     keys?: CodePair[];
     // (undocumented)

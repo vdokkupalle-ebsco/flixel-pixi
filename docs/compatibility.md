@@ -145,6 +145,7 @@ publishes them through context-owned input state on fixed simulation steps.
 | `FlxButton` interaction and appearance    | Adapted        | Three states, label offsets, externally controlled checkbox highlighting, four callbacks, and four backend-neutral sound hooks are retained in one composite Pixi render handle.          |
 | Stage/UI-thread mouse-up listener         | Adapted        | The input queue plus pointer capture replaces the Flash stage listener. Activation occurs on an uncancelled authoritative release and never directly inside a DOM or Pixi event callback. |
 | `FlxG.keys`, `mouse`, and `resetInput`    | Adapted        | The facade resolves a typed `FlxInputService` from the active context; `FlxGame` installs and advances a headless-capable manager before every state step.                                |
+| Modern HaxeFlixel gamepads                | Adapted        | Web Gamepad snapshots are polled once per fixed step with standard-layout constants, scaled dead zones, stable logical reconnect IDs, injectable providers, and replay 1.1 state.         |
 
 See the [historical input evidence](history/porting/input.md) for low-FPS
 transition proofs, mapping notes, cancellation tests, replay snapshots, and

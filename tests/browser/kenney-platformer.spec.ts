@@ -3,6 +3,92 @@ import { expect, test } from '@playwright/test';
 const GAMES = 'http://127.0.0.1:4174';
 
 test.describe('Kenney Platformer sample', () => {
+  test('supports standard gamepad movement and jump controls', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Reflect.set(window, '__TEST_GAMEPADS__', []);
+      Object.defineProperty(navigator, 'getGamepads', {
+        configurable: true,
+        value: () => Reflect.get(window, '__TEST_GAMEPADS__') ?? [],
+      });
+    });
+    await page.goto(`${GAMES}/kenney-platformer/`);
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 20_000 },
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => window.__FLIXEL_PIXI_KENNEY__?.onFloor?.() ?? false,
+        ),
+      )
+      .toBe(true);
+
+    const initialX = await page.evaluate(
+      () => window.__FLIXEL_PIXI_KENNEY__?.playerX?.() ?? 0,
+    );
+    await page.evaluate(() => {
+      Reflect.set(window, '__TEST_GAMEPADS__', [
+        {
+          axes: [1, 0],
+          buttons: Array.from({ length: 17 }, () => ({
+            pressed: false,
+            touched: false,
+            value: 0,
+          })),
+          connected: true,
+          id: 'Synthetic Kenney Pad',
+          index: 0,
+          mapping: 'standard',
+          timestamp: 1,
+        },
+      ]);
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.__FLIXEL_PIXI_KENNEY__?.playerX?.() ?? 0),
+      )
+      .toBeGreaterThan(initialX + 8);
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.__FLIXEL_PIXI_KENNEY__?.gamepad?.() ?? null),
+      )
+      .toEqual({ index: 0, uid: 0 });
+
+    await page.evaluate(() => {
+      const buttons = Array.from({ length: 17 }, () => ({
+        pressed: false,
+        touched: false,
+        value: 0,
+      }));
+      buttons[0] = { pressed: true, touched: true, value: 1 };
+      Reflect.set(window, '__TEST_GAMEPADS__', [
+        {
+          axes: [0, 0],
+          buttons,
+          connected: true,
+          id: 'Synthetic Kenney Pad',
+          index: 0,
+          mapping: 'standard',
+          timestamp: 2,
+        },
+      ]);
+    });
+    const groundedY = await page.evaluate(
+      () => window.__FLIXEL_PIXI_KENNEY__?.playerY?.() ?? 0,
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.__FLIXEL_PIXI_KENNEY__?.playerY?.() ?? 0),
+      )
+      .toBeLessThan(groundedY - 8);
+
+    await page.locator('[data-action="destroy"]').click();
+  });
+
   test('boots, lands on floor, exposes lives, destroys cleanly', async ({
     page,
   }) => {
