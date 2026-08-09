@@ -4,6 +4,10 @@ import type { FlxCamera } from '../core/flx-camera';
 import type { FlxTilemap, FlxTilemapChange } from '../tilemap/flx-tilemap';
 
 import type { FlxRenderHandle } from './flx-render-handle';
+import {
+  interpolateCameraScrollX,
+  interpolateCameraScrollY,
+} from './flx-render-interpolation';
 
 interface TileChunk {
   readonly column: number;
@@ -67,7 +71,7 @@ export class FlxTilemapRenderHandle implements FlxRenderHandle {
     return count;
   }
 
-  sync(camera?: FlxCamera): void {
+  sync(camera?: FlxCamera, interpolationAlpha = 1): void {
     if (this.#destroyed) return;
     this.#lastRebuiltChunks = [];
     const owner = this.#owner;
@@ -84,12 +88,14 @@ export class FlxTilemapRenderHandle implements FlxRenderHandle {
       const chunkWidth = owner.tileWidth * this.chunkSizeInTiles;
       const chunkHeight = owner.tileHeight * this.chunkSizeInTiles;
       const localLeft =
-        camera.scroll.x * owner.scrollFactor.x -
+        interpolateCameraScrollX(camera, interpolationAlpha) *
+          owner.scrollFactor.x -
         owner.x +
         camera.width * 0.5 -
         camera.width / (2 * camera.zoom);
       const localTop =
-        camera.scroll.y * owner.scrollFactor.y -
+        interpolateCameraScrollY(camera, interpolationAlpha) *
+          owner.scrollFactor.y -
         owner.y +
         camera.height * 0.5 -
         camera.height / (2 * camera.zoom);

@@ -19,6 +19,8 @@ export interface FlxFpsDisplayOptions {
   container?: HTMLElement;
   /** Whether positioning is relative to the host or viewport. */
   placement?: 'host' | 'viewport';
+  /** Compact shows FPS only; detailed also shows frame pacing and update cadence. */
+  mode?: 'compact' | 'detailed';
   /** Screen corner. Defaults to top-right. */
   position?: FlxFpsDisplayPosition;
   /** Optional expected FPS used to color the reading. */
@@ -29,23 +31,60 @@ export interface FlxFpsDisplayOptions {
   updateIntervalMs?: number;
 }
 
-/** Small dependency-free DOM display for completed engine render FPS. @public */
+/** Metrics from the most recently completed FPS sampling window. @public */
+export interface FlxFpsMetrics {
+  /** Mean wall-clock interval between rendered frames. */
+  readonly averageFrameMS: number;
+  /** Renders preceded by two or more fixed updates. */
+  readonly catchUpFrames: number;
+  /** Mean completed render frames per second. */
+  readonly fps: number;
+  /** Frames slower than 1.5 times the target frame interval. */
+  readonly jankFrames: number;
+  /** Slowest frame interval in the sampling window. */
+  readonly maxFrameMS: number;
+  /** 95th percentile frame interval in the sampling window. */
+  readonly p95FrameMS: number;
+  /** Fixed simulation updates completed per second. */
+  readonly updatesPerSecond: number;
+  /** Renders preceded by no fixed update. */
+  readonly zeroStepFrames: number;
+}
+
+const EMPTY_METRICS: FlxFpsMetrics = Object.freeze({
+  averageFrameMS: 0,
+  catchUpFrames: 0,
+  fps: 0,
+  jankFrames: 0,
+  maxFrameMS: 0,
+  p95FrameMS: 0,
+  updatesPerSecond: 0,
+  zeroStepFrames: 0,
+});
+
+/** Small dependency-free DOM display for render FPS and frame pacing. @public */
 export class FlxFpsDisplay {
   readonly #container: HTMLElement;
   readonly #originalContainerPosition: string;
   readonly #root: HTMLDivElement;
+  readonly #mode: 'compact' | 'detailed';
   readonly #targetFramerate: number | undefined;
   readonly #updateIntervalMs: number;
   readonly #value: HTMLSpanElement;
   #changedContainerPosition = false;
   #elapsedMS = 0;
+  #frameTimes: number[] = [];
   #frameCount = 0;
-  #fps = 0;
+  #metrics = EMPTY_METRICS;
+  #simulationSteps = 0;
+  #zeroStepFrames = 0;
+  #catchUpFrames = 0;
 
   constructor(options: FlxFpsDisplayOptions = {}) {
     const {
       className,
       container = document.body,
+      mode = 'detailed',
       placement = container === document.body ? 'viewport' : 'host',
       position = 'top-right',
       targetFramerate,
@@ -58,6 +97,7 @@ export class FlxFpsDisplay {
     }
 
     this.#container = container;
+    this.#mode = mode;
     this.#originalContainerPosition = container.style.position;
     this.#targetFramerate = targetFramerate;
     this.#updateIntervalMs = updateIntervalMs;
@@ -83,6 +123,7 @@ export class FlxFpsDisplay {
       'color:var(--flx-fps-text,#e2e8f0)',
       'font:600 0.75rem/1 ui-monospace,SFMono-Regular,Consolas,monospace',
       'font-variant-numeric:tabular-nums',
+      'white-space:pre',
       'box-shadow:0 1px 4px rgba(0,0,0,0.25)',
     ].join(';');
     applyTheme(this.#root, theme);
@@ -104,31 +145,67 @@ export class FlxFpsDisplay {
   }
 
   get fps(): number {
-    return this.#fps;
+    return this.#metrics.fps;
+  }
+
+  /** Metrics from the most recently completed sampling window. */
+  get metrics(): FlxFpsMetrics {
+    return this.#metrics;
   }
 
   /** Clear collected samples, such as after returning from a background tab. */
   reset(): void {
     this.#elapsedMS = 0;
+    this.#frameTimes = [];
     this.#frameCount = 0;
-    this.#fps = 0;
+    this.#metrics = EMPTY_METRICS;
+    this.#simulationSteps = 0;
+    this.#zeroStepFrames = 0;
+    this.#catchUpFrames = 0;
     this.#value.textContent = '— FPS';
     delete this.#root.dataset.rating;
     this.#root.style.color = 'var(--flx-fps-text,#e2e8f0)';
   }
 
-  /** Record one completed rendered frame and its wall-clock interval. */
-  recordFrame(elapsedMS: number): void {
+  /** Record one completed render and the fixed updates executed before it. */
+  recordFrame(elapsedMS: number, simulationSteps = 1): void {
     if (!Number.isFinite(elapsedMS) || elapsedMS < 0) return;
+    if (!Number.isFinite(simulationSteps) || simulationSteps < 0) return;
+    const completedSteps = Math.floor(simulationSteps);
     this.#frameCount += 1;
     this.#elapsedMS += elapsedMS;
+    this.#frameTimes.push(elapsedMS);
+    this.#simulationSteps += completedSteps;
+    if (completedSteps === 0) this.#zeroStepFrames += 1;
+    if (completedSteps > 1) this.#catchUpFrames += 1;
     if (this.#elapsedMS < this.#updateIntervalMs) return;
 
-    this.#fps = (this.#frameCount * 1000) / this.#elapsedMS;
-    this.#value.textContent = `${Math.round(this.#fps)} FPS`;
+    const sortedFrameTimes = [...this.#frameTimes].sort(
+      (left, right) => left - right,
+    );
+    const fps = (this.#frameCount * 1000) / this.#elapsedMS;
+    const targetFrameMS = 1000 / (this.#targetFramerate ?? 60);
+    const p95Index = Math.max(0, Math.ceil(sortedFrameTimes.length * 0.95) - 1);
+    this.#metrics = Object.freeze({
+      averageFrameMS: this.#elapsedMS / this.#frameCount,
+      catchUpFrames: this.#catchUpFrames,
+      fps,
+      jankFrames: this.#frameTimes.filter(
+        (frameMS) => frameMS > targetFrameMS * 1.5,
+      ).length,
+      maxFrameMS: sortedFrameTimes.at(-1) ?? 0,
+      p95FrameMS: sortedFrameTimes[p95Index] ?? 0,
+      updatesPerSecond: (this.#simulationSteps * 1000) / this.#elapsedMS,
+      zeroStepFrames: this.#zeroStepFrames,
+    });
+    this.#value.textContent = this.#formatMetrics();
     this.#applyRating();
     this.#frameCount = 0;
     this.#elapsedMS = 0;
+    this.#frameTimes = [];
+    this.#simulationSteps = 0;
+    this.#zeroStepFrames = 0;
+    this.#catchUpFrames = 0;
   }
 
   destroy(): void {
@@ -141,11 +218,27 @@ export class FlxFpsDisplay {
 
   #applyRating(): void {
     if (this.#targetFramerate === undefined) return;
-    const ratio = this.#fps / this.#targetFramerate;
+    const ratio = this.#metrics.fps / this.#targetFramerate;
+    const targetFrameMS = 1000 / this.#targetFramerate;
     const rating =
-      ratio >= 0.9 ? 'good' : ratio >= 0.6 ? 'warning' : 'critical';
+      ratio < 0.6 || this.#metrics.p95FrameMS > targetFrameMS * 2
+        ? 'critical'
+        : ratio < 0.9 || this.#metrics.jankFrames > 0
+          ? 'warning'
+          : 'good';
     this.#root.dataset.rating = rating;
     this.#root.style.color = `var(--flx-fps-${rating})`;
+  }
+
+  #formatMetrics(): string {
+    const metrics = this.#metrics;
+    const fps = `${Math.round(metrics.fps)} FPS`;
+    if (this.#mode === 'compact') return fps;
+    return [
+      `${fps} · ${metrics.averageFrameMS.toFixed(1)} ms`,
+      `P95 ${metrics.p95FrameMS.toFixed(1)} · MAX ${metrics.maxFrameMS.toFixed(1)} · JANK ${metrics.jankFrames}`,
+      `UPS ${Math.round(metrics.updatesPerSecond)} · IDLE ${metrics.zeroStepFrames} · CATCH ${metrics.catchUpFrames}`,
+    ].join('\n');
   }
 }
 

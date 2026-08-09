@@ -93,6 +93,8 @@ export interface CreateBrowserGameOptions {
   updateFramerate?: number;
   /** Optional visual frame-rate cap. By default rendering follows the display. */
   renderFramerate?: number;
+  /** Smooth fixed-step motion between updates without changing game state. Defaults to true. */
+  renderInterpolation?: boolean;
 }
 
 /** Running browser game application handle returned by {@link createBrowserGame}. @public */
@@ -153,6 +155,7 @@ export async function createBrowserGame(
     zoom = 1,
     updateFramerate = 60,
     renderFramerate,
+    renderInterpolation = true,
   } = options;
 
   validateFramerate('updateFramerate', updateFramerate);
@@ -262,6 +265,7 @@ export async function createBrowserGame(
           renderFramerate,
         ),
         preloaderCompletion,
+        renderInterpolation,
         unsubscribeObserver,
       );
       unsubscribeView?.();
@@ -384,6 +388,7 @@ function startApplication(
   renderFramerate: number | undefined,
   fpsDisplayOptions: FlxFpsDisplayOptions | null,
   preloaderCompletion: Promise<void>,
+  renderInterpolation: boolean,
   unsubscribeObserver?: () => void,
 ): BrowserGameApplication {
   const frameListeners = new Set<(frame: BrowserGameFrame) => void>();
@@ -432,15 +437,18 @@ function startApplication(
     const actualRenderElapsedMS = Math.max(0, now - previousActualRenderTime);
     previousActualRenderTime = now;
     if (game.context.renderablesDirty) syncWorldToRenderer(game, renderer);
-    renderer.render();
+    renderer.render(
+      game.context.cameras,
+      renderInterpolation ? game.interpolationAlpha : 1,
+    );
     frameCount += 1;
     const event = {
       elapsedMS: actualRenderElapsedMS,
       frameCount,
       simulationSteps: simulationStepsSinceRender,
     };
+    fpsDisplay?.recordFrame(actualRenderElapsedMS, event.simulationSteps);
     simulationStepsSinceRender = 0;
-    fpsDisplay?.recordFrame(actualRenderElapsedMS);
     for (const listener of [...frameListeners]) listener(event);
     animationFrame = requestAnimationFrame(frame);
   };

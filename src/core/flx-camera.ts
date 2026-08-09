@@ -57,6 +57,8 @@ export class FlxCamera extends FlxBasic {
   deadzone: FlxRect | null = null;
   bounds: FlxRect | null = null;
   readonly scroll = new FlxPoint();
+  /** Scroll at the start of the latest fixed update. @internal */
+  readonly lastScroll = new FlxPoint();
   readonly scale = new FlxPoint(1, 1);
   bgColor = 0xff000000;
   antialiasing = false;
@@ -165,6 +167,7 @@ export class FlxCamera extends FlxBasic {
       throw new RangeError('Camera elapsed time must be non-negative.');
     }
 
+    this.lastScroll.copyFrom(this.scroll);
     this.#updateFollow();
     this.#clampScrollToBounds();
     this.#updateEffects(elapsed);

@@ -4,6 +4,10 @@ import type { FlxCamera } from '../core/flx-camera';
 import type { FlxSprite } from '../objects/flx-sprite';
 import type { FlxSpriteGroup } from '../objects/flx-sprite-group';
 import type { FlxRenderHandle } from './flx-render-handle';
+import {
+  interpolateObjectX,
+  interpolateObjectY,
+} from './flx-render-interpolation';
 
 /** Adapter-owned Pixi container branch for one logical sprite composite. @public */
 export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
@@ -29,7 +33,7 @@ export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
     return this.#members.size;
   }
 
-  sync(camera?: FlxCamera): void {
+  sync(camera?: FlxCamera, interpolationAlpha = 1): void {
     if (this.#destroyed) return;
     const desired = this.#owner.members
       .slice(0, this.#owner.length)
@@ -49,15 +53,22 @@ export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
         this.#members.set(member, handle);
         this.view.addChild(handle.view);
       }
-      handle.sync(camera);
+      handle.sync(camera, interpolationAlpha);
       handle.view.position.set(
-        member.x - this.#owner.x - member.offset.x,
-        member.y - this.#owner.y - member.offset.y,
+        interpolateObjectX(member, interpolationAlpha) -
+          interpolateObjectX(this.#owner, interpolationAlpha) -
+          member.offset.x,
+        interpolateObjectY(member, interpolationAlpha) -
+          interpolateObjectY(this.#owner, interpolationAlpha) -
+          member.offset.y,
       );
       this.view.setChildIndex(handle.view, this.#membersOrder(member, desired));
     }
 
-    this.view.position.set(this.#owner.x, this.#owner.y);
+    this.view.position.set(
+      interpolateObjectX(this.#owner, interpolationAlpha),
+      interpolateObjectY(this.#owner, interpolationAlpha),
+    );
     this.view.scale.set(1, 1);
     this.view.angle = 0;
     this.view.alpha = 1;

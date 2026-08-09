@@ -21,9 +21,19 @@ describe('FlxFpsDisplay', () => {
     for (let frame = 0; frame < 30; frame += 1) {
       display.recordFrame(1000 / 60);
     }
-    expect(root?.textContent).toBe('60 FPS');
+    expect(root?.textContent).toBe(
+      '60 FPS · 16.7 ms\nP95 16.7 · MAX 16.7 · JANK 0\nUPS 60 · IDLE 0 · CATCH 0',
+    );
     expect(root?.dataset.rating).toBe('good');
     expect(display.fps).toBeCloseTo(60);
+    expect(display.metrics).toEqual(
+      expect.objectContaining({
+        catchUpFrames: 0,
+        jankFrames: 0,
+        zeroStepFrames: 0,
+      }),
+    );
+    expect(display.metrics.updatesPerSecond).toBeCloseTo(60);
 
     display.reset();
     expect(root?.textContent).toBe('— FPS');
@@ -33,6 +43,50 @@ describe('FlxFpsDisplay', () => {
     display.destroy();
     expect(container.children).toHaveLength(0);
     expect(container.style.position).toBe('static');
+  });
+
+  it('exposes frame spikes and uneven fixed-update cadence hidden by average FPS', () => {
+    const container = document.createElement('div');
+    const display = new FlxFpsDisplay({
+      container,
+      targetFramerate: 60,
+      updateIntervalMs: 100,
+    });
+
+    display.recordFrame(10, 0);
+    display.recordFrame(10, 2);
+    display.recordFrame(10, 1);
+    display.recordFrame(10, 1);
+    display.recordFrame(60, 2);
+
+    expect(display.metrics).toEqual({
+      averageFrameMS: 20,
+      catchUpFrames: 2,
+      fps: 50,
+      jankFrames: 1,
+      maxFrameMS: 60,
+      p95FrameMS: 60,
+      updatesPerSecond: 60,
+      zeroStepFrames: 1,
+    });
+    expect(container.textContent).toContain('P95 60.0 · MAX 60.0 · JANK 1');
+    expect(container.textContent).toContain('UPS 60 · IDLE 1 · CATCH 2');
+    expect(
+      container.querySelector<HTMLElement>('.flx-fps-display')?.dataset.rating,
+    ).toBe('critical');
+    display.destroy();
+  });
+
+  it('keeps the original single-line reading in compact mode', () => {
+    const container = document.createElement('div');
+    const display = new FlxFpsDisplay({
+      container,
+      mode: 'compact',
+      updateIntervalMs: 100,
+    });
+    for (let frame = 0; frame < 10; frame += 1) display.recordFrame(10);
+    expect(container.textContent).toBe('100 FPS');
+    display.destroy();
   });
 
   it('supports position, classes, themes, and warning thresholds', () => {

@@ -11,6 +11,13 @@ import type { FlxCamera } from '../core/flx-camera';
 import type { FlxEmitter } from '../objects/flx-emitter';
 import type { FlxParticle } from '../objects/flx-particle';
 import type { FlxRenderHandle } from './flx-render-handle';
+import {
+  interpolateCameraScrollX,
+  interpolateCameraScrollY,
+  interpolateObjectAngle,
+  interpolateObjectX,
+  interpolateObjectY,
+} from './flx-render-interpolation';
 
 /** Selects the renderer-only projection used by an emitter. @public */
 export interface FlxEmitterRenderOptions {
@@ -66,7 +73,7 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
     return this.optimized ? this.#particles.size : this.#sprites.size;
   }
 
-  sync(camera?: FlxCamera): void {
+  sync(camera?: FlxCamera, interpolationAlpha = 1): void {
     if (this.#destroyed) return;
     const members = this.#owner.members
       .slice(0, this.#owner.length)
@@ -75,8 +82,9 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
     else this.#syncSpriteMembers(members);
 
     for (const particle of members) {
-      if (this.optimized) this.#syncParticle(particle, camera);
-      else this.#syncSprite(particle, camera);
+      if (this.optimized)
+        this.#syncParticle(particle, camera, interpolationAlpha);
+      else this.#syncSprite(particle, camera, interpolationAlpha);
     }
     if (camera !== undefined) {
       this.#bounds.x = 0;
@@ -137,7 +145,11 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
     }
   }
 
-  #syncParticle(owner: FlxParticle, camera?: FlxCamera): void {
+  #syncParticle(
+    owner: FlxParticle,
+    camera?: FlxCamera,
+    interpolationAlpha = 1,
+  ): void {
     const particle = this.#particles.get(owner);
     if (particle === undefined) return;
     particle.texture = owner.renderTexture;
@@ -145,16 +157,23 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
       owner.frameWidth > 0 ? owner.origin.x / owner.frameWidth : 0;
     particle.anchorY =
       owner.frameHeight > 0 ? owner.origin.y / owner.frameHeight : 0;
-    particle.x = this.#screenX(owner, camera) + owner.origin.x;
-    particle.y = this.#screenY(owner, camera) + owner.origin.y;
+    particle.x =
+      this.#screenX(owner, camera, interpolationAlpha) + owner.origin.x;
+    particle.y =
+      this.#screenY(owner, camera, interpolationAlpha) + owner.origin.y;
     particle.scaleX = owner.renderFlipped ? -owner.scale.x : owner.scale.x;
     particle.scaleY = owner.scale.y;
-    particle.rotation = (owner.angle * Math.PI) / 180;
+    particle.rotation =
+      (interpolateObjectAngle(owner, interpolationAlpha) * Math.PI) / 180;
     particle.tint = owner.color;
     particle.alpha = owner.exists && owner.visible ? owner.alpha : 0;
   }
 
-  #syncSprite(owner: FlxParticle, camera?: FlxCamera): void {
+  #syncSprite(
+    owner: FlxParticle,
+    camera?: FlxCamera,
+    interpolationAlpha = 1,
+  ): void {
     const sprite = this.#sprites.get(owner);
     if (sprite === undefined) return;
     sprite.texture = owner.renderTexture;
@@ -163,14 +182,14 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
       owner.frameHeight > 0 ? owner.origin.y / owner.frameHeight : 0,
     );
     sprite.position.set(
-      this.#screenX(owner, camera) + owner.origin.x,
-      this.#screenY(owner, camera) + owner.origin.y,
+      this.#screenX(owner, camera, interpolationAlpha) + owner.origin.x,
+      this.#screenY(owner, camera, interpolationAlpha) + owner.origin.y,
     );
     sprite.scale.set(
       owner.renderFlipped ? -owner.scale.x : owner.scale.x,
       owner.scale.y,
     );
-    sprite.angle = owner.angle;
+    sprite.angle = interpolateObjectAngle(owner, interpolationAlpha);
     sprite.alpha = owner.alpha;
     sprite.tint = owner.color;
     sprite.blendMode = owner.blend ?? 'normal';
@@ -178,19 +197,37 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
     sprite.visible = owner.exists && owner.visible && owner.alpha > 0;
   }
 
-  #screenX(owner: FlxParticle, camera?: FlxCamera): number {
+  #screenX(
+    owner: FlxParticle,
+    camera?: FlxCamera,
+    interpolationAlpha = 1,
+  ): number {
     return (
-      owner.x -
+      interpolateObjectX(owner, interpolationAlpha) -
       owner.offset.x -
-      Math.trunc((camera?.scroll.x ?? 0) * owner.scrollFactor.x)
+      Math.trunc(
+        (camera === undefined
+          ? 0
+          : interpolateCameraScrollX(camera, interpolationAlpha)) *
+          owner.scrollFactor.x,
+      )
     );
   }
 
-  #screenY(owner: FlxParticle, camera?: FlxCamera): number {
+  #screenY(
+    owner: FlxParticle,
+    camera?: FlxCamera,
+    interpolationAlpha = 1,
+  ): number {
     return (
-      owner.y -
+      interpolateObjectY(owner, interpolationAlpha) -
       owner.offset.y -
-      Math.trunc((camera?.scroll.y ?? 0) * owner.scrollFactor.y)
+      Math.trunc(
+        (camera === undefined
+          ? 0
+          : interpolateCameraScrollY(camera, interpolationAlpha)) *
+          owner.scrollFactor.y,
+      )
     );
   }
 }

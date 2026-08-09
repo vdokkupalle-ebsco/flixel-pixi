@@ -4,6 +4,11 @@ import type { FlxCamera } from '../core/flx-camera';
 import type { FlxButton } from '../objects/flx-button';
 import type { FlxRenderHandle } from './flx-render-handle';
 import { FlxTextRenderHandle } from './flx-text-render-handle';
+import {
+  interpolateObjectAngle,
+  interpolateObjectX,
+  interpolateObjectY,
+} from './flx-render-interpolation';
 
 /** Composite Pixi view for a button background and its optional label. @public */
 export class FlxButtonRenderHandle implements FlxRenderHandle {
@@ -26,7 +31,7 @@ export class FlxButtonRenderHandle implements FlxRenderHandle {
     return this.#destroyed;
   }
 
-  sync(camera?: FlxCamera): void {
+  sync(camera?: FlxCamera, interpolationAlpha = 1): void {
     void camera;
     if (this.#destroyed) return;
     const owner = this.#owner;
@@ -44,14 +49,17 @@ export class FlxButtonRenderHandle implements FlxRenderHandle {
         this.#labelHandle = new FlxTextRenderHandle(label);
         this.view.addChild(this.#labelHandle.view);
       }
-      this.#labelHandle.sync();
+      this.#labelHandle.sync(undefined, interpolationAlpha);
       this.#labelHandle.view.position.set(label.x - owner.x, label.y - owner.y);
     }
 
-    this.view.position.set(owner.x - owner.offset.x, owner.y - owner.offset.y);
+    this.view.position.set(
+      interpolateObjectX(owner, interpolationAlpha) - owner.offset.x,
+      interpolateObjectY(owner, interpolationAlpha) - owner.offset.y,
+    );
     this.view.origin.set(owner.origin.x, owner.origin.y);
     this.view.scale.set(owner.scale.x, owner.scale.y);
-    this.view.angle = owner.angle;
+    this.view.angle = interpolateObjectAngle(owner, interpolationAlpha);
     this.view.alpha = owner.alpha;
     this.view.tint = owner.color;
     this.view.blendMode = owner.blend ?? 'normal';

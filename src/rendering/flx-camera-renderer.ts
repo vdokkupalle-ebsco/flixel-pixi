@@ -20,6 +20,12 @@ import { FlxTilemap } from '../tilemap/flx-tilemap';
 import type { FlxEmitterRenderOptions } from './flx-emitter-render-handle';
 import type { FlxRenderHandle } from './flx-render-handle';
 import { FlxTilemapRenderHandle } from './flx-tilemap-render-handle';
+import {
+  interpolateCameraScrollX,
+  interpolateCameraScrollY,
+  interpolateObjectX,
+  interpolateObjectY,
+} from './flx-render-interpolation';
 
 /** Pixi resources owned for one logical camera. @public */
 export interface FlxCameraView {
@@ -204,12 +210,23 @@ export class FlxCameraRenderer implements FlxCameraHost {
     }
   }
 
-  render(cameras: readonly FlxCamera[] = this.#context.cameras): void {
+  /** Render selected cameras, optionally between their previous and current fixed states. */
+  render(
+    cameras: readonly FlxCamera[] = this.#context.cameras,
+    interpolationAlpha = 1,
+  ): void {
     this.#assertUsable();
+    if (
+      !Number.isFinite(interpolationAlpha) ||
+      interpolationAlpha < 0 ||
+      interpolationAlpha > 1
+    ) {
+      throw new RangeError('interpolationAlpha must be between 0 and 1.');
+    }
     this.#context.drawPlugins();
     for (const camera of cameras) {
       if (!this.#views.has(camera)) this.addCamera(camera);
-      this.#renderCamera(camera);
+      this.#renderCamera(camera, interpolationAlpha);
     }
     this.#syncOutputOrder();
     this.#renderer.render({ clear: true, container: this.#outputStage });
@@ -229,7 +246,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
     this.#cameraPass.destroy({ children: true });
   }
 
-  #renderCamera(camera: FlxCamera): void {
+  #renderCamera(camera: FlxCamera, interpolationAlpha: number): void {
     const view = this.#views.get(camera);
     if (view === undefined) return;
     const visible = camera.exists && camera.visible;
@@ -253,7 +270,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
         this.#entries.delete(object);
         continue;
       }
-      entry.handle.sync(camera);
+      entry.handle.sync(camera, interpolationAlpha);
       const routedCameras = object.cameras ?? this.#context.cameras;
       const routed = routedCameras.includes(camera);
       if (object instanceof FlxEmitter) {
@@ -284,14 +301,22 @@ export class FlxCameraRenderer implements FlxCameraHost {
         (object instanceof FlxTilemap || object.alpha > 0);
       if (!entry.handle.view.visible) continue;
       const offset = object instanceof FlxTilemap ? null : object.offset;
+      const cameraScrollX = interpolateCameraScrollX(
+        camera,
+        interpolationAlpha,
+      );
+      const cameraScrollY = interpolateCameraScrollY(
+        camera,
+        interpolationAlpha,
+      );
       const x =
-        object.x -
+        interpolateObjectX(object, interpolationAlpha) -
         (offset?.x ?? 0) -
-        Math.trunc(camera.scroll.x * object.scrollFactor.x);
+        Math.trunc(cameraScrollX * object.scrollFactor.x);
       const y =
-        object.y -
+        interpolateObjectY(object, interpolationAlpha) -
         (offset?.y ?? 0) -
-        Math.trunc(camera.scroll.y * object.scrollFactor.y);
+        Math.trunc(cameraScrollY * object.scrollFactor.y);
       entry.handle.view.position.set(x, y);
 
       if (this.debugBounds && !object.ignoreDrawDebug) {

@@ -47,6 +47,8 @@ export class FlxObject extends FlxBasic {
   drag = new FlxPoint();
   maxVelocity = new FlxPoint(10_000, 10_000);
   angle = 0;
+  /** Angle at the start of the latest fixed update. @internal */
+  lastAngle = 0;
   angularVelocity = 0;
   angularAcceleration = 0;
   angularDrag = 0;
@@ -95,6 +97,7 @@ export class FlxObject extends FlxBasic {
     }
 
     this.last.copyFrom(this);
+    this.lastAngle = this.angle;
     if (
       this.path !== null &&
       this.pathSpeed !== 0 &&
@@ -240,6 +243,7 @@ export class FlxObject extends FlxBasic {
     this.x = x;
     this.y = y;
     this.last.copyFrom(this);
+    this.lastAngle = this.angle;
     this.velocity.make();
   }
 

@@ -6,6 +6,7 @@ import type { FlxCamera } from '../core/flx-camera';
 export interface FlxRenderHandle {
   readonly view: Container;
   readonly destroyed: boolean;
-  sync(camera?: FlxCamera): void;
+  /** Project authoritative state into the view for one camera and render alpha. */
+  sync(camera?: FlxCamera, interpolationAlpha?: number): void;
   destroy(): void;
 }

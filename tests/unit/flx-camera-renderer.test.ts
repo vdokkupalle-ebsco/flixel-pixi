@@ -45,6 +45,41 @@ afterEach(() => {
 });
 
 describe('Pixi camera render passes', () => {
+  it('interpolates render transforms without mutating authoritative state', () => {
+    const outputStage = new Container();
+    const fake = fakeRenderer(1);
+    const cameraRenderer = new FlxCameraRenderer(
+      fake.renderer,
+      outputStage,
+      context,
+    );
+    const camera = context.camera;
+    camera.lastScroll.make(0, 0);
+    camera.scroll.make(10, 6);
+    const sprite = new FlxSprite(30, 40).makeGraphic(8, 8, 0xffffffff);
+    sprite.last.make(10, 20);
+    sprite.lastAngle = 350;
+    sprite.angle = 10;
+    const handle = cameraRenderer.add(sprite);
+
+    cameraRenderer.render([camera], 0.5);
+
+    expect(handle.view.position).toMatchObject({ x: 15, y: 27 });
+    expect(handle.view.angle).toBeCloseTo(360);
+    expect(sprite).toMatchObject({ angle: 10, x: 30, y: 40 });
+    expect(camera.scroll).toMatchObject({ x: 10, y: 6 });
+
+    cameraRenderer.render([camera], 1);
+    expect(handle.view.position).toMatchObject({ x: 20, y: 34 });
+    expect(() => cameraRenderer.render([camera], -0.1)).toThrow(
+      /interpolationAlpha/,
+    );
+
+    cameraRenderer.destroy();
+    sprite.destroy();
+    outputStage.destroy({ children: true });
+  });
+
   it('routes one logical world through ordered camera targets', () => {
     const primary = context.camera;
     primary.scroll.make(4.9, 5.9);

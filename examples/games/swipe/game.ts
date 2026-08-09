@@ -5,13 +5,16 @@ import {
   FlxSprite,
   FlxState,
   FlxText,
+  makeGraphicPixels,
   type PixelBuffer,
 } from '../../../src';
 
 const FRUIT_SIZE = 48;
 const TRAIL_SEGMENTS = 24;
 const TRAIL_LIFETIME = 0.16;
+const PARTICLE_POOL_SIZE = 48;
 const FRUIT_COLORS = [0xff4d6dff, 0xffca3aff, 0x8ac926ff, 0x6a4c93ff];
+const EXPLOSION_COLORS = [0xfff3b0ff, 0xff9f1cff, 0xff3d00ff, 0xff5a36ff];
 const LAUNCHES = [
   { x: 92, vx: 105, vy: -470 },
   { x: 520, vx: -90, vy: -505 },
@@ -175,6 +178,25 @@ export class SwipeDemoState extends FlxState {
       ] as const,
   );
   readonly #bombGraphic = FlxGraphic.fromPixels(makeBombPixels(), 'swipe-bomb');
+  readonly #fruitParticleGraphics = FRUIT_COLORS.map((color, index) =>
+    FlxGraphic.fromPixels(
+      makeGraphicPixels(6, 6, color),
+      `swipe-fruit-particle-${index}`,
+    ),
+  );
+  readonly #explosionGraphics = EXPLOSION_COLORS.map(
+    (color, index) =>
+      [
+        FlxGraphic.fromPixels(
+          makeGraphicPixels(7, 7, color),
+          `swipe-explosion-${index}-small`,
+        ),
+        FlxGraphic.fromPixels(
+          makeGraphicPixels(10, 10, color),
+          `swipe-explosion-${index}-large`,
+        ),
+      ] as const,
+  );
   #fruits: Fruit[] = [];
   #bombs: Bomb[] = [];
   #particles: JuiceParticle[] = [];
@@ -213,6 +235,16 @@ export class SwipeDemoState extends FlxState {
     this.add(title);
     this.add(help);
     this.add(this.#hud);
+    const initialParticleGraphic = this.#fruitParticleGraphics[0];
+    if (initialParticleGraphic === undefined) {
+      throw new Error('Particle graphics are unavailable.');
+    }
+    for (let index = 0; index < PARTICLE_POOL_SIZE; index += 1) {
+      const sprite = new FlxSprite(0, 0, initialParticleGraphic);
+      sprite.visible = false;
+      this.#particles.push({ life: 0, sprite });
+      this.add(sprite);
+    }
     for (let index = 0; index < TRAIL_SEGMENTS; index += 1) {
       const sprite = new FlxSprite().makeGraphic(
         1,
@@ -251,12 +283,12 @@ export class SwipeDemoState extends FlxState {
         this.#removeBomb(bomb);
       }
     }
-    for (const particle of [...this.#particles]) {
+    for (const particle of this.#particles) {
+      if (particle.life <= 0) continue;
       particle.life -= FlxG.elapsed;
       if (particle.life <= 0) {
-        this.remove(particle.sprite, true);
-        particle.sprite.destroy();
-        this.#particles.splice(this.#particles.indexOf(particle), 1);
+        particle.life = 0;
+        particle.sprite.visible = false;
       }
     }
     for (const piece of [...this.#slicePieces]) {
@@ -333,7 +365,8 @@ export class SwipeDemoState extends FlxState {
       activeBombs: this.#bombs.length,
       activeFruit: this.#fruits.length,
       bombsHit: this.bombsHit,
-      juiceParticles: this.#particles.length,
+      juiceParticles: this.#particles.filter((particle) => particle.life > 0)
+        .length,
       lastJuiceColor: this.lastJuiceColor,
       lastDirection: this.lastDirection,
       misses: this.misses,
@@ -354,6 +387,11 @@ export class SwipeDemoState extends FlxState {
     super.destroy();
     this.#bombGraphic.destroy();
     for (const graphic of this.#fruitGraphics) graphic.destroy();
+    for (const graphic of this.#fruitParticleGraphics) graphic.destroy();
+    for (const pair of this.#explosionGraphics) {
+      pair[0].destroy();
+      pair[1].destroy();
+    }
     for (const pair of this.#fruitHalfGraphics) {
       pair[0].destroy();
       pair[1].destroy();
@@ -537,37 +575,62 @@ export class SwipeDemoState extends FlxState {
     color: number,
   ): void {
     this.lastJuiceColor = color;
+    const colorIndex = FRUIT_COLORS.indexOf(color);
+    const graphic =
+      this.#fruitParticleGraphics[colorIndex] ?? this.#fruitParticleGraphics[0];
+    if (graphic === undefined) return;
     for (let index = 0; index < 8; index += 1) {
       const angle = (index / 8) * Math.PI * 2;
-      const particle = new FlxSprite(x, y).makeGraphic(6, 6, color);
-      particle.velocity.make(
+      const particle = this.#acquireParticle(graphic, x, y, 0.42);
+      particle.sprite.velocity.make(
         velocityX * 0.2 + Math.cos(angle) * 150,
         velocityY * 0.15 + Math.sin(angle) * 150,
       );
-      particle.acceleration.y = 360;
-      this.#particles.push({ life: 0.42, sprite: particle });
-      this.add(particle);
+      particle.sprite.acceleration.y = 360;
     }
   }
 
   #explodeBomb(bomb: Bomb, x: number, y: number): void {
-    const colors = [0xfff3b0ff, 0xff9f1cff, 0xff3d00ff, 0xff5a36ff];
     for (let index = 0; index < 20; index += 1) {
       const angle = (index / 20) * Math.PI * 2;
       const speed = 120 + (index % 4) * 35;
-      const color = colors[index % colors.length] ?? 0xffffffff;
-      const size = index % 3 === 0 ? 10 : 7;
-      const particle = new FlxSprite(x, y).makeGraphic(size, size, color);
-      particle.velocity.make(
+      const colorIndex = index % EXPLOSION_COLORS.length;
+      const sizeIndex = index % 3 === 0 ? 1 : 0;
+      const graphic = this.#explosionGraphics[colorIndex]?.[sizeIndex];
+      if (graphic === undefined) continue;
+      const particle = this.#acquireParticle(graphic, x, y, 0.58);
+      particle.sprite.velocity.make(
         bomb.velocity.x * 0.15 + Math.cos(angle) * speed,
         bomb.velocity.y * 0.1 + Math.sin(angle) * speed,
       );
-      particle.acceleration.y = 260;
-      particle.angularVelocity = index % 2 === 0 ? 300 : -300;
-      this.#particles.push({ life: 0.58, sprite: particle });
-      this.add(particle);
+      particle.sprite.acceleration.y = 260;
+      particle.sprite.angularVelocity = index % 2 === 0 ? 300 : -300;
     }
     FlxG.camera.shake(0.018, 0.22);
+  }
+
+  #acquireParticle(
+    graphic: FlxGraphic,
+    x: number,
+    y: number,
+    life: number,
+  ): JuiceParticle {
+    const particle =
+      this.#particles.find((candidate) => candidate.life <= 0) ??
+      this.#particles.reduce((oldest, candidate) =>
+        candidate.life < oldest.life ? candidate : oldest,
+      );
+    particle.life = life;
+    particle.sprite.loadGraphic(graphic);
+    particle.sprite.x = x;
+    particle.sprite.y = y;
+    particle.sprite.alpha = 1;
+    particle.sprite.angle = 0;
+    particle.sprite.angularVelocity = 0;
+    particle.sprite.velocity.make(0, 0);
+    particle.sprite.acceleration.make(0, 0);
+    particle.sprite.visible = true;
+    return particle;
   }
 
   #updateHud(): void {

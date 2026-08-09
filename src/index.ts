@@ -242,6 +242,7 @@ export type {
 export { FlxFpsDisplay } from './debugger/flx-fps-display';
 export type {
   FlxFpsDisplayOptions,
+  FlxFpsMetrics,
   FlxFpsDisplayPosition,
   FlxFpsDisplayTheme,
 } from './debugger/flx-fps-display';

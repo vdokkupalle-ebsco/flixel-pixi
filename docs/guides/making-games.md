@@ -13,12 +13,18 @@ const app = await createBrowserGame({
   initialState: PlayState,
   updateFramerate: 60,
   renderFramerate: 60,
+  renderInterpolation: true,
 });
 ```
 
 `updateFramerate` controls the deterministic simulation rate and defaults to 60. `renderFramerate` is an optional visual cap; omit it to render at the
 browser display's refresh rate. They are independent, so a game can update at
 60 Hz while rendering at 30 FPS.
+
+Render interpolation is enabled by default. It projects moving objects,
+rotations, particles, and camera scroll between the previous and current fixed
+states without mutating deterministic game state. Set `renderInterpolation:
+false` when deliberately testing raw fixed-step presentation.
 
 Enable the lightweight in-game FPS display when profiling a game:
 
@@ -29,9 +35,17 @@ createBrowserGame({
 });
 ```
 
-It defaults to the top-right of the game host. Pass an options object to choose
-another corner, sampling interval, CSS classes, or theme colors. The display is
-DOM-based, adds no Pixi draw calls, and is removed by `app.destroy()`.
+It defaults to a detailed report in the top-right of the game host. Alongside
+average FPS it shows average/P95/max frame time, jank frames, simulation updates
+per second (`UPS`), renders with no update (`IDLE`), and renders that caught up
+with multiple updates (`CATCH`). This separates throughput from frame pacing:
+an average near 60 FPS can still feel uneven when P95, JANK, IDLE, or CATCH are
+high.
+
+Pass an options object to choose another corner, sampling interval, CSS classes,
+theme colors, or `mode: 'compact'` for the original single-line FPS reading.
+The display is DOM-based, adds no Pixi draw calls, and is removed by
+`app.destroy()`.
 
 `createBrowserGame` runs **incremental world sync** every frame, so sprites
 added with `this.add(...)` during play are registered automatically.
@@ -71,7 +85,8 @@ multi-touch swipes, mouse-drag fallback, deterministic fruit arcs, gesture
 trails, continuous swept-segment hit detection, and animated cut halves.
 Fruit-colored juice bursts preserve the target palette, while deterministic
 bomb launches demonstrate hazardous swipe targets, score penalties, explosion
-particles, and camera shake.
+particles, and camera shake. Its burst effects reuse a fixed sprite pool and
+prebuilt graphics so gesture-heavy play does not allocate particle textures.
 
 ## Named actions
 

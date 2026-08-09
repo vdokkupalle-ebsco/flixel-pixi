@@ -108,6 +108,7 @@ export interface CreateBrowserGameOptions {
     preload?: (context: BrowserGamePreloadContext) => Promise<void> | void;
     preloader?: false | BrowserGamePreloaderOptions;
     renderFramerate?: number;
+    renderInterpolation?: boolean;
     // @deprecated (undocumented)
     showPreloader?: boolean;
     signal?: AbortSignal;
@@ -840,7 +841,7 @@ export class FlxButtonRenderHandle implements FlxRenderHandle {
     // (undocumented)
     readonly sprite: Sprite;
     // (undocumented)
-    sync(camera?: FlxCamera): void;
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
     // (undocumented)
     readonly view: Container<ContainerChild>;
 }
@@ -994,8 +995,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
     remove(object: FlxSprite | FlxTilemap | FlxEmitter, destroyHandle?: boolean): boolean;
     // (undocumented)
     removeCamera(camera: FlxCamera): void;
-    // (undocumented)
-    render(cameras?: readonly FlxCamera[]): void;
+    render(cameras?: readonly FlxCamera[], interpolationAlpha?: number): void;
     // (undocumented)
     get renderTargetBytes(): number;
     // (undocumented)
@@ -1332,7 +1332,7 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
     // (undocumented)
     get projectedParticleCount(): number;
     // (undocumented)
-    sync(camera?: FlxCamera): void;
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
     // (undocumented)
     readonly view: Container<ContainerChild>;
 }
@@ -1383,7 +1383,8 @@ export class FlxFpsDisplay {
     destroy(): void;
     // (undocumented)
     get fps(): number;
-    recordFrame(elapsedMS: number): void;
+    get metrics(): FlxFpsMetrics;
+    recordFrame(elapsedMS: number, simulationSteps?: number): void;
     reset(): void;
 }
 
@@ -1391,6 +1392,7 @@ export class FlxFpsDisplay {
 export interface FlxFpsDisplayOptions {
     className?: string;
     container?: HTMLElement;
+    mode?: 'compact' | 'detailed';
     placement?: 'host' | 'viewport';
     position?: FlxFpsDisplayPosition;
     targetFramerate?: number;
@@ -1413,6 +1415,18 @@ export interface FlxFpsDisplayTheme {
     text?: string;
     // (undocumented)
     warning?: string;
+}
+
+// @public
+export interface FlxFpsMetrics {
+    readonly averageFrameMS: number;
+    readonly catchUpFrames: number;
+    readonly fps: number;
+    readonly jankFrames: number;
+    readonly maxFrameMS: number;
+    readonly p95FrameMS: number;
+    readonly updatesPerSecond: number;
+    readonly zeroStepFrames: number;
 }
 
 // @public
@@ -2486,8 +2500,7 @@ export interface FlxRenderHandle {
     destroy(): void;
     // (undocumented)
     readonly destroyed: boolean;
-    // (undocumented)
-    sync(camera?: FlxCamera): void;
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
     // (undocumented)
     readonly view: Container;
 }
@@ -2835,7 +2848,7 @@ export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
     get destroyed(): boolean;
     get memberHandleCount(): number;
     // (undocumented)
-    sync(camera?: FlxCamera): void;
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
     // (undocumented)
     readonly view: Container<ContainerChild>;
 }
@@ -2850,7 +2863,7 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
     // (undocumented)
     readonly sprite: Sprite;
     // (undocumented)
-    sync(): void;
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
     // (undocumented)
     readonly view: Container;
 }
@@ -2986,7 +2999,7 @@ export class FlxTextRenderHandle implements FlxRenderHandle {
     // (undocumented)
     get destroyed(): boolean;
     // (undocumented)
-    sync(): void;
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
     // (undocumented)
     readonly textNode: FlxPixiTextNode;
     // (undocumented)
@@ -3153,7 +3166,7 @@ export class FlxTilemapRenderHandle implements FlxRenderHandle {
     get lastRebuiltChunks(): readonly string[];
     get rebuildCount(): number;
     // (undocumented)
-    sync(camera?: FlxCamera): void;
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
     // (undocumented)
     readonly view: Container;
     get visibleChunkCount(): number;

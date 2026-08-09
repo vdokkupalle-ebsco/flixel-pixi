@@ -1,7 +1,13 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 
+import type { FlxCamera } from '../core/flx-camera';
 import type { FlxSprite } from '../objects/flx-sprite';
 import type { FlxRenderHandle } from './flx-render-handle';
+import {
+  interpolateObjectAngle,
+  interpolateObjectX,
+  interpolateObjectY,
+} from './flx-render-interpolation';
 
 /** Pixi container/sprite pair synchronized from one `FlxSprite`. @public */
 export class FlxSpriteRenderHandle implements FlxRenderHandle {
@@ -25,7 +31,8 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
     return this.#destroyed;
   }
 
-  sync(): void {
+  sync(camera?: FlxCamera, interpolationAlpha = 1): void {
+    void camera;
     if (this.#destroyed) return;
     const owner = this.#owner;
     this.sprite.texture = owner.renderTexture;
@@ -39,10 +46,13 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
       owner.renderFlippedY ? owner.frameHeight : 0,
     );
 
-    this.view.position.set(owner.x - owner.offset.x, owner.y - owner.offset.y);
+    this.view.position.set(
+      interpolateObjectX(owner, interpolationAlpha) - owner.offset.x,
+      interpolateObjectY(owner, interpolationAlpha) - owner.offset.y,
+    );
     this.view.origin.set(owner.origin.x, owner.origin.y);
     this.view.scale.set(owner.scale.x, owner.scale.y);
-    this.view.angle = owner.angle;
+    this.view.angle = interpolateObjectAngle(owner, interpolationAlpha);
     this.view.alpha = owner.alpha;
     this.view.tint = owner.color;
     this.view.blendMode = owner.blend ?? 'normal';
