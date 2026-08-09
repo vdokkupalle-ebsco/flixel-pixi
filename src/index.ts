@@ -87,6 +87,11 @@ export type {
 export { FlxObject } from './objects/flx-object';
 export type { FlxCameraLike } from './objects/flx-object';
 export { FlxAnim } from './objects/flx-anim';
+export { FlxAnimationController } from './animation/flx-animation-controller';
+export type { FlxAnimationFrameEvent } from './animation/flx-animation-controller';
+export { FlxFrame } from './animation/flx-frame';
+export { FlxFramesCollection } from './animation/flx-frames-collection';
+export type { FlxGridFramesOptions } from './animation/flx-frames-collection';
 export { FlxButton } from './objects/flx-button';
 export type { FlxButtonCallback, FlxButtonSound } from './objects/flx-button';
 export { FlxPath } from './objects/flx-path';

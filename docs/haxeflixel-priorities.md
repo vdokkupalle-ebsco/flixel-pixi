@@ -44,8 +44,8 @@ started merely to match a Haxe class count.
 | ----: | :------: | ----------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
 |     1 |    P0    | Core tweening and easing                        | Complete (`5d3cbbf`)     | Deterministic manager, easing families, options, chaining, target control, unit coverage.          |
 |     2 |    P0    | Specialized tweens, motion, paths, and showcase | Complete (`0292702`)     | Misc/motion tween families, documentation, public demo, unit and browser coverage.                 |
-|     3 |    P0    | State overlays and nested substates             | Implemented; uncommitted | Deferred lifecycle, persistence policies, reuse/destruction, signals, render ordering, demo/tests. |
-|     4 |    P0    | Animation and frame model                       | Next                     | Controller-based animation and frame collections work without regressing current sprite APIs.      |
+|     3 |    P0    | State overlays and nested substates             | Complete (`3d71446`)     | Deferred lifecycle, persistence policies, reuse/destruction, signals, render ordering, demo/tests. |
+|     4 |    P0    | Animation and frame model                       | Implemented; uncommitted | Controller-based animation and frame collections work without regressing current sprite APIs.      |
 |     5 |    P0    | Container and sprite-group model                | Planned                  | Transformable composite objects and groups preserve collision, camera, and lifecycle semantics.    |
 |     6 |    P0    | Input expansion                                 | Planned                  | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
 |     7 |    P1    | UI and text authoring                           | Planned                  | Common HUD/control/input-text needs no application-specific framework code.                        |
@@ -75,15 +75,32 @@ Representative upstream areas:
 - animation prefixes, frame labels, reverse playback, callbacks, finish/reset,
   and frame-duration control.
 
-Planned slices:
+Compatibility decisions:
+
+- **Adapted:** `FlxAnimationController`, named selection, loop points, reverse
+  playback, flip flags, timing controls, and signals use the fixed Flixel clock.
+- **Adapted:** grid and atlas inputs normalize into caller-owned
+  `FlxFramesCollection` texture views; Pixi owns rendering, not playback time.
+- **Exact within the existing API:** `FlxSprite.addAnimation()`, `play()`, and
+  callbacks remain supported alongside the controller.
+- **Deferred:** trimmed/rotated atlas metadata and richer derived frame queries
+  belong to the content-pipeline checkpoint.
+- **Deprecated:** pre-rotated animation remains unnecessary because Pixi
+  transforms rotation without authoring duplicate frame sets.
+
+Implemented slices:
 
 1. Introduce a controller without breaking `FlxSprite.addAnimation()` and
    `play()`.
 2. Normalize frame collections from grids, atlases, and generated graphics.
 3. Add prefix/range selection, per-frame duration, reverse playback, and
    deterministic callbacks.
-4. Decide whether pre-rotated animations remain deprecated in favor of Pixi
-   transforms.
+4. Keep pre-rotated animations deprecated in favor of Pixi transforms.
+
+Evidence: unit contracts cover controller state, frame lookup, reverse/flip,
+loop/finish/frame signals, per-frame durations, validation, and ownership. The
+public animation showcase exercises these features through package exports and
+has a browser lifecycle test. See [`guides/animation.md`](guides/animation.md).
 
 Risks: asset ownership, texture lifetime, callback order, API duplication, and
 animation state during atlas unload.

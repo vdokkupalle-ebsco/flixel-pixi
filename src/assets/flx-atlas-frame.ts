@@ -28,6 +28,8 @@ export interface FlxAtlasFrame {
   readonly texture: Texture;
   /** 0-based position in insertion order. */
   readonly index: number;
+  /** Optional display duration in seconds supplied by source metadata. */
+  readonly duration?: number;
 }
 
 /** An ordered, immutable list of atlas frames. @public */

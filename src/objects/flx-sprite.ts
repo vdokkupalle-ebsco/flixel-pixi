@@ -4,6 +4,8 @@ import { FlxGraphic } from '../assets/flx-graphic';
 import { bakeAtlasFrameStrip } from '../assets/flx-atlas-bake';
 import { canvasSourceFromTexture } from '../assets/flx-atlas';
 import type { FlxAtlasFrameList } from '../assets/flx-atlas-frame';
+import { FlxAnimationController } from '../animation/flx-animation-controller';
+import { FlxFramesCollection } from '../animation/flx-frames-collection';
 import { makeGraphicPixels, type PixelBuffer } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
 import { FlxPoint } from '../math/flx-point';
@@ -39,6 +41,10 @@ export interface FlxAnimationPlayOptions {
    * Force restart even if this animation is already playing. Default `false`.
    */
   force?: boolean;
+  /** Play frames in reverse order. Default `false`. */
+  reversed?: boolean;
+  /** Starting frame number within the animation. Default `0`. */
+  frame?: number;
 }
 
 /**
@@ -74,6 +80,7 @@ function resolveFramerate(): number {
 
 interface AtlasStripSlot {
   readonly key: string;
+  readonly name: string;
   readonly source: CanvasImageSource;
   readonly x: number;
   readonly y: number;
@@ -93,11 +100,14 @@ export class FlxSprite extends FlxObject {
   frameHeight = 0;
   frames = 0;
   dirty = true;
+  readonly animation: FlxAnimationController;
 
   readonly #animations: FlxAnim[] = [];
   readonly #renderHandles = new Set<FlxRenderHandle>();
   #graphic: FlxGraphic | null = null;
   #ownsGraphic = false;
+  #frameCollection: FlxFramesCollection | null = null;
+  #ownsFrameCollection = false;
   #supportsReverse = false;
   #currentAnimation: FlxAnim | null = null;
   #currentAnimationFrame = 0;
@@ -113,16 +123,19 @@ export class FlxSprite extends FlxObject {
   #playbackLoop = true;
   /** Per-playback delay in seconds (set by play). 0 = freeze on frame 0. */
   #playbackDelay = 0;
+  #playbackReversed = false;
   /**
    * Append-only atlas strip slots. Multiple atlas `addAnimation` calls share
    * one graphic; indices stay stable because slots are only appended.
    */
   readonly #atlasStripSlots: AtlasStripSlot[] = [];
+  #frameNames: (string | null)[] = [];
   #atlasStripCellW = 0;
   #atlasStripCellH = 0;
 
   constructor(x = 0, y = 0, simpleGraphic: FlxGraphic | Texture | null = null) {
     super(x, y);
+    this.animation = new FlxAnimationController(this);
     this.health = 1;
     if (simpleGraphic === null) this.makeGraphic(8, 8);
     else this.loadGraphic(simpleGraphic);
@@ -137,6 +150,7 @@ export class FlxSprite extends FlxObject {
     this.#releaseGraphic();
     this.#callback = null;
     this.#currentAnimation = null;
+    this.animation.destroy();
     super.destroy();
   }
 
@@ -159,6 +173,28 @@ export class FlxSprite extends FlxObject {
     }
 
     this.#configureGraphic(animated, reverse, width, height);
+    return this;
+  }
+
+  /** Loads named texture views without baking them into a new strip. */
+  loadFrames(collection: FlxFramesCollection, reverse = false): this {
+    if (collection.numFrames === 0) {
+      throw new RangeError('FlxSprite.loadFrames requires at least one frame.');
+    }
+    const first = collection.getFrame(0);
+    if (
+      collection.frames.some(
+        (frame) => frame.width !== first.width || frame.height !== first.height,
+      )
+    ) {
+      throw new RangeError(
+        'FlxSprite.loadFrames requires uniform frame dimensions.',
+      );
+    }
+    this.#releaseGraphic();
+    this.#frameCollection = collection;
+    this.#ownsFrameCollection = false;
+    this.#configureFrames(collection, reverse);
     return this;
   }
 
@@ -205,25 +241,43 @@ export class FlxSprite extends FlxObject {
     if (
       this.#animationPaused ||
       animation === null ||
-      this.#playbackDelay <= 0 ||
+      this.#currentFrameDuration() <= 0 ||
       (!this.#playbackLoop && this.finished)
     ) {
       if (this.dirty) this.drawFrame();
       return;
     }
 
-    this.#frameTimer += FlxG.elapsed;
-    while (this.#frameTimer > this.#playbackDelay) {
-      this.#frameTimer -= this.#playbackDelay;
-      if (this.#currentAnimationFrame === animation.frames.length - 1) {
-        if (this.#playbackLoop) this.#currentAnimationFrame = 0;
-        this.finished = true;
+    this.#frameTimer +=
+      FlxG.elapsed * this.animation.timeScale * animation.timeScale;
+    let frameDuration = this.#currentFrameDuration();
+    while (frameDuration > 0 && this.#frameTimer > frameDuration) {
+      this.#frameTimer -= frameDuration;
+      const lastFrame = animation.frames.length - 1;
+      const atBoundary = this.#playbackReversed
+        ? this.#currentAnimationFrame <= animation.loopPoint
+        : this.#currentAnimationFrame >= lastFrame;
+      if (atBoundary) {
+        if (this.#playbackLoop) {
+          this.#currentAnimationFrame = this.#playbackReversed
+            ? lastFrame
+            : animation.loopPoint;
+          this.finished = true;
+          this.animation.dispatchLoop(animation.name);
+        } else if (!this.finished) {
+          this.finished = true;
+          this.#animationPaused = true;
+          this.animation.dispatchFinish(animation.name);
+        }
       } else {
-        this.#currentAnimationFrame += 1;
+        this.#currentAnimationFrame += this.#playbackReversed ? -1 : 1;
       }
       this.#currentFrameIndex =
         animation.frames[this.#currentAnimationFrame] ?? 0;
+      this.#syncAnimationState();
       this.dirty = true;
+      if (!this.#playbackLoop && this.finished) break;
+      frameDuration = this.#currentFrameDuration();
     }
 
     if (this.dirty) this.drawFrame();
@@ -238,6 +292,11 @@ export class FlxSprite extends FlxObject {
       this.#currentAnimationFrame,
       this.#currentFrameIndex,
     );
+    this.animation.dispatchFrameChange({
+      animationName: this.#currentAnimation?.name ?? null,
+      frameIndex: this.#currentFrameIndex,
+      frameNumber: this.#currentAnimationFrame,
+    });
     this.syncRenderHandles();
   }
 
@@ -272,10 +331,6 @@ export class FlxSprite extends FlxObject {
       throw new RangeError('Animation must contain at least one frame.');
     }
 
-    // Remove existing animation with the same name
-    const existingIdx = this.#animations.findIndex((a) => a.name === name);
-    if (existingIdx >= 0) this.#animations.splice(existingIdx, 1);
-
     if (isAtlasFrameList(frames)) {
       const atlasOpts =
         typeof frameRateOrOptions === 'object' && frameRateOrOptions !== null
@@ -285,23 +340,20 @@ export class FlxSprite extends FlxObject {
     } else {
       const frameRate =
         typeof frameRateOrOptions === 'number' ? frameRateOrOptions : undefined;
-      // Strip indices — validate each
-      for (const frame of frames as readonly number[])
-        this.#validateFrame(frame);
       // 4-arg form: legacy frameRate/looped defaults; 2-arg form: speed=1/loop=false
       const useLegacyDefaults = frameRate !== undefined || looped !== undefined;
       const resolvedFrameRate = frameRate ?? 0;
       const resolvedLooped = useLegacyDefaults ? (looped ?? true) : false;
       const defaultSpeed =
         resolvedFrameRate > 0 ? resolvedFrameRate / resolveFramerate() : 1;
-      this.#animations.push(
-        new FlxAnim(
-          name,
-          frames as readonly number[],
-          resolvedFrameRate,
-          resolvedLooped,
-          defaultSpeed,
-        ),
+      this.registerAnimation(
+        name,
+        frames as readonly number[],
+        resolvedFrameRate,
+        resolvedLooped,
+        false,
+        false,
+        defaultSpeed,
       );
     }
   }
@@ -324,6 +376,8 @@ export class FlxSprite extends FlxObject {
     let loop: boolean;
     let speed: number;
     let force: boolean;
+    let reversed = false;
+    let frame = 0;
 
     if (typeof forceOrOptions === 'boolean') {
       // Legacy form — apply per-animation stored defaults
@@ -337,6 +391,8 @@ export class FlxSprite extends FlxObject {
       force = opts.force ?? false;
       loop = opts.loop ?? false;
       speed = opts.speed ?? 1;
+      reversed = opts.reversed ?? false;
+      frame = opts.frame ?? 0;
       if (speed <= 0) {
         throw new RangeError('FlxSprite.play: speed must be > 0.');
       }
@@ -345,6 +401,7 @@ export class FlxSprite extends FlxObject {
     if (
       !force &&
       this.#currentAnimation?.name === name &&
+      this.#playbackReversed === reversed &&
       (this.#playbackLoop || !this.finished)
     ) {
       return;
@@ -357,8 +414,18 @@ export class FlxSprite extends FlxObject {
     }
 
     this.#currentAnimation = animation;
-    this.#currentAnimationFrame = 0;
-    this.#currentFrameIndex = animation.frames[0] ?? 0;
+    const maxFrame = animation.frames.length - 1;
+    if (!Number.isInteger(frame)) {
+      throw new RangeError('FlxSprite.play: frame must be an integer.');
+    }
+    const startFrame =
+      frame < 0
+        ? Math.floor(FlxG.random() * animation.frames.length)
+        : Math.min(Math.max(frame, 0), maxFrame);
+    this.#playbackReversed = reversed;
+    this.#currentAnimationFrame = reversed ? maxFrame - startFrame : startFrame;
+    this.#currentFrameIndex =
+      animation.frames[this.#currentAnimationFrame] ?? 0;
     this.#frameTimer = 0;
     this.#animationPaused = false;
     this.#playbackLoop = loop;
@@ -374,6 +441,7 @@ export class FlxSprite extends FlxObject {
     }
 
     this.finished = this.#playbackDelay <= 0;
+    this.#syncAnimationState();
     this.dirty = true;
     this.drawFrame();
   }
@@ -400,6 +468,7 @@ export class FlxSprite extends FlxObject {
     this.#currentAnimationFrame = 0;
     this.#currentFrameIndex = Math.floor(FlxG.random() * this.frames);
     this.dirty = true;
+    this.#syncAnimationState();
   }
 
   setOriginToCorner(): void {
@@ -513,6 +582,18 @@ export class FlxSprite extends FlxObject {
     return this.#animationPaused;
   }
 
+  /** @internal */
+  get currentAnimation(): FlxAnim | null {
+    return this.#currentAnimation;
+  }
+
+  /** @internal */
+  get currentFrameName(): string | null {
+    return (
+      this.#frameCollection?.getFrame(this.#currentFrameIndex).name ?? null
+    );
+  }
+
   /** Number of live adapter handles owned by this gameplay object. */
   get renderHandleCount(): number {
     return this.#renderHandles.size;
@@ -520,6 +601,9 @@ export class FlxSprite extends FlxObject {
 
   /** @internal */
   get renderTexture(): Texture {
+    if (this.#frameCollection !== null && this.frames > 0) {
+      return this.#frameCollection.getFrame(this.#currentFrameIndex).texture;
+    }
     const graphic = this.#graphic;
     if (graphic === null || this.frames === 0) return Texture.EMPTY;
     return graphic.frameTexture(
@@ -531,12 +615,22 @@ export class FlxSprite extends FlxObject {
 
   /** @internal */
   get renderFlipped(): boolean {
-    return this.#supportsReverse && this.#facing === FlxObject.LEFT;
+    const facingFlip = this.#supportsReverse && this.#facing === FlxObject.LEFT;
+    return facingFlip !== (this.#currentAnimation?.flipX ?? false);
+  }
+
+  /** @internal */
+  get renderFlippedY(): boolean {
+    return this.#currentAnimation?.flipY ?? false;
   }
 
   /** @internal */
   get graphic(): FlxGraphic | null {
     return this.#graphic;
+  }
+
+  get frameCollection(): FlxFramesCollection | null {
+    return this.#frameCollection;
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────────
@@ -590,6 +684,7 @@ export class FlxSprite extends FlxObject {
         this.#atlasStripSlots.push({
           height: frame.texture.frame.height,
           key,
+          name: frame.name,
           source: canvasSource,
           width: frame.texture.frame.width,
           x: frame.texture.frame.x,
@@ -620,9 +715,11 @@ export class FlxSprite extends FlxObject {
         this.#atlasStripCellW,
         this.#atlasStripCellH,
       );
+      this.#frameNames = this.#atlasStripSlots.map((slot) => slot.name);
+      this.#frameCollection?.setNames(this.#frameNames);
     }
 
-    this.#animations.push(new FlxAnim(name, indices, 0, false, 1));
+    this.registerAnimation(name, indices, 0, false);
   }
 
   #configureGraphic(
@@ -654,6 +751,16 @@ export class FlxSprite extends FlxObject {
     this.height = height;
     this.frames =
       Math.floor(graphic.width / width) * Math.floor(graphic.height / height);
+    this.#frameNames = Array.from({ length: this.frames }, (_, index) =>
+      String(index),
+    );
+    this.#frameCollection = FlxFramesCollection.fromGraphicGrid(
+      graphic,
+      width,
+      height,
+      { names: this.#frameNames },
+    );
+    this.#ownsFrameCollection = true;
     this.origin.make(width * 0.5, height * 0.5);
     this.#supportsReverse = reverse;
     this.#currentFrameIndex = 0;
@@ -670,8 +777,182 @@ export class FlxSprite extends FlxObject {
   }
 
   #releaseGraphic(): void {
+    if (this.#ownsFrameCollection) this.#frameCollection?.destroy();
+    this.#frameCollection = null;
+    this.#ownsFrameCollection = false;
     if (this.#ownsGraphic) this.#graphic?.destroy();
     this.#graphic = null;
     this.#ownsGraphic = false;
+  }
+
+  /** @internal */
+  registerAnimation(
+    name: string,
+    frames: readonly number[],
+    frameRate = 30,
+    looped = true,
+    flipX = false,
+    flipY = false,
+    defaultSpeed = frameRate > 0 ? frameRate / resolveFramerate() : 1,
+  ): void {
+    if (name.length === 0) {
+      throw new RangeError('Animation name cannot be empty.');
+    }
+    if (frames.length === 0) {
+      throw new RangeError('Animation must contain at least one frame.');
+    }
+    for (const frame of frames) this.#validateFrame(frame);
+
+    const existingIdx = this.#animations.findIndex(
+      (animation) => animation.name === name,
+    );
+    if (existingIdx >= 0) {
+      const existing = this.#animations[existingIdx];
+      if (existing === this.#currentAnimation) {
+        this.stopAnimation();
+        this.#currentAnimation = null;
+      }
+      existing?.destroy();
+      this.#animations.splice(existingIdx, 1);
+    }
+    this.#animations.push(
+      new FlxAnim(name, frames, frameRate, looped, defaultSpeed, flipX, flipY),
+    );
+  }
+
+  /** @internal */
+  removeAnimation(name: string): boolean {
+    const index = this.#animations.findIndex(
+      (animation) => animation.name === name,
+    );
+    if (index < 0) return false;
+    const [removed] = this.#animations.splice(index, 1);
+    if (removed === this.#currentAnimation) {
+      this.stopAnimation();
+      this.#currentAnimation = null;
+    }
+    removed?.destroy();
+    return true;
+  }
+
+  /** @internal */
+  appendAnimation(name: string, frames: readonly number[]): void {
+    const animation = this.getAnimation(name);
+    if (animation === null) throw new Error(`No animation called "${name}".`);
+    for (const frame of frames) this.#validateFrame(frame);
+    animation.frames.push(...frames);
+  }
+
+  /** @internal */
+  renameAnimation(oldName: string, newName: string): boolean {
+    if (newName.length === 0) {
+      throw new RangeError('Animation name cannot be empty.');
+    }
+    if (this.getAnimation(newName) !== null) {
+      throw new Error(`Animation "${newName}" already exists.`);
+    }
+    const animation = this.getAnimation(oldName);
+    if (animation === null) return false;
+    animation.name = newName;
+    return true;
+  }
+
+  /** @internal */
+  getAnimation(name: string): FlxAnim | null {
+    return (
+      this.#animations.find((animation) => animation.name === name) ?? null
+    );
+  }
+
+  /** @internal */
+  getAnimationList(): FlxAnim[] {
+    return [...this.#animations];
+  }
+
+  /** @internal */
+  playAnimation(
+    name: string,
+    force = false,
+    reversed = false,
+    frame = 0,
+  ): void {
+    const animation = this.getAnimation(name);
+    if (animation === null) throw new Error(`No animation called "${name}".`);
+    this.play(name, {
+      force,
+      frame,
+      loop: animation.looped,
+      reversed,
+      speed: animation.defaultSpeed,
+    });
+  }
+
+  /** @internal */
+  finishAnimation(): void {
+    const animation = this.#currentAnimation;
+    if (animation === null) return;
+    this.#currentAnimationFrame = this.#playbackReversed
+      ? 0
+      : animation.frames.length - 1;
+    this.#currentFrameIndex =
+      animation.frames[this.#currentAnimationFrame] ?? 0;
+    this.finished = true;
+    this.#animationPaused = true;
+    this.#syncAnimationState();
+    this.dirty = true;
+    this.drawFrame();
+    this.animation.dispatchFinish(animation.name);
+  }
+
+  /** @internal */
+  stopAnimation(): void {
+    this.finished = true;
+    this.#animationPaused = true;
+    this.#syncAnimationState();
+  }
+
+  /** @internal */
+  frameIndexByName(name: string): number {
+    return this.#frameCollection?.getByName(name).index ?? -1;
+  }
+
+  /** @internal */
+  frameIndicesByPrefix(prefix: string): number[] {
+    return (
+      this.#frameCollection?.getByPrefix(prefix).map((frame) => frame.index) ??
+      []
+    );
+  }
+
+  #syncAnimationState(): void {
+    const animation = this.#currentAnimation;
+    if (animation === null) return;
+    animation.curFrame = this.#currentAnimationFrame;
+    animation.finished = this.finished;
+    animation.paused = this.#animationPaused;
+    animation.reversed = this.#playbackReversed;
+  }
+
+  #configureFrames(collection: FlxFramesCollection, reverse: boolean): void {
+    const first = collection.getFrame(0);
+    this.frameWidth = first.width;
+    this.frameHeight = first.height;
+    this.width = first.width;
+    this.height = first.height;
+    this.frames = collection.numFrames;
+    this.#frameNames = collection.frames.map((frame) => frame.name);
+    this.origin.make(first.width * 0.5, first.height * 0.5);
+    this.#supportsReverse = reverse;
+    this.#currentFrameIndex = 0;
+    this.#currentAnimationFrame = 0;
+    this.#frameTimer = 0;
+    this.dirty = true;
+    this.drawFrame();
+  }
+
+  #currentFrameDuration(): number {
+    const duration =
+      this.#frameCollection?.getFrame(this.#currentFrameIndex).duration ?? 0;
+    return duration > 0 ? duration : this.#playbackDelay;
   }
 }

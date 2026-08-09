@@ -247,28 +247,126 @@ export class FlxAngleTween extends FlxTween {
 
 // @public
 export class FlxAnim {
-    constructor(name: string, frames: readonly number[], frameRate?: number, looped?: boolean, defaultSpeed?: number);
+    constructor(name: string, frames: readonly number[], frameRate?: number, looped?: boolean, defaultSpeed?: number, flipX?: boolean, flipY?: boolean);
+    // (undocumented)
+    curFrame: number;
     readonly defaultLooped: boolean;
     readonly defaultSpeed: number;
     // (undocumented)
-    readonly delay: number;
+    get delay(): number;
     // (undocumented)
     destroy(): void;
     // (undocumented)
+    finished: boolean;
+    // (undocumented)
+    flipX: boolean;
+    // (undocumented)
+    flipY: boolean;
+    // (undocumented)
+    get frameDuration(): number;
+    set frameDuration(value: number);
+    // (undocumented)
+    frameRate: number;
+    // (undocumented)
     frames: number[];
     // (undocumented)
-    readonly looped: boolean;
+    looped: boolean;
     // (undocumented)
-    readonly name: string;
+    loopPoint: number;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    get numFrames(): number;
+    // (undocumented)
+    paused: boolean;
+    // (undocumented)
+    reversed: boolean;
+    // (undocumented)
+    timeScale: number;
 }
 
 // @public
 export type FlxAnimationCallback = (animationName: string | null, frameNumber: number, frameIndex: number) => void;
 
 // @public
+export class FlxAnimationController {
+    constructor(sprite: FlxSprite);
+    // (undocumented)
+    add(name: string, frames: readonly number[], frameRate?: number, looped?: boolean, flipX?: boolean, flipY?: boolean): void;
+    // (undocumented)
+    addByIndices(name: string, prefix: string, indices: readonly number[], postfix?: string, frameRate?: number, looped?: boolean, flipX?: boolean, flipY?: boolean): void;
+    // (undocumented)
+    addByNames(name: string, frameNames: readonly string[], frameRate?: number, looped?: boolean, flipX?: boolean, flipY?: boolean): void;
+    // (undocumented)
+    addByPrefix(name: string, prefix: string, frameRate?: number, looped?: boolean, flipX?: boolean, flipY?: boolean): void;
+    // (undocumented)
+    append(name: string, frames: readonly number[]): void;
+    // (undocumented)
+    get curAnim(): FlxAnim | null;
+    set curAnim(animation: FlxAnim | null);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    exists(name: string): boolean;
+    // (undocumented)
+    finish(): void;
+    // (undocumented)
+    get finished(): boolean;
+    set finished(value: boolean);
+    // (undocumented)
+    get frameIndex(): number;
+    set frameIndex(value: number);
+    // (undocumented)
+    get frameName(): string | null;
+    set frameName(value: string | null);
+    // (undocumented)
+    getAnimationList(): FlxAnim[];
+    // (undocumented)
+    getNameList(): string[];
+    // (undocumented)
+    get name(): string | null;
+    set name(value: string | null);
+    // (undocumented)
+    get numFrames(): number;
+    // (undocumented)
+    readonly onFinish: FlxSignal<string>;
+    // (undocumented)
+    readonly onFrameChange: FlxSignal<FlxAnimationFrameEvent>;
+    // (undocumented)
+    readonly onLoop: FlxSignal<string>;
+    // (undocumented)
+    get paused(): boolean;
+    set paused(value: boolean);
+    // (undocumented)
+    play(name: string, force?: boolean, reversed?: boolean, frame?: number): void;
+    // (undocumented)
+    randomFrame(): void;
+    // (undocumented)
+    remove(name: string): boolean;
+    // (undocumented)
+    rename(oldName: string, newName: string): boolean;
+    // (undocumented)
+    stop(): void;
+    // (undocumented)
+    timeScale: number;
+}
+
+// @public
+export interface FlxAnimationFrameEvent {
+    // (undocumented)
+    readonly animationName: string | null;
+    // (undocumented)
+    readonly frameIndex: number;
+    // (undocumented)
+    readonly frameNumber: number;
+}
+
+// @public
 export interface FlxAnimationPlayOptions {
     force?: boolean;
+    frame?: number;
     loop?: boolean;
+    reversed?: boolean;
     speed?: number;
 }
 
@@ -424,6 +522,7 @@ export interface FlxAtlasAnimationOptions {
 
 // @public
 export interface FlxAtlasFrame {
+    readonly duration?: number;
     readonly index: number;
     // (undocumented)
     readonly name: string;
@@ -1205,6 +1304,57 @@ export interface FlxFpsDisplayTheme {
 }
 
 // @public
+export class FlxFrame {
+    constructor(options: {
+        index: number;
+        name?: string | null;
+        texture: Texture | (() => Texture);
+        duration?: number;
+        width?: number;
+        height?: number;
+    });
+    // (undocumented)
+    duration: number;
+    // (undocumented)
+    readonly height: number;
+    // (undocumented)
+    readonly index: number;
+    // (undocumented)
+    name: string | null;
+    // (undocumented)
+    get texture(): Texture;
+    // (undocumented)
+    readonly width: number;
+}
+
+// @public
+export class FlxFramesCollection {
+    constructor(frames?: readonly FlxFrame[]);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    frames: FlxFrame[];
+    // (undocumented)
+    static fromAtlas(frames: FlxAtlasFrameList): FlxFramesCollection;
+    // (undocumented)
+    static fromGraphicGrid(graphic: FlxGraphic, frameWidth: number, frameHeight: number, options?: FlxGridFramesOptions): FlxFramesCollection;
+    // (undocumented)
+    getByIndices(indices: readonly number[]): FlxFrame[];
+    // (undocumented)
+    getByName(name: string): FlxFrame;
+    // (undocumented)
+    getByNames(names: readonly string[]): FlxFrame[];
+    // (undocumented)
+    getByPrefix(prefix: string): FlxFrame[];
+    // (undocumented)
+    getFrame(index: number): FlxFrame;
+    // (undocumented)
+    get numFrames(): number;
+    // (undocumented)
+    setNames(names: readonly (string | null)[]): void;
+}
+
+// @public
 export class FlxG {
     // (undocumented)
     static get actions(): FlxActions;
@@ -1421,6 +1571,14 @@ export class FlxGraphic {
     readonly texture: Texture;
     // (undocumented)
     get width(): number;
+}
+
+// @public
+export interface FlxGridFramesOptions {
+    // (undocumented)
+    readonly durations?: readonly number[];
+    // (undocumented)
+    readonly names?: readonly (string | null)[];
 }
 
 // @public
@@ -2217,6 +2375,8 @@ export class FlxSprite extends FlxObject {
     get alpha(): number;
     set alpha(value: number);
     // (undocumented)
+    readonly animation: FlxAnimationController;
+    // (undocumented)
     get animationFrame(): number;
     // (undocumented)
     get animationName(): string | null;
@@ -2250,11 +2410,14 @@ export class FlxSprite extends FlxObject {
     get frame(): number;
     set frame(value: number);
     // (undocumented)
+    get frameCollection(): FlxFramesCollection | null;
+    // (undocumented)
     frameHeight: number;
     // (undocumented)
     frames: number;
     // (undocumented)
     frameWidth: number;
+    loadFrames(collection: FlxFramesCollection, reverse?: boolean): this;
     // (undocumented)
     loadGraphic(source: FlxGraphic | Texture, animated?: boolean, reverse?: boolean, width?: number, height?: number, unique?: boolean): this;
     protected loadPixelBuffer(buffer: PixelBuffer, key?: string): this;

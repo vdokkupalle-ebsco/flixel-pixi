@@ -30,8 +30,14 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
     const owner = this.#owner;
     this.sprite.texture = owner.renderTexture;
     this.sprite.roundPixels = !owner.antialiasing;
-    this.sprite.scale.set(owner.renderFlipped ? -1 : 1, 1);
-    this.sprite.position.set(owner.renderFlipped ? owner.frameWidth : 0, 0);
+    this.sprite.scale.set(
+      owner.renderFlipped ? -1 : 1,
+      owner.renderFlippedY ? -1 : 1,
+    );
+    this.sprite.position.set(
+      owner.renderFlipped ? owner.frameWidth : 0,
+      owner.renderFlippedY ? owner.frameHeight : 0,
+    );
 
     this.view.position.set(owner.x - owner.offset.x, owner.y - owner.offset.y);
     this.view.origin.set(owner.origin.x, owner.origin.y);
