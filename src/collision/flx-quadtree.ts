@@ -140,10 +140,23 @@ export class FlxQuadTree extends FlxRect {
     if (list !== FlxQuadTree.A_LIST && list !== FlxQuadTree.B_LIST) {
       throw new RangeError('Quadtree list must be A_LIST or B_LIST.');
     }
-    if (objectOrGroup instanceof FlxGroup) {
-      for (const member of objectOrGroup.members.slice(
+    const compositeGroup =
+      objectOrGroup instanceof FlxGroup
+        ? objectOrGroup
+        : Reflect.get(objectOrGroup, 'group') instanceof FlxGroup
+          ? (Reflect.get(objectOrGroup, 'group') as FlxGroup)
+          : null;
+    if (compositeGroup !== null) {
+      if (
+        objectOrGroup instanceof FlxObject &&
+        (!objectOrGroup.exists ||
+          objectOrGroup.allowCollisions === FlxObject.NONE)
+      ) {
+        return;
+      }
+      for (const member of compositeGroup.members.slice(
         0,
-        objectOrGroup.length,
+        compositeGroup.length,
       )) {
         if (member !== null && member.exists) this.add(member, list);
       }

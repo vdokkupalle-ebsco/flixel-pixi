@@ -59,6 +59,15 @@ transforms or bounds.
 | `FlxList`                                                | Adapted        | The linked-list helper is implemented as an internal collision detail rather than a root package export.                                                                                                                                        |
 | `FlxG.overlap` and `FlxG.collide`                        | Exact          | World bounds/divisions, self comparison, nested groups, process filtering, notification, and separation delegation are implemented.                                                                                                             |
 
+Modern HaxeFlixel container parity is tracked separately from the pinned AS3
+inventory. At HaxeFlixel commit
+`8c7b551f203a78ab0e7ee6757f39693d35108d24`, `FlxContainer`,
+`FlxSpriteContainer`, and `FlxSpriteGroup` are classified **Adapted**:
+exclusive ownership is preserved, composite collision expands to member AABBs,
+and world-authoritative member coordinates drive adapter-owned Pixi `Container`
+branches. See the [container guide](guides/containers.md) for the exact
+local/world and lifecycle contract.
+
 See the [historical collision evidence](history/porting/collision.md) for
 collision vectors and stress measurements.
 

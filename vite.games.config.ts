@@ -26,6 +26,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/animation/index.html',
         ),
+        containers: resolve(
+          import.meta.dirname,
+          'examples/games/containers/index.html',
+        ),
         substates: resolve(
           import.meta.dirname,
           'examples/games/substates/index.html',

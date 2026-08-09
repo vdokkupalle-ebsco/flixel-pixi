@@ -25,6 +25,7 @@ describe('Headless core math and deterministic utilities', () => {
     expect(point.copyFrom({ x: 5, y: 6 })).toBe(point);
     expect(point.copyFromFlash({ x: 7, y: 8 })).toBe(point);
     expect(point.copyToFlash(target)).toEqual({ x: 7, y: 8 });
+    expect({ ...point }).toEqual({ x: 7, y: 8 });
   });
 
   it('exposes rectangle edges, copy helpers, and strict overlap', () => {

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi container showcase</title>
+    <link rel="stylesheet" href="../_kit/shell.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header>
+        <p class="eyebrow">P0 PARITY CHECKPOINT</p>
+        <h1>Container Showcase</h1>
+        <p>
+          Nested composites keep deterministic world collision while the
+          renderer owns a hierarchy of Pixi containers.
+        </p>
+      </header>
+      <section class="game-card" aria-label="Container showcase game">
+        <div data-testid="canvas-host"></div>
+        <div class="game-controls">
+          <span data-testid="status" data-state="loading">Loading…</span>
+          <button data-action="destroy" type="button" disabled>Destroy</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

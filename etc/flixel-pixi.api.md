@@ -652,6 +652,7 @@ export class FlxBasic {
     alive: boolean;
     // (undocumented)
     cameras: readonly FlxCamera[] | null;
+    container: FlxContainer | null;
     destroy(): void;
     draw(): void;
     drawDebug(camera?: unknown): void;
@@ -937,6 +938,12 @@ export interface FlxColorTweenTarget {
     alpha: number;
     // (undocumented)
     color: number;
+}
+
+// @public
+export class FlxContainer<T extends FlxBasic = FlxBasic> extends FlxGroup<T> {
+    // (undocumented)
+    replace(oldObject: T, newObject: T): T | null;
 }
 
 // @public
@@ -2454,6 +2461,122 @@ export class FlxSprite extends FlxObject {
 }
 
 // @public
+export class FlxSpriteContainer<T extends FlxSprite = FlxSprite> extends FlxSpriteGroup<T> {
+    // (undocumented)
+    protected createGroup(maxSize: number): FlxContainer<T>;
+}
+
+// @public
+export class FlxSpriteGroup<T extends FlxSprite = FlxSprite> extends FlxSprite {
+    constructor(x?: number, y?: number, maxSize?: number);
+    // (undocumented)
+    add(sprite: T): T;
+    // (undocumented)
+    get alpha(): number;
+    set alpha(value: number);
+    // (undocumented)
+    callAll(functionName: string, recurse?: boolean): void;
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    get color(): number;
+    set color(value: number);
+    // (undocumented)
+    contains(sprite: FlxSprite, recurse?: boolean): boolean;
+    // (undocumented)
+    countDead(): number;
+    // (undocumented)
+    countLiving(): number;
+    // (undocumented)
+    protected createGroup(maxSize: number): FlxGroup<T>;
+    // (undocumented)
+    createRenderHandle(): FlxRenderHandle;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    directAlpha: boolean;
+    // (undocumented)
+    draw(): void;
+    // (undocumented)
+    findMaxX(): number;
+    // (undocumented)
+    findMaxY(): number;
+    // (undocumented)
+    findMinX(): number;
+    // (undocumented)
+    findMinY(): number;
+    // (undocumented)
+    getFirstAlive(): T | null;
+    // (undocumented)
+    getFirstAvailable(objectClass?: FlxBasicConstructor<T>): T | null;
+    // (undocumented)
+    getFirstDead(): T | null;
+    // (undocumented)
+    getFirstExtant(): T | null;
+    // (undocumented)
+    getFirstNull(): number;
+    getMemberLocalPosition(member: T, out?: FlxPoint): FlxPoint;
+    // (undocumented)
+    getRandom(startIndex?: number, length?: number): T | null;
+    getWorldPosition(local: Readonly<FlxPoint>, out?: FlxPoint): FlxPoint;
+    // (undocumented)
+    readonly group: FlxGroup<T>;
+    // (undocumented)
+    kill(): void;
+    // (undocumented)
+    get length(): number;
+    // (undocumented)
+    get maxSize(): number;
+    set maxSize(value: number);
+    // (undocumented)
+    get members(): (T | null)[];
+    multiTransformChildren<V>(transforms: readonly FlxSpriteTransform<T, V>[], values: readonly V[]): void;
+    // (undocumented)
+    onScreen(camera?: FlxCameraLike): boolean;
+    // (undocumented)
+    overlaps(objectOrGroup: FlxBasic): boolean;
+    // (undocumented)
+    overlapsAt(x: number, y: number, objectOrGroup: FlxBasic): boolean;
+    // (undocumented)
+    overlapsPoint(point: Readonly<FlxPoint>): boolean;
+    // (undocumented)
+    recycle(objectClass?: FlxBasicConstructor<T>): T | null;
+    // (undocumented)
+    remove(sprite: T, splice?: boolean): T | null;
+    // (undocumented)
+    replace(oldObject: T, newObject: T): T | null;
+    // (undocumented)
+    reset(x: number, y: number): void;
+    // (undocumented)
+    revive(): void;
+    // (undocumented)
+    setAll(variableName: string, value: unknown, recurse?: boolean): void;
+    setMemberLocalPosition(member: T, x: number, y: number): T;
+    // (undocumented)
+    get solid(): boolean;
+    set solid(value: boolean);
+    // (undocumented)
+    sort(index?: string, order?: number): void;
+    transformChildren<V>(transform: FlxSpriteTransform<T, V>, value: V): void;
+    // (undocumented)
+    update(): void;
+}
+
+// @public
+export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxSpriteGroup, onDestroy?: () => void);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    get memberHandleCount(): number;
+    // (undocumented)
+    sync(camera?: FlxCamera): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
 export class FlxSpriteRenderHandle implements FlxRenderHandle {
     constructor(owner: FlxSprite, onDestroy?: () => void);
     // (undocumented)
@@ -2467,6 +2590,9 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
     // (undocumented)
     readonly view: Container;
 }
+
+// @public
+export type FlxSpriteTransform<T extends FlxSprite, V> = (sprite: T, value: V) => void;
 
 // @public
 export class FlxState extends FlxGroup {

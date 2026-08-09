@@ -67,6 +67,7 @@ Compatibility is pinned to Flixel commit
 - [Loading and preloader guide](docs/guides/loading.md)
 - [Making games (pools, actions, sync)](docs/guides/making-games.md)
 - [Animation and frame collections](docs/guides/animation.md)
+- [Containers and sprite groups](docs/guides/containers.md)
 - [Tweens and easing](docs/guides/tweens.md)
 - [Performance guide](docs/guides/performance.md)
 - [Browser guide](docs/guides/browser.md)

@@ -45,8 +45,8 @@ started merely to match a Haxe class count.
 |     1 |    P0    | Core tweening and easing                        | Complete (`5d3cbbf`)     | Deterministic manager, easing families, options, chaining, target control, unit coverage.          |
 |     2 |    P0    | Specialized tweens, motion, paths, and showcase | Complete (`0292702`)     | Misc/motion tween families, documentation, public demo, unit and browser coverage.                 |
 |     3 |    P0    | State overlays and nested substates             | Complete (`3d71446`)     | Deferred lifecycle, persistence policies, reuse/destruction, signals, render ordering, demo/tests. |
-|     4 |    P0    | Animation and frame model                       | Implemented; uncommitted | Controller-based animation and frame collections work without regressing current sprite APIs.      |
-|     5 |    P0    | Container and sprite-group model                | Planned                  | Transformable composite objects and groups preserve collision, camera, and lifecycle semantics.    |
+|     4 |    P0    | Animation and frame model                       | Complete (`8f47307`)     | Controller-based animation and frame collections work without regressing current sprite APIs.      |
+|     5 |    P0    | Container and sprite-group model                | Implemented; uncommitted | Transformable composite objects and groups preserve collision, camera, and lifecycle semantics.    |
 |     6 |    P0    | Input expansion                                 | Planned                  | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
 |     7 |    P1    | UI and text authoring                           | Planned                  | Common HUD/control/input-text needs no application-specific framework code.                        |
 |     8 |    P1    | Atlas and content-pipeline expansion            | Planned                  | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
@@ -120,6 +120,38 @@ Required behavior:
   sprites.
 
 Checkpoint the coordinate and collision model before exposing public classes.
+
+Compatibility decisions:
+
+- **Adapted:** `FlxContainer` provides exclusive ownership and synchronous
+  reparenting through `FlxBasic.container`; ordinary `FlxGroup` remains
+  non-exclusive.
+- **Adapted:** `FlxSpriteGroup` and `FlxSpriteContainer` expose the group
+  authoring surface while member positions stay authoritative world-space
+  values during ownership. Local helpers cover translation without deriving
+  gameplay state from Pixi matrices.
+- **Adapted:** composite overlap/collision recursively expands member AABBs.
+  Rotation and scale remain visual and do not mutate collision extents, matching
+  the existing sprite boundary.
+- **Exact in lifecycle intent:** stable nested traversal, kill/revive hooks,
+  recycling, and destruction occur once through the backing group.
+- **Adapted for PixiJS v8:** renderer handles own `Container` branches with
+  drawable sprites as leaves; the engine never adds children to a Pixi sprite.
+
+Implemented slices:
+
+1. Add exclusive logical containers with membership cleanup hooks.
+2. Add transformable sprite groups/containers, local/world helpers, nested
+   transforms, camera routing, bounds, and common group delegates.
+3. Expand broad-phase collision to composite members without renderer queries.
+4. Add adapter-owned composite render handles and incremental child ownership.
+
+Evidence: unit contracts cover exclusive reparenting, coordinate conversion,
+transform propagation, collision gaps, nested lifecycle, and leaf-safe Pixi
+ownership. The public container showcase exercises nested transforms,
+world-space collision, renderer lifecycle, and teardown across the supported
+browser projects. See [`guides/containers.md`](guides/containers.md) and
+[`adr/0013-container-coordinate-and-render-ownership.md`](adr/0013-container-coordinate-and-render-ownership.md).
 
 ### Input expansion
 

@@ -144,12 +144,15 @@ export class FlxObject extends FlxBasic {
   }
 
   overlaps(objectOrGroup: FlxBasic): boolean {
-    if (objectOrGroup instanceof FlxGroup) {
+    const group =
+      objectOrGroup instanceof FlxGroup
+        ? objectOrGroup
+        : Reflect.get(objectOrGroup, 'group') instanceof FlxGroup
+          ? (Reflect.get(objectOrGroup, 'group') as FlxGroup)
+          : null;
+    if (group !== null) {
       let result = false;
-      for (const member of objectOrGroup.members.slice(
-        0,
-        objectOrGroup.length,
-      )) {
+      for (const member of group.members.slice(0, group.length)) {
         if (member !== null && this.overlaps(member)) result = true;
       }
       return result;
@@ -160,12 +163,15 @@ export class FlxObject extends FlxBasic {
   }
 
   overlapsAt(x: number, y: number, objectOrGroup: FlxBasic): boolean {
-    if (objectOrGroup instanceof FlxGroup) {
+    const group =
+      objectOrGroup instanceof FlxGroup
+        ? objectOrGroup
+        : Reflect.get(objectOrGroup, 'group') instanceof FlxGroup
+          ? (Reflect.get(objectOrGroup, 'group') as FlxGroup)
+          : null;
+    if (group !== null) {
       let result = false;
-      for (const member of objectOrGroup.members.slice(
-        0,
-        objectOrGroup.length,
-      )) {
+      for (const member of group.members.slice(0, group.length)) {
         if (member !== null && this.overlapsAt(x, y, member)) result = true;
       }
       return result;

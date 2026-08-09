@@ -54,6 +54,7 @@ export type { FlxPluginConstructor } from './core/flx-g';
 export { FlxGame } from './core/flx-game';
 export { FlxGroup } from './core/flx-group';
 export type { FlxBasicConstructor } from './core/flx-group';
+export { FlxContainer } from './core/flx-container';
 export { FlxState } from './core/flx-state';
 export type { FlxStateConstructor } from './core/flx-state';
 export { FlxSubState } from './core/flx-sub-state';
@@ -106,6 +107,8 @@ export type {
   FlxAnimationPlayOptions,
   FlxAtlasAnimationOptions,
 } from './objects/flx-sprite';
+export { FlxSpriteContainer, FlxSpriteGroup } from './objects/flx-sprite-group';
+export type { FlxSpriteTransform } from './objects/flx-sprite-group';
 export { FlxText } from './objects/flx-text';
 export type { FlxTextRenderMode } from './objects/flx-text';
 export { FlxTileblock } from './objects/flx-tileblock';
@@ -121,6 +124,7 @@ export type { FlxRenderHandle } from './rendering/flx-render-handle';
 export { FlxCameraRenderer } from './rendering/flx-camera-renderer';
 export type { FlxCameraView } from './rendering/flx-camera-renderer';
 export { FlxSpriteRenderHandle } from './rendering/flx-sprite-render-handle';
+export { FlxSpriteGroupRenderHandle } from './rendering/flx-sprite-group-render-handle';
 export { FlxEmitterRenderHandle } from './rendering/flx-emitter-render-handle';
 export type { FlxEmitterRenderOptions } from './rendering/flx-emitter-render-handle';
 export { FlxButtonRenderHandle } from './rendering/flx-button-render-handle';

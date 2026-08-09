@@ -1,4 +1,5 @@
 import type { FlxCamera } from './flx-camera';
+import type { FlxContainer } from './flx-container';
 
 /** Base lifecycle object shared by gameplay objects, groups, and plugins. @public */
 export class FlxBasic {
@@ -11,6 +12,8 @@ export class FlxBasic {
   visible = true;
   alive = true;
   cameras: readonly FlxCamera[] | null = null;
+  /** Exclusive logical container that currently owns this object, if any. */
+  container: FlxContainer | null = null;
   ignoreDrawDebug = false;
 
   /** Override to release owned resources. */

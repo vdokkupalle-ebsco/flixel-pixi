@@ -6,6 +6,7 @@ import { FlxGame } from '../../src/core/flx-game';
 import { FlxState } from '../../src/core/flx-state';
 import { FlxSubState } from '../../src/core/flx-sub-state';
 import { FlxSprite } from '../../src/objects/flx-sprite';
+import { FlxSpriteContainer } from '../../src/objects/flx-sprite-group';
 import { FlxCameraRenderer } from '../../src/rendering/flx-camera-renderer';
 import { syncWorldToRenderer } from '../../src/rendering/flx-world-sync';
 
@@ -74,6 +75,31 @@ describe('syncWorldToRenderer', () => {
 
     syncWorldToRenderer(game, renderer);
     expect(renderer.registeredObjectCount).toBe(1);
+  });
+
+  it('registers a sprite composite once and lets its handle own member branches', () => {
+    game = new FlxGame(640, 480, emptyState());
+    game.step();
+    const renderer = new FlxCameraRenderer(
+      fakeRenderer(),
+      new Container(),
+      game.context,
+    );
+    const state = requireState(game);
+    const composite = new FlxSpriteContainer(20, 30);
+    const member = composite.add(new FlxSprite(4, 5));
+    state.add(composite);
+
+    syncWorldToRenderer(game, renderer);
+    expect(Array.from(renderer.registeredObjects)).toEqual([composite]);
+    expect(composite.renderHandleCount).toBe(1);
+    expect(member.renderHandleCount).toBe(1);
+
+    state.remove(composite);
+    syncWorldToRenderer(game, renderer);
+    expect(renderer.registeredObjectCount).toBe(0);
+    expect(composite.renderHandleCount).toBe(0);
+    expect(member.renderHandleCount).toBe(0);
   });
 
   it('removes handles when a sprite is removed from the state', () => {
