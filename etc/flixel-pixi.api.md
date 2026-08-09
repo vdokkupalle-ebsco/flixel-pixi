@@ -920,6 +920,87 @@ export interface FlxDebuggerVCRCallbacks {
 }
 
 // @public
+export class FlxEase {
+    // (undocumented)
+    static backIn(t: number): number;
+    // (undocumented)
+    static backInOut(t: number): number;
+    // (undocumented)
+    static backOut(t: number): number;
+    // (undocumented)
+    static bounceIn(t: number): number;
+    // (undocumented)
+    static bounceInOut(t: number): number;
+    // (undocumented)
+    static bounceOut(t: number): number;
+    // (undocumented)
+    static circIn(t: number): number;
+    // (undocumented)
+    static circInOut(t: number): number;
+    // (undocumented)
+    static circOut(t: number): number;
+    // (undocumented)
+    static cubeIn(t: number): number;
+    // (undocumented)
+    static cubeInOut(t: number): number;
+    // (undocumented)
+    static cubeOut(t: number): number;
+    // (undocumented)
+    static elasticIn(t: number): number;
+    // (undocumented)
+    static elasticInOut(t: number): number;
+    // (undocumented)
+    static elasticOut(t: number): number;
+    // (undocumented)
+    static expoIn(t: number): number;
+    // (undocumented)
+    static expoInOut(t: number): number;
+    // (undocumented)
+    static expoOut(t: number): number;
+    // (undocumented)
+    static linear(t: number): number;
+    // (undocumented)
+    static quadIn(t: number): number;
+    // (undocumented)
+    static quadInOut(t: number): number;
+    // (undocumented)
+    static quadOut(t: number): number;
+    // (undocumented)
+    static quartIn(t: number): number;
+    // (undocumented)
+    static quartInOut(t: number): number;
+    // (undocumented)
+    static quartOut(t: number): number;
+    // (undocumented)
+    static quintIn(t: number): number;
+    // (undocumented)
+    static quintInOut(t: number): number;
+    // (undocumented)
+    static quintOut(t: number): number;
+    // (undocumented)
+    static sineIn(t: number): number;
+    // (undocumented)
+    static sineInOut(t: number): number;
+    // (undocumented)
+    static sineOut(t: number): number;
+    // (undocumented)
+    static smootherStepIn(t: number): number;
+    // (undocumented)
+    static smootherStepInOut(t: number): number;
+    // (undocumented)
+    static smootherStepOut(t: number): number;
+    // (undocumented)
+    static smoothStepIn(t: number): number;
+    // (undocumented)
+    static smoothStepInOut(t: number): number;
+    // (undocumented)
+    static smoothStepOut(t: number): number;
+}
+
+// @public
+export type FlxEaseFunction = (progress: number) => number;
+
+// @public
 export class FlxEmitter extends FlxGroup<FlxParticle> {
     constructor(x?: number, y?: number, size?: number);
     // (undocumented)
@@ -1481,6 +1562,15 @@ export interface FlxMouseRecord {
     readonly x: number;
     // (undocumented)
     readonly y: number;
+}
+
+// @public
+export class FlxNumTween extends FlxTween {
+    constructor(fromValue: number, toValue: number, duration: number, options?: FlxTweenOptions, tweenFunction?: (value: number) => void, manager?: FlxTweenManager);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    value: number;
 }
 
 // @public
@@ -2324,6 +2414,128 @@ export class FlxTimer {
 export type FlxTimerCallback = (timer: FlxTimer) => void;
 
 // @public
+export class FlxTween {
+    constructor(options?: FlxTweenOptions, manager?: FlxTweenManager);
+    // (undocumented)
+    active: boolean;
+    // (undocumented)
+    static readonly BACKWARD: FlxTweenType;
+    // (undocumented)
+    backward: boolean;
+    // (undocumented)
+    cancel(): void;
+    // (undocumented)
+    cancelChain(): void;
+    // (undocumented)
+    static cancelTweensOf(target: object, fieldPaths?: readonly string[]): void;
+    // (undocumented)
+    static completeTweensOf(target: object, fieldPaths?: readonly string[]): void;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    duration: number;
+    // (undocumented)
+    ease: FlxEaseFunction | null;
+    // (undocumented)
+    executions: number;
+    // (undocumented)
+    finished: boolean;
+    // (undocumented)
+    framerate: number;
+    // (undocumented)
+    static get globalManager(): FlxTweenManager;
+    // (undocumented)
+    get loopDelay(): number;
+    set loopDelay(value: number);
+    // (undocumented)
+    static readonly LOOPING: FlxTweenType;
+    // (undocumented)
+    readonly manager: FlxTweenManager;
+    // (undocumented)
+    static num(fromValue: number, toValue: number, duration?: number, options?: FlxTweenOptions, tweenFunction?: (value: number) => void): FlxNumTween;
+    // (undocumented)
+    onComplete: FlxTweenCallback | null;
+    // (undocumented)
+    static readonly ONESHOT: FlxTweenType;
+    // (undocumented)
+    onStart: FlxTweenCallback | null;
+    // (undocumented)
+    onUpdate: FlxTweenCallback | null;
+    // (undocumented)
+    get percent(): number;
+    set percent(value: number);
+    // (undocumented)
+    static readonly PERSIST: FlxTweenType;
+    // (undocumented)
+    static readonly PINGPONG: FlxTweenType;
+    // (undocumented)
+    scale: number;
+    // (undocumented)
+    start(): this;
+    // (undocumented)
+    get startDelay(): number;
+    set startDelay(value: number);
+    // (undocumented)
+    then(tween: FlxTween): this;
+    // (undocumented)
+    get time(): number;
+    // (undocumented)
+    static tween<T extends object>(target: T, values: Record<string, number>, duration?: number, options?: FlxTweenOptions): FlxVarTween<T>;
+    // (undocumented)
+    type: FlxTweenType;
+    // (undocumented)
+    wait(delay: number): this;
+}
+
+// @public
+export type FlxTweenCallback = (tween: FlxTween) => void;
+
+// @public
+export class FlxTweenManager extends FlxBasic {
+    constructor();
+    // (undocumented)
+    cancelTweensOf(target: object, fieldPaths?: readonly string[]): void;
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    completeTweensOf(target: object, fieldPaths?: readonly string[]): void;
+    // (undocumented)
+    containsTweensOf(target: object, fieldPaths?: readonly string[]): boolean;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    num(fromValue: number, toValue: number, duration?: number, options?: FlxTweenOptions, tweenFunction?: (value: number) => void): FlxNumTween;
+    // (undocumented)
+    tween<T extends object>(target: T, values: Record<string, number>, duration?: number, options?: FlxTweenOptions): FlxVarTween<T>;
+    // (undocumented)
+    get tweenCount(): number;
+    // (undocumented)
+    update(): void;
+}
+
+// @public
+export interface FlxTweenOptions {
+    // (undocumented)
+    ease?: FlxEaseFunction;
+    framerate?: number;
+    // (undocumented)
+    loopDelay?: number;
+    // (undocumented)
+    onComplete?: FlxTweenCallback;
+    // (undocumented)
+    onStart?: FlxTweenCallback;
+    // (undocumented)
+    onUpdate?: FlxTweenCallback;
+    // (undocumented)
+    startDelay?: number;
+    // (undocumented)
+    type?: FlxTweenType;
+}
+
+// @public
+export type FlxTweenType = 'oneshot' | 'persist' | 'looping' | 'pingpong' | 'backward';
+
+// @public
 export class FlxU {
     // (undocumented)
     static abs(value: number): number;
@@ -2374,6 +2586,15 @@ export class FlxU {
     static shuffle<T>(objects: T[], howManyTimes: number, random?: () => number): T[];
     // (undocumented)
     static srand(seed: number): number;
+}
+
+// @public
+export class FlxVarTween<T extends object = object> extends FlxTween {
+    constructor(target: T, values: Record<string, number>, duration: number, options?: FlxTweenOptions, manager?: FlxTweenManager);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    readonly target: T;
 }
 
 // @public

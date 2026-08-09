@@ -121,6 +121,17 @@ export { FlxTilemapRenderHandle } from './rendering/flx-tilemap-render-handle';
 export { TimerManager } from './plugin/timer-manager';
 export { DebugPathDisplay } from './plugin/debug-path-display';
 
+// --- Tweens ---
+export { FlxEase } from './tweens/flx-ease';
+export type { FlxEaseFunction } from './tweens/flx-ease';
+export { FlxNumTween, FlxTween, FlxVarTween } from './tweens/flx-tween';
+export type {
+  FlxTweenCallback,
+  FlxTweenOptions,
+  FlxTweenType,
+} from './tweens/flx-tween';
+export { FlxTweenManager } from './tweens/flx-tween-manager';
+
 // --- Audio ---
 export { FLX_AUDIO_SERVICE } from './audio/flx-audio-backend';
 export type {

@@ -6,6 +6,7 @@ import { FlxContext, type FlxStateRuntime } from './flx-context';
 import { FlxG } from './flx-g';
 import { DebugPathDisplay } from '../plugin/debug-path-display';
 import { TimerManager } from '../plugin/timer-manager';
+import { FlxTweenManager } from '../tweens/flx-tween-manager';
 import {
   FlxInputManager,
   type FlxInputManagerOptions,
@@ -73,6 +74,7 @@ export class FlxGame implements FlxStateRuntime {
     this.audio = new FlxAudioManager(this.context, audioBackend);
     this.context.addPlugin(new DebugPathDisplay());
     this.context.addPlugin(new TimerManager());
+    this.context.addPlugin(new FlxTweenManager());
     this.#clock = new FixedStepAccumulator({ stepSeconds: 1 / gameFramerate });
     this.#requestedState = new initialState();
     // Debug services — always constructed but free when unused
@@ -200,6 +202,7 @@ export class FlxGame implements FlxStateRuntime {
     this.#requestedState = null;
     const previousState = this.#state;
     this.context.getPlugin(TimerManager)?.clear();
+    this.context.getPlugin(FlxTweenManager)?.clear();
     this.audio.destroySounds(false);
     previousState?.destroy();
     this.#state = nextState;

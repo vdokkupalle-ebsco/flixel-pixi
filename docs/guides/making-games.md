@@ -42,6 +42,9 @@ same helper.
 Critical assets, custom preloading, branded bootstrap screens, retry, and
 in-game loading states are covered in [`loading.md`](loading.md).
 
+Property animation, easing, loop modes, delays, and chains are covered in
+[`tweens.md`](tweens.md).
+
 ## Named actions
 
 Bind gameplay intents instead of scattering raw key names:

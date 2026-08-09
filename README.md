@@ -65,6 +65,7 @@ Compatibility is pinned to Flixel commit
 - [Lifecycle guide](docs/guides/lifecycle.md)
 - [Loading and preloader guide](docs/guides/loading.md)
 - [Making games (pools, actions, sync)](docs/guides/making-games.md)
+- [Tweens and easing](docs/guides/tweens.md)
 - [Performance guide](docs/guides/performance.md)
 - [Browser guide](docs/guides/browser.md)
 - [Debugging guide](docs/guides/debugging.md)
