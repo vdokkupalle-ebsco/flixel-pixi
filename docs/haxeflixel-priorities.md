@@ -48,8 +48,8 @@ started merely to match a Haxe class count.
 |     4 |    P0    | Animation and frame model                       | Complete (`8f47307`) | Controller-based animation and frame collections work without regressing current sprite APIs.      |
 |     5 |    P0    | Container and sprite-group model                | Complete (`070469f`) | Transformable composite objects and groups preserve collision, camera, and lifecycle semantics.    |
 |     6 |    P0    | Input expansion                                 | Complete (`f197d9f`) | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
-|     7 |    P1    | UI and text authoring                           | In progress          | Common HUD/control/input-text needs no application-specific framework code.                        |
-|     8 |    P1    | Atlas and content-pipeline expansion            | Planned              | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
+|     7 |    P1    | UI and text authoring                           | Complete             | Common HUD/control/input-text needs no application-specific framework code.                        |
+|     8 |    P1    | Atlas and content-pipeline expansion            | Complete             | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Planned              | Logical coordinates remain correct through browser/window lifecycle changes.                       |
 |    10 |    P1    | Audio organization and system UX                | Planned              | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Planned              | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
@@ -271,8 +271,9 @@ loading, unload behavior, and texture-source ownership.
 
 Current slice: TexturePacker JSON hash/array parsing validates frame geometry
 and duplicate names, preserves rotated/trimmed metadata in Pixi textures, and
-restores those transforms when baking tile or animation strips. Asset-bundle
-integration and a dedicated demo remain within this checkpoint.
+restores those transforms when baking tile or animation strips. Bundle-backed
+registration, explicit cache ownership, and the dedicated TexturePacker demo
+complete this checkpoint.
 
 ### Scaling, resize, fullscreen, and focus policy
 

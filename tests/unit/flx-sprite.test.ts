@@ -209,6 +209,28 @@ describe('FlxSprite', () => {
     sprite.x = -100;
     expect(sprite.onScreen(camera)).toBe(false);
 
+    sprite.makeGraphic(1920, 1080);
+    sprite.setOriginToCorner();
+    sprite.angle = 0;
+    sprite.scale.make(1 / 3, 1 / 3);
+    sprite.x = 620;
+    sprite.y = 0;
+    expect(
+      sprite.onScreen({
+        height: 360,
+        scroll: new FlxPoint(),
+        width: 640,
+      }),
+    ).toBe(true);
+    sprite.x = 641;
+    expect(
+      sprite.onScreen({
+        height: 360,
+        scroll: new FlxPoint(),
+        width: 640,
+      }),
+    ).toBe(false);
+
     sprite.makeGraphic(3, 2, 0xabcdef80);
     expect(sprite.graphic?.pixels?.data[0]).toBe(0xabcdef80);
     sprite.destroy();

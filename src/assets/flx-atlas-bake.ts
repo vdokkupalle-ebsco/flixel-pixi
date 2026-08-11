@@ -34,7 +34,7 @@ export function atlasBakeCellFromTexture(
   const rotated = texture.rotate === 2;
   const trim = texture.trim;
   return {
-    height: rotated ? texture.frame.width : texture.frame.height,
+    height: texture.frame.height,
     rotated,
     source,
     sourceHeight: texture.orig.height,
@@ -43,7 +43,7 @@ export function atlasBakeCellFromTexture(
     trimWidth: trim?.width ?? texture.orig.width,
     trimX: trim?.x ?? 0,
     trimY: trim?.y ?? 0,
-    width: rotated ? texture.frame.height : texture.frame.width,
+    width: texture.frame.width,
     x: texture.frame.x,
     y: texture.frame.y,
   };

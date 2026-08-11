@@ -106,7 +106,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
     expect(bakeSpy).toHaveBeenCalledWith(
       [
         expect.objectContaining({
-          height: 6,
+          height: 4,
           rotated: true,
           sourceHeight: 12,
           sourceWidth: 14,
@@ -114,7 +114,7 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
           trimWidth: 4,
           trimX: 3,
           trimY: 2,
-          width: 4,
+          width: 6,
         }),
       ],
       14,

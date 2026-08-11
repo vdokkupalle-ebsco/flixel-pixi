@@ -2,8 +2,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BufferImageSource, Texture } from 'pixi.js';
 
-import { FlxAtlas } from '../../src/assets/flx-atlas';
+import { canvasSourceFromTexture, FlxAtlas } from '../../src/assets/flx-atlas';
 import { FlxAtlasRegistry } from '../../src/assets/flx-atlas-registry';
+import type { FlxAssets } from '../../src/assets/flx-assets';
 import type { FlxAtlasFrameRect } from '../../src/assets/flx-atlas-frame';
 import * as atlasBake from '../../src/assets/flx-atlas-bake';
 
@@ -278,6 +279,28 @@ describe('bakeAtlasFrameStrip', () => {
   });
 });
 
+describe('canvasSourceFromTexture', () => {
+  it('uses Pixi ImageBitmap resources directly when PNG decoding prefers them', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'ImageBitmap');
+    class FakeImageBitmap {
+      readonly fake = true;
+    }
+    Object.defineProperty(globalThis, 'ImageBitmap', {
+      configurable: true,
+      value: FakeImageBitmap,
+    });
+    try {
+      const resource = new FakeImageBitmap() as unknown as ImageBitmap;
+      const texture = { source: { resource } } as unknown as Texture;
+      expect(canvasSourceFromTexture(texture)).toBe(resource);
+    } finally {
+      if (original === undefined)
+        Reflect.deleteProperty(globalThis, 'ImageBitmap');
+      else Object.defineProperty(globalThis, 'ImageBitmap', original);
+    }
+  });
+});
+
 // ── FlxAtlas pickers ──────────────────────────────────────────────────────────
 
 describe('FlxAtlas.getFrame', () => {
@@ -495,6 +518,105 @@ describe('FlxAtlasRegistry', () => {
 
     globalThis.Image = originalImage;
   });
+
+  it('registers TexturePacker JSON from loaded asset aliases', () => {
+    const texture = makeTexture(16, 8);
+    const metadata = {
+      frames: {
+        'hero.png': {
+          frame: { h: 8, w: 8, x: 0, y: 0 },
+          rotated: false,
+          trimmed: false,
+        },
+      },
+    };
+    const assets = {
+      get: vi.fn((id: string) => {
+        if (id === 'hero-image') return texture;
+        if (id === 'hero-meta') return metadata;
+        return undefined;
+      }),
+    } as unknown as FlxAssets;
+
+    const atlas = registry.registerFromAssets('hero', assets, {
+      image: 'hero-image',
+      meta: 'hero-meta',
+    });
+
+    expect(atlas.frameCount).toBe(1);
+    expect(atlas.getFrame('hero').texture.source).toBe(texture.source);
+    expect(registry.get('hero')).toBe(atlas);
+  });
+
+  it('registers a fixed grid from an asset-owned texture', () => {
+    const texture = makeTexture(16, 8);
+    const assets = {
+      get: vi.fn(() => texture),
+    } as unknown as FlxAssets;
+
+    const atlas = registry.registerFromAssets('tiles', assets, {
+      image: 'tiles-image',
+      meta: { frameHeight: 8, frameWidth: 8 },
+    });
+
+    expect(atlas.frameCount).toBe(2);
+  });
+
+  it('replaces an existing atlas registered under the same key', () => {
+    const firstTexture = makeTexture(8, 8);
+    const secondTexture = makeTexture(16, 8);
+    let current = firstTexture;
+    const assets = {
+      get: vi.fn(() => current),
+    } as unknown as FlxAssets;
+
+    const first = registry.registerFromAssets('tiles', assets, {
+      image: 'tiles-image',
+      meta: { frameHeight: 8, frameWidth: 8 },
+    });
+    current = secondTexture;
+    const second = registry.registerFromAssets('tiles', assets, {
+      image: 'tiles-image',
+      meta: { frameHeight: 8, frameWidth: 8 },
+    });
+
+    expect(first.frameCount).toBe(1);
+    expect(second.frameCount).toBe(2);
+    expect(registry.get('tiles')).toBe(second);
+  });
+
+  it('reports missing or incorrectly parsed bundle assets', () => {
+    const assets = {
+      get: vi.fn(() => undefined),
+    } as unknown as FlxAssets;
+    expect(() =>
+      registry.registerFromAssets('missing-image', assets, {
+        image: 'image',
+        meta: 'meta',
+      }),
+    ).toThrow(/not a loaded Pixi Texture/i);
+
+    const texture = makeTexture(8, 8);
+    const missingMetaAssets = {
+      get: vi.fn((id: string) => (id === 'image' ? texture : undefined)),
+    } as unknown as FlxAssets;
+    expect(() =>
+      registry.registerFromAssets('missing-meta', missingMetaAssets, {
+        image: 'image',
+        meta: 'meta',
+      }),
+    ).toThrow(/metadata asset.*not loaded/i);
+
+    const convertedMetaAssets = {
+      get: vi.fn(() => texture),
+    } as unknown as FlxAssets;
+    expect(() =>
+      registry.registerFromAssets('converted-meta', convertedMetaAssets, {
+        image: 'image',
+        meta: 'meta',
+      }),
+    ).toThrow(/parser: 'text'/i);
+  });
 });
 
 describe('FlxAtlas.makeGraphic', () => {
@@ -544,7 +666,7 @@ describe('FlxAtlas.makeGraphic', () => {
     expect(spy).toHaveBeenCalledWith(
       [
         expect.objectContaining({
-          height: 6,
+          height: 4,
           rotated: true,
           sourceHeight: 12,
           sourceWidth: 14,
@@ -552,7 +674,7 @@ describe('FlxAtlas.makeGraphic', () => {
           trimWidth: 4,
           trimX: 3,
           trimY: 2,
-          width: 4,
+          width: 6,
         }),
       ],
       14,

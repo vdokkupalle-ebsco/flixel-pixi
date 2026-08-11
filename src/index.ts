@@ -34,7 +34,10 @@ export type { FlxBmFontData } from './assets/flx-bmfont-parse';
 
 // --- Atlas ---
 export { FlxAtlas } from './assets/flx-atlas';
-export { FlxAtlasRegistry } from './assets/flx-atlas-registry';
+export {
+  FlxAtlasRegistry,
+  type FlxAtlasAssetSource,
+} from './assets/flx-atlas-registry';
 export { FLX_ATLAS_SERVICE } from './core/flx-context';
 export type {
   FlxAtlasFrame,
@@ -166,6 +169,7 @@ export type {
   FlxAnimationPlayOptions,
   FlxAtlasAnimationOptions,
 } from './objects/flx-sprite';
+export { FlxBackdrop } from './objects/flx-backdrop';
 export { FlxSpriteContainer, FlxSpriteGroup } from './objects/flx-sprite-group';
 export type { FlxSpriteTransform } from './objects/flx-sprite-group';
 export { FlxText } from './objects/flx-text';
@@ -191,6 +195,7 @@ export type { FlxRenderHandle } from './rendering/flx-render-handle';
 export { FlxCameraRenderer } from './rendering/flx-camera-renderer';
 export type { FlxCameraView } from './rendering/flx-camera-renderer';
 export { FlxSpriteRenderHandle } from './rendering/flx-sprite-render-handle';
+export { FlxBackdropRenderHandle } from './rendering/flx-backdrop-render-handle';
 export { FlxSpriteGroupRenderHandle } from './rendering/flx-sprite-group-render-handle';
 export { FlxEmitterRenderHandle } from './rendering/flx-emitter-render-handle';
 export type { FlxEmitterRenderOptions } from './rendering/flx-emitter-render-handle';

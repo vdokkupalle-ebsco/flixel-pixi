@@ -73,8 +73,8 @@ export class FlxAtlas {
       const orig = new Rectangle(
         0,
         0,
-        rect.sourceWidth ?? (rect.rotated === true ? rect.height : rect.width),
-        rect.sourceHeight ?? (rect.rotated === true ? rect.width : rect.height),
+        rect.sourceWidth ?? rect.width,
+        rect.sourceHeight ?? rect.height,
       );
       const trim =
         rect.trimX === undefined ||
@@ -245,7 +245,10 @@ export function canvasSourceFromTexture(texture: Texture): CanvasImageSource {
   if (
     resource instanceof HTMLImageElement ||
     resource instanceof HTMLCanvasElement ||
-    resource instanceof HTMLVideoElement
+    resource instanceof HTMLVideoElement ||
+    (typeof ImageBitmap !== 'undefined' && resource instanceof ImageBitmap) ||
+    (typeof OffscreenCanvas !== 'undefined' &&
+      resource instanceof OffscreenCanvas)
   ) {
     return resource;
   }

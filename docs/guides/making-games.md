@@ -59,6 +59,33 @@ in-game loading states are covered in [`loading.md`](loading.md).
 Property animation, easing, loop modes, delays, and chains are covered in
 [`tweens.md`](tweens.md).
 
+## Infinite scrolling backdrops
+
+`FlxBackdrop` repeats one texture through a renderer-owned Pixi `TilingSprite`.
+The game creates one logical object—no duplicate sprites or manual wrap checks
+are needed:
+
+```ts
+import { FlxBackdrop } from 'flixel-pixi';
+
+const sky = new FlxBackdrop(skyGraphic, 0, 0, 640, 360);
+sky.tileScale.make(1 / 3, 1 / 3);
+sky.scrollVelocity.make(-12, 0);
+sky.repeatY = false;
+sky.antialiasing = true;
+this.add(sky);
+```
+
+`scrollVelocity` advances `tilePosition` using the deterministic fixed-step
+`FlxG.elapsed`. Use different velocities for parallax layers. `tileScale`
+changes the repeated pattern without changing the visible region, while
+`resize()` changes only that region. `repeatX` and `repeatY` control each axis;
+disabled axes render one tile and ignore that axis of `tilePosition`.
+
+The source artwork must tile cleanly along every repeated axis. For smooth
+illustration assets, use linear filtering (`antialiasing = true` and a linear
+texture source); keep nearest filtering for deliberate pixel art.
+
 ## Touches and swipes
 
 `FlxG.touches` publishes every touch on simulation steps. Pointer coordinates
@@ -227,6 +254,38 @@ TexturePacker JSON frames preserve `rotated`, `sourceSize`, and
 frame rendering use the original logical size and trim offset. Malformed
 geometry, incomplete trim metadata, and duplicate array-format names fail at
 load time with the affected frame name.
+
+For declarative startup, put the image and metadata in the same `FlxAssets`
+bundle, load the metadata as text, and register the atlas during `preload`:
+
+```ts
+createBrowserGame({
+  assets: {
+    bundles: [
+      {
+        name: 'player',
+        assets: [
+          { alias: 'player-image', src: './player.png' },
+          { alias: 'player-meta', src: './player.json', parser: 'text' },
+        ],
+      },
+    ],
+    initialBundles: 'player',
+  },
+  preload({ assets }) {
+    FlxG.atlas.registerFromAssets('player', assets, {
+      image: 'player-image',
+      meta: 'player-meta',
+    });
+  },
+  // ...host, initialState, dimensions
+});
+```
+
+`parser: 'text'` is intentional: it prevents Pixi's post-load spritesheet
+parser from converting the JSON before Flixel validates and normalizes it.
+The asset cache owns the base texture and metadata; remove the registry entry
+before unloading that bundle.
 
 ### Registering animations from atlas frames
 

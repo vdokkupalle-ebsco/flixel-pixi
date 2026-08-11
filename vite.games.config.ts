@@ -26,6 +26,7 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/animation/index.html',
         ),
+        atlas: resolve(import.meta.dirname, 'examples/games/atlas/index.html'),
         containers: resolve(
           import.meta.dirname,
           'examples/games/containers/index.html',

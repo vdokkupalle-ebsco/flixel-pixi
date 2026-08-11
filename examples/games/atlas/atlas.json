@@ -1,0 +1,88 @@
+{
+  "frames": {
+    "middleground.png": {
+      "frame": { "x": 1, "y": 434, "w": 1920, "h": 734 },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 0, "y": 346, "w": 1920, "h": 734 },
+      "sourceSize": { "w": 1920, "h": 1080 }
+    },
+    "walk_01.png": {
+      "frame": { "x": 1521, "y": 183, "w": 249, "h": 514 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 218, "y": 83, "w": 249, "h": 514 },
+      "sourceSize": { "w": 650, "h": 650 }
+    },
+    "walk_02.png": {
+      "frame": { "x": 1022, "y": 180, "w": 235, "h": 497 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 211, "y": 89, "w": 235, "h": 497 },
+      "sourceSize": { "w": 650, "h": 650 }
+    },
+    "walk_03.png": {
+      "frame": { "x": 512, "y": 1, "w": 170, "h": 508 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 242, "y": 84, "w": 170, "h": 508 },
+      "sourceSize": { "w": 650, "h": 650 }
+    },
+    "walk_04.png": {
+      "frame": { "x": 1, "y": 1, "w": 159, "h": 509 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 246, "y": 80, "w": 159, "h": 509 },
+      "sourceSize": { "w": 650, "h": 650 }
+    },
+    "walk_05.png": {
+      "frame": { "x": 1540, "y": 1, "w": 180, "h": 504 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 239, "y": 87, "w": 180, "h": 504 },
+      "sourceSize": { "w": 650, "h": 650 }
+    },
+    "walk_06.png": {
+      "frame": { "x": 514, "y": 173, "w": 204, "h": 506 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 230, "y": 89, "w": 204, "h": 506 },
+      "sourceSize": { "w": 650, "h": 650 }
+    },
+    "walk_07.png": {
+      "frame": { "x": 1, "y": 173, "w": 179, "h": 511 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 238, "y": 83, "w": 179, "h": 511 },
+      "sourceSize": { "w": 650, "h": 650 }
+    },
+    "walk_08.png": {
+      "frame": { "x": 1022, "y": 1, "w": 177, "h": 516 },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": { "x": 228, "y": 82, "w": 177, "h": 516 },
+      "sourceSize": { "w": 650, "h": 650 }
+    }
+  },
+  "animations": {
+    "walk": [
+      "walk_01.png",
+      "walk_02.png",
+      "walk_03.png",
+      "walk_04.png",
+      "walk_05.png",
+      "walk_06.png",
+      "walk_07.png",
+      "walk_08.png"
+    ]
+  },
+  "meta": {
+    "app": "https://www.codeandweb.com/texturepacker",
+    "version": "1.1",
+    "image": "atlas.png",
+    "format": "RGBA8888",
+    "size": { "w": 2045, "h": 1169 },
+    "scale": "1",
+    "smartupdate": "$TexturePacker:SmartUpdate:c821ddf93c1a4da6e097ba2764597913:d6f4e5f25cd3949c24ed1fa970e821b1:cbce6b53f0f49e0bf15173c25c41f876$"
+  }
+}

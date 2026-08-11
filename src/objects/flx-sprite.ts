@@ -499,16 +499,26 @@ export class FlxSprite extends FlxObject {
 
     const halfWidth = this.frameWidth * 0.5;
     const halfHeight = this.frameHeight * 0.5;
-    const radius =
-      Math.hypot(halfWidth, halfHeight) *
-      Math.max(Math.abs(this.scale.x), Math.abs(this.scale.y));
-    point.x += halfWidth;
-    point.y += halfHeight;
+    const radians = (this.angle * Math.PI) / 180;
+    const cosine = Math.cos(radians);
+    const sine = Math.sin(radians);
+    const relativeCenterX = (halfWidth - this.origin.x) * this.scale.x;
+    const relativeCenterY = (halfHeight - this.origin.y) * this.scale.y;
+    point.x +=
+      this.origin.x + relativeCenterX * cosine - relativeCenterY * sine;
+    point.y +=
+      this.origin.y + relativeCenterX * sine + relativeCenterY * cosine;
+    const extentX =
+      Math.abs(cosine * halfWidth * this.scale.x) +
+      Math.abs(sine * halfHeight * this.scale.y);
+    const extentY =
+      Math.abs(sine * halfWidth * this.scale.x) +
+      Math.abs(cosine * halfHeight * this.scale.y);
     return (
-      point.x + radius > 0 &&
-      point.x - radius < camera.width &&
-      point.y + radius > 0 &&
-      point.y - radius < camera.height
+      point.x + extentX > 0 &&
+      point.x - extentX < camera.width &&
+      point.y + extentY > 0 &&
+      point.y - extentY < camera.height
     );
   }
 

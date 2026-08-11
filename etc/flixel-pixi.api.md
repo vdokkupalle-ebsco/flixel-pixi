@@ -20,6 +20,7 @@ import { Sprite } from 'pixi.js';
 import { Text as Text_2 } from 'pixi.js';
 import type { TextStyleAlign } from 'pixi.js';
 import { Texture } from 'pixi.js';
+import { TilingSprite } from 'pixi.js';
 
 // @public
 export interface BrowserGameApplication {
@@ -667,6 +668,12 @@ export interface FlxAtlasAnimationOptions {
 }
 
 // @public
+export interface FlxAtlasAssetSource {
+    image: string;
+    meta: string | FlxAtlasGridMeta;
+}
+
+// @public
 export interface FlxAtlasFrame {
     readonly duration?: number;
     readonly index: number;
@@ -721,6 +728,7 @@ export class FlxAtlasRegistry {
     get(key: string): FlxAtlas;
     has(key: string): boolean;
     load(key: string, imageUrl: string, meta: FlxAtlasMeta): Promise<FlxAtlas>;
+    registerFromAssets(key: string, assets: FlxAssets, source: FlxAtlasAssetSource): FlxAtlas;
     remove(key: string): void;
 }
 
@@ -793,6 +801,45 @@ export interface FlxAudioService {
     updateSounds(elapsed: number): void;
     // (undocumented)
     volume: number;
+}
+
+// @public
+export class FlxBackdrop extends FlxSprite {
+    constructor(source?: FlxGraphic | Texture | null, x?: number, y?: number, width?: number, height?: number);
+    // (undocumented)
+    createRenderHandle(): FlxBackdropRenderHandle;
+    loadBackdropFrame(atlas: FlxAtlas, name: string, width?: number, height?: number): this;
+    loadBackdropGraphic(source: FlxGraphic | Texture, width?: number, height?: number): this;
+    // (undocumented)
+    loadGraphic(source: FlxGraphic | Texture, animated?: boolean, reverse?: boolean, width?: number, height?: number, unique?: boolean): this;
+    // (undocumented)
+    onScreen(camera?: FlxCameraLike): boolean;
+    // (undocumented)
+    preUpdate(): void;
+    repeatX: boolean;
+    repeatY: boolean;
+    resize(width: number, height: number): this;
+    readonly scrollVelocity: FlxPoint;
+    tileAngle: number;
+    readonly tilePosition: FlxPoint;
+    readonly tileScale: FlxPoint;
+    // (undocumented)
+    update(): void;
+}
+
+// @public
+export class FlxBackdropRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxBackdrop, onDestroy?: () => void);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly tiling: TilingSprite;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
 }
 
 // @public
