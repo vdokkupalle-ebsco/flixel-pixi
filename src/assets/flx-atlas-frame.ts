@@ -13,6 +13,20 @@ export interface FlxAtlasFrameRect {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+  /** Whether TexturePacker stored the pixels rotated 90 degrees clockwise. */
+  readonly rotated?: boolean;
+  /** Logical untrimmed source width, when transparent padding was removed. */
+  readonly sourceWidth?: number;
+  /** Logical untrimmed source height, when transparent padding was removed. */
+  readonly sourceHeight?: number;
+  /** Horizontal placement of the trimmed pixels in the logical source. */
+  readonly trimX?: number;
+  /** Vertical placement of the trimmed pixels in the logical source. */
+  readonly trimY?: number;
+  /** Logical width of the trimmed pixels. */
+  readonly trimWidth?: number;
+  /** Logical height of the trimmed pixels. */
+  readonly trimHeight?: number;
 }
 
 // ── Public frame type (FlxAtlas output) ───────────────────────────────────────

@@ -75,6 +75,56 @@ describe('FlxSprite.addAnimation + play — atlas frame list', () => {
     sprite.destroy();
   });
 
+  it('bakes transformed atlas frames at their logical dimensions', () => {
+    const sprite = new FlxSprite();
+    const [base] = buildFrameList(1);
+    if (base === undefined) throw new Error('Expected an atlas frame.');
+    const transformed: FlxAtlasFrame = {
+      ...base,
+      texture: new Texture({
+        frame: new Rectangle(0, 0, 6, 4),
+        orig: new Rectangle(0, 0, 14, 12),
+        rotate: 2,
+        source: base.texture.source,
+        trim: new Rectangle(3, 2, 4, 6),
+      }),
+    };
+    const stripTex = new Texture({
+      source: new BufferImageSource({
+        autoGenerateMipmaps: false,
+        height: 12,
+        resource: new Uint8Array(14 * 12 * 4),
+        scaleMode: 'nearest',
+        width: 14,
+      }),
+    });
+    const bakeSpy = vi
+      .spyOn(atlasBAke, 'bakeAtlasFrameStrip')
+      .mockReturnValue(stripTex);
+
+    sprite.addAnimation('rotated', [transformed]);
+    expect(bakeSpy).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          height: 6,
+          rotated: true,
+          sourceHeight: 12,
+          sourceWidth: 14,
+          trimHeight: 6,
+          trimWidth: 4,
+          trimX: 3,
+          trimY: 2,
+          width: 4,
+        }),
+      ],
+      14,
+      12,
+    );
+    expect(sprite.frameWidth).toBe(14);
+    expect(sprite.frameHeight).toBe(12);
+    sprite.destroy();
+  });
+
   it('two atlas animations share one append-only strip', () => {
     const sprite = new FlxSprite();
     const walk = buildFrameList(2, 8, 8);

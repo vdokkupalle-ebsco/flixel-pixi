@@ -1,7 +1,11 @@
 import { Texture, type BLEND_MODES } from 'pixi.js';
 
 import { FlxGraphic } from '../assets/flx-graphic';
-import { bakeAtlasFrameStrip } from '../assets/flx-atlas-bake';
+import {
+  atlasBakeCellFromTexture,
+  bakeAtlasFrameStrip,
+  type FlxAtlasBakeCell,
+} from '../assets/flx-atlas-bake';
 import { canvasSourceFromTexture } from '../assets/flx-atlas';
 import type { FlxAtlasFrameList } from '../assets/flx-atlas-frame';
 import { FlxAnimationController } from '../animation/flx-animation-controller';
@@ -81,11 +85,7 @@ function resolveFramerate(): number {
 interface AtlasStripSlot {
   readonly key: string;
   readonly name: string;
-  readonly source: CanvasImageSource;
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
+  readonly cell: FlxAtlasBakeCell;
 }
 
 /** Renderer-neutral Flixel sprite state with adapter-owned Pixi views. @public */
@@ -648,8 +648,8 @@ export class FlxSprite extends FlxObject {
     if (first === undefined) {
       throw new RangeError('Atlas animation requires at least one frame.');
     }
-    const outW = options?.frameWidth ?? first.texture.frame.width;
-    const outH = options?.frameHeight ?? first.texture.frame.height;
+    const outW = options?.frameWidth ?? first.texture.orig.width;
+    const outH = options?.frameHeight ?? first.texture.orig.height;
     if (outW <= 0 || outH <= 0) {
       throw new RangeError(
         'Atlas animation frameWidth/frameHeight must be positive.',
@@ -672,23 +672,25 @@ export class FlxSprite extends FlxObject {
     const indices: number[] = [];
     let appended = false;
     for (const frame of frames) {
-      const key = `${frame.name}@${frame.texture.frame.x},${frame.texture.frame.y},${frame.texture.frame.width}x${frame.texture.frame.height}->${outW}x${outH}`;
+      const texture = frame.texture;
+      const trim = texture.trim;
+      const key =
+        `${frame.name}@${texture.frame.x},${texture.frame.y},${texture.frame.width}x${texture.frame.height}` +
+        `/r${texture.rotate}/o${texture.orig.width}x${texture.orig.height}` +
+        `/t${trim?.x ?? 0},${trim?.y ?? 0},${trim?.width ?? texture.orig.width}x${trim?.height ?? texture.orig.height}` +
+        `->${outW}x${outH}`;
       let slotIndex = this.#atlasStripSlots.findIndex(
         (slot) => slot.key === key,
       );
       if (slotIndex < 0) {
         const canvasSource = canvasSourceFromTexture(
-          new Texture({ source: frame.texture.source }),
+          new Texture({ source: texture.source }),
         );
         slotIndex = this.#atlasStripSlots.length;
         this.#atlasStripSlots.push({
-          height: frame.texture.frame.height,
+          cell: atlasBakeCellFromTexture(texture, canvasSource),
           key,
           name: frame.name,
-          source: canvasSource,
-          width: frame.texture.frame.width,
-          x: frame.texture.frame.x,
-          y: frame.texture.frame.y,
         });
         appended = true;
       }
@@ -696,13 +698,7 @@ export class FlxSprite extends FlxObject {
     }
 
     if (appended || this.#graphic === null) {
-      const cells = this.#atlasStripSlots.map((slot) => ({
-        height: slot.height,
-        source: slot.source,
-        width: slot.width,
-        x: slot.x,
-        y: slot.y,
-      }));
+      const cells = this.#atlasStripSlots.map((slot) => slot.cell);
       const stripTexture = bakeAtlasFrameStrip(
         cells,
         this.#atlasStripCellW,

@@ -269,6 +269,11 @@ Current atlas support remains the base. Candidate additions:
 Every loader must define aliasing, cache identity, bundle progress, background
 loading, unload behavior, and texture-source ownership.
 
+Current slice: TexturePacker JSON hash/array parsing validates frame geometry
+and duplicate names, preserves rotated/trimmed metadata in Pixi textures, and
+restores those transforms when baking tile or animation strips. Asset-bundle
+integration and a dedicated demo remain within this checkpoint.
+
 ### Scaling, resize, fullscreen, and focus policy
 
 Representative upstream areas: scale modes, focus-lost UI, HTML5 frontend, and

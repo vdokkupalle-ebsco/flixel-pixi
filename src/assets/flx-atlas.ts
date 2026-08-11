@@ -1,6 +1,10 @@
 import { Rectangle, Texture } from 'pixi.js';
 
-import { bakeAtlasFrameStrip, type FlxAtlasBakeCell } from './flx-atlas-bake';
+import {
+  atlasBakeCellFromTexture,
+  bakeAtlasFrameStrip,
+  type FlxAtlasBakeCell,
+} from './flx-atlas-bake';
 import type {
   FlxAtlasFrame,
   FlxAtlasFrameList,
@@ -57,11 +61,40 @@ export class FlxAtlas {
     for (let i = 0; i < rects.length; i += 1) {
       const rect = rects[i];
       if (rect === undefined) continue;
-      const frame = new Rectangle(rect.x, rect.y, rect.width, rect.height);
+      if (byName.has(rect.name)) {
+        throw new Error(`FlxAtlas "${key}": duplicate frame "${rect.name}".`);
+      }
+      const frame = new Rectangle(
+        rect.x,
+        rect.y,
+        rect.rotated === true ? rect.height : rect.width,
+        rect.rotated === true ? rect.width : rect.height,
+      );
+      const orig = new Rectangle(
+        0,
+        0,
+        rect.sourceWidth ?? (rect.rotated === true ? rect.height : rect.width),
+        rect.sourceHeight ?? (rect.rotated === true ? rect.width : rect.height),
+      );
+      const trim =
+        rect.trimX === undefined ||
+        rect.trimY === undefined ||
+        rect.trimWidth === undefined ||
+        rect.trimHeight === undefined
+          ? undefined
+          : new Rectangle(
+              rect.trimX,
+              rect.trimY,
+              rect.trimWidth,
+              rect.trimHeight,
+            );
       const sub = new Texture({
         frame,
         label: rect.name,
+        orig,
+        rotate: rect.rotated === true ? 2 : 0,
         source: texture.source,
+        ...(trim === undefined ? {} : { trim }),
       });
       const atlasFrame: FlxAtlasFrame = {
         index: i,
@@ -170,18 +203,12 @@ export class FlxAtlas {
     if (sample === undefined) {
       throw new RangeError('makeGraphic requires at least one non-null frame');
     }
-    const width = frameWidth ?? sample.texture.frame.width;
-    const height = frameHeight ?? sample.texture.frame.height;
+    const width = frameWidth ?? sample.texture.orig.width;
+    const height = frameHeight ?? sample.texture.orig.height;
     const source = canvasSourceFromTexture(this.texture);
     const cells: (FlxAtlasBakeCell | null)[] = frames.map((frame) => {
       if (frame === null) return null;
-      return {
-        height: frame.texture.frame.height,
-        source,
-        width: frame.texture.frame.width,
-        x: frame.texture.frame.x,
-        y: frame.texture.frame.y,
-      };
+      return atlasBakeCellFromTexture(frame.texture, source);
     });
     return bakeAtlasFrameStrip(cells, width, height);
   }

@@ -83,32 +83,86 @@ describe('parseTextureAtlasJson', () => {
     expect(frames[0]).toMatchObject({ height: 16, width: 16 });
   });
 
-  it('throws on rotated hash frames', () => {
-    expect(() =>
-      parseTextureAtlasJson(
-        JSON.stringify({
-          frames: {
-            'a.png': { frame: { x: 0, y: 0, w: 4, h: 4 }, rotated: true },
+  it('preserves rotated and trimmed TexturePacker metadata', () => {
+    const frames = parseTextureAtlasJson(
+      JSON.stringify({
+        frames: {
+          'hero.png': {
+            frame: { h: 12, w: 8, x: 4, y: 6 },
+            rotated: true,
+            sourceSize: { h: 20, w: 18 },
+            spriteSourceSize: { h: 12, w: 8, x: 5, y: 4 },
+            trimmed: true,
           },
-        }),
-      ),
-    ).toThrow(/rotated/i);
+        },
+      }),
+    );
+    expect(frames[0]).toEqual({
+      height: 12,
+      name: 'hero.png',
+      rotated: true,
+      sourceHeight: 20,
+      sourceWidth: 18,
+      trimHeight: 12,
+      trimWidth: 8,
+      trimX: 5,
+      trimY: 4,
+      width: 8,
+      x: 4,
+      y: 6,
+    });
   });
 
-  it('throws on rotated array frames', () => {
+  it('rejects duplicate array names and malformed frame geometry', () => {
     expect(() =>
       parseTextureAtlasJson(
         JSON.stringify({
           frames: [
-            {
-              filename: 'b.png',
-              frame: { x: 0, y: 0, w: 4, h: 4 },
-              rotated: true,
-            },
+            { filename: 'a.png', frame: { h: 4, w: 4, x: 0, y: 0 } },
+            { filename: 'a.png', frame: { h: 4, w: 4, x: 4, y: 0 } },
           ],
         }),
       ),
-    ).toThrow(/rotated/i);
+    ).toThrow(/duplicate/i);
+    expect(() =>
+      parseTextureAtlasJson(
+        JSON.stringify({
+          frames: {
+            'bad.png': { frame: { h: 4, w: 0, x: 0, y: 0 } },
+          },
+        }),
+      ),
+    ).toThrow(/positive integer/i);
+  });
+
+  it('rejects incomplete or out-of-bounds trim metadata', () => {
+    expect(() =>
+      parseTextureAtlasJson(
+        JSON.stringify({
+          frames: {
+            'bad.png': {
+              frame: { h: 4, w: 4, x: 0, y: 0 },
+              sourceSize: { h: 8, w: 8 },
+              trimmed: true,
+            },
+          },
+        }),
+      ),
+    ).toThrow(/spriteSourceSize/i);
+    expect(() =>
+      parseTextureAtlasJson(
+        JSON.stringify({
+          frames: {
+            'bad.png': {
+              frame: { h: 4, w: 4, x: 0, y: 0 },
+              sourceSize: { h: 8, w: 8 },
+              spriteSourceSize: { h: 4, w: 4, x: 6, y: 0 },
+              trimmed: true,
+            },
+          },
+        }),
+      ),
+    ).toThrow(/fit inside/i);
   });
 
   it('throws when frames property is missing', () => {

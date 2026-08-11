@@ -60,9 +60,11 @@ sprite.animation.play('walk');
 The collection passed to `loadFrames()` remains caller-owned and must outlive
 the sprite. Asset bundles or the atlas registry should normally own it and its
 textures. Collections loaded into a sprite currently require uniform frame
-dimensions; trimmed and rotated atlas metadata is deferred to the content
-pipeline checkpoint. Frame `duration` values, when present, override the
-animation's default frame rate for that frame.
+dimensions. TexturePacker JSON frame textures retain trim and rotation
+metadata. Atlas-backed strip animations undo packed rotation and place trimmed
+pixels within the original logical frame, so differently trimmed animation
+frames keep a stable cell size. Frame `duration` values, when present, override
+the animation's default frame rate for that frame.
 
 Grid collections support custom names and durations:
 

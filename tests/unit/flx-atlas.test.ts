@@ -51,6 +51,10 @@ describe('bakeAtlasFrameStrip', () => {
         data: new Uint8ClampedArray(16 * 8 * 4),
       })),
       imageSmoothingEnabled: true,
+      restore: vi.fn(),
+      rotate: vi.fn(),
+      save: vi.fn(),
+      translate: vi.fn(),
     };
     const canvas = {
       getContext: vi.fn(() => context),
@@ -98,6 +102,166 @@ describe('bakeAtlasFrameStrip', () => {
     texture.destroy(true);
   });
 
+  it('places trimmed pixels within the scaled logical frame', () => {
+    const context = {
+      clearRect: vi.fn(),
+      drawImage: vi.fn(),
+      getImageData: vi.fn(() => ({
+        data: new Uint8ClampedArray(20 * 10 * 4),
+      })),
+      imageSmoothingEnabled: true,
+      restore: vi.fn(),
+      rotate: vi.fn(),
+      save: vi.fn(),
+      translate: vi.fn(),
+    };
+    vi.spyOn(document, 'createElement').mockReturnValue({
+      getContext: vi.fn(() => context),
+      height: 0,
+      width: 0,
+    } as unknown as HTMLCanvasElement);
+
+    const texture = atlasBake.bakeAtlasFrameStrip(
+      [
+        {
+          height: 3,
+          source: {} as CanvasImageSource,
+          sourceHeight: 10,
+          sourceWidth: 10,
+          trimHeight: 3,
+          trimWidth: 4,
+          trimX: 2,
+          trimY: 1,
+          width: 4,
+          x: 5,
+          y: 6,
+        },
+      ],
+      20,
+      10,
+    );
+
+    expect(context.drawImage).toHaveBeenCalledWith(
+      expect.anything(),
+      5,
+      6,
+      4,
+      3,
+      4,
+      1,
+      8,
+      3,
+    );
+    texture.destroy(true);
+  });
+
+  it('undoes clockwise packed rotation while drawing', () => {
+    const context = {
+      clearRect: vi.fn(),
+      drawImage: vi.fn(),
+      getImageData: vi.fn(() => ({
+        data: new Uint8ClampedArray(4 * 6 * 4),
+      })),
+      imageSmoothingEnabled: true,
+      restore: vi.fn(),
+      rotate: vi.fn(),
+      save: vi.fn(),
+      translate: vi.fn(),
+    };
+    vi.spyOn(document, 'createElement').mockReturnValue({
+      getContext: vi.fn(() => context),
+      height: 0,
+      width: 0,
+    } as unknown as HTMLCanvasElement);
+
+    const texture = atlasBake.bakeAtlasFrameStrip(
+      [
+        {
+          height: 4,
+          rotated: true,
+          source: {} as CanvasImageSource,
+          width: 6,
+          x: 2,
+          y: 3,
+        },
+      ],
+      4,
+      6,
+    );
+
+    expect(context.save).toHaveBeenCalledOnce();
+    expect(context.translate).toHaveBeenCalledWith(0, 6);
+    expect(context.rotate).toHaveBeenCalledWith(-Math.PI / 2);
+    expect(context.drawImage).toHaveBeenCalledWith(
+      expect.anything(),
+      2,
+      3,
+      6,
+      4,
+      0,
+      0,
+      6,
+      4,
+    );
+    expect(context.restore).toHaveBeenCalledOnce();
+    texture.destroy(true);
+  });
+
+  it('combines trim placement with inverse rotation', () => {
+    const context = {
+      clearRect: vi.fn(),
+      drawImage: vi.fn(),
+      getImageData: vi.fn(() => ({
+        data: new Uint8ClampedArray(28 * 24 * 4),
+      })),
+      imageSmoothingEnabled: true,
+      restore: vi.fn(),
+      rotate: vi.fn(),
+      save: vi.fn(),
+      translate: vi.fn(),
+    };
+    vi.spyOn(document, 'createElement').mockReturnValue({
+      getContext: vi.fn(() => context),
+      height: 0,
+      width: 0,
+    } as unknown as HTMLCanvasElement);
+
+    const texture = atlasBake.bakeAtlasFrameStrip(
+      [
+        {
+          height: 4,
+          rotated: true,
+          source: {} as CanvasImageSource,
+          sourceHeight: 12,
+          sourceWidth: 14,
+          trimHeight: 6,
+          trimWidth: 4,
+          trimX: 3,
+          trimY: 2,
+          width: 6,
+          x: 7,
+          y: 8,
+        },
+      ],
+      28,
+      24,
+    );
+
+    expect(context.translate).toHaveBeenCalledWith(6, 16);
+    expect(context.drawImage).toHaveBeenCalledWith(
+      expect.anything(),
+      7,
+      8,
+      6,
+      4,
+      0,
+      0,
+      12,
+      8,
+    );
+    texture.destroy(true);
+  });
+
   it('reports a missing 2D canvas context', () => {
     const canvas = {
       getContext: vi.fn(() => null),
@@ -140,6 +304,45 @@ describe('FlxAtlas.getFrame', () => {
       { height: 8, name: 'a.png', width: 8, x: 0, y: 0 },
     ]);
     expect(() => atlas.getFrame('missing')).toThrow(/missing/);
+  });
+
+  it('builds Pixi rotation, original-size, and trim metadata', () => {
+    const atlas = makeAtlas([
+      {
+        height: 6,
+        name: 'packed.png',
+        rotated: true,
+        sourceHeight: 12,
+        sourceWidth: 14,
+        trimHeight: 6,
+        trimWidth: 4,
+        trimX: 3,
+        trimY: 2,
+        width: 4,
+        x: 0,
+        y: 0,
+      },
+    ]);
+    const texture = atlas.getFrame('packed').texture;
+
+    expect(texture.rotate).toBe(2);
+    expect(texture.frame).toMatchObject({ height: 4, width: 6 });
+    expect(texture.orig).toMatchObject({ height: 12, width: 14 });
+    expect(texture.trim).toMatchObject({
+      height: 6,
+      width: 4,
+      x: 3,
+      y: 2,
+    });
+  });
+
+  it('rejects duplicate frame names', () => {
+    expect(() =>
+      makeAtlas([
+        { height: 4, name: 'same', width: 4, x: 0, y: 0 },
+        { height: 4, name: 'same', width: 4, x: 4, y: 0 },
+      ]),
+    ).toThrow(/duplicate/i);
   });
 });
 
@@ -313,6 +516,48 @@ describe('FlxAtlas.makeGraphic', () => {
     expect(result).toBe(strip);
     expect(spy).toHaveBeenCalledWith(expect.any(Array), 8, 8);
     expect(spy.mock.calls[0]?.[0]).toHaveLength(3);
+  });
+
+  it('passes rotated and trimmed logical geometry to the strip baker', () => {
+    const atlas = makeAtlas([
+      {
+        height: 6,
+        name: 'packed.png',
+        rotated: true,
+        sourceHeight: 12,
+        sourceWidth: 14,
+        trimHeight: 6,
+        trimWidth: 4,
+        trimX: 3,
+        trimY: 2,
+        width: 4,
+        x: 0,
+        y: 0,
+      },
+    ]);
+    const strip = makeTexture(14, 12);
+    const spy = vi
+      .spyOn(atlasBake, 'bakeAtlasFrameStrip')
+      .mockReturnValue(strip);
+
+    expect(atlas.makeGraphic([atlas.getFrame('packed')])).toBe(strip);
+    expect(spy).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          height: 6,
+          rotated: true,
+          sourceHeight: 12,
+          sourceWidth: 14,
+          trimHeight: 6,
+          trimWidth: 4,
+          trimX: 3,
+          trimY: 2,
+          width: 4,
+        }),
+      ],
+      14,
+      12,
+    );
   });
 
   it('rejects empty or all-null frame lists', () => {

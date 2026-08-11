@@ -684,6 +684,13 @@ export interface FlxAtlasFrameRect {
     readonly height: number;
     // (undocumented)
     readonly name: string;
+    readonly rotated?: boolean;
+    readonly sourceHeight?: number;
+    readonly sourceWidth?: number;
+    readonly trimHeight?: number;
+    readonly trimWidth?: number;
+    readonly trimX?: number;
+    readonly trimY?: number;
     // (undocumented)
     readonly width: number;
     // (undocumented)

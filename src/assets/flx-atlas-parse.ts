@@ -50,8 +50,8 @@ export function parseTextureAtlasXml(xmlText: string): FlxAtlasFrameRect[] {
  * frame rects. Supports both hash (`frames: { "name": {...} }`) and array
  * (`frames: [ { filename, frame } ]`) formats.
  *
- * Throws a clear error for any rotated frame (`rotated: true`) since correct
- * UV mapping for rotated regions is not supported in v1.
+ * Preserves TexturePacker rotation and trim metadata so Pixi can reconstruct
+ * each frame's logical size and placement.
  *
  * @public
  */
@@ -70,23 +70,15 @@ export function parseTextureAtlasJson(jsonText: string): FlxAtlasFrameRect[] {
 
   // Array format: [ { filename, frame: { x, y, w, h }, rotated? } ]
   if (Array.isArray(framesRaw)) {
-    return (framesRaw as Record<string, unknown>[]).map((entry, idx) => {
-      if (entry['rotated'] === true) {
-        const name = String(entry['filename'] ?? idx);
-        throw new Error(
-          `Atlas frame "${name}" has rotated: true, which is not supported. ` +
-            'Please disable rotation in TexturePacker.',
-        );
-      }
-      const frame = entry['frame'] as Record<string, number> | undefined;
-      if (frame === undefined)
-        throw new Error(`Frame at index ${idx} is missing "frame" rect.`);
-      const x = frame['x'] ?? 0;
-      const y = frame['y'] ?? 0;
-      const width = frame['w'] ?? frame['width'] ?? 0;
-      const height = frame['h'] ?? frame['height'] ?? 0;
+    const names = new Set<string>();
+    return framesRaw.map((value, idx) => {
+      const entry = atlasRecord(value, `Frame at index ${idx}`);
       const name = String(entry['filename'] ?? idx);
-      return { height, name, width, x, y };
+      if (names.has(name)) {
+        throw new Error(`Atlas JSON contains duplicate frame "${name}".`);
+      }
+      names.add(name);
+      return parseJsonFrame(name, entry);
     });
   }
 
@@ -94,25 +86,122 @@ export function parseTextureAtlasJson(jsonText: string): FlxAtlasFrameRect[] {
   if (typeof framesRaw === 'object' && framesRaw !== null) {
     const hash = framesRaw as Record<string, unknown>;
     return Object.entries(hash).map(([name, rawEntry]) => {
-      const entry = rawEntry as Record<string, unknown>;
-      if (entry['rotated'] === true) {
-        throw new Error(
-          `Atlas frame "${name}" has rotated: true, which is not supported. ` +
-            'Please disable rotation in TexturePacker.',
-        );
-      }
-      const frame = entry['frame'] as Record<string, number> | undefined;
-      if (frame === undefined)
-        throw new Error(`Frame "${name}" is missing "frame" rect.`);
-      const x = frame['x'] ?? 0;
-      const y = frame['y'] ?? 0;
-      const width = frame['w'] ?? frame['width'] ?? 0;
-      const height = frame['h'] ?? frame['height'] ?? 0;
-      return { height, name, width, x, y };
+      return parseJsonFrame(name, atlasRecord(rawEntry, `Frame "${name}"`));
     });
   }
 
   throw new Error('"frames" must be an object or an array.');
+}
+
+function atlasRecord(value: unknown, label: string): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function atlasNumber(
+  value: unknown,
+  label: string,
+  allowZero: boolean,
+): number {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    !Number.isInteger(value) ||
+    (allowZero ? value < 0 : value <= 0)
+  ) {
+    throw new RangeError(
+      `${label} must be ${allowZero ? 'a non-negative' : 'a positive'} integer.`,
+    );
+  }
+  return value;
+}
+
+function frameDimension(
+  frame: Record<string, unknown>,
+  shortName: 'w' | 'h',
+  longName: 'width' | 'height',
+  label: string,
+): number {
+  return atlasNumber(frame[shortName] ?? frame[longName], label, false);
+}
+
+function parseJsonFrame(
+  name: string,
+  entry: Record<string, unknown>,
+): FlxAtlasFrameRect {
+  if (name.length === 0) throw new Error('Atlas frame name must not be empty.');
+  const frame = atlasRecord(entry['frame'], `Frame "${name}" rect`);
+  const x = atlasNumber(frame['x'], `Frame "${name}" x`, true);
+  const y = atlasNumber(frame['y'], `Frame "${name}" y`, true);
+  const width = frameDimension(frame, 'w', 'width', `Frame "${name}" width`);
+  const height = frameDimension(frame, 'h', 'height', `Frame "${name}" height`);
+  for (const flag of ['rotated', 'trimmed'] as const) {
+    if (entry[flag] !== undefined && typeof entry[flag] !== 'boolean') {
+      throw new TypeError(`Frame "${name}" ${flag} must be boolean.`);
+    }
+  }
+  const rotated = entry['rotated'] === true;
+  const hasTrimMetadata =
+    entry['trimmed'] !== false &&
+    (entry['trimmed'] === true ||
+      entry['sourceSize'] !== undefined ||
+      entry['spriteSourceSize'] !== undefined);
+  if (!hasTrimMetadata) {
+    return { height, name, rotated, width, x, y };
+  }
+
+  const source = atlasRecord(entry['sourceSize'], `Frame "${name}" sourceSize`);
+  const trim = atlasRecord(
+    entry['spriteSourceSize'],
+    `Frame "${name}" spriteSourceSize`,
+  );
+  const sourceWidth = frameDimension(
+    source,
+    'w',
+    'width',
+    `Frame "${name}" source width`,
+  );
+  const sourceHeight = frameDimension(
+    source,
+    'h',
+    'height',
+    `Frame "${name}" source height`,
+  );
+  const trimX = atlasNumber(trim['x'], `Frame "${name}" trim x`, true);
+  const trimY = atlasNumber(trim['y'], `Frame "${name}" trim y`, true);
+  const trimWidth = frameDimension(
+    trim,
+    'w',
+    'width',
+    `Frame "${name}" trim width`,
+  );
+  const trimHeight = frameDimension(
+    trim,
+    'h',
+    'height',
+    `Frame "${name}" trim height`,
+  );
+  if (trimX + trimWidth > sourceWidth || trimY + trimHeight > sourceHeight) {
+    throw new RangeError(
+      `Frame "${name}" trimmed region must fit inside sourceSize.`,
+    );
+  }
+  return {
+    height,
+    name,
+    rotated,
+    sourceHeight,
+    sourceWidth,
+    trimHeight,
+    trimWidth,
+    trimX,
+    trimY,
+    width,
+    x,
+    y,
+  };
 }
 
 // ── Fixed-grid parser ─────────────────────────────────────────────────────────

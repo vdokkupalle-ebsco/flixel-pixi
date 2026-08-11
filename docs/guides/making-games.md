@@ -222,6 +222,12 @@ const custom = playerAtlas.framesByNumber([0, 2, 1]);
 const idle = playerAtlas.getFrame('idle');
 ```
 
+TexturePacker JSON frames preserve `rotated`, `sourceSize`, and
+`spriteSourceSize` metadata in the returned Pixi texture. This makes direct
+frame rendering use the original logical size and trim offset. Malformed
+geometry, incomplete trim metadata, and duplicate array-format names fail at
+load time with the affected frame name.
+
 ### Registering animations from atlas frames
 
 Pass a `FlxAtlasFrameList` directly to `addAnimation`. The engine bakes the
@@ -240,6 +246,13 @@ sprite.addAnimation('walk', playerAtlas.framesByPrefix('walk_', 1, 2), {
 
 For tilemaps and single-frame items, use `atlas.makeGraphic(...)` then
 `loadGraphic` / `loadMap` — still no internal bake API.
+
+The horizontal-strip baking path supports TexturePacker rotation and trimming.
+It restores clockwise-packed pixels to their original orientation and places
+trimmed content at `spriteSourceSize` within the logical `sourceSize`. Unless
+you provide `frameWidth` and `frameHeight`, that logical size becomes the strip
+cell size, preventing animation jitter when successive frames have different
+trim bounds.
 
 ### Unified `play` API
 
