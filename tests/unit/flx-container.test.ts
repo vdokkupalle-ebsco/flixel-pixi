@@ -270,8 +270,15 @@ describe('FlxSpriteContainer coordinate and transform contract', () => {
     expect(handle.view.children).toHaveLength(2);
 
     group.filters = [new FlxBlurFilter(2, { quality: 1 })];
+    group.setFilterArea(0, 0, 25, 16);
     handle.sync();
     expect(handle.view.filters).toHaveLength(1);
+    expect(handle.view.filterArea).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 25,
+      height: 16,
+    });
     expect(handle.view.children.every((child) => child.filters === null)).toBe(
       true,
     );
@@ -282,6 +289,7 @@ describe('FlxSpriteContainer coordinate and transform contract', () => {
     group.filters = [];
     handle.sync();
     expect(destroyRootFilter).toHaveBeenCalledOnce();
+    expect(handle.view.filterArea).toBeNull();
 
     const visit = (node: Container): void => {
       if (node instanceof Sprite) expect(node.children).toHaveLength(0);

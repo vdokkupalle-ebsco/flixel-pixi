@@ -59,7 +59,7 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
     this.view.tint = owner.color;
     this.view.blendMode = owner.blend ?? 'normal';
     this.view.visible = owner.exists && owner.visible && owner.alpha > 0;
-    this.#filterChain.sync(this.view, owner.filters);
+    this.#filterChain.sync(this.view, owner.filters, owner.filterArea);
   }
 
   destroy(): void {

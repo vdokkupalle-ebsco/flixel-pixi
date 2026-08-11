@@ -96,8 +96,35 @@ Conversely, destroying a sprite or camera releases its filter bindings without
 destroying the shared map. Padding does not grow when `setScale()` changes, so
 choose it for the largest animated scale to prevent clipping.
 
+## Explicit filter areas
+
+Pixi normally measures filtered bounds every rendered frame. For a known-size
+sprite or composite, define the participating content rectangle in local render
+coordinates:
+
+```ts
+const panel = new FlxSpriteContainer(200, 100);
+panel.filters = [new FlxBlurFilter(4)];
+panel.setFilterArea(0, 0, 320, 180);
+
+// Return to safe automatic bounds measurement.
+panel.clearFilterArea();
+```
+
+The engine clones the input and creates a separate renderer rectangle for every
+camera projection. Pixi transforms that local rectangle with the object, so do
+not subtract camera scroll or apply zoom yourself. Filter padding is applied
+afterward; the area should describe the unfiltered local content.
+
+An explicit area improves CPU cost by avoiding recursive bounds traversal, but
+an area that is too small or stale clips visual output. Prefer automatic bounds
+for dynamic composites unless maintaining the rectangle is cheaper and
+reliable. The setting affects only filter rendering—not collision, input,
+culling, or `onScreen()` checks. It is dormant while the filter list is empty
+and becomes active again when filters are assigned.
+
 Filters render through intermediate framebuffers. Prefer one filter on a
 `FlxSpriteContainer` when the same effect applies to several children, keep
 blur quality as low as the art permits, and avoid replacing descriptors every
-frame. Explicit filter-area tuning is a later advanced-rendering slice because
-it requires a camera-aware coordinate and invalidation contract.
+frame. Use explicit areas for measured bounds-traversal bottlenecks rather than
+adding them to every filtered sprite by default.

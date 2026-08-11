@@ -17,6 +17,7 @@ export interface FilterShowcaseSnapshot {
   compositeFilters: number;
   displacementRevision: number;
   displacementScale: readonly [number, number];
+  explicitArea: boolean;
   grayscaleFilters: number;
   shaderRenderers: readonly ('webgl' | 'webgpu')[];
   shaderRevision: number;
@@ -55,6 +56,7 @@ export class FilterShowcaseState extends FlxState {
     },
   });
   blurEnabled = true;
+  explicitArea = true;
   shaderStrength = 0.7;
   shaderTime = 0;
 
@@ -99,6 +101,7 @@ export class FilterShowcaseState extends FlxState {
     this.composite.add(new FlxSprite(0, 0).makeGraphic(48, 70, 0xfacc15ff));
     this.composite.add(new FlxSprite(28, 18).makeGraphic(48, 52, 0xf472b6ff));
     this.composite.filters = [FlxColorMatrixFilter.grayscale(0.65)];
+    this.#syncFilterArea();
     this.add(this.composite);
     label(this, 510, 'Composite');
 
@@ -135,12 +138,18 @@ export class FilterShowcaseState extends FlxState {
     this.shader.uniforms.set('uStrength', strength);
   }
 
+  setExplicitArea(enabled: boolean): void {
+    this.explicitArea = enabled;
+    this.#syncFilterArea();
+  }
+
   snapshot(): FilterShowcaseSnapshot {
     return {
       blurEnabled: this.blurEnabled,
       compositeFilters: this.composite.filters.length,
       displacementRevision: this.displacement.revision,
       displacementScale: [this.displacement.scaleX, this.displacement.scaleY],
+      explicitArea: this.explicitArea,
       grayscaleFilters: this.grayscale.filters.length,
       shaderRenderers: this.shader.compatibleRenderers,
       shaderRevision: this.shader.uniforms.revision,
@@ -152,6 +161,11 @@ export class FilterShowcaseState extends FlxState {
     this.blurred.filters = this.blurEnabled
       ? [new FlxBlurFilter(7, { quality: 3 })]
       : [];
+  }
+
+  #syncFilterArea(): void {
+    if (this.explicitArea) this.composite.setFilterArea(0, 0, 76, 70);
+    else this.composite.clearFilterArea();
   }
 }
 

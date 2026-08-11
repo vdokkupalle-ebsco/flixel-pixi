@@ -3488,6 +3488,7 @@ export class FlxSprite extends FlxObject {
     blend: BLEND_MODES | null;
     // (undocumented)
     centerOffsets(adjustPosition?: boolean): void;
+    clearFilterArea(): this;
     // (undocumented)
     get color(): number;
     set color(value: number);
@@ -3504,6 +3505,8 @@ export class FlxSprite extends FlxObject {
     // (undocumented)
     get facing(): number;
     set facing(direction: number);
+    get filterArea(): Readonly<RectangleLike> | null;
+    set filterArea(value: RectangleLike | null);
     get filters(): readonly FlxFilter[];
     set filters(value: readonly FlxFilter[]);
     // (undocumented)
@@ -3545,6 +3548,7 @@ export class FlxSprite extends FlxObject {
     resumeAnimation(): void;
     // (undocumented)
     scale: FlxPoint;
+    setFilterArea(x: number, y: number, width: number, height: number): this;
     // (undocumented)
     setOriginToCorner(): void;
     // (undocumented)

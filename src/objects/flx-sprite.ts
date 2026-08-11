@@ -13,6 +13,7 @@ import { FlxFramesCollection } from '../animation/flx-frames-collection';
 import { makeGraphicPixels, type PixelBuffer } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
 import { FlxPoint } from '../math/flx-point';
+import type { RectangleLike } from '../math/flx-rect';
 import { FlxSpriteRenderHandle } from '../rendering/flx-sprite-render-handle';
 import {
   FlxBlurFilter,
@@ -125,6 +126,7 @@ export class FlxSprite extends FlxObject {
   #alpha = 1;
   #color = 0xffffff;
   #filters: readonly FlxFilter[] = Object.freeze([]);
+  #filterArea: Readonly<RectangleLike> | null = null;
   #animationPaused = false;
   #destroyed = false;
   /** Per-playback loop override (set by play). */
@@ -579,6 +581,44 @@ export class FlxSprite extends FlxObject {
       );
     }
     this.#filters = Object.freeze([...value]);
+  }
+
+  /** Optional local render rectangle that skips automatic filter bounds measurement. */
+  get filterArea(): Readonly<RectangleLike> | null {
+    return this.#filterArea;
+  }
+
+  set filterArea(value: RectangleLike | null) {
+    if (value === null) {
+      this.#filterArea = null;
+      return;
+    }
+    const { x, y, width, height } = value;
+    if (
+      !Number.isFinite(x) ||
+      !Number.isFinite(y) ||
+      !Number.isFinite(width) ||
+      !Number.isFinite(height) ||
+      width <= 0 ||
+      height <= 0
+    ) {
+      throw new RangeError(
+        'Filter area must have finite coordinates and positive dimensions.',
+      );
+    }
+    this.#filterArea = Object.freeze({ x, y, width, height });
+  }
+
+  /** Define a local render rectangle for filter bounds optimization. */
+  setFilterArea(x: number, y: number, width: number, height: number): this {
+    this.filterArea = { x, y, width, height };
+    return this;
+  }
+
+  /** Restore automatic filter bounds measurement. */
+  clearFilterArea(): this {
+    this.filterArea = null;
+    return this;
   }
 
   get alpha(): number {

@@ -3,6 +3,7 @@ import {
   ColorMatrixFilter,
   defaultFilterVert,
   Filter,
+  Rectangle,
   UniformGroup,
   type ColorMatrix,
   type Container,
@@ -18,6 +19,7 @@ import {
   readFlxShaderUniforms,
   type FlxFilter,
 } from './flx-filter';
+import type { RectangleLike } from '../math/flx-rect';
 
 interface MaterializedFilter {
   readonly filter: Filter;
@@ -27,10 +29,16 @@ interface MaterializedFilter {
 
 /** @internal Adapter-owned materialization of renderer-neutral filters. */
 export class FlxFilterChain {
+  #area: Rectangle | null = null;
+  #areaSource: Readonly<RectangleLike> | null = null;
   #source: readonly FlxFilter[] | null = null;
   #filters: MaterializedFilter[] = [];
 
-  sync(view: Container, source: readonly FlxFilter[]): void {
+  sync(
+    view: Container,
+    source: readonly FlxFilter[],
+    area: Readonly<RectangleLike> | null = null,
+  ): void {
     if (source !== this.#source) {
       this.#release(view);
       this.#source = source;
@@ -40,19 +48,43 @@ export class FlxFilterChain {
           ? this.#filters.map((entry) => entry.filter)
           : null;
     }
+    this.#syncArea(view, source.length > 0 ? area : null);
     for (const filter of this.#filters) filter.sync();
   }
 
   destroy(view: Container): void {
     this.#release(view);
     this.#source = null;
+    this.#areaSource = null;
+    this.#area = null;
   }
 
   #release(view: Container): void {
     view.filters = null;
+    clearFilterArea(view);
+    this.#areaSource = null;
     for (const filter of this.#filters) filter.destroy();
     this.#filters = [];
   }
+
+  #syncArea(view: Container, source: Readonly<RectangleLike> | null): void {
+    if (source === this.#areaSource) return;
+    this.#areaSource = source;
+    if (source === null) {
+      clearFilterArea(view);
+      return;
+    }
+    this.#area ??= new Rectangle();
+    this.#area.x = source.x;
+    this.#area.y = source.y;
+    this.#area.width = source.width;
+    this.#area.height = source.height;
+    view.filterArea = this.#area;
+  }
+}
+
+function clearFilterArea(view: Container): void {
+  view.filterArea = null as unknown as Rectangle;
 }
 
 function materializeFilter(filter: FlxFilter): MaterializedFilter {

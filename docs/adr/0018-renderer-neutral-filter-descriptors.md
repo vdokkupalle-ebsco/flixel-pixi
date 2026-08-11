@@ -28,8 +28,9 @@ stateful GPU resource when one sprite is projected into multiple cameras.
    [ADR-0019](0019-typed-cross-renderer-shader-filters.md), and displacement
    follows the texture-lifetime contract in
    [ADR-0020](0020-non-owning-displacement-maps.md).
-5. Filters remain visual-only: collision, bounds, input, and fixed-step state do
-   not query filtered Pixi output.
+5. Filters remain visual-only: collision, gameplay bounds, input, and fixed-step
+   state do not query filtered Pixi output. Optional filter-render bounds follow
+   [ADR-0021](0021-local-explicit-filter-areas.md).
 
 ## Consequences
 
@@ -40,5 +41,5 @@ stateful GPU resource when one sprite is projected into multiple cameras.
 - Applying filters introduces offscreen render passes. Authors should prefer a
   filtered composite over repeating the same filter on many children, and blur
   quality must be chosen with its framebuffer cost in mind.
-- Explicit filter areas remain deferred until their coordinate and performance
-  policies are implemented and measured.
+- Explicit local filter areas can skip Pixi's automatic recursive bounds
+  measurement, while automatic measurement remains the default.

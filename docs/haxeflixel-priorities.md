@@ -397,11 +397,19 @@ Current slice:
   destroys the caller-owned map, and early map destruction fails clearly.
 - The showcase animates a generated displacement map and browser coverage
   verifies changing rendered pixels across the supported engines.
-- Explicit filter areas remain pending within this checkpoint. See
+- **Adapted:** optional `FlxSprite.filterArea` rectangles use local render
+  coordinates, clone caller input, reuse camera-local Pixi rectangles, and
+  restore automatic bounds measurement when cleared or filters are absent.
+- The showcase toggles explicit and automatic bounds on a composite and asserts
+  identical output. Explicit areas remain opt-in because stale rectangles clip
+  content; automatic measurement is the safe default.
+- The filter/shader portion of this checkpoint is complete. Mesh/strip rendering
+  is the next independent advanced-rendering slice. See
   [`guides/filters.md`](guides/filters.md),
   [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md),
   [`adr/0019-typed-cross-renderer-shader-filters.md`](adr/0019-typed-cross-renderer-shader-filters.md),
-  and [`adr/0020-non-owning-displacement-maps.md`](adr/0020-non-owning-displacement-maps.md).
+  [`adr/0020-non-owning-displacement-maps.md`](adr/0020-non-owning-displacement-maps.md),
+  and [`adr/0021-local-explicit-filter-areas.md`](adr/0021-local-explicit-filter-areas.md).
 
 ### Debugger and runtime inspection
 

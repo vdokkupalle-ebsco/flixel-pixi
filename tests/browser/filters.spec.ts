@@ -18,6 +18,7 @@ test('renders neutral sprite/composite filters and replaces chains', async ({
     blurEnabled: true,
     compositeFilters: 1,
     displacementScale: [8, 4],
+    explicitArea: true,
     grayscaleFilters: 1,
     shaderRenderers: ['webgl', 'webgpu'],
     shaderStrength: 0.7,
@@ -80,6 +81,29 @@ test('renders neutral sprite/composite filters and replaces chains', async ({
     0,
   );
   expect(displacementDifference).toBeGreaterThan(100);
+
+  const compositePixels = () =>
+    page.evaluate(() => {
+      const app = window.__FLIXEL_PIXI_FILTERS__?.app;
+      if (!app) throw new Error('Missing filter showcase application.');
+      const output = app.app.renderer.extract.pixels(app.app.stage);
+      const result: number[] = [];
+      for (let y = 120; y < 184; y += 4) {
+        for (let x = 514; x < 582; x += 4) {
+          const pixelX = Math.floor((x / 640) * output.width);
+          const pixelY = Math.floor((y / 360) * output.height);
+          const index = (pixelY * output.width + pixelX) * 4;
+          result.push(...output.pixels.slice(index, index + 3));
+        }
+      }
+      return result;
+    });
+  const explicitComposite = await compositePixels();
+  expect(Math.max(...explicitComposite)).toBeGreaterThan(80);
+  await page.locator('[data-action="area"]').click();
+  await expect.poll(snapshot).toMatchObject({ explicitArea: false });
+  await page.waitForTimeout(50);
+  expect(await compositePixels()).toEqual(explicitComposite);
 
   await page.locator('[data-action="blur"]').click();
   await expect.poll(snapshot).toMatchObject({ blurEnabled: false });

@@ -36,3 +36,4 @@ and storage backends with gesture-unlock queuing and versioned save slots.
 | [0018](0018-renderer-neutral-filter-descriptors.md)       | Handle-local Pixi filters from neutral descriptors         | Accepted |
 | [0019](0019-typed-cross-renderer-shader-filters.md)       | Typed cross-renderer shader filters                        | Accepted |
 | [0020](0020-non-owning-displacement-maps.md)              | Non-owning normalized displacement maps                    | Accepted |
+| [0021](0021-local-explicit-filter-areas.md)               | Local explicit filter areas with automatic fallback        | Accepted |

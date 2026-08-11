@@ -8,6 +8,7 @@ declare global {
       destroyed: boolean;
       ready: boolean;
       setBlurEnabled?: (enabled: boolean) => void;
+      setExplicitArea?: (enabled: boolean) => void;
       setShaderStrength?: (strength: number) => void;
       snapshot?: () => FilterShowcaseSnapshot | null;
     };
@@ -21,6 +22,9 @@ const toggle = document.querySelector<HTMLButtonElement>(
 );
 const shaderToggle = document.querySelector<HTMLButtonElement>(
   '[data-action="shader"]',
+);
+const areaToggle = document.querySelector<HTMLButtonElement>(
+  '[data-action="area"]',
 );
 const destroy = document.querySelector<HTMLButtonElement>(
   '[data-action="destroy"]',
@@ -47,6 +51,9 @@ bootGame({
       setBlurEnabled(enabled) {
         state()?.setBlurEnabled(enabled);
       },
+      setExplicitArea(enabled) {
+        state()?.setExplicitArea(enabled);
+      },
       setShaderStrength(strength) {
         state()?.setShaderStrength(strength);
       },
@@ -54,6 +61,7 @@ bootGame({
     };
     toggle?.removeAttribute('disabled');
     shaderToggle?.removeAttribute('disabled');
+    areaToggle?.removeAttribute('disabled');
     destroy?.removeAttribute('disabled');
     toggle?.addEventListener('click', () => {
       const current = state();
@@ -68,6 +76,14 @@ bootGame({
       current.setShaderStrength(strength);
       shaderToggle.textContent =
         strength > 0 ? 'Disable shader' : 'Enable shader';
+    });
+    areaToggle?.addEventListener('click', () => {
+      const current = state();
+      if (!current) return;
+      current.setExplicitArea(!current.explicitArea);
+      areaToggle.textContent = current.explicitArea
+        ? 'Use automatic bounds'
+        : 'Use explicit area';
     });
     destroy?.addEventListener('click', () => {
       app.destroy();

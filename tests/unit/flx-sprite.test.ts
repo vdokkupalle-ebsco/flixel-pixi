@@ -444,6 +444,80 @@ describe('FlxSprite', () => {
     graphic.destroy();
   });
 
+  it('projects immutable local filter areas into reusable camera rectangles', () => {
+    const sprite = new FlxSprite();
+    const source = { x: -4, y: -6, width: 40, height: 30 };
+    sprite.filterArea = source;
+    source.width = 1;
+    expect(sprite.filterArea).toEqual({
+      x: -4,
+      y: -6,
+      width: 40,
+      height: 30,
+    });
+    expect(Object.isFrozen(sprite.filterArea)).toBe(true);
+
+    const handle = sprite.createRenderHandle();
+    if (!(handle instanceof FlxSpriteRenderHandle)) {
+      throw new Error('Expected sprite handle.');
+    }
+    expect(handle.view.filterArea).toBeNull();
+
+    sprite.filters = [FlxColorMatrixFilter.grayscale()];
+    handle.sync();
+    const rendererArea = handle.view.filterArea;
+    expect(rendererArea).toMatchObject({
+      x: -4,
+      y: -6,
+      width: 40,
+      height: 30,
+    });
+
+    const second = sprite.createRenderHandle();
+    if (!(second instanceof FlxSpriteRenderHandle)) {
+      throw new Error('Expected sprite handle.');
+    }
+    expect(second.view.filterArea).toMatchObject({
+      x: -4,
+      y: -6,
+      width: 40,
+      height: 30,
+    });
+    expect(second.view.filterArea).not.toBe(rendererArea);
+
+    sprite.filters = [new FlxBlurFilter(2)];
+    handle.sync();
+    expect(handle.view.filterArea).toBe(rendererArea);
+    expect(handle.view.filterArea).toMatchObject({
+      x: -4,
+      y: -6,
+      width: 40,
+      height: 30,
+    });
+
+    sprite.setFilterArea(1, 2, 20, 10);
+    handle.sync();
+    expect(handle.view.filterArea).toBe(rendererArea);
+    expect(handle.view.filterArea).toMatchObject({
+      x: 1,
+      y: 2,
+      width: 20,
+      height: 10,
+    });
+
+    sprite.clearFilterArea();
+    handle.sync();
+    expect(handle.view.filterArea).toBeNull();
+    expect(() => sprite.setFilterArea(0, 0, 0, 10)).toThrow(RangeError);
+    expect(() => sprite.setFilterArea(Number.NaN, 0, 10, 10)).toThrow(
+      RangeError,
+    );
+
+    second.destroy();
+    handle.destroy();
+    sprite.destroy();
+  });
+
   it('validates graphic dimensions and leaves shared graphics alive', () => {
     const graphic = spriteSheet();
     const sprite = new FlxSprite();

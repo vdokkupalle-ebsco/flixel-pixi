@@ -78,7 +78,11 @@ export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
     this.view.blendMode = 'normal';
     this.view.visible =
       this.#owner.exists && this.#owner.visible && this.#owner.alpha > 0;
-    this.#filterChain.sync(this.view, this.#owner.filters);
+    this.#filterChain.sync(
+      this.view,
+      this.#owner.filters,
+      this.#owner.filterArea,
+    );
   }
 
   destroy(): void {
