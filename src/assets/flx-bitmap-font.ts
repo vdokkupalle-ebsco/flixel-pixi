@@ -23,15 +23,52 @@ function installPixiBitmapFont(
   textures: Texture[],
   url?: string,
 ): BitmapFont {
-  const font = new BitmapFont({ data, textures }, url);
-  const cacheKey = `${font.fontFamily}-bitmap`;
-  if (!Cache.has(cacheKey)) {
-    Cache.set(cacheKey, font);
+  const cacheKey = `${data.fontFamily}-bitmap`;
+  if (Cache.has(cacheKey)) {
+    throw new Error(
+      `Bitmap font family "${data.fontFamily}" is already registered. Destroy or reuse the existing font first.`,
+    );
   }
+  const font = new BitmapFont({ data, textures }, url);
+  Cache.set(cacheKey, font);
   font.once('destroy', () => {
     if (Cache.get(cacheKey) === font) Cache.remove(cacheKey);
   });
   return font;
+}
+
+function destroyFontWithoutSourceTextures(font: BitmapFont): void {
+  // Pixi's BitmapFont.destroy() destroys page texture sources. Those sources are
+  // supplied by the caller here and remain owned by FlxGraphic/Assets.
+  font.pages.length = 0;
+  font.destroy();
+}
+
+function validateSinglePageFont(data: FlxBmFontData, texture: Texture): void {
+  if (data.pages.length !== 1 || data.pages[0]?.id !== 0) {
+    throw new Error(
+      'FlxBitmapFont.fromAngelCode currently supports one page with id 0.',
+    );
+  }
+  for (const char of Object.values(data.chars)) {
+    if (char.page !== 0) {
+      throw new Error(
+        'FlxBitmapFont.fromAngelCode currently supports glyphs on page 0 only.',
+      );
+    }
+    if (
+      char.x < 0 ||
+      char.y < 0 ||
+      char.width < 0 ||
+      char.height < 0 ||
+      char.x + char.width > texture.width ||
+      char.y + char.height > texture.height
+    ) {
+      throw new RangeError(
+        `Bitmap font glyph "${char.letter}" must fit inside the source texture.`,
+      );
+    }
+  }
 }
 
 /**
@@ -41,13 +78,20 @@ function installPixiBitmapFont(
 export class FlxBitmapFont {
   readonly #pixiFont: BitmapFont;
   readonly #ownsPixiFont: boolean;
+  #destroyOwnedSource: (() => void) | null = null;
   #destroyed = false;
 
   constructor(pixiFont: BitmapFont, ownsPixiFont = true) {
     this.#pixiFont = pixiFont;
     this.#ownsPixiFont = ownsPixiFont;
     const cacheKey = `${pixiFont.fontFamily}-bitmap`;
-    if (!Cache.has(cacheKey)) {
+    const cached = Cache.get<BitmapFont>(cacheKey);
+    if (cached !== undefined && cached !== pixiFont) {
+      throw new Error(
+        `Bitmap font family "${pixiFont.fontFamily}" is already registered with a different font.`,
+      );
+    }
+    if (cached === undefined) {
       Cache.set(cacheKey, pixiFont);
     }
   }
@@ -92,6 +136,7 @@ export class FlxBitmapFont {
       data.fontFamily = fontFamily;
     }
     const texture = textureFromSource(source);
+    validateSinglePageFont(data, texture);
     const font = installPixiBitmapFont(data, [texture]);
     return new FlxBitmapFont(font, true);
   }
@@ -108,13 +153,27 @@ export class FlxBitmapFont {
     },
   ): FlxBitmapFont {
     if (!Number.isFinite(charWidth) || charWidth <= 0) {
-      throw new RangeError('Monospace charWidth must be a positive finite number.');
+      throw new RangeError(
+        'Monospace charWidth must be a positive finite number.',
+      );
     }
     if (!Number.isFinite(charHeight) || charHeight <= 0) {
-      throw new RangeError('Monospace charHeight must be a positive finite number.');
+      throw new RangeError(
+        'Monospace charHeight must be a positive finite number.',
+      );
     }
     const spacingX = options?.spacingX ?? 0;
     const spacingY = options?.spacingY ?? 0;
+    if (!Number.isFinite(spacingX) || spacingX < 0) {
+      throw new RangeError(
+        'Monospace spacingX must be a non-negative finite number.',
+      );
+    }
+    if (!Number.isFinite(spacingY) || spacingY < 0) {
+      throw new RangeError(
+        'Monospace spacingY must be a non-negative finite number.',
+      );
+    }
     const texture = textureFromSource(source);
     const cols = Math.max(
       1,
@@ -131,6 +190,13 @@ export class FlxBitmapFont {
       }
       const id = letter.codePointAt(0);
       if (id === undefined) continue;
+      const x = column * (charWidth + spacingX);
+      const y = row * (charHeight + spacingY);
+      if (x + charWidth > texture.width || y + charHeight > texture.height) {
+        throw new RangeError(
+          `Monospace glyph "${letter}" must fit inside the source texture.`,
+        );
+      }
       chars[letter] = {
         id,
         kerning: {},
@@ -138,8 +204,8 @@ export class FlxBitmapFont {
         page: 0,
         width: charWidth,
         height: charHeight,
-        x: column * (charWidth + spacingX),
-        y: row * (charHeight + spacingY),
+        x,
+        y,
         xAdvance: charWidth + spacingX,
         xOffset: 0,
         yOffset: 0,
@@ -176,6 +242,7 @@ export class FlxBitmapFont {
     defaultFont = FlxBitmapFont.fromMonospace(graphic, 'A', 8, 8, {
       fontFamily: 'flx-default-bitmap',
     });
+    defaultFont.#destroyOwnedSource = () => graphic.destroy();
     return defaultFont;
   }
 
@@ -183,12 +250,14 @@ export class FlxBitmapFont {
     if (this.#destroyed) return;
     this.#destroyed = true;
     const cacheKey = `${this.#pixiFont.fontFamily}-bitmap`;
-    if (Cache.get(cacheKey) === this.#pixiFont) {
+    if (this.#ownsPixiFont && Cache.get(cacheKey) === this.#pixiFont) {
       Cache.remove(cacheKey);
     }
     if (this.#ownsPixiFont) {
-      this.#pixiFont.destroy();
+      destroyFontWithoutSourceTextures(this.#pixiFont);
     }
+    this.#destroyOwnedSource?.();
+    this.#destroyOwnedSource = null;
     if (defaultFont === this) defaultFont = null;
   }
 }

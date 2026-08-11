@@ -86,8 +86,8 @@ plain TypeScript state; Pixi display objects are synchronized views.
 | `FlxSprite.loadRotatedGraphic`                        | Deprecated     | Runtime Pixi rotation replaces pre-baked Flash rotation sheets.                                                                                                              |
 | `framePixels`, mutable `pixels`, `stamp`, and overlap | Emulated       | CPU packed-buffer helpers remain in the explicit compatibility module; arbitrary gameplay GPU readback remains unsupported by the rendering architecture.                    |
 | `FlxText`                                             | Adapted        | Text, width wrapping, alignment, font, size, fill, one-pixel shadow, border, multiline bounds, transforms, and alpha use Pixi `Text`; `BitmapText` is an explicit fast mode. |
-| Modern HaxeFlixel `FlxBitmapFont`                     | Adapted        | AngelCode BMFont XML and monospace grid builders register Pixi `BitmapFont` instances through `FlxGraphic`/texture sources and Pixi `Cache`.                                     |
-| Modern HaxeFlixel `FlxBitmapText`                     | Adapted        | Bitmap-font labels use Pixi `BitmapText` with field width, alignment, spacing, tint, and transform sync through a dedicated render handle.                                     |
+| Modern HaxeFlixel `FlxBitmapFont`                     | Adapted        | AngelCode BMFont XML and monospace grid builders register Pixi `BitmapFont` instances through `FlxGraphic`/texture sources and Pixi `Cache`.                                 |
+| Modern HaxeFlixel `FlxBitmapText`                     | Adapted        | Bitmap-font labels use Pixi `BitmapText` with field width, alignment, spacing, tint, and transform sync through a dedicated render handle.                                   |
 | `FlxTileblock`                                        | Adapted        | Seeded tile selection generates one uploadable texture from pixel-backed/preprocessed tile graphics; URL textures must be preprocessed rather than read back from the GPU.   |
 | `FlxAssets` (browser-native)                          | New            | Typed descriptors, aliases, manifests, bundles, progress, retries, failure state, background loading, cache lookup, and unload wrap Pixi `Assets`.                           |
 
@@ -139,18 +139,19 @@ collision/path contracts, chunk metrics, and browser snapshots.
 The input milestone queues browser events independently of display cadence and
 publishes them through context-owned input state on fixed simulation steps.
 
-| Upstream surface                          | Classification | Input status / adaptation                                                                                                                                                                 |
-| ----------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Input` digital transitions and snapshots | Exact          | The pinned `2 → 1` pressed and `-1 → 0` released states, named queries, reset, any-key, numeric records, and playback are preserved.                                                      |
-| `Keyboard` names and event capture        | Adapted        | Public key names and legacy values remain; DOM `code` is preferred for physical bindings, with `keyCode`/`key` fallback and explicit `CTRL`/`RETURN` aliases.                             |
-| `Mouse` buttons, wheel, and coordinates   | Adapted        | Pointer Events replace Flash mouse events; CSS-to-logical scaling, capture, cancellation, multi-button state, cursor CSS, and the full inverse camera transform are implemented.          |
+| Upstream surface                          | Classification | Input status / adaptation                                                                                                                                                                             |
+| ----------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Input` digital transitions and snapshots | Exact          | The pinned `2 → 1` pressed and `-1 → 0` released states, named queries, reset, any-key, numeric records, and playback are preserved.                                                                  |
+| `Keyboard` names and event capture        | Adapted        | Public key names and legacy values remain; DOM `code` is preferred for physical bindings, with `keyCode`/`key` fallback and explicit `CTRL`/`RETURN` aliases.                                         |
+| `Mouse` buttons, wheel, and coordinates   | Adapted        | Pointer Events replace Flash mouse events; CSS-to-logical scaling, capture, cancellation, multi-button state, cursor CSS, and the full inverse camera transform are implemented.                      |
 | `FlxButton` interaction and appearance    | Adapted        | Four visual states, per-status label offsets/alphas, swipe-to-press, multi-touch overlap, checkbox highlighting, four callbacks, and backend-neutral sound hooks in one composite Pixi render handle. |
-| Stage/UI-thread mouse-up listener         | Adapted        | The input queue plus pointer capture replaces the Flash stage listener. Activation occurs on an uncancelled authoritative release and never directly inside a DOM or Pixi event callback. |
-| `FlxG.keys`, `mouse`, and `resetInput`    | Adapted        | The facade resolves a typed `FlxInputService` from the active context; `FlxGame` installs and advances a headless-capable manager before every state step.                                |
-| Modern HaxeFlixel gamepads                | Adapted        | Web Gamepad snapshots are polled once per fixed step with standard-layout constants, scaled dead zones, stable logical reconnect IDs, injectable providers, and replay 1.1 state.         |
-| Modern HaxeFlixel actions                 | Adapted        | Serializable keyboard, mouse, wheel, gamepad-button, analog-axis, keyboard-axis, and D-pad sources support stable device targeting and exclusive runtime rebinding.                       |
-| Modern HaxeFlixel touches and swipes      | Adapted        | Pointer Events publish concurrent touches at fixed-step boundaries; only the primary touch mirrors the mouse, and logical-distance swipes are recorded in replay 1.2.                     |
-| Modern HaxeFlixel `FlxBar`                 | Adapted        | Eight fill directions, parent/value binding, position follow offsets, renderer-owned fill geometry, and limit callbacks without per-value texture uploads.                                 |
+| Stage/UI-thread mouse-up listener         | Adapted        | The input queue plus pointer capture replaces the Flash stage listener. Activation occurs on an uncancelled authoritative release and never directly inside a DOM or Pixi event callback.             |
+| `FlxG.keys`, `mouse`, and `resetInput`    | Adapted        | The facade resolves a typed `FlxInputService` from the active context; `FlxGame` installs and advances a headless-capable manager before every state step.                                            |
+| Modern HaxeFlixel gamepads                | Adapted        | Web Gamepad snapshots are polled once per fixed step with standard-layout constants, scaled dead zones, stable logical reconnect IDs, injectable providers, and replay 1.1 state.                     |
+| Modern HaxeFlixel actions                 | Adapted        | Serializable keyboard, mouse, wheel, gamepad-button, analog-axis, keyboard-axis, and D-pad sources support stable device targeting and exclusive runtime rebinding.                                   |
+| Modern HaxeFlixel touches and swipes      | Adapted        | Pointer Events publish concurrent touches at fixed-step boundaries; only the primary touch mirrors the mouse, and logical-distance swipes are recorded in replay 1.2.                                 |
+| Modern HaxeFlixel `FlxBar`                | Adapted        | Eight fill directions, parent/value binding, position follow offsets, renderer-owned fill geometry, and limit callbacks without per-value texture uploads.                                            |
+| Modern HaxeFlixel `FlxInputText`          | Adapted        | Camera-projected native input/textarea controls preserve selection, mobile keyboards, and IME while publishing edits and submission on fixed updates.                                                 |
 
 See the [historical input evidence](history/porting/input.md) for low-FPS
 transition proofs, mapping notes, cancellation tests, replay snapshots, and
@@ -297,6 +298,12 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 - Source: HaxeFlixel `flixel.text.FlxBitmapText`
 - Public API (subset): `text`, `font`, `fieldWidth`, `alignment`, `letterSpacing`, `lineSpacing`, `setFormat`, `createRenderHandle`
 - Compatibility status: Adapted — Pixi `BitmapText` projection with field width, alignment, spacing, tint, and transform interpolation.
+
+### Modern HaxeFlixel `FlxInputText`
+
+- Source: HaxeFlixel `flixel.text.FlxInputText`
+- Public API (adapted subset): `text`, `maxLength`, `multiline`, `type`, `inputMode`, `placeholder`, `enabled`, `editable`, `focused`, `focus`, `blur`, `select`, `selectionStart`, `selectionEnd`, `onTextChange`, `onSubmit`
+- Compatibility status: Adapted — a camera-projected native input/textarea owns caret, selection, mobile keyboard, password, and IME behavior; changes become authoritative only on fixed updates.
 
 ### `org.flixel.FlxTileblock`
 

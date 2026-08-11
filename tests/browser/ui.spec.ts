@@ -54,6 +54,50 @@ test('operates rendered UI through native keyboard accessibility controls', asyn
     alignment?.expected.height ?? 0,
     0,
   );
+  const nameInput = page.locator('[data-flx-input-text]');
+  await expect(nameInput).toHaveCount(1);
+  await expect(nameInput).toHaveAttribute('aria-label', 'Player name');
+  await nameInput.fill('Miyu');
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.__FLIXEL_PIXI_UI__?.snapshot?.()?.playerName),
+    )
+    .toBe('Miyu');
+  await nameInput.evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.dispatchEvent(
+      new CompositionEvent('compositionstart', { bubbles: true, data: '' }),
+    );
+    input.value = 'Miyu 勇';
+    input.setSelectionRange(input.value.length, input.value.length);
+    input.dispatchEvent(
+      new InputEvent('input', {
+        bubbles: true,
+        data: '勇',
+        inputType: 'insertCompositionText',
+        isComposing: true,
+      }),
+    );
+    input.dispatchEvent(
+      new CompositionEvent('compositionend', {
+        bubbles: true,
+        data: '勇',
+      }),
+    );
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.__FLIXEL_PIXI_UI__?.snapshot?.()?.playerName),
+    )
+    .toBe('Miyu 勇');
+  await nameInput.press('Enter');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.__FLIXEL_PIXI_UI__?.snapshot?.()?.submittedName,
+      ),
+    )
+    .toBe('Miyu 勇');
 
   const before = await page.evaluate(() =>
     window.__FLIXEL_PIXI_UI__?.snapshot?.(),
@@ -78,4 +122,5 @@ test('operates rendered UI through native keyboard accessibility controls', asyn
 
   await page.locator('[data-action="destroy"]').click();
   await expect(controls).toHaveCount(0);
+  await expect(nameInput).toHaveCount(0);
 });

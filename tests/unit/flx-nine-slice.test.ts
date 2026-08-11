@@ -16,8 +16,7 @@ function panelGraphic(): FlxGraphic {
   const pixels = makeGraphicPixels(size, size, 0);
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
-      const corner =
-        x < 8 || x >= size - 8 || y < 8 || y >= size - 8;
+      const corner = x < 8 || x >= size - 8 || y < 8 || y >= size - 8;
       pixels.data[y * size + x] = corner ? 0xff8844ff : 0x442211ff;
     }
   }
@@ -67,9 +66,7 @@ describe('FlxNineSliceSprite', () => {
   it('rejects loadGraphic and oversized border insets', () => {
     const graphic = panelGraphic();
     const sprite = new FlxNineSliceSprite();
-    expect(() => sprite.loadGraphic(graphic)).toThrow(
-      'loadNineSliceGraphic',
-    );
+    expect(() => sprite.loadGraphic(graphic)).toThrow('loadNineSliceGraphic');
     expect(() =>
       sprite.loadNineSliceGraphic(
         graphic,
@@ -82,6 +79,18 @@ describe('FlxNineSliceSprite', () => {
         32,
       ),
     ).toThrow('source texture width');
+    expect(() =>
+      sprite.loadNineSliceGraphic(
+        graphic,
+        false,
+        false,
+        32,
+        32,
+        { bottom: 8, left: Number.NaN, right: 8, top: 8 },
+        64,
+        64,
+      ),
+    ).toThrow('positive');
   });
 });
 
@@ -111,7 +120,8 @@ describe('FlxNineSliceButton', () => {
       96,
       32,
     );
-    const handle = button.createRenderHandle() as FlxNineSliceButtonRenderHandle;
+    const handle =
+      button.createRenderHandle() as FlxNineSliceButtonRenderHandle;
 
     expect(handle).toBeInstanceOf(FlxNineSliceButtonRenderHandle);
     expect(handle.slice.width).toBe(96);

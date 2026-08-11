@@ -926,20 +926,24 @@ export class FlxBitmapFont {
 export class FlxBitmapText extends FlxSprite {
     constructor(x?: number, y?: number, text?: string, font?: FlxBitmapFont | null, fieldWidth?: number);
     // (undocumented)
-    alignment: TextStyleAlign;
+    get alignment(): TextStyleAlign;
+    set alignment(value: TextStyleAlign);
     // (undocumented)
     createRenderHandle(): FlxRenderHandle;
     // (undocumented)
     destroy(): void;
     // (undocumented)
-    fieldWidth: number;
+    get fieldWidth(): number;
+    set fieldWidth(value: number);
     // (undocumented)
     get font(): FlxBitmapFont;
     set font(value: FlxBitmapFont);
     // (undocumented)
-    letterSpacing: number;
+    get letterSpacing(): number;
+    set letterSpacing(value: number);
     // (undocumented)
-    lineSpacing: number;
+    get lineSpacing(): number;
+    set lineSpacing(value: number);
     // (undocumented)
     postUpdate(): void;
     // (undocumented)
@@ -2185,6 +2189,57 @@ export interface FlxInputService {
     // (undocumented)
     updateInput(): void;
 }
+
+// @public
+export class FlxInputText extends FlxText {
+    constructor(x?: number, y?: number, width?: number, text?: string, options?: FlxInputTextOptions);
+    accessibleLabel: string;
+    backgroundColor: number;
+    blur(): void;
+    get composing(): boolean;
+    destroy(): void;
+    editable: boolean;
+    enabled: boolean;
+    focus(): void;
+    get focused(): boolean;
+    focusedBorderColor: number;
+    inputBorderColor: number;
+    inputMode: string;
+    get maxLength(): number;
+    set maxLength(value: number);
+    readonly multiline: boolean;
+    onSubmit: FlxInputTextSubmitCallback | null;
+    onTextChange: FlxInputTextChangeCallback | null;
+    placeholder: string;
+    select(start?: number, end?: number): void;
+    get selectionEnd(): number;
+    get selectionStart(): number;
+    tabIndex: number;
+    get text(): string;
+    set text(value: string);
+    type: FlxInputTextType;
+    update(): void;
+}
+
+// @public
+export type FlxInputTextChangeCallback = (value: string) => void;
+
+// @public
+export interface FlxInputTextOptions {
+    readonly accessibleLabel?: string;
+    readonly height?: number;
+    readonly inputMode?: string;
+    readonly maxLength?: number;
+    readonly multiline?: boolean;
+    readonly placeholder?: string;
+    readonly type?: FlxInputTextType;
+}
+
+// @public
+export type FlxInputTextSubmitCallback = (value: string) => void;
+
+// @public
+export type FlxInputTextType = 'email' | 'password' | 'search' | 'tel' | 'text' | 'url';
 
 // @public
 export interface FlxKeyboardEventLike {

@@ -40,7 +40,8 @@ export class FlxNineSliceButton extends FlxButton {
   setBorders(left: number, top: number, right: number, bottom: number): this {
     const texture = this.renderTexture;
     const textureWidth = texture.width > 0 ? texture.width : this.frameWidth;
-    const textureHeight = texture.height > 0 ? texture.height : this.frameHeight;
+    const textureHeight =
+      texture.height > 0 ? texture.height : this.frameHeight;
     const borders: FlxNineSliceBorders = {
       bottom,
       left,
@@ -105,7 +106,11 @@ export class FlxNineSliceButton extends FlxButton {
     const texture = this.renderTexture;
     const textureWidth = frameWidth > 0 ? frameWidth : texture.frame.width;
     const textureHeight = frameHeight > 0 ? frameHeight : texture.frame.height;
-    const resolved = resolveNineSliceBorders(borders, textureWidth, textureHeight);
+    const resolved = resolveNineSliceBorders(
+      borders,
+      textureWidth,
+      textureHeight,
+    );
     const outWidth = displayWidth ?? this.frameWidth;
     const outHeight = displayHeight ?? this.frameHeight;
     validateNineSliceBorders(

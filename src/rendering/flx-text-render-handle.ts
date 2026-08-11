@@ -54,7 +54,7 @@ export class FlxTextRenderHandle implements FlxRenderHandle {
       this.#styleVersion = owner.textStyleVersion;
     }
 
-    const canMeasure = typeof document !== 'undefined';
+    const canMeasure = typeof CanvasRenderingContext2D !== 'undefined';
     const measuredHeight = canMeasure
       ? this.textNode.height
       : Math.max(1, owner.text.split('\n').length * owner.size * 1.2 + 4);
@@ -86,6 +86,7 @@ export class FlxTextRenderHandle implements FlxRenderHandle {
     this.view.alpha = owner.alpha;
     this.view.blendMode = owner.blend ?? 'normal';
     this.view.visible = owner.exists && owner.visible && owner.alpha > 0;
+    this.view.visible = this.view.visible && owner.isCanvasTextVisible();
   }
 
   destroy(): void {

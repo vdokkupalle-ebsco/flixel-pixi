@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Cache } from 'pixi.js';
 
 import {
   FlxBitmapFont,
@@ -29,6 +30,15 @@ describe('parseBmFontXml', () => {
     expect(data.fontSize).toBe(8);
     expect(data.chars.A).toMatchObject({ width: 8, height: 8, xAdvance: 8 });
     expect(data.pages).toHaveLength(1);
+  });
+
+  it('rejects non-finite metrics and undeclared glyph pages', () => {
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace('size="8"', 'size="NaN"')),
+    ).toThrow('size must be finite');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace('page="0"', 'page="1"')),
+    ).toThrow('declared page id');
   });
 });
 
@@ -68,6 +78,46 @@ describe('FlxBitmapFont', () => {
     text.destroy();
     graphic.destroy();
   });
+
+  it('preserves caller-owned textures and cache entries for non-owning wrappers', () => {
+    const graphic = monospaceGraphic();
+    const font = FlxBitmapFont.fromMonospace(graphic, 'ABC', 8, 8, {
+      fontFamily: 'UnitOwned8',
+    });
+    const wrapper = new FlxBitmapFont(font.pixiFont, false);
+    const source = graphic.texture.source;
+
+    wrapper.destroy();
+    expect(Cache.get('UnitOwned8-bitmap')).toBe(font.pixiFont);
+
+    font.destroy();
+    expect(source.destroyed).toBe(false);
+    expect(graphic.destroyed).toBe(false);
+    expect(Cache.has('UnitOwned8-bitmap')).toBe(false);
+
+    graphic.destroy();
+  });
+
+  it('rejects duplicate families and glyphs outside the source texture', () => {
+    const graphic = monospaceGraphic();
+    const font = FlxBitmapFont.fromMonospace(graphic, 'ABC', 8, 8, {
+      fontFamily: 'UnitDuplicate8',
+    });
+
+    expect(() =>
+      FlxBitmapFont.fromMonospace(graphic, 'ABC', 8, 8, {
+        fontFamily: 'UnitDuplicate8',
+      }),
+    ).toThrow('already registered');
+    expect(() =>
+      FlxBitmapFont.fromMonospace(graphic, 'ABCD', 8, 8, {
+        fontFamily: 'UnitOverflow8',
+      }),
+    ).toThrow('must fit inside the source texture');
+
+    font.destroy();
+    graphic.destroy();
+  });
 });
 
 describe('FlxBitmapText', () => {
@@ -96,6 +146,37 @@ describe('FlxBitmapText', () => {
     expect(handle.textNode.style.align).toBe('center');
     expect(handle.textNode.style.letterSpacing).toBe(2);
     expect(text.color).toBe(0x33ccff);
+
+    font.destroy();
+    text.destroy();
+    graphic.destroy();
+  });
+
+  it('resyncs mutable layout properties after handle creation', () => {
+    const graphic = monospaceGraphic();
+    const font = FlxBitmapFont.fromMonospace(graphic, 'ABC', 8, 8, {
+      fontFamily: 'UnitMutable8',
+    });
+    const text = new FlxBitmapText(10, 12, 'AB', font, 32);
+    const handle = text.createRenderHandle() as FlxBitmapTextRenderHandle;
+
+    text.alignment = 'right';
+    text.letterSpacing = 3;
+    text.lineSpacing = 2;
+    text.fieldWidth = 48;
+
+    expect(handle.textNode.style.align).toBe('right');
+    expect(handle.textNode.style.letterSpacing).toBe(3);
+    expect(handle.textNode.style.lineHeight).toBe(10);
+    expect(handle.textNode.style.wordWrapWidth).toBe(48);
+    expect(text.width).toBe(48);
+    expect(text.origin.x).toBe(24);
+    expect(() => {
+      text.fieldWidth = Number.NaN;
+    }).toThrow('positive finite');
+    expect(() => new FlxBitmapText(0, 0, '', font, Number.NaN)).toThrow(
+      'zero or a positive finite',
+    );
 
     font.destroy();
     text.destroy();

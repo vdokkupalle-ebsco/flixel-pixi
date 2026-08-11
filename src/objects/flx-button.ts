@@ -31,12 +31,7 @@ interface FlxButtonInput {
 function makeDefaultButtonGraphic(): FlxGraphic {
   const width = 80;
   const frameHeight = 20;
-  const colors = [
-    0x31415cff,
-    0x466384ff,
-    0x243247ff,
-    0x1a2230ff,
-  ];
+  const colors = [0x31415cff, 0x466384ff, 0x243247ff, 0x1a2230ff];
   const pixels = makeGraphicPixels(width, frameHeight * colors.length, 0);
   for (let frame = 0; frame < colors.length; frame += 1) {
     for (let y = 0; y < frameHeight; y += 1) {
@@ -155,6 +150,7 @@ export class FlxButton extends FlxSprite {
       if (
         currentInput !== null &&
         currentInput.justReleased &&
+        !currentInput.justCancelled &&
         overlapFound
       ) {
         this.#onUpHandler();
@@ -163,8 +159,7 @@ export class FlxButton extends FlxSprite {
       if (
         this.status !== FlxButton.NORMAL &&
         this.status !== FlxButton.DISABLED &&
-        (!overlapFound ||
-          (currentInput !== null && currentInput.justReleased))
+        (!overlapFound || currentInput?.justCancelled === true)
       ) {
         this.#onOutHandler();
       }
@@ -349,7 +344,8 @@ export class FlxButton extends FlxSprite {
       justPressed: mouse.justPressed(),
       justReleased: mouse.justReleased(),
       pressed: mouse.pressed(),
-      getWorldPosition: (camera, point) => mouse.getWorldPosition(camera, point),
+      getWorldPosition: (camera, point) =>
+        mouse.getWorldPosition(camera, point),
     };
   }
 
@@ -360,7 +356,8 @@ export class FlxButton extends FlxSprite {
       justPressed: touch.justPressed,
       justReleased: touch.justReleased,
       pressed: touch.pressed,
-      getWorldPosition: (camera, point) => touch.getWorldPosition(camera, point),
+      getWorldPosition: (camera, point) =>
+        touch.getWorldPosition(camera, point),
     };
   }
 
@@ -415,8 +412,7 @@ export class FlxButton extends FlxSprite {
     const label = this.label;
     if (label === null) return;
     const statusIndex = Math.min(this.status, this.labelOffsets.length - 1);
-    const offset =
-      this.labelOffsets[statusIndex] ?? this.labelOffsets[0];
+    const offset = this.labelOffsets[statusIndex] ?? this.labelOffsets[0];
     if (offset === undefined) return;
     const alphaIndex = Math.min(this.status, this.labelAlphas.length - 1);
     label.x = this.x + offset.x;

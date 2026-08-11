@@ -76,6 +76,24 @@ export function validateNineSliceBorders(
   displayHeight: number,
 ): void {
   if (
+    !Number.isFinite(textureWidth) ||
+    !Number.isFinite(textureHeight) ||
+    !Number.isFinite(displayWidth) ||
+    !Number.isFinite(displayHeight) ||
+    textureWidth <= 0 ||
+    textureHeight <= 0 ||
+    displayWidth <= 0 ||
+    displayHeight <= 0
+  ) {
+    throw new RangeError(
+      'Nine-slice source and display sizes must be positive and finite.',
+    );
+  }
+  if (
+    !Number.isFinite(borders.left) ||
+    !Number.isFinite(borders.top) ||
+    !Number.isFinite(borders.right) ||
+    !Number.isFinite(borders.bottom) ||
     borders.left <= 0 ||
     borders.top <= 0 ||
     borders.right <= 0 ||

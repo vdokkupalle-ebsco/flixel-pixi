@@ -1,7 +1,7 @@
 # UI authoring
 
-The first UI checkpoint provides efficient value bars and reusable buttons with
-native browser accessibility.
+The UI checkpoint provides efficient value bars, reusable buttons, bitmap-font
+labels, and browser-native text entry.
 
 ## Value bars
 
@@ -122,8 +122,48 @@ add(score);
 Use `FlxBitmapText` for HUD counters and labels that update every frame; keep
 styled `FlxText` for infrequent labels with borders and shadows.
 
+Bitmap-font family names must be unique while registered. Destroying an owned
+`FlxBitmapFont` removes that registration and its glyph metadata, but leaves the
+source `FlxGraphic` or texture under its original owner's control.
+
+## Native text input and IME
+
+`FlxInputText` renders through Pixi when no browser bridge exists. Under
+`createBrowserGame`, it is replaced by a camera-positioned native `<input>` or
+`<textarea>`. This preserves the browser's caret, selection, password manager,
+mobile keyboard, and IME composition behavior:
+
+```ts
+const playerName = new FlxInputText(24, 96, 220, '', {
+  accessibleLabel: 'Player name',
+  maxLength: 24,
+  placeholder: 'Enter a name',
+});
+playerName.setFormat('Arial', 14, 0xffffff);
+playerName.onTextChange = (value) => previewName(value);
+playerName.onSubmit = (value) => acceptName(value);
+add(playerName);
+```
+
+DOM edits, selection, focus, composition state, and Enter submission are
+coalesced and published to `FlxInputText` on fixed updates. Gameplay callbacks
+never run directly from a DOM event. Key-downs originating in native editable
+elements are excluded from `FlxG.keys`, so text entry does not trigger gameplay
+bindings.
+
+Use `multiline: true` for a `<textarea>`, `type: 'password'` for concealed
+single-line entry, and `inputMode` to hint the mobile keyboard. `enabled`,
+`editable`, `tabIndex`, `focus()`, `blur()`, `select()`, `selectionStart`, and
+`selectionEnd` cover common form behavior. Colors are configurable through
+`backgroundColor`, `inputBorderColor`, `focusedBorderColor`, and the inherited
+text `color`.
+
+The visible native field depends on the default accessibility bridge. If an
+application sets `accessibility: false`, it must provide its own DOM input
+adapter; Pixi remains a visual fallback but cannot provide browser IME.
+
 ## Remaining UI checkpoint
 
-Bitmap-font file parsing, DOM/IME-backed text input, and virtual controls remain
+Asset-backed multi-page bitmap-font loading and virtual controls remain
 separate slices. They must keep the same asset-ownership, deterministic input,
 and native accessibility boundaries.

@@ -230,11 +230,15 @@ Current slice:
 - `FlxBitmapFont` and `FlxBitmapText` parse AngelCode XML and monospace grids,
   register Pixi `BitmapFont` instances, and project labels through a dedicated
   render handle with alignment, spacing, and tint.
-- The public UI demo and Chromium test cover camera placement, semantic labels,
-  disabled state, Enter/Space activation, Kenney atlas bars/buttons, and
-  bitmap-font HUD labels.
+- `FlxInputText` projects to native single-line or multiline browser controls
+  for selection, mobile keyboards, and IME. DOM edits, focus, composition, and
+  submission are consumed on fixed updates, and editable DOM key-downs are
+  isolated from gameplay keyboard bindings.
+- The public UI demo and cross-browser test cover camera placement, semantic
+  labels, disabled state, Enter/Space activation, Kenney atlas bars/buttons,
+  bitmap-font HUD labels, and native IME text entry.
 
-Remaining slices: DOM/IME text input and virtual controls. See
+Remaining slices: asset-backed multi-page bitmap fonts and virtual controls. See
 [`guides/ui.md`](guides/ui.md) and
 [`adr/0017-native-accessibility-over-render-textures.md`](adr/0017-native-accessibility-over-render-textures.md).
 

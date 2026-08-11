@@ -21,7 +21,10 @@ export class FlxNineSliceButtonRenderHandle implements FlxRenderHandle {
   #labelHandle: FlxTextRenderHandle | null = null;
   #destroyed = false;
 
-  constructor(owner: FlxNineSliceButton, onDestroy: () => void = () => undefined) {
+  constructor(
+    owner: FlxNineSliceButton,
+    onDestroy: () => void = () => undefined,
+  ) {
     this.#owner = owner;
     this.#onDestroy = onDestroy;
     this.view.addChild(this.slice);

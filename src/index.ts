@@ -146,6 +146,13 @@ export { FlxSpriteContainer, FlxSpriteGroup } from './objects/flx-sprite-group';
 export type { FlxSpriteTransform } from './objects/flx-sprite-group';
 export { FlxText } from './objects/flx-text';
 export type { FlxTextRenderMode } from './objects/flx-text';
+export { FlxInputText } from './objects/flx-input-text';
+export type {
+  FlxInputTextChangeCallback,
+  FlxInputTextOptions,
+  FlxInputTextSubmitCallback,
+  FlxInputTextType,
+} from './objects/flx-input-text';
 export { FlxBitmapText } from './objects/flx-bitmap-text';
 export { FlxTileblock } from './objects/flx-tileblock';
 export { FlxTile } from './tilemap/flx-tile';

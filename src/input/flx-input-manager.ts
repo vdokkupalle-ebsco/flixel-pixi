@@ -32,6 +32,16 @@ interface ActivePointer {
   readonly touch: boolean;
 }
 
+function isTextEntryTarget(target: EventTarget | null): boolean {
+  if (typeof Element === 'undefined' || !(target instanceof Element)) {
+    return false;
+  }
+  return (
+    target.matches('input, textarea, select') ||
+    target.closest('[contenteditable="true"]') !== null
+  );
+}
+
 /** Owns DOM listeners and publishes their events only on simulation steps. @public */
 export class FlxInputManager implements FlxInputService {
   readonly keys = new Keyboard();
@@ -90,6 +100,7 @@ export class FlxInputManager implements FlxInputService {
   }
 
   readonly #keyDown = (event: KeyboardEvent): void => {
+    if (isTextEntryTarget(event.target)) return;
     this.keys.handleKeyDown(event);
   };
 

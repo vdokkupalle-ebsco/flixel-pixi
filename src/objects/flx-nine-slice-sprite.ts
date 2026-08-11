@@ -15,7 +15,8 @@ import { FlxSprite } from './flx-sprite';
 /**
  * Resizable sprite with fixed corner and edge art via Pixi 9-slice scaling.
  *
- * Use {@link loadNineSliceGraphic} or {@link loadNineSliceFrame} instead of
+ * Use {@link FlxNineSliceSprite.loadNineSliceGraphic} or
+ * {@link FlxNineSliceSprite.loadNineSliceFrame} instead of
  * {@link FlxSprite.loadGraphic} so border insets are tracked for rendering.
  * @public
  */

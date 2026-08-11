@@ -42,6 +42,10 @@ stability, member-AABB collision, and recursive adapter teardown. Collision and
 lifecycle assertions also run headlessly so browser rendering cannot become an
 authoritative input.
 
+The UI suite runs in Chromium, Firefox, and WebKit. It verifies camera-aligned
+semantic buttons, native text focus and selection, synthetic IME composition,
+fixed-step value publication, Enter submission, and complete DOM teardown.
+
 ## Reports
 
 CI uploads coverage, API model, benchmark, bundle-size, and Playwright reports.

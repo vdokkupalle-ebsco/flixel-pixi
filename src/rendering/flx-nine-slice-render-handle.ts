@@ -19,7 +19,10 @@ export class FlxNineSliceRenderHandle implements FlxRenderHandle {
   readonly #onDestroy: () => void;
   #destroyed = false;
 
-  constructor(owner: FlxNineSliceSprite, onDestroy: () => void = () => undefined) {
+  constructor(
+    owner: FlxNineSliceSprite,
+    onDestroy: () => void = () => undefined,
+  ) {
     this.#owner = owner;
     this.#onDestroy = onDestroy;
     this.view.addChild(this.slice);

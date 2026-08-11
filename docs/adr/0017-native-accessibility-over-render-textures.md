@@ -28,11 +28,21 @@ and screen-reader activation.
    callbacks directly.
 5. The DOM bridge owns and removes its elements, listeners, and temporary host
    positioning with the browser application lifecycle.
+6. `FlxInputText` uses a visible native `<input>` or `<textarea>` in the same
+   camera-projected layer. The native control owns caret, selection, mobile
+   keyboard, and IME composition behavior; its Pixi text leaf is a fallback
+   when no bridge is installed.
+7. Text, selection, focus, composition, and submission events are queued and
+   consumed on fixed updates. Editable DOM key-downs are excluded from gameplay
+   keyboard state, while key-up still clears any pre-existing held state.
 
 ## Consequences
 
 - Render-texture cameras retain their existing ownership and compositing model.
 - Keyboard and screen-reader users get semantic native controls, while pointer
   behavior and visual focus remain part of the Flixel button.
-- The initial bridge projects logical button bounds. Rich transformed hit
-  regions and DOM-backed text input remain later UI/scaling slices.
+- Browser text entry retains native language, accessibility, and mobile UX
+  instead of approximating it inside a canvas.
+- The bridge projects axis-aligned logical control bounds. Rich rotated DOM
+  controls remain outside the initial contract; scaling modes must continue to
+  share the same logical-to-DOM viewport transform.

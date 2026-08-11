@@ -1,4 +1,4 @@
-import { FlxBitmapText, FlxState } from '../../../src';
+import { FlxBitmapText, FlxInputText, FlxState } from '../../../src';
 import {
   KenneyValueBar,
   KENNEY_BUTTON_W,
@@ -14,6 +14,8 @@ export interface UiDemoSnapshot {
   health: number;
   mana: number;
   percent: number;
+  playerName: string;
+  submittedName: string;
 }
 
 const PANEL_W = 380;
@@ -30,6 +32,7 @@ const HEAL_BUTTON_X = DAMAGE_BUTTON_X + KENNEY_BUTTON_W + BUTTON_GAP;
 export class UiDemoState extends FlxState {
   health = 65;
   mana = 40;
+  submittedName = '';
 
   readonly #healthText = new FlxBitmapText(
     0,
@@ -83,6 +86,11 @@ export class UiDemoState extends FlxState {
     },
     'blue',
   );
+  readonly #nameInput = new FlxInputText(220, 239, 200, '', {
+    accessibleLabel: 'Player name',
+    maxLength: 20,
+    placeholder: 'Player name',
+  });
 
   override create(): void {
     super.create();
@@ -133,6 +141,10 @@ export class UiDemoState extends FlxState {
     this.#damageButton.tabIndex = 0;
     this.#healButton.accessibleLabel = 'Heal health by 15';
     this.#healButton.tabIndex = 0;
+    this.#nameInput.setFormat('Arial', 12, 0xf8fafc, 'left');
+    this.#nameInput.onSubmit = (value) => {
+      this.submittedName = value;
+    };
 
     this.add(panel);
     this.add(title);
@@ -142,6 +154,7 @@ export class UiDemoState extends FlxState {
     for (const sprite of this.#manaBar.sprites) this.add(sprite);
     this.add(this.#damageButton);
     this.add(this.#healButton);
+    this.add(this.#nameInput);
     this.add(this.#healthBar.bar);
     this.add(this.#manaBar.bar);
     this.#syncUi();
@@ -159,6 +172,8 @@ export class UiDemoState extends FlxState {
       health: this.health,
       mana: this.mana,
       percent: this.#healthBar.bar.percent,
+      playerName: this.#nameInput.text,
+      submittedName: this.submittedName,
     };
   }
 

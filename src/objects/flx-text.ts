@@ -155,6 +155,11 @@ export class FlxText extends FlxSprite {
     return this.#styleVersion;
   }
 
+  /** Whether the Pixi text leaf should be rendered. @internal */
+  isCanvasTextVisible(): boolean {
+    return true;
+  }
+
   /** @internal */
   get textStyle(): TextStyleOptions {
     return {

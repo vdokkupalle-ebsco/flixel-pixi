@@ -42,12 +42,7 @@ function buildUiBitmapFont(): FlxBitmapFont {
   }
   BitmapFont.install({
     name: UI_BITMAP_FONT_NAME,
-    chars: [
-      ['A', 'Z'],
-      ['a', 'z'],
-      ['0', '9'],
-      ' ',
-    ],
+    chars: [['A', 'Z'], ['a', 'z'], ['0', '9'], ' '],
     resolution: 2,
     style: {
       fontFamily: UI_BITMAP_FONT_NAME,

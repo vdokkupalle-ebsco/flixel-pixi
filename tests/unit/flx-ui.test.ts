@@ -11,6 +11,7 @@ import {
   FlxContext,
   FlxG,
   FlxInputManager,
+  FlxInputText,
 } from '../../src';
 
 function bounds(
@@ -93,7 +94,9 @@ describe('FlxBar', () => {
     expect(() => bar.update()).toThrow(/finite/);
     expect(() => bar.setRange(2, 2)).toThrow(/greater/);
     expect(() => bar.trackParent(null, 'health')).toThrow(/parent/);
-    expect(() => bar.setParent({ health: 'full' }, 'health')).toThrow(/numeric/);
+    expect(() => bar.setParent({ health: 'full' }, 'health')).toThrow(
+      /numeric/,
+    );
     bar.destroy();
   });
 
@@ -104,8 +107,15 @@ describe('FlxBar', () => {
       x: 100,
       y: 200,
     };
-    const bar = new FlxBar(0, 0, FlxBar.LEFT_TO_RIGHT, 40, 8, parent, 'health')
-      .setParent(parent, 'health', true, 4, -12);
+    const bar = new FlxBar(
+      0,
+      0,
+      FlxBar.LEFT_TO_RIGHT,
+      40,
+      8,
+      parent,
+      'health',
+    ).setParent(parent, 'health', true, 4, -12);
     bar.update();
     expect(bar.x).toBe(104);
     expect(bar.y).toBe(188);
@@ -191,6 +201,34 @@ describe('FlxButton', () => {
   });
 });
 
+describe('FlxInputText', () => {
+  it('normalizes authored values and retains multiline input', () => {
+    const single = new FlxInputText(0, 0, 120, 'abc\ndef');
+    expect(single.text).toBe('abc def');
+    single.select(2, 99);
+    single.maxLength = 4;
+    expect(single.text).toBe('abc ');
+    expect(single.selectionEnd).toBe(4);
+    expect(() => {
+      single.maxLength = -1;
+    }).toThrow(/non-negative/);
+    single.destroy();
+
+    const multiline = new FlxInputText(0, 0, 120, 'ab\ncd', {
+      height: 48,
+      maxLength: 4,
+      multiline: true,
+    });
+    expect(multiline.text).toBe('ab\nc');
+    expect(multiline.height).toBe(48);
+    multiline.destroy();
+
+    expect(() => new FlxInputText(0, 0, 120, '', { height: 0 })).toThrow(
+      /positive/,
+    );
+  });
+});
+
 describe('browser UI accessibility bridge', () => {
   it('projects semantic buttons and queues focus/activation for fixed updates', () => {
     const context = new FlxContext(320, 160);
@@ -262,5 +300,116 @@ describe('browser UI accessibility bridge', () => {
     renderer.destroy();
     input.destroy();
     button.destroy();
+  });
+
+  it('publishes native text, selection, composition, and submit on fixed updates', () => {
+    const context = new FlxContext(320, 160);
+    FlxG.installContext(context);
+    const renderer = new FlxCameraRenderer(
+      {
+        render: () => undefined,
+        resolution: 1,
+      } as unknown as Renderer,
+      new Container(),
+      context,
+    );
+    const changed = vi.fn();
+    const submitted = vi.fn();
+    const field = new FlxInputText(40, 30, 120, '', {
+      accessibleLabel: 'Player name',
+      maxLength: 6,
+      placeholder: 'Name',
+    });
+    field.onTextChange = changed;
+    field.onSubmit = submitted;
+    renderer.add(field);
+    const host = document.createElement('div');
+    const canvas = document.createElement('canvas');
+    canvas.style.objectFit = 'contain';
+    host.appendChild(canvas);
+    document.body.appendChild(host);
+    host.getBoundingClientRect = () => bounds(0, 0, 640, 480);
+    canvas.getBoundingClientRect = () => bounds(0, 0, 640, 480);
+    const overlay = new FlxAccessibilityOverlay(
+      host,
+      canvas,
+      renderer,
+      320,
+      160,
+    );
+    const keyboard = new FlxInputManager(context, { keyboardTarget: window });
+    const native = host.querySelector<HTMLInputElement>(
+      '[data-flx-input-text]',
+    );
+
+    expect(native?.getAttribute('aria-label')).toBe('Player name');
+    expect(native?.style.left).toBe('80px');
+    expect(native?.style.top).toBe('140px');
+    expect(native?.style.width).toBe('240px');
+    expect(native?.style.height).toBe('48px');
+    expect(native?.placeholder).toBe('Name');
+
+    field.focus();
+    overlay.sync();
+    expect(document.activeElement).toBe(native);
+    expect(field.focused).toBe(false);
+    field.update();
+    expect(field.focused).toBe(true);
+
+    field.blur();
+    overlay.sync();
+    expect(document.activeElement).not.toBe(native);
+    field.update();
+    expect(field.focused).toBe(false);
+
+    native?.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        bubbles: true,
+        code: 'KeyA',
+        key: 'a',
+      }),
+    );
+    keyboard.updateInput();
+    expect(keyboard.keys.A).toBe(false);
+
+    native?.focus();
+    if (native) {
+      native.value = 'abcdefghi';
+      native.setSelectionRange(6, 6);
+      native.dispatchEvent(new Event('compositionstart'));
+      native.dispatchEvent(new Event('input'));
+    }
+    expect(field.text).toBe('');
+    expect(field.focused).toBe(false);
+    expect(field.composing).toBe(false);
+    field.update();
+    expect(field.text).toBe('abcdef');
+    expect(field.focused).toBe(true);
+    expect(field.composing).toBe(true);
+    expect(changed).toHaveBeenCalledWith('abcdef');
+
+    native?.dispatchEvent(new Event('compositionend'));
+    native?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', repeat: false }),
+    );
+    field.update();
+    expect(field.composing).toBe(false);
+    expect(submitted).toHaveBeenCalledWith('abcdef');
+
+    field.text = 'xy';
+    field.select(1, 2);
+    overlay.sync();
+    expect(native?.value).toBe('xy');
+    expect(native?.selectionStart).toBe(1);
+    expect(native?.selectionEnd).toBe(2);
+    field.type = 'email';
+    field.select(0, 1);
+    expect(() => overlay.sync()).not.toThrow();
+
+    overlay.destroy();
+    expect(field.isCanvasTextVisible()).toBe(true);
+    keyboard.destroy();
+    renderer.destroy();
+    field.destroy();
   });
 });
