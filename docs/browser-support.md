@@ -46,6 +46,11 @@ The UI suite runs in Chromium, Firefox, and WebKit. It verifies camera-aligned
 semantic buttons, native text focus and selection, synthetic IME composition,
 fixed-step value publication, Enter submission, and complete DOM teardown.
 
+The viewport suite runs in Chromium, Firefox, and WebKit. It verifies fit/fill
+layout changes, cropped logical bounds, safe HUD padding, pointer conversion,
+alignment changes, and native accessibility projection against the same canvas
+bounds. Device-notch values still require real-device coverage before 1.0.
+
 ## Reports
 
 CI uploads coverage, API model, benchmark, bundle-size, and Playwright reports.

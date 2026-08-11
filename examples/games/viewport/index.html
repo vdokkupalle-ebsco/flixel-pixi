@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>flixel-pixi — Viewport Layout</title>
+    <link rel="stylesheet" href="../_kit/shell.css" />
+    <style>
+      #app {
+        width: min(1100px, calc(100vw - 24px));
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .controls label {
+        display: grid;
+        gap: 4px;
+        color: #94a3b8;
+        font-size: 0.75rem;
+      }
+      select,
+      input {
+        min-height: 34px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        color: #e2e8f0;
+        background: #1e293b;
+      }
+      .canvas-host {
+        width: 100%;
+        height: 420px;
+        min-height: 0;
+        transition:
+          width 160ms ease,
+          height 160ms ease;
+      }
+      .diagnostics {
+        margin: 8px 0 0;
+        color: #cbd5e1;
+        font:
+          0.75rem/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+      .legend-visible {
+        color: #38bdf8;
+      }
+      .legend-safe {
+        color: #4ade80;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div>
+          <h1>Viewport layout</h1>
+          <p class="status" data-testid="status" data-state="loading">
+            Initializing…
+          </p>
+        </div>
+        <div class="actions">
+          <a href="../"><button type="button">All demos</button></a>
+          <button type="button" data-action="fullscreen">Fullscreen</button>
+          <button type="button" data-action="destroy">Destroy</button>
+        </div>
+      </header>
+      <div class="controls">
+        <label>
+          Scale mode
+          <select data-scale-mode>
+            <option value="fit">Fit</option>
+            <option value="fill">Fill</option>
+            <option value="fixed">Fixed</option>
+            <option value="integer">Integer</option>
+          </select>
+        </label>
+        <label>
+          Horizontal alignment
+          <select data-align-x>
+            <option value="0">Left</option>
+            <option value="0.5" selected>Center</option>
+            <option value="1">Right</option>
+          </select>
+        </label>
+        <label>
+          Vertical alignment
+          <select data-align-y>
+            <option value="0">Top</option>
+            <option value="0.5" selected>Center</option>
+            <option value="1">Bottom</option>
+          </select>
+        </label>
+        <label>
+          Safe padding
+          <input data-safe-padding type="range" min="0" max="48" value="16" />
+        </label>
+        <button type="button" data-host-width="100%" data-host-height="420px">
+          Wide
+        </button>
+        <button type="button" data-host-width="560px" data-host-height="560px">
+          Square
+        </button>
+        <button type="button" data-host-width="360px" data-host-height="560px">
+          Portrait
+        </button>
+        <button type="button" data-host-width="320px" data-host-height="220px">
+          Tiny
+        </button>
+      </div>
+      <div data-testid="canvas-host" class="canvas-host"></div>
+      <p class="diagnostics" data-testid="viewport-diagnostics">
+        Waiting for viewport snapshot…
+      </p>
+      <p class="diagnostics">
+        <span class="legend-visible">Blue: visible logical rectangle</span> ·
+        <span class="legend-safe">Green: safe HUD rectangle</span> · Yellow:
+        logical pointer
+      </p>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

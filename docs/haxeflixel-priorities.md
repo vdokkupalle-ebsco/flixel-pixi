@@ -50,7 +50,7 @@ started merely to match a Haxe class count.
 |     6 |    P0    | Input expansion                                 | Complete (`f197d9f`) | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
 |     7 |    P1    | UI and text authoring                           | Complete             | Common HUD/control/input-text needs no application-specific framework code.                        |
 |     8 |    P1    | Atlas and content-pipeline expansion            | Complete             | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
-|     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Planned              | Logical coordinates remain correct through browser/window lifecycle changes.                       |
+|     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | In progress          | Logical coordinates remain correct through browser/window lifecycle changes.                       |
 |    10 |    P1    | Audio organization and system UX                | Planned              | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Planned              | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
@@ -290,6 +290,21 @@ Planned capabilities:
 
 This checkpoint must extend the browser support matrix and visual/coordinate
 tests rather than relying on CSS inspection alone.
+
+Current slice:
+
+- `FlxBrowserViewport` provides fit, fill, fixed, and integer presentation
+  modes without changing the game's logical dimensions or camera model.
+- Host resize observation, runtime mode changes, alignment, and fullscreen
+  helpers share the canvas bounds already consumed by pointer conversion and
+  native accessibility projection.
+- Immutable `logicalRect`, `visibleRect`, and `safeRect` snapshots expose crop,
+  device cutout, and developer-padding boundaries through `onChange()`.
+- The public viewport demo visualizes scale modes, host presets, alignment,
+  fullscreen, logical pointer coordinates, and safe HUD anchoring.
+- Pure layout coverage verifies letterboxing, crop offsets, fixed sizing,
+  integer enlargement, safe boundaries, and invalid configuration. Dedicated
+  browser coverage verifies pointer and native-overlay coordinates.
 
 ### Audio organization and system UX
 

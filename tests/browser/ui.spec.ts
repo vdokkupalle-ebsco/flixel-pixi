@@ -132,3 +132,65 @@ test('operates rendered UI through native keyboard accessibility controls', asyn
   await expect(controls).toHaveCount(0);
   await expect(nameInput).toHaveCount(0);
 });
+
+test('keeps native UI aligned while changing browser scale modes', async ({
+  page,
+}) => {
+  await page.goto(UI_DEMO);
+  await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+    'data-state',
+    'ready',
+    { timeout: 10_000 },
+  );
+
+  const fit = await page.evaluate(() => {
+    const host = document.querySelector<HTMLElement>(
+      '[data-testid="canvas-host"]',
+    );
+    const viewport = window.__FLIXEL_PIXI_UI__?.app?.viewport;
+    if (!host || !viewport) return null;
+    host.style.width = '900px';
+    host.style.height = '300px';
+    return {
+      hostHeight: host.clientHeight,
+      hostWidth: host.clientWidth,
+      snapshot: viewport.setMode('fit'),
+    };
+  });
+  expect(fit?.snapshot).toMatchObject({
+    displayHeight: fit?.hostHeight,
+    displayWidth: (fit?.hostHeight ?? 0) * 2,
+    left: ((fit?.hostWidth ?? 0) - (fit?.hostHeight ?? 0) * 2) / 2,
+    scale: (fit?.hostHeight ?? 0) / 320,
+    top: 0,
+  });
+
+  const damage = page.locator('[data-flx-accessible-button]').first();
+  await expect(damage).toBeVisible();
+  await damage.focus();
+  await page.keyboard.press('Enter');
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.__FLIXEL_PIXI_UI__?.snapshot?.()?.health),
+    )
+    .toBe(50);
+
+  const integer = await page.evaluate(() => {
+    const host = document.querySelector<HTMLElement>(
+      '[data-testid="canvas-host"]',
+    );
+    const snapshot =
+      window.__FLIXEL_PIXI_UI__?.app?.viewport.setMode('integer');
+    return host && snapshot
+      ? { hostHeight: host.clientHeight, hostWidth: host.clientWidth, snapshot }
+      : null;
+  });
+  expect(integer?.snapshot).toMatchObject({
+    displayHeight: 320,
+    displayWidth: 640,
+    left: ((integer?.hostWidth ?? 0) - 640) / 2,
+    scale: 1,
+    top: ((integer?.hostHeight ?? 0) - 320) / 2,
+  });
+  await expect(damage).toBeVisible();
+});

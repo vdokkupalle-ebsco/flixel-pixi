@@ -349,6 +349,15 @@ export type {
 // --- Game Maker DX ---
 
 export { createBrowserGame } from './browser/create-browser-game';
+export { FlxBrowserViewport } from './browser/flx-browser-viewport';
+export type {
+  FlxBrowserSafePadding,
+  FlxBrowserScaleMode,
+  FlxBrowserScaleOptions,
+  FlxBrowserViewportInsets,
+  FlxBrowserViewportRect,
+  FlxBrowserViewportSnapshot,
+} from './browser/flx-browser-viewport';
 export type {
   BrowserGameApplication,
   BrowserGameAssetOptions,

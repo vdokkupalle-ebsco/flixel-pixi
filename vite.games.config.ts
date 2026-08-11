@@ -33,6 +33,10 @@ export default defineConfig({
         ),
         swipe: resolve(import.meta.dirname, 'examples/games/swipe/index.html'),
         ui: resolve(import.meta.dirname, 'examples/games/ui/index.html'),
+        viewport: resolve(
+          import.meta.dirname,
+          'examples/games/viewport/index.html',
+        ),
         substates: resolve(
           import.meta.dirname,
           'examples/games/substates/index.html',

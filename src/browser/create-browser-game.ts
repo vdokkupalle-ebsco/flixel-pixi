@@ -29,6 +29,11 @@ import { FlxCameraRenderer } from '../rendering/flx-camera-renderer';
 import { syncWorldToRenderer } from '../rendering/flx-world-sync';
 import { getRenderFrameTiming, validateFramerate } from './frame-pacing';
 import { FlxAccessibilityOverlay } from './flx-accessibility-overlay';
+import {
+  FlxBrowserViewport,
+  type FlxBrowserScaleMode,
+  type FlxBrowserScaleOptions,
+} from './flx-browser-viewport';
 
 /** Declarative asset configuration for browser startup. @public */
 export interface BrowserGameAssetOptions {
@@ -89,6 +94,8 @@ export interface CreateBrowserGameOptions {
   fpsDisplay?: boolean | FlxFpsDisplayOptions;
   /** Native keyboard and screen-reader controls for supported Flixel UI. Defaults to true. */
   accessibility?: boolean;
+  /** CSS-space canvas scaling policy. Defaults to aspect-preserving `fit`. */
+  scaling?: FlxBrowserScaleMode | FlxBrowserScaleOptions;
   backgroundColor?: number;
   audioBackend?: FlxAudioBackend;
   zoom?: number;
@@ -109,6 +116,8 @@ export interface BrowserGameApplication {
   readonly assets: FlxAssets;
   /** Reusable loading model for optional in-game Pixi/Flixel loading screens. */
   readonly loading: FlxLoadingSession;
+  /** Browser canvas sizing controller. */
+  readonly viewport: FlxBrowserViewport;
   /** Number of completed browser render frames. */
   readonly frameCount: number;
   /** Fixed simulation rate in updates per second. */
@@ -137,6 +146,7 @@ interface BootResources {
   appInitialized: boolean;
   game: FlxGame | null;
   renderer: FlxCameraRenderer | null;
+  viewport: FlxBrowserViewport | null;
 }
 
 /**
@@ -188,6 +198,7 @@ export async function createBrowserGame(
       appInitialized: false,
       game: null,
       renderer: null,
+      viewport: null,
     };
 
     try {
@@ -203,9 +214,14 @@ export async function createBrowserGame(
       });
       resources.appInitialized = true;
       throwIfAborted(loading.signal);
-      resources.app.canvas.style.cssText =
-        'width:100%;height:100%;display:block;object-fit:contain;object-position:center center';
       host.prepend(resources.app.canvas);
+      resources.viewport = new FlxBrowserViewport(
+        host,
+        resources.app.canvas,
+        width,
+        height,
+        options.scaling ?? 'fit',
+      );
       loading.report({
         message: 'Renderer ready.',
         progress: 0.2,
@@ -257,6 +273,7 @@ export async function createBrowserGame(
         resources.app,
         resources.game,
         resources.renderer,
+        resources.viewport,
         assets,
         loading,
         view,
@@ -386,6 +403,7 @@ function startApplication(
   app: Application,
   game: FlxGame,
   renderer: FlxCameraRenderer,
+  viewport: FlxBrowserViewport,
   assets: FlxAssets,
   loading: FlxLoadingSession,
   preloader: FlxPreloaderView | null,
@@ -476,6 +494,7 @@ function startApplication(
     game,
     loading,
     renderer,
+    viewport,
     renderFramerate,
     updateFramerate,
     get frameCount() {
@@ -503,6 +522,7 @@ function startApplication(
       loading.destroy();
       renderer.destroy();
       game.destroy();
+      viewport.destroy();
       app.destroy({ removeView: true, releaseGlobalResources: true });
       host.replaceChildren();
     },
@@ -558,6 +578,7 @@ function cleanupBootResources(
   host: HTMLElement,
   resources: BootResources,
 ): void {
+  resources.viewport?.destroy();
   resources.renderer?.destroy();
   resources.game?.destroy();
   if (resources.appInitialized) {

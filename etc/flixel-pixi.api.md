@@ -39,6 +39,7 @@ export interface BrowserGameApplication {
     readonly renderFramerate: number | undefined;
     syncRenderer(): void;
     readonly updateFramerate: number;
+    readonly viewport: FlxBrowserViewport;
 }
 
 // @public
@@ -113,6 +114,7 @@ export interface CreateBrowserGameOptions {
     preloader?: false | BrowserGamePreloaderOptions;
     renderFramerate?: number;
     renderInterpolation?: boolean;
+    scaling?: FlxBrowserScaleMode | FlxBrowserScaleOptions;
     // @deprecated (undocumented)
     showPreloader?: boolean;
     signal?: AbortSignal;
@@ -1096,6 +1098,102 @@ export interface FlxBmFontData {
         id: number;
         file: string;
     }[];
+}
+
+// @public
+export type FlxBrowserSafePadding = number | Partial<FlxBrowserViewportInsets>;
+
+// @public
+export type FlxBrowserScaleMode = 'fill' | 'fit' | 'fixed' | 'integer';
+
+// @public
+export interface FlxBrowserScaleOptions {
+    alignX?: number;
+    alignY?: number;
+    mode?: FlxBrowserScaleMode;
+    pixelated?: boolean;
+    safePadding?: FlxBrowserSafePadding;
+    useSafeAreaInsets?: boolean;
+}
+
+// @public
+export class FlxBrowserViewport {
+    constructor(host: HTMLElement, canvas: HTMLCanvasElement, logicalWidth: number, logicalHeight: number, options?: FlxBrowserScaleMode | FlxBrowserScaleOptions);
+    // (undocumented)
+    destroy(): void;
+    exitFullscreen(): Promise<void>;
+    // (undocumented)
+    get fullscreen(): boolean;
+    // (undocumented)
+    get mode(): FlxBrowserScaleMode;
+    onChange(listener: (snapshot: FlxBrowserViewportSnapshot) => void): () => void;
+    refresh(): FlxBrowserViewportSnapshot;
+    requestFullscreen(): Promise<void>;
+    setAlignment(alignX: number, alignY: number): FlxBrowserViewportSnapshot;
+    setMode(mode: FlxBrowserScaleMode): FlxBrowserViewportSnapshot;
+    setSafePadding(padding: FlxBrowserSafePadding): FlxBrowserViewportSnapshot;
+    // (undocumented)
+    get snapshot(): FlxBrowserViewportSnapshot;
+    toggleFullscreen(): Promise<void>;
+}
+
+// @public
+export interface FlxBrowserViewportInsets {
+    // (undocumented)
+    readonly bottom: number;
+    // (undocumented)
+    readonly left: number;
+    // (undocumented)
+    readonly right: number;
+    // (undocumented)
+    readonly top: number;
+}
+
+// @public
+export interface FlxBrowserViewportRect {
+    // (undocumented)
+    readonly bottom: number;
+    // (undocumented)
+    readonly height: number;
+    // (undocumented)
+    readonly left: number;
+    // (undocumented)
+    readonly right: number;
+    // (undocumented)
+    readonly top: number;
+    // (undocumented)
+    readonly width: number;
+    // (undocumented)
+    readonly x: number;
+    // (undocumented)
+    readonly y: number;
+}
+
+// @public
+export interface FlxBrowserViewportSnapshot {
+    readonly devicePixelRatio: number;
+    // (undocumented)
+    readonly displayHeight: number;
+    // (undocumented)
+    readonly displayWidth: number;
+    readonly fullscreen: boolean;
+    // (undocumented)
+    readonly hostHeight: number;
+    // (undocumented)
+    readonly hostWidth: number;
+    // (undocumented)
+    readonly left: number;
+    readonly logicalRect: FlxBrowserViewportRect;
+    // (undocumented)
+    readonly mode: FlxBrowserScaleMode;
+    readonly safeAreaInsets: FlxBrowserViewportInsets;
+    readonly safePadding: FlxBrowserViewportInsets;
+    readonly safeRect: FlxBrowserViewportRect;
+    // (undocumented)
+    readonly scale: number;
+    // (undocumented)
+    readonly top: number;
+    readonly visibleRect: FlxBrowserViewportRect;
 }
 
 // @public
