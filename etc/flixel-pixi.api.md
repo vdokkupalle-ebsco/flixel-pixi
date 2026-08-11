@@ -109,6 +109,7 @@ export interface CreateBrowserGameOptions {
     host: HTMLElement;
     // (undocumented)
     initialState: FlxStateConstructor;
+    maxDevicePixelRatio?: number;
     onLoadingSnapshot?: (snapshot: FlxLoadingSnapshot) => void;
     preload?: (context: BrowserGamePreloadContext) => Promise<void> | void;
     preloader?: false | BrowserGamePreloaderOptions;

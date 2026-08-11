@@ -164,3 +164,67 @@ test('publishes visible and safe logical bounds across viewport changes', async 
     );
   }
 });
+
+test('updates Pixi and camera backing resolution when browser DPR changes', async ({
+  page,
+}) => {
+  await page.goto(VIEWPORT_DEMO);
+  await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+    'data-state',
+    'ready',
+    { timeout: 10_000 },
+  );
+
+  const setDpr = async (value: number): Promise<void> => {
+    await page.evaluate((nextDpr) => {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        configurable: true,
+        value: nextDpr,
+      });
+      window.dispatchEvent(new Event('resize'));
+    }, value);
+  };
+  const resolutions = async (): Promise<{
+    camera: number;
+    canvasHeight: number;
+    canvasWidth: number;
+    logicalHeight: number;
+    logicalWidth: number;
+    renderer: number;
+  } | null> =>
+    page.evaluate(() => {
+      const application = window.__FLIXEL_PIXI_VIEWPORT__?.app;
+      if (!application) return null;
+      const camera = application.game.context.camera;
+      const view = application.renderer.getCameraView(camera);
+      if (!view) return null;
+      return {
+        camera: view.target.source.resolution,
+        canvasHeight: application.app.canvas.height,
+        canvasWidth: application.app.canvas.width,
+        logicalHeight: application.app.renderer.height,
+        logicalWidth: application.app.renderer.width,
+        renderer: application.app.renderer.resolution,
+      };
+    });
+
+  await setDpr(1.25);
+  await expect.poll(resolutions).toEqual({
+    camera: 1.25,
+    canvasHeight: 450,
+    canvasWidth: 800,
+    logicalHeight: 360,
+    logicalWidth: 640,
+    renderer: 1.25,
+  });
+
+  await setDpr(3);
+  await expect.poll(resolutions).toEqual({
+    camera: 2,
+    canvasHeight: 720,
+    canvasWidth: 1_280,
+    logicalHeight: 360,
+    logicalWidth: 640,
+    renderer: 2,
+  });
+});

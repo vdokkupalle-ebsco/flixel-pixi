@@ -34,6 +34,7 @@ import {
   type FlxBrowserScaleMode,
   type FlxBrowserScaleOptions,
 } from './flx-browser-viewport';
+import { resolveRendererResolution } from './renderer-resolution';
 
 /** Declarative asset configuration for browser startup. @public */
 export interface BrowserGameAssetOptions {
@@ -96,6 +97,8 @@ export interface CreateBrowserGameOptions {
   accessibility?: boolean;
   /** CSS-space canvas scaling policy. Defaults to aspect-preserving `fit`. */
   scaling?: FlxBrowserScaleMode | FlxBrowserScaleOptions;
+  /** Upper bound for renderer resolution as browser DPR changes. Defaults to 2. */
+  maxDevicePixelRatio?: number;
   backgroundColor?: number;
   audioBackend?: FlxAudioBackend;
   zoom?: number;
@@ -170,12 +173,17 @@ export async function createBrowserGame(
     renderFramerate,
     renderInterpolation = true,
     accessibility = true,
+    maxDevicePixelRatio = 2,
   } = options;
 
   validateFramerate('updateFramerate', updateFramerate);
   if (renderFramerate !== undefined) {
     validateFramerate('renderFramerate', renderFramerate);
   }
+  const initialResolution = resolveRendererResolution(
+    window.devicePixelRatio,
+    maxDevicePixelRatio,
+  );
 
   host.replaceChildren();
   const loading = new FlxLoadingSession(options.signal);
@@ -209,7 +217,7 @@ export async function createBrowserGame(
         width,
         height,
         backgroundColor,
-        resolution: Math.min(window.devicePixelRatio, 2),
+        resolution: initialResolution,
         autoDensity: true,
       });
       resources.appInitialized = true;
@@ -288,6 +296,7 @@ export async function createBrowserGame(
         preloaderCompletion,
         renderInterpolation,
         accessibility,
+        maxDevicePixelRatio,
         unsubscribeObserver,
       );
       unsubscribeView?.();
@@ -413,6 +422,7 @@ function startApplication(
   preloaderCompletion: Promise<void>,
   renderInterpolation: boolean,
   accessibilityEnabled: boolean,
+  maxDevicePixelRatio: number,
   unsubscribeObserver?: () => void,
 ): BrowserGameApplication {
   const frameListeners = new Set<(frame: BrowserGameFrame) => void>();
@@ -433,6 +443,17 @@ function startApplication(
         game.context.height,
       )
     : null;
+  const unsubscribeViewport = viewport.onChange((snapshot) => {
+    const resolution = resolveRendererResolution(
+      snapshot.devicePixelRatio,
+      maxDevicePixelRatio,
+    );
+    if (resolution === app.renderer.resolution) return;
+    app.renderer.resize(game.context.width, game.context.height, resolution);
+    renderer.resize(resolution);
+    viewport.refresh();
+    game.context.markRenderablesDirty();
+  });
 
   const mountFpsDisplay = (): void => {
     if (!destroyed && fpsDisplayOptions) {
@@ -517,6 +538,7 @@ function startApplication(
       fpsDisplay?.destroy();
       fpsDisplay = null;
       accessibility?.destroy();
+      unsubscribeViewport();
       unsubscribeObserver?.();
       preloader?.destroy();
       loading.destroy();

@@ -34,6 +34,7 @@ const app = await createBrowserGame({
   initialState: PlayState,
   width: 640,
   height: 360,
+  maxDevicePixelRatio: 2,
   scaling: { mode: 'fit', alignX: 0.5, alignY: 0.5 },
 });
 
@@ -54,6 +55,11 @@ The viewport observes its host for resizes. `app.viewport.refresh()` is
 available when application code changes layout synchronously and needs the new
 placement immediately. Input and native accessibility overlays read the same
 canvas bounds, including centered or cropped offsets.
+
+When browser DPR changes—such as moving a window between displays—the browser
+boot path resizes Pixi's backing framebuffer and every camera render texture
+without changing logical dimensions. `maxDevicePixelRatio` limits GPU memory
+and fill-rate cost; it defaults to `2`.
 
 ### Safe HUD placement
 

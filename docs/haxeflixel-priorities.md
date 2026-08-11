@@ -302,6 +302,8 @@ Current slice:
   device cutout, and developer-padding boundaries through `onChange()`.
 - The public viewport demo visualizes scale modes, host presets, alignment,
   fullscreen, logical pointer coordinates, and safe HUD anchoring.
+- Browser DPR changes resize Pixi's framebuffer and camera render textures up
+  to a configurable cap without changing logical game or camera dimensions.
 - Pure layout coverage verifies letterboxing, crop offsets, fixed sizing,
   integer enlargement, safe boundaries, and invalid configuration. Dedicated
   browser coverage verifies pointer and native-overlay coordinates.
