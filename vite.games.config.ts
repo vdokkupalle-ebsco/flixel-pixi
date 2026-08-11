@@ -39,6 +39,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/meshes/index.html',
         ),
+        graphics: resolve(
+          import.meta.dirname,
+          'examples/games/graphics/index.html',
+        ),
         swipe: resolve(import.meta.dirname, 'examples/games/swipe/index.html'),
         ui: resolve(import.meta.dirname, 'examples/games/ui/index.html'),
         viewport: resolve(

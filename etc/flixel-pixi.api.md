@@ -2355,6 +2355,26 @@ export class FlxGamepadManager {
 export type FlxGamepadProvider = () => readonly (FlxGamepadLike | null)[];
 
 // @public
+export class FlxGradient {
+    readonly center: Readonly<PointLike>;
+    readonly end: Readonly<PointLike>;
+    readonly innerRadius: number;
+    static linear(stops: readonly FlxGradientStop[], options?: FlxLinearGradientOptions): FlxGradient;
+    readonly outerCenter: Readonly<PointLike>;
+    readonly outerRadius: number;
+    static radial(stops: readonly FlxGradientStop[], options?: FlxRadialGradientOptions): FlxGradient;
+    readonly start: Readonly<PointLike>;
+    readonly stops: readonly Readonly<FlxGradientStop>[];
+    readonly type: 'linear' | 'radial';
+}
+
+// @public
+export interface FlxGradientStop {
+    readonly color: number;
+    readonly offset: number;
+}
+
+// @public
 export class FlxGraphic {
     constructor(texture: Texture, options?: {
         ownsTexture?: boolean;
@@ -2378,6 +2398,58 @@ export class FlxGraphic {
     readonly texture: Texture;
     // (undocumented)
     get width(): number;
+}
+
+// @public
+export class FlxGraphics extends FlxSprite {
+    constructor(x?: number, y?: number, width?: number, height?: number);
+    circle(x: number, y: number, radius: number, style: FlxGraphicsStyle): this;
+    clearGraphics(): this;
+    get commandCount(): number;
+    // (undocumented)
+    createRenderHandle(): FlxRenderHandle;
+    ellipse(x: number, y: number, radiusX: number, radiusY: number, style: FlxGraphicsStyle): this;
+    get graphicsRevision(): number;
+    line(points: ArrayLike<number>, stroke: FlxGraphicsStroke): this;
+    // (undocumented)
+    onScreen(camera?: FlxCameraLike): boolean;
+    polygon(points: ArrayLike<number>, style: FlxGraphicsStyle): this;
+    rect(x: number, y: number, width: number, height: number, style: FlxGraphicsStyle): this;
+    roundRect(x: number, y: number, width: number, height: number, radius: number, style: FlxGraphicsStyle): this;
+    star(x: number, y: number, points: number, radius: number, innerRadius: number, style: FlxGraphicsStyle, rotation?: number): this;
+}
+
+// @public
+export type FlxGraphicsFill = number | FlxGradient;
+
+// @public
+export class FlxGraphicsRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxGraphics, onDestroy?: () => void);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    readonly graphics: Graphics;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
+export interface FlxGraphicsStroke {
+    readonly alignment?: number;
+    readonly cap?: 'butt' | 'round' | 'square';
+    readonly fill: FlxGraphicsFill;
+    readonly join?: 'bevel' | 'miter' | 'round';
+    readonly width: number;
+}
+
+// @public
+export interface FlxGraphicsStyle {
+    readonly fill?: FlxGraphicsFill;
+    readonly stroke?: FlxGraphicsStroke;
 }
 
 // @public
@@ -2561,6 +2633,12 @@ export interface FlxKeyRecord {
     readonly code: number;
     // (undocumented)
     readonly value: number;
+}
+
+// @public
+export interface FlxLinearGradientOptions {
+    readonly end?: PointLike;
+    readonly start?: PointLike;
 }
 
 // @public
@@ -3147,6 +3225,14 @@ export class FlxQuadTree extends FlxRect {
     execute(): boolean;
     // (undocumented)
     load(first: FlxBasic, second?: FlxBasic | null, notify?: FlxOverlapCallback | null, process?: FlxProcessCallback | null): void;
+}
+
+// @public
+export interface FlxRadialGradientOptions {
+    readonly center?: PointLike;
+    readonly innerRadius?: number;
+    readonly outerCenter?: PointLike;
+    readonly outerRadius?: number;
 }
 
 // @public

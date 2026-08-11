@@ -77,6 +77,14 @@ camera geometry, buffer reuse, topology replacement, validation, transformed
 visual culling, filter inheritance, and non-owning texture teardown. WebGPU
 execution and forced context-loss recovery remain later release gates.
 
+The vector-graphics showcase is specified for Chromium, Firefox, and WebKit. It
+checks rendered linear/radial gradients, stable revisions during transform-only
+animation, an intentional day/night command rebuild, and complete teardown.
+Unit coverage verifies immutable descriptors, camera-local contexts and
+gradient textures, rebuild cleanup, primitives, validation, filters, culling,
+and handle teardown. The committed browser contract is awaiting its next
+available browser execution window.
+
 ## Reports
 
 CI uploads coverage, API model, benchmark, bundle-size, and Playwright reports.

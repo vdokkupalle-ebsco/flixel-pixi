@@ -412,15 +412,26 @@ Current slice:
   authoritative `FlxObject` rectangle. The harbor showcase covers a deforming
   water surface, a crane chain attached to a moving weight, pause behavior,
   rendered pixels, and teardown across the supported browser engines.
-- The filter/shader/mesh portion of this checkpoint is complete. Gradients and
-  reusable drawing helpers are the next independent advanced-rendering slice.
-  See [`guides/meshes.md`](guides/meshes.md),
+- **Adapted:** immutable `FlxGradient` descriptors and revisioned `FlxGraphics`
+  commands provide local linear/radial fills plus common rectangles, circles,
+  ellipses, polygons, stars, and lines without exposing Pixi objects.
+- Each camera owns its tessellated context and generated gradient textures.
+  Transform-only animation retains geometry; intentional command changes
+  rebuild once and release the prior gradient resources.
+- The vector quest scene applies the helpers to game scenery, a route, pickup,
+  and HUD, with a day/night rebuild contract. Its cross-browser test is
+  committed but awaiting the next available browser execution window.
+- The filters, shaders, meshes, gradients, and reusable drawing-helper slices
+  are complete. Explicit snapshot/readback policy is the remaining independent
+  advanced-rendering decision. See [`guides/graphics.md`](guides/graphics.md),
+  [`guides/meshes.md`](guides/meshes.md),
   [`guides/filters.md`](guides/filters.md),
   [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md),
   [`adr/0019-typed-cross-renderer-shader-filters.md`](adr/0019-typed-cross-renderer-shader-filters.md),
   [`adr/0020-non-owning-displacement-maps.md`](adr/0020-non-owning-displacement-maps.md),
   [`adr/0021-local-explicit-filter-areas.md`](adr/0021-local-explicit-filter-areas.md),
-  and [`adr/0022-revisioned-camera-local-strip-geometry.md`](adr/0022-revisioned-camera-local-strip-geometry.md).
+  [`adr/0022-revisioned-camera-local-strip-geometry.md`](adr/0022-revisioned-camera-local-strip-geometry.md),
+  and [`adr/0023-stable-camera-local-vector-graphics.md`](adr/0023-stable-camera-local-vector-graphics.md).
 
 ### Debugger and runtime inspection
 

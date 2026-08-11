@@ -38,3 +38,4 @@ and storage backends with gesture-unlock queuing and versioned save slots.
 | [0020](0020-non-owning-displacement-maps.md)              | Non-owning normalized displacement maps                    | Accepted |
 | [0021](0021-local-explicit-filter-areas.md)               | Local explicit filter areas with automatic fallback        | Accepted |
 | [0022](0022-revisioned-camera-local-strip-geometry.md)    | Revisioned camera-local strip geometry                     | Accepted |
+| [0023](0023-stable-camera-local-vector-graphics.md)       | Stable camera-local vector graphics                        | Accepted |

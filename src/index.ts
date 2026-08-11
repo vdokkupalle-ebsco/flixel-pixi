@@ -169,6 +169,15 @@ export type {
   FlxAnimationPlayOptions,
   FlxAtlasAnimationOptions,
 } from './objects/flx-sprite';
+export { FlxGradient, FlxGraphics } from './objects/flx-graphics';
+export type {
+  FlxGradientStop,
+  FlxGraphicsFill,
+  FlxGraphicsStroke,
+  FlxGraphicsStyle,
+  FlxLinearGradientOptions,
+  FlxRadialGradientOptions,
+} from './objects/flx-graphics';
 export { FlxStrip } from './objects/flx-strip';
 export type { FlxStripGeometry, FlxStripTopology } from './objects/flx-strip';
 export { FlxBackdrop } from './objects/flx-backdrop';
@@ -197,6 +206,7 @@ export type { FlxRenderHandle } from './rendering/flx-render-handle';
 export { FlxCameraRenderer } from './rendering/flx-camera-renderer';
 export type { FlxCameraView } from './rendering/flx-camera-renderer';
 export { FlxSpriteRenderHandle } from './rendering/flx-sprite-render-handle';
+export { FlxGraphicsRenderHandle } from './rendering/flx-graphics-render-handle';
 export { FlxStripRenderHandle } from './rendering/flx-strip-render-handle';
 export { FlxBackdropRenderHandle } from './rendering/flx-backdrop-render-handle';
 export { FlxSpriteGroupRenderHandle } from './rendering/flx-sprite-group-render-handle';
