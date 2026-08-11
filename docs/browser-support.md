@@ -54,11 +54,12 @@ canvas bounds. Device-notch values still require real-device coverage before
 1.0.
 
 The ambient-audio suite runs in Chromium, Firefox, and WebKit. It moves a
-listener deterministically across generated looping emitters and verifies
-camera visibility gating, distance attenuation, left/right pan, hierarchical
-mute, and offscreen playback policy. Automated tests validate engine state;
-speaker output and mobile interruption recovery remain manual real-device
-checks.
+listener deterministically across supplied looping emitters and verifies camera
+visibility gating, distance attenuation, left/right pan, hierarchical and
+master mute, volume controls, and offscreen playback policy. Automated tests
+validate engine state and native control synchronization; speaker output,
+localStorage restrictions, and mobile interruption recovery remain manual
+real-device checks.
 
 ## Reports
 

@@ -102,6 +102,7 @@ export interface CreateBrowserGameOptions {
     assets?: BrowserGameAssetOptions;
     // (undocumented)
     audioBackend?: FlxAudioBackend;
+    audioControls?: boolean | FlxAudioControlsOptions;
     autoPause?: boolean;
     // (undocumented)
     backgroundColor?: number;
@@ -759,6 +760,25 @@ export interface FlxAudioBackend {
 }
 
 // @public
+export class FlxAudioControls {
+    constructor(audio: FlxAudioService, options?: FlxAudioControlsOptions);
+    destroy(): void;
+}
+
+// @public
+export interface FlxAudioControlsOptions {
+    ariaLabel?: string;
+    className?: string;
+    container?: HTMLElement;
+    persist?: boolean | string;
+    placement?: 'host' | 'viewport';
+    position?: FlxAudioControlsPosition;
+}
+
+// @public
+export type FlxAudioControlsPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+// @public
 export class FlxAudioManager implements FlxAudioService {
     constructor(context: FlxContext, backend: FlxAudioBackend);
     destroy(): void;
@@ -770,6 +790,7 @@ export class FlxAudioManager implements FlxAudioService {
     // (undocumented)
     get mute(): boolean;
     set mute(value: boolean);
+    onChange(listener: (state: FlxAudioState) => void): () => void;
     pauseSounds(): void;
     play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean, group?: FlxSoundGroup): FlxSound;
     playMusic(source: unknown, volume?: number, group?: FlxSoundGroup): void;
@@ -797,6 +818,7 @@ export interface FlxAudioService {
     readonly musicGroup: FlxSoundGroup;
     // (undocumented)
     mute: boolean;
+    onChange?(listener: (state: FlxAudioState) => void): () => void;
     // (undocumented)
     pauseSounds(): void;
     // (undocumented)
@@ -815,6 +837,12 @@ export interface FlxAudioService {
     updateSounds(elapsed: number): void;
     // (undocumented)
     volume: number;
+}
+
+// @public
+export interface FlxAudioState {
+    readonly mute: boolean;
+    readonly volume: number;
 }
 
 // @public

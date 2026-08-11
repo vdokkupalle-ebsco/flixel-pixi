@@ -5,7 +5,11 @@ import {
   type FlxAssetBundle,
   type FlxAssetInitOptions,
 } from '../assets/flx-assets';
-import type { FlxAudioBackend } from '../audio/flx-audio-backend';
+import {
+  FLX_AUDIO_SERVICE,
+  type FlxAudioBackend,
+} from '../audio/flx-audio-backend';
+import type { FlxAudioService } from '../audio/flx-audio-manager';
 import { FlxG } from '../core/flx-g';
 import { FlxGame } from '../core/flx-game';
 import type { FlxStateConstructor } from '../core/flx-state';
@@ -29,6 +33,10 @@ import { FlxCameraRenderer } from '../rendering/flx-camera-renderer';
 import { syncWorldToRenderer } from '../rendering/flx-world-sync';
 import { getRenderFrameTiming, validateFramerate } from './frame-pacing';
 import { FlxAccessibilityOverlay } from './flx-accessibility-overlay';
+import {
+  FlxAudioControls,
+  type FlxAudioControlsOptions,
+} from './flx-audio-controls';
 import {
   FlxBrowserViewport,
   type FlxBrowserScaleMode,
@@ -93,6 +101,8 @@ export interface CreateBrowserGameOptions {
   signal?: AbortSignal;
   /** Optional lightweight in-game FPS overlay. Disabled by default. */
   fpsDisplay?: boolean | FlxFpsDisplayOptions;
+  /** Optional accessible master volume/mute controls. Disabled by default. */
+  audioControls?: boolean | FlxAudioControlsOptions;
   /** Native keyboard and screen-reader controls for supported Flixel UI. Defaults to true. */
   accessibility?: boolean;
   /** CSS-space canvas scaling policy. Defaults to aspect-preserving `fit`. */
@@ -300,6 +310,7 @@ export async function createBrowserGame(
           updateFramerate,
           renderFramerate,
         ),
+        resolveAudioControlsOptions(options.audioControls, host),
         preloaderCompletion,
         renderInterpolation,
         accessibility,
@@ -427,6 +438,7 @@ function startApplication(
   updateFramerate: number,
   renderFramerate: number | undefined,
   fpsDisplayOptions: FlxFpsDisplayOptions | null,
+  audioControlsOptions: FlxAudioControlsOptions | null,
   preloaderCompletion: Promise<void>,
   renderInterpolation: boolean,
   accessibilityEnabled: boolean,
@@ -443,6 +455,7 @@ function startApplication(
   let simulationStepsSinceRender = 0;
   let animationFrame = 0;
   let fpsDisplay: FlxFpsDisplay | null = null;
+  let audioControls: FlxAudioControls | null = null;
   let windowFocused = document.hasFocus();
   let focused = document.visibilityState === 'visible' && windowFocused;
   const accessibility = accessibilityEnabled
@@ -471,7 +484,15 @@ function startApplication(
       fpsDisplay = new FlxFpsDisplay(fpsDisplayOptions);
     }
   };
-  void preloaderCompletion.then(mountFpsDisplay, mountFpsDisplay);
+  const mountBrowserOverlays = (): void => {
+    mountFpsDisplay();
+    if (!destroyed && audioControlsOptions) {
+      const audio = game.context.getService<FlxAudioService>(FLX_AUDIO_SERVICE);
+      if (audio)
+        audioControls = new FlxAudioControls(audio, audioControlsOptions);
+    }
+  };
+  void preloaderCompletion.then(mountBrowserOverlays, mountBrowserOverlays);
 
   const refreshFocus = (): void => {
     const nextFocused = document.visibilityState === 'visible' && windowFocused;
@@ -570,6 +591,8 @@ function startApplication(
       window.removeEventListener('blur', handleWindowBlur);
       fpsDisplay?.destroy();
       fpsDisplay = null;
+      audioControls?.destroy();
+      audioControls = null;
       accessibility?.destroy();
       unsubscribeViewport();
       unsubscribeObserver?.();
@@ -581,6 +604,19 @@ function startApplication(
       app.destroy({ removeView: true, releaseGlobalResources: true });
       host.replaceChildren();
     },
+  };
+}
+
+function resolveAudioControlsOptions(
+  config: boolean | FlxAudioControlsOptions | undefined,
+  host: HTMLElement,
+): FlxAudioControlsOptions | null {
+  if (!config) return null;
+  if (config === true) return { container: host, placement: 'host' };
+  return {
+    container: host,
+    placement: 'host',
+    ...config,
   };
 }
 

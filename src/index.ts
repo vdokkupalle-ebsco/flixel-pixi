@@ -258,7 +258,7 @@ export type {
 } from './audio/flx-sound';
 export { FlxSoundGroup } from './audio/flx-sound-group';
 export { FlxAudioManager } from './audio/flx-audio-manager';
-export type { FlxAudioService } from './audio/flx-audio-manager';
+export type { FlxAudioService, FlxAudioState } from './audio/flx-audio-manager';
 export { NullAudioBackend } from './audio/null-audio-backend';
 export { WebAudioBackend } from './audio/web-audio-backend';
 export type {
@@ -358,6 +358,11 @@ export type {
 // --- Game Maker DX ---
 
 export { createBrowserGame } from './browser/create-browser-game';
+export { FlxAudioControls } from './browser/flx-audio-controls';
+export type {
+  FlxAudioControlsOptions,
+  FlxAudioControlsPosition,
+} from './browser/flx-audio-controls';
 export { FlxBrowserViewport } from './browser/flx-browser-viewport';
 export type {
   FlxBrowserSafePadding,

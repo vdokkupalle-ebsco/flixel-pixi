@@ -51,7 +51,7 @@ started merely to match a Haxe class count.
 |     7 |    P1    | UI and text authoring                           | Complete             | Common HUD/control/input-text needs no application-specific framework code.                        |
 |     8 |    P1    | Atlas and content-pipeline expansion            | Complete             | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Complete             | Logical coordinates remain correct through browser/window lifecycle changes.                       |
-|    10 |    P1    | Audio organization and system UX                | In progress          | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
+|    10 |    P1    | Audio organization and system UX                | Complete             | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Planned              | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
 |    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
@@ -344,6 +344,10 @@ Current slice:
   pause-vs-stop controls.
 - Browser coverage deterministically verifies spatial direction, attenuation,
   viewport gating, routing mute, and policy changes in all three engine lanes.
+- Optional `FlxAudioControls` expose keyboard/screen-reader-friendly master
+  mute and volume controls. Manager change subscriptions keep external changes
+  synchronized, while opt-in localStorage persistence restores preferences
+  without making storage availability a boot requirement.
 
 ## P2 — advanced workflows
 

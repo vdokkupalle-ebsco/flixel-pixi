@@ -72,14 +72,35 @@ test('demonstrates viewport-gated spatial attenuation and panning', async ({
       clockGain: 0,
       clockVisible: false,
     });
+  await expect
+    .poll(async () => (await snapshot())?.sources[2]?.gain ?? 0)
+    .toBeGreaterThan(0);
   const nearAlarm = await snapshot();
   expect(nearAlarm?.sources[2]?.gain ?? 0).toBeGreaterThan(0);
   expect(nearAlarm?.sources[2]?.pan ?? 0).toBeGreaterThan(0);
+
+  await page.locator('[data-testid="flx-audio-volume"]').evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.value = '0.25';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await expect
+    .poll(async () => (await snapshot())?.sources[2]?.gain ?? 1)
+    .toBeLessThan(nearAlarm?.sources[2]?.gain ?? 0);
+
+  await page.locator('[data-testid="flx-audio-mute"]').click();
+  await expect.poll(snapshot).toMatchObject({ masterMuted: true });
+  await expect.poll(async () => (await snapshot())?.sources[2]?.gain).toBe(0);
+
+  await page.locator('[data-testid="flx-audio-mute"]').click();
+  await expect.poll(snapshot).toMatchObject({ masterMuted: false });
 
   await page.locator('[data-action="mute"]').click();
   await expect.poll(snapshot).toMatchObject({ ambientMuted: true });
   await expect.poll(async () => (await snapshot())?.sources[2]?.gain).toBe(0);
 
-  await page.locator('[data-offscreen]').selectOption('stop');
+  await page.evaluate(() => {
+    window.__FLIXEL_PIXI_AMBIENT_AUDIO__?.setOffscreen?.('stop');
+  });
   await expect.poll(snapshot).toMatchObject({ offscreen: 'stop' });
 });

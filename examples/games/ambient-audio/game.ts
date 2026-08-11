@@ -67,6 +67,7 @@ export function preloadAmbientAudio(
 
 export interface AmbientAudioSnapshot {
   ambientMuted: boolean;
+  masterMuted: boolean;
   autoTour: boolean;
   cameraX: number;
   offscreen: FlxSoundOffscreenBehavior;
@@ -160,6 +161,7 @@ export class AmbientAudioState extends FlxState {
     const playerCenter = this.player.x + this.player.width / 2;
     return {
       ambientMuted: this.ambientGroup.mute,
+      masterMuted: FlxG.mute,
       autoTour: this.autoTour,
       cameraX: FlxG.camera.scroll.x,
       offscreen: this.offscreen,

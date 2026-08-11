@@ -66,6 +66,26 @@ class RecordingAudioBackend extends NullAudioBackend {
 }
 
 describe('FlxSound and FlxAudioManager', () => {
+  it('publishes master audio preference changes without duplicate events', () => {
+    const context = new FlxContext(320, 240);
+    const manager = new FlxAudioManager(context, new NullAudioBackend());
+    const changes: { mute: boolean; volume: number }[] = [];
+    const unsubscribe = manager.onChange((state) => changes.push({ ...state }));
+
+    manager.volume = 0.75;
+    manager.volume = 0.75;
+    manager.mute = true;
+    expect(changes).toEqual([
+      { mute: false, volume: 0.75 },
+      { mute: true, volume: 0.75 },
+    ]);
+
+    unsubscribe();
+    manager.mute = false;
+    expect(changes).toHaveLength(2);
+    manager.destroy();
+  });
+
   it('manages sound lifecycle, playback, and properties', () => {
     const context = new FlxContext(320, 240);
     const backend = new NullAudioBackend();

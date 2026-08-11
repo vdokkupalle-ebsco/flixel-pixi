@@ -47,6 +47,10 @@ bootGame({
   width: 640,
   height: 360,
   fpsDisplay: true,
+  audioControls: {
+    persist: 'flixel-pixi:ambient-audio',
+    position: 'bottom-right',
+  },
   async preload({ report }) {
     report(0, 'Preloading ambient sounds…');
     await preloadAmbientAudio((progress) => {

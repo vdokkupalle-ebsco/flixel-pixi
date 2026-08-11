@@ -15,6 +15,8 @@ export interface FlxAudioService {
   mute: boolean;
   readonly soundGroup: FlxSoundGroup;
   readonly musicGroup: FlxSoundGroup;
+  /** Subscribe to master volume/mute changes when supported. */
+  onChange?(listener: (state: FlxAudioState) => void): () => void;
 
   play(
     source: unknown,
@@ -41,6 +43,14 @@ export interface FlxAudioService {
   destroy(): void;
 }
 
+/** Serializable master audio preferences. @public */
+export interface FlxAudioState {
+  /** Whether master audio is muted. */
+  readonly mute: boolean;
+  /** Master gain from 0 through 1. */
+  readonly volume: number;
+}
+
 /**
  * Owns the audio backend, the music singleton, and the sound-effects group.
  *
@@ -59,6 +69,7 @@ export class FlxAudioManager implements FlxAudioService {
 
   #volume = 0.5;
   #muted = false;
+  readonly #listeners = new Set<(state: FlxAudioState) => void>();
   readonly #backend: FlxAudioBackend;
   readonly #context: FlxContext;
 
@@ -78,8 +89,11 @@ export class FlxAudioManager implements FlxAudioService {
   }
 
   set volume(value: number) {
-    this.#volume = Math.max(0, Math.min(1, value));
+    const next = Math.max(0, Math.min(1, value));
+    if (next === this.#volume) return;
+    this.#volume = next;
     this.#propagateGlobals();
+    this.#emitChange();
   }
 
   get mute(): boolean {
@@ -87,8 +101,16 @@ export class FlxAudioManager implements FlxAudioService {
   }
 
   set mute(value: boolean) {
+    if (value === this.#muted) return;
     this.#muted = value;
     this.#propagateGlobals();
+    this.#emitChange();
+  }
+
+  /** Subscribe to master audio preference changes. */
+  onChange(listener: (state: FlxAudioState) => void): () => void {
+    this.#listeners.add(listener);
+    return () => this.#listeners.delete(listener);
   }
 
   /**
@@ -228,6 +250,7 @@ export class FlxAudioManager implements FlxAudioService {
     this.soundGroup.destroy();
     this.musicGroup.destroy();
     this.#backend.destroy();
+    this.#listeners.clear();
     this.#context.removeService(FLX_AUDIO_SERVICE);
   }
 
@@ -266,5 +289,10 @@ export class FlxAudioManager implements FlxAudioService {
         member._globalMuted = this.#muted;
       }
     }
+  }
+
+  #emitChange(): void {
+    const state = Object.freeze({ mute: this.#muted, volume: this.#volume });
+    for (const listener of [...this.#listeners]) listener(state);
   }
 }

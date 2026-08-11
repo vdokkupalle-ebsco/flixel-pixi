@@ -64,6 +64,30 @@ viewport before resuming. A source assigned to multiple cameras is audible
 when any of them can see it. Use `viewport: 'ignore'` for distance-only spatial
 audio and `detach()` to return the sound to ordinary playback.
 
+### Master audio controls and persistence
+
+Browser games can opt into native master controls without adding UI to their
+game state:
+
+```ts
+await createBrowserGame({
+  host,
+  initialState: PlayState,
+  audioControls: {
+    position: 'bottom-right',
+    persist: 'my-game:audio',
+  },
+});
+```
+
+The DOM overlay contains a keyboard-operable mute button and labelled volume
+slider. It follows changes made through `FlxG.mute` and `FlxG.volume`, and
+opt-in persistence restores those master settings from localStorage. Storage
+errors and malformed saved values are ignored so audio preferences cannot
+prevent the game from booting. Use `audioControls: true` for host-relative
+controls without persistence, or instantiate `FlxAudioControls` directly when
+the application shell owns placement.
+
 ## Storage
 
 `FlxSave` uses `LocalStorageBackend` or `IndexedDBBackend` (ADR 0011). Expect
