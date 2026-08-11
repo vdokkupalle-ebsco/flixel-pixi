@@ -3,6 +3,10 @@ import { Keyboard } from './keyboard';
 import { Mouse } from './mouse';
 import { FlxGamepadManager, type FlxGamepadProvider } from './flx-gamepad';
 import { FlxTouchManager, type FlxTouchOptions } from './flx-touch';
+import {
+  FLX_VIRTUAL_INPUT_SERVICE,
+  type FlxVirtualInput,
+} from './flx-virtual-input';
 import { getDomViewport } from './flx-dom-viewport';
 
 /** Service token for deterministic keyboard and pointer input. @public */
@@ -76,6 +80,14 @@ export class FlxInputManager implements FlxInputService {
     this.mouse.update();
     this.gamepads.update();
     this.touches.update();
+  }
+
+  /** Advance registered virtual controls after live or replayed input is ready. */
+  updateVirtualInput(): void {
+    this.#assertUsable();
+    this.#context
+      .getService<FlxVirtualInput>(FLX_VIRTUAL_INPUT_SERVICE)
+      ?.update();
   }
 
   resetInput(): void {

@@ -225,6 +225,9 @@ export const FLX_LOG_SERVICE: unique symbol;
 export const FLX_STORAGE_SERVICE: unique symbol;
 
 // @public
+export const FLX_VIRTUAL_INPUT_SERVICE: unique symbol;
+
+// @public
 export const FLX_WATCH_SERVICE: unique symbol;
 
 // @public
@@ -332,7 +335,27 @@ export class FlxActions {
 }
 
 // @public
-export type FlxActionSource = FlxActionKeyboardSource | FlxActionMouseSource | FlxActionWheelSource | FlxActionGamepadButtonSource | FlxActionKeyboardAxisSource | FlxActionGamepadAxisSource | FlxActionGamepadButtonAxisSource;
+export type FlxActionSource = FlxActionKeyboardSource | FlxActionMouseSource | FlxActionWheelSource | FlxActionGamepadButtonSource | FlxActionKeyboardAxisSource | FlxActionGamepadAxisSource | FlxActionGamepadButtonAxisSource | FlxActionVirtualButtonSource | FlxActionVirtualButtonAxisSource;
+
+// @public
+export interface FlxActionVirtualButtonAxisSource {
+    // (undocumented)
+    readonly device: 'virtual-button-axis';
+    // (undocumented)
+    readonly negative: string;
+    // (undocumented)
+    readonly positive: string;
+    // (undocumented)
+    readonly scale?: number;
+}
+
+// @public
+export interface FlxActionVirtualButtonSource {
+    // (undocumented)
+    readonly device: 'virtual-button';
+    // (undocumented)
+    readonly id: string;
+}
 
 // @public
 export interface FlxActionWheelSource {
@@ -1854,6 +1877,7 @@ export class FlxG {
     // (undocumented)
     static get touches(): FlxTouchManager;
     static readonly vcr: FlxVCR;
+    static get virtualInputs(): FlxVirtualInput;
     // (undocumented)
     static get visualDebug(): boolean;
     static set visualDebug(value: boolean);
@@ -2160,6 +2184,7 @@ export class FlxInputManager implements FlxInputService {
     readonly touches: FlxTouchManager;
     // (undocumented)
     updateInput(): void;
+    updateVirtualInput(): void;
 }
 
 // @public
@@ -3969,6 +3994,148 @@ export interface FlxVCR {
     stepRequested: boolean;
     // (undocumented)
     timeout: number;
+}
+
+// @public
+export type FlxVirtualActionMode = 'none' | 'a' | 'a-b';
+
+// @public
+export class FlxVirtualButton extends FlxButton implements FlxVirtualButtonState {
+    constructor(id: string, x: number, y: number, label: string, options?: FlxVirtualButtonOptions);
+    // (undocumented)
+    createRenderHandle(): FlxVirtualButtonRenderHandle;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    disabledColor: number;
+    // (undocumented)
+    highlightColor: number;
+    // (undocumented)
+    get justPressed(): boolean;
+    // (undocumented)
+    get justReleased(): boolean;
+    // (undocumented)
+    normalColor: number;
+    // (undocumented)
+    get pressed(): boolean;
+    // (undocumented)
+    pressedColor: number;
+    get source(): FlxActionVirtualButtonSource;
+    // (undocumented)
+    update(): void;
+    // (undocumented)
+    readonly virtualInputId: string;
+}
+
+// @public
+export interface FlxVirtualButtonOptions {
+    // (undocumented)
+    readonly accessibleLabel?: string;
+    // (undocumented)
+    readonly disabledColor?: number;
+    // (undocumented)
+    readonly highlightColor?: number;
+    // (undocumented)
+    readonly normalColor?: number;
+    // (undocumented)
+    readonly pressedColor?: number;
+    // (undocumented)
+    readonly size?: number;
+}
+
+// @public
+export class FlxVirtualButtonRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxVirtualButton, onDestroy?: () => void);
+    // (undocumented)
+    readonly background: Graphics;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
+export interface FlxVirtualButtonState {
+    // (undocumented)
+    readonly justPressed: boolean;
+    // (undocumented)
+    readonly justReleased: boolean;
+    // (undocumented)
+    readonly pressed: boolean;
+}
+
+// @public
+export type FlxVirtualDPadMode = 'none' | 'up-down' | 'left-right' | 'full';
+
+// @public
+export class FlxVirtualInput {
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    getButton(id: string): FlxVirtualButtonState | null;
+    // (undocumented)
+    registerButton(id: string, state: FlxVirtualButtonState): void;
+    // (undocumented)
+    unregisterButton(id: string, state: FlxVirtualButtonState): boolean;
+}
+
+// @public
+export class FlxVirtualPad extends FlxGroup<FlxVirtualButton> {
+    constructor(dpadMode?: FlxVirtualDPadMode, actionMode?: FlxVirtualActionMode, options?: FlxVirtualPadOptions);
+    // (undocumented)
+    readonly A: FlxVirtualButton | null;
+    // (undocumented)
+    readonly B: FlxVirtualButton | null;
+    bindActions(actions: FlxActions, map: FlxVirtualPadActionMap): this;
+    bindAxes(actions: FlxActions, map: FlxVirtualPadAxisMap): this;
+    // (undocumented)
+    readonly down: FlxVirtualButton | null;
+    // (undocumented)
+    getButton(id: 'up' | 'down' | 'left' | 'right' | 'A' | 'B'): FlxVirtualButton | null;
+    // (undocumented)
+    readonly left: FlxVirtualButton | null;
+    // (undocumented)
+    readonly right: FlxVirtualButton | null;
+    // (undocumented)
+    readonly up: FlxVirtualButton | null;
+}
+
+// @public
+export interface FlxVirtualPadActionMap {
+    // (undocumented)
+    readonly A?: string;
+    // (undocumented)
+    readonly B?: string;
+    // (undocumented)
+    readonly down?: string;
+    // (undocumented)
+    readonly left?: string;
+    // (undocumented)
+    readonly right?: string;
+    // (undocumented)
+    readonly up?: string;
+}
+
+// @public
+export interface FlxVirtualPadAxisMap {
+    // (undocumented)
+    readonly horizontal?: string;
+    // (undocumented)
+    readonly vertical?: string;
+}
+
+// @public
+export interface FlxVirtualPadOptions extends FlxVirtualButtonOptions {
+    // (undocumented)
+    readonly gap?: number;
+    // (undocumented)
+    readonly idPrefix?: string;
+    // (undocumented)
+    readonly margin?: number;
 }
 
 // @public

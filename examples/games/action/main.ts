@@ -14,6 +14,7 @@ declare global {
       record?: () => void;
       stopRecord?: () => void;
       playReplay?: () => void;
+      playerPosition?: () => { x: number; y: number } | null;
       gamepad?: () => {
         axis: number;
         index: number;
@@ -86,6 +87,12 @@ bootGame({
           app.syncRenderer();
         }
       },
+      playerPosition() {
+        const state = app.game.state;
+        return state instanceof ActionState
+          ? { x: state.player.x, y: state.player.y }
+          : null;
+      },
       gamepad() {
         const pad = FlxG.gamepads.firstActive;
         return pad === null
@@ -127,7 +134,8 @@ bootGame({
     });
 
     if (status) {
-      status.textContent = 'Action sample ready';
+      status.textContent =
+        'Action sample ready — use arrows/gamepad or the virtual pad';
       status.setAttribute('data-state', 'ready');
     }
   })

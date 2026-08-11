@@ -16,6 +16,10 @@ import type { Keyboard } from '../input/keyboard';
 import type { Mouse } from '../input/mouse';
 import type { FlxGamepadManager } from '../input/flx-gamepad';
 import type { FlxTouchManager } from '../input/flx-touch';
+import {
+  type FlxVirtualInput,
+  virtualInputForContext,
+} from '../input/flx-virtual-input';
 import { FlxObject } from '../objects/flx-object';
 import type { FlxSave } from '../storage/flx-save';
 import { FLX_STORAGE_SERVICE } from '../storage/flx-storage-backend';
@@ -129,6 +133,11 @@ export class FlxG {
 
   static get touches(): FlxTouchManager {
     return FlxG.#input.touches;
+  }
+
+  /** Context-owned registry resolved by serializable virtual action sources. */
+  static get virtualInputs(): FlxVirtualInput {
+    return virtualInputForContext(FlxG.context);
   }
 
   static get elapsed(): number {

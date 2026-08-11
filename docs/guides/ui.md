@@ -164,6 +164,39 @@ adapter; Pixi remains a visual fallback but cannot provide browser IME.
 
 ## Remaining UI checkpoint
 
-Asset-backed multi-page bitmap-font loading and virtual controls remain
+### Virtual controls
+
+`FlxVirtualPad` provides a HUD-aligned D-pad and optional A/B action buttons.
+Each `FlxVirtualButton` publishes a stable, serializable source through
+`button.source`; `bindActions()` and `bindAxes()` add those sources alongside
+existing keyboard and gamepad bindings:
+
+```ts
+const pad = new FlxVirtualPad('full', 'a-b', {
+  idPrefix: 'play-pad',
+});
+pad
+  .bindAxes(FlxG.actions, {
+    horizontal: 'move-x',
+    vertical: 'move-y',
+  })
+  .bindActions(FlxG.actions, { A: 'jump', B: 'dash' });
+add(pad);
+```
+
+Virtual input advances after live or replayed pointer state and before state
+updates. It therefore preserves fixed-step `pressed`, `justPressed`, and
+`justReleased` transitions without synthesizing keyboard events. Recorded
+touch frames remain the replay authority; virtual button state is derived from
+them. Buttons also inherit the native semantic-button bridge, so their
+`accessibleLabel`, focus, and keyboard activation follow regular `FlxButton`
+behavior.
+
+Use a stable `idPrefix` whenever bindings are saved. A context rejects duplicate
+virtual input IDs to prevent ambiguous action resolution. The public Action
+demo combines virtual, keyboard, and gamepad sources for the same movement and
+burst actions.
+
+Asset-backed multi-page bitmap-font loading and analog virtual sticks remain
 separate slices. They must keep the same asset-ownership, deterministic input,
 and native accessibility boundaries.

@@ -219,8 +219,11 @@ export async function createInputApplication(
     toggleButton.x + toggleButton.width * 0.5,
     toggleButton.y + toggleButton.height * 0.5,
   );
-  const buttonScreen = camera.worldToScreen(buttonCenter);
-  const restored = camera.screenToWorld(buttonScreen);
+  const buttonScreen = camera.worldToScreen({
+    x: buttonCenter.x + camera.scroll.x * (1 - toggleButton.scrollFactor.x),
+    y: buttonCenter.y + camera.scroll.y * (1 - toggleButton.scrollFactor.y),
+  });
+  const restored = camera.screenToWorld(camera.worldToScreen(buttonCenter));
   const contractMetrics = verifyInputContracts();
   const metrics: InputMetrics = {
     ...contractMetrics,

@@ -155,6 +155,8 @@ export class FlxGame implements FlxStateRuntime {
       }
     }
 
+    this.input.updateVirtualInput();
+
     const t0 = performance.now();
     this.context.elapsed = stepSeconds * this.context.timeScale;
     if (!this.context.paused || FlxG.vcr.stepRequested) {

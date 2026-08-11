@@ -55,6 +55,20 @@ export interface FlxActionGamepadButtonAxisSource {
   readonly scale?: number;
 }
 
+/** One registered virtual control exposed as a digital action source. @public */
+export interface FlxActionVirtualButtonSource {
+  readonly device: 'virtual-button';
+  readonly id: string;
+}
+
+/** Pair of virtual buttons exposed as a scalar analog source. @public */
+export interface FlxActionVirtualButtonAxisSource {
+  readonly device: 'virtual-button-axis';
+  readonly negative: string;
+  readonly positive: string;
+  readonly scale?: number;
+}
+
 /** Serializable digital or scalar-analog source for one named action. @public */
 export type FlxActionSource =
   | FlxActionKeyboardSource
@@ -63,7 +77,9 @@ export type FlxActionSource =
   | FlxActionGamepadButtonSource
   | FlxActionKeyboardAxisSource
   | FlxActionGamepadAxisSource
-  | FlxActionGamepadButtonAxisSource;
+  | FlxActionGamepadButtonAxisSource
+  | FlxActionVirtualButtonSource
+  | FlxActionVirtualButtonAxisSource;
 
 /** Versioned binding schema returned by {@link FlxActions.save}. @public */
 export interface FlxActionBindingsData {
@@ -251,9 +267,15 @@ export class FlxActions {
             if (gamepad[query](source.button)) return true;
           }
           break;
+        case 'virtual-button': {
+          const button = FlxG.virtualInputs.getButton(source.id);
+          if (button?.[query] === true) return true;
+          break;
+        }
         case 'keyboard-axis':
         case 'gamepad-axis':
         case 'gamepad-button-axis':
+        case 'virtual-button-axis':
           break;
       }
     }
@@ -286,6 +308,14 @@ export class FlxActions {
         if (Math.abs(value) > Math.abs(result)) result = value;
       }
       return result;
+    }
+    if (source.device === 'virtual-button-axis') {
+      const negative =
+        FlxG.virtualInputs.getButton(source.negative)?.pressed === true;
+      const positive =
+        FlxG.virtualInputs.getButton(source.positive)?.pressed === true;
+      if (negative === positive) return 0;
+      return (negative ? -1 : 1) * (source.scale ?? 1);
     }
     return 0;
   }
@@ -379,9 +409,29 @@ function normalizeSource(source: FlxActionSource): FlxActionSource {
         ),
         scale: finite(source.scale ?? 1, 'Gamepad button axis scale'),
       };
+    case 'virtual-button':
+      return {
+        device: 'virtual-button',
+        id: normalizeVirtualId(source.id),
+      };
+    case 'virtual-button-axis':
+      return {
+        device: 'virtual-button-axis',
+        negative: normalizeVirtualId(source.negative),
+        positive: normalizeVirtualId(source.positive),
+        scale: finite(source.scale ?? 1, 'Virtual button axis scale'),
+      };
     default:
       throw new TypeError('Unknown action source device.');
   }
+}
+
+function normalizeVirtualId(id: string): string {
+  const value = String(id).trim();
+  if (value.length === 0) {
+    throw new RangeError('Virtual button id cannot be empty.');
+  }
+  return value;
 }
 
 function normalizeTarget(
