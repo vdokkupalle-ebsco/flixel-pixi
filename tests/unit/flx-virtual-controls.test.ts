@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  FlxActions,
   FlxContext,
   FlxG,
   FlxGame,
@@ -10,6 +11,8 @@ import {
   FlxVirtualButton,
   FlxVirtualButtonRenderHandle,
   FlxVirtualPad,
+  FlxVirtualStick,
+  FlxVirtualStickRenderHandle,
 } from '../../src';
 
 function bounds(width: number, height: number): DOMRect {
@@ -209,5 +212,202 @@ describe('FlxVirtualButton', () => {
     expect(() => first.destroy()).not.toThrow();
     FlxG.installContext(context);
     input.destroy();
+  });
+});
+
+describe('FlxVirtualStick', () => {
+  it('publishes normalized axes with a radial dead zone', () => {
+    let stick: FlxVirtualStick | null = null;
+    class StickState extends FlxState {
+      override create(): void {
+        super.create();
+        stick = new FlxVirtualStick('unit-stick', 20, 100, {
+          deadZone: 0.2,
+          knobRadius: 20,
+          radius: 50,
+        });
+        stick.bindAxes(FlxG.actions, {
+          horizontal: 'move-x',
+          vertical: 'move-y',
+        });
+        this.add(stick);
+      }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.getBoundingClientRect = () => bounds(320, 240);
+    document.body.appendChild(canvas);
+    const game = new FlxGame(320, 240, StickState, 1, 60, 60, false, {
+      pointerTarget: canvas,
+    });
+    game.step();
+    if (stick === null) throw new Error('Expected the virtual stick.');
+    const activeStick = stick as FlxVirtualStick;
+    const centerX = activeStick.x + activeStick.radius;
+    const centerY = activeStick.y + activeStick.radius;
+
+    canvas.dispatchEvent(pointer('pointerdown', centerX, centerY, 1, true));
+    game.step();
+    expect(activeStick.pressed).toBe(true);
+    expect(FlxG.actions.value('move-x')).toBe(0);
+
+    canvas.dispatchEvent(
+      pointer('pointermove', centerX + 15, centerY, 1, true),
+    );
+    game.step();
+    expect(FlxG.actions.value('move-x')).toBeCloseTo(0.375);
+    expect(FlxG.actions.value('move-y')).toBe(0);
+
+    canvas.dispatchEvent(
+      pointer('pointermove', centerX + 100, centerY, 1, true),
+    );
+    game.step();
+    expect(activeStick.rawX).toBe(1);
+    expect(FlxG.actions.value('move-x')).toBe(1);
+
+    canvas.dispatchEvent(pointer('pointerup', centerX + 100, centerY, 1, true));
+    game.step();
+    expect(activeStick.pressed).toBe(false);
+    expect(activeStick.xAxis).toBe(0);
+    expect(FlxG.actions.value('move-x')).toBe(0);
+    expect(FlxG.actions.save().bindings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: 'move-x',
+          sources: [
+            {
+              axis: 'x',
+              device: 'virtual-stick-axis',
+              id: 'unit-stick',
+              scale: 1,
+            },
+          ],
+        }),
+      ]),
+    );
+    game.destroy();
+  });
+
+  it('renders stable texture-free geometry and validates registration', () => {
+    const context = new FlxContext(320, 240);
+    FlxG.installContext(context);
+    const input = new FlxInputManager(context);
+    const stick = new FlxVirtualStick('render-stick', 10, 20, { radius: 48 });
+    const handle = stick.createRenderHandle();
+    expect(handle).toBeInstanceOf(FlxVirtualStickRenderHandle);
+    expect(handle.base.bounds.width).toBeGreaterThan(0);
+    expect(handle.knob.bounds.width).toBeGreaterThan(0);
+    expect(stick.source('y')).toEqual({
+      axis: 'y',
+      device: 'virtual-stick-axis',
+      id: 'render-stick',
+    });
+    const actions = new FlxActions();
+    expect(stick.bindAxes(actions, {})).toBe(stick);
+    expect(() =>
+      actions.addSource('bad', {
+        axis: 'z' as never,
+        device: 'virtual-stick-axis',
+        id: 'render-stick',
+      }),
+    ).toThrow('axis');
+    expect(() =>
+      FlxG.virtualInputs.registerStick('render-stick', stick),
+    ).not.toThrow();
+    expect(
+      FlxG.virtualInputs.unregisterStick('render-stick', {
+        xAxis: 0,
+        yAxis: 0,
+      }),
+    ).toBe(false);
+    const passive = { xAxis: 0, yAxis: 0 };
+    FlxG.virtualInputs.registerStick('passive-stick', passive);
+    expect(() => input.updateVirtualInput()).not.toThrow();
+    expect(FlxG.virtualInputs.unregisterStick('passive-stick', passive)).toBe(
+      true,
+    );
+    expect(() => new FlxVirtualStick('render-stick', 0, 0)).toThrow(
+      'already registered',
+    );
+    expect(() => new FlxVirtualButton('render-stick', 0, 0, 'A')).toThrow(
+      'already registered',
+    );
+    expect(
+      () => new FlxVirtualStick('bad-radius', 0, 0, { radius: 0 }),
+    ).toThrow('radius');
+    expect(
+      () =>
+        new FlxVirtualStick('bad-knob', 0, 0, { knobRadius: 50, radius: 50 }),
+    ).toThrow('knob radius');
+    expect(
+      () => new FlxVirtualStick('bad-dead-zone', 0, 0, { deadZone: 1 }),
+    ).toThrow('dead zone');
+
+    stick.destroy();
+    stick.destroy();
+    expect(handle.destroyed).toBe(true);
+    expect(() => handle.sync()).not.toThrow();
+    expect(() => handle.destroy()).not.toThrow();
+    expect(FlxG.virtualInputs.getStick('render-stick')).toBeNull();
+    input.destroy();
+  });
+
+  it('captures non-primary touches and resets hidden controls', () => {
+    let stick: FlxVirtualStick | null = null;
+    class TouchStickState extends FlxState {
+      override create(): void {
+        super.create();
+        stick = new FlxVirtualStick('touch-stick', 20, 100, {
+          knobRadius: 20,
+          radius: 50,
+        });
+        this.add(stick);
+      }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.getBoundingClientRect = () => bounds(320, 240);
+    document.body.appendChild(canvas);
+    const game = new FlxGame(320, 240, TouchStickState, 1, 60, 60, false, {
+      pointerTarget: canvas,
+    });
+    game.step();
+    if (stick === null) throw new Error('Expected the touch stick.');
+    const activeStick = stick as FlxVirtualStick;
+    const centerX = activeStick.x + activeStick.radius;
+    const centerY = activeStick.y + activeStick.radius;
+
+    FlxG.mouse.hide();
+    canvas.dispatchEvent(pointer('pointerdown', centerX, centerY, 1, true));
+    game.step();
+    expect(activeStick.pressed).toBe(false);
+    canvas.dispatchEvent(pointer('pointerup', centerX, centerY, 1, true));
+    game.step();
+
+    FlxG.mouse.show();
+    canvas.dispatchEvent(pointer('pointerdown', 319, 1, 1, true));
+    game.step();
+    expect(activeStick.pressed).toBe(false);
+    canvas.dispatchEvent(pointer('pointerup', 319, 1, 1, true));
+    game.step();
+
+    canvas.dispatchEvent(pointer('pointerdown', centerX, centerY, 2, false));
+    game.step();
+    expect(activeStick.pressed).toBe(true);
+    canvas.dispatchEvent(
+      pointer('pointermove', centerX + 30, centerY + 30, 2, false),
+    );
+    game.step();
+    expect(activeStick.xAxis).toBeGreaterThan(0);
+    expect(activeStick.yAxis).toBeGreaterThan(0);
+
+    activeStick.visible = false;
+    game.step();
+    expect(activeStick.pressed).toBe(false);
+    expect(activeStick.rawX).toBe(0);
+    expect(activeStick.rawY).toBe(0);
+    canvas.dispatchEvent(pointer('pointerup', centerX, centerY, 2, false));
+    game.step();
+    game.destroy();
   });
 });

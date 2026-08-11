@@ -241,9 +241,11 @@ Current slice:
   input, serializable digital/scalar action sources, native semantic buttons,
   HUD placement, and replay derivation from recorded pointer/touch frames. The
   public Action demo combines them with keyboard and gamepad bindings.
+- `FlxVirtualStick` provides captured proportional pointer movement, radial
+  dead-zone remapping, normalized serializable axes, stable texture-free Pixi
+  geometry, and replay derivation through the same virtual-input registry.
 
-Remaining slices: asset-backed multi-page bitmap fonts and analog virtual
-sticks. See
+Remaining slice: asset-backed multi-page bitmap fonts. See
 [`guides/ui.md`](guides/ui.md) and
 [`adr/0017-native-accessibility-over-render-textures.md`](adr/0017-native-accessibility-over-render-textures.md).
 

@@ -13,20 +13,44 @@ test('combines canvas virtual controls with semantic keyboard activation', async
   );
 
   const controls = page.locator('[data-flx-accessible-button]');
-  await expect(controls).toHaveCount(5);
-  const moveRight = page.locator('[aria-label="Move right"]');
+  await expect(controls).toHaveCount(1);
   const actionA = page.locator('[aria-label="Action A"]');
-  await expect(moveRight).toHaveCount(1);
   await expect(actionA).toHaveCount(1);
 
   const before = await page.evaluate(
     () => window.__FLIXEL_PIXI_ACTION__?.playerPosition?.() ?? null,
   );
   expect(before).not.toBeNull();
-  const box = await moveRight.boundingBox();
-  if (box === null) throw new Error('Expected a visible Move right control.');
-  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  const canvas = page.locator('canvas');
+  const box = await canvas.boundingBox();
+  const stick = await page.evaluate(
+    () => window.__FLIXEL_PIXI_ACTION__?.virtualStick?.() ?? null,
+  );
+  if (box === null || stick === null) {
+    throw new Error('Expected a visible virtual stick.');
+  }
+  const scale = Math.min(box.width / 640, box.height / 480);
+  const viewportX = box.x + (box.width - 640 * scale) * 0.5;
+  const viewportY = box.y + (box.height - 480 * scale) * 0.5;
+  const centerX = viewportX + stick.x * scale;
+  const centerY = viewportY + stick.y * scale;
+  await page.mouse.move(centerX, centerY);
   await page.mouse.down();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.__FLIXEL_PIXI_ACTION__?.virtualStick?.()?.pressed ?? false,
+      ),
+    )
+    .toBe(true);
+  await page.mouse.move(centerX + stick.radius * scale, centerY);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.__FLIXEL_PIXI_ACTION__?.virtualStick?.()?.xAxis ?? 0,
+      ),
+    )
+    .toBeGreaterThan(0.9);
   await expect
     .poll(
       () =>

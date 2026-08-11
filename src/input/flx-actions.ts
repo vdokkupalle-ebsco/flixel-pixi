@@ -69,6 +69,14 @@ export interface FlxActionVirtualButtonAxisSource {
   readonly scale?: number;
 }
 
+/** One normalized axis from a registered virtual stick. @public */
+export interface FlxActionVirtualStickAxisSource {
+  readonly axis: 'x' | 'y';
+  readonly device: 'virtual-stick-axis';
+  readonly id: string;
+  readonly scale?: number;
+}
+
 /** Serializable digital or scalar-analog source for one named action. @public */
 export type FlxActionSource =
   | FlxActionKeyboardSource
@@ -79,7 +87,8 @@ export type FlxActionSource =
   | FlxActionGamepadAxisSource
   | FlxActionGamepadButtonAxisSource
   | FlxActionVirtualButtonSource
-  | FlxActionVirtualButtonAxisSource;
+  | FlxActionVirtualButtonAxisSource
+  | FlxActionVirtualStickAxisSource;
 
 /** Versioned binding schema returned by {@link FlxActions.save}. @public */
 export interface FlxActionBindingsData {
@@ -276,6 +285,7 @@ export class FlxActions {
         case 'gamepad-axis':
         case 'gamepad-button-axis':
         case 'virtual-button-axis':
+        case 'virtual-stick-axis':
           break;
       }
     }
@@ -316,6 +326,11 @@ export class FlxActions {
         FlxG.virtualInputs.getButton(source.positive)?.pressed === true;
       if (negative === positive) return 0;
       return (negative ? -1 : 1) * (source.scale ?? 1);
+    }
+    if (source.device === 'virtual-stick-axis') {
+      const stick = FlxG.virtualInputs.getStick(source.id);
+      const value = source.axis === 'x' ? stick?.xAxis : stick?.yAxis;
+      return (value ?? 0) * (source.scale ?? 1);
     }
     return 0;
   }
@@ -420,6 +435,16 @@ function normalizeSource(source: FlxActionSource): FlxActionSource {
         negative: normalizeVirtualId(source.negative),
         positive: normalizeVirtualId(source.positive),
         scale: finite(source.scale ?? 1, 'Virtual button axis scale'),
+      };
+    case 'virtual-stick-axis':
+      if (source.axis !== 'x' && source.axis !== 'y') {
+        throw new RangeError('Virtual stick axis must be "x" or "y".');
+      }
+      return {
+        axis: source.axis,
+        device: 'virtual-stick-axis',
+        id: normalizeVirtualId(source.id),
+        scale: finite(source.scale ?? 1, 'Virtual stick axis scale'),
       };
     default:
       throw new TypeError('Unknown action source device.');

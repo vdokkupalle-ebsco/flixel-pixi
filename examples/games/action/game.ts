@@ -9,6 +9,7 @@ import {
   FlxState,
   FlxText,
   FlxVirtualPad,
+  FlxVirtualStick,
   LocalStorageBackend,
   makeGraphicPixels,
 } from '../../../src';
@@ -38,6 +39,7 @@ export class ActionState extends FlxState {
   bursts = 0;
   audioCtx: AudioContext | null = null;
   virtualPad!: FlxVirtualPad;
+  virtualStick!: FlxVirtualStick;
 
   override create(): void {
     super.create();
@@ -101,17 +103,24 @@ export class ActionState extends FlxState {
       { button: FlxGamepadButton.A, device: 'gamepad-button' },
     );
 
-    this.virtualPad = new FlxVirtualPad('full', 'a', {
+    this.virtualStick = new FlxVirtualStick(
+      'action-stick',
+      18,
+      FlxG.height - 18 - 104,
+      { radius: 52 },
+    );
+    this.virtualStick.bindAxes(FlxG.actions, {
+      horizontal: 'move-x',
+      vertical: 'move-y',
+    });
+    this.add(this.virtualStick);
+
+    this.virtualPad = new FlxVirtualPad('none', 'a', {
       idPrefix: 'action-pad',
       margin: 18,
       size: 46,
     });
-    this.virtualPad
-      .bindAxes(FlxG.actions, {
-        horizontal: 'move-x',
-        vertical: 'move-y',
-      })
-      .bindActions(FlxG.actions, { A: 'burst' });
+    this.virtualPad.bindActions(FlxG.actions, { A: 'burst' });
     this.add(this.virtualPad);
 
     const mini = new FlxCamera(480, 16, 144, 108, 0.35);
@@ -159,7 +168,7 @@ export class ActionState extends FlxState {
         ? 'REPLAY'
         : 'idle';
     const padLabel = gamepad === null ? 'none' : `#${gamepad.uid}`;
-    this.hud.text = `bursts ${this.bursts} (saved) · vcr ${vcr} · gamepad ${padLabel} · touch controls ready · cams ${FlxG.cameras.length}`;
+    this.hud.text = `bursts ${this.bursts} (saved) · vcr ${vcr} · gamepad ${padLabel} · analog touch ready · cams ${FlxG.cameras.length}`;
 
     super.update();
   }

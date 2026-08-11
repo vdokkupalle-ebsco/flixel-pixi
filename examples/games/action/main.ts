@@ -15,6 +15,14 @@ declare global {
       stopRecord?: () => void;
       playReplay?: () => void;
       playerPosition?: () => { x: number; y: number } | null;
+      virtualStick?: () => {
+        x: number;
+        y: number;
+        radius: number;
+        pressed: boolean;
+        xAxis: number;
+        yAxis: number;
+      } | null;
       gamepad?: () => {
         axis: number;
         index: number;
@@ -93,6 +101,19 @@ bootGame({
           ? { x: state.player.x, y: state.player.y }
           : null;
       },
+      virtualStick() {
+        const state = app.game.state;
+        return state instanceof ActionState
+          ? {
+              radius: state.virtualStick.radius,
+              pressed: state.virtualStick.pressed,
+              x: state.virtualStick.x + state.virtualStick.radius,
+              xAxis: state.virtualStick.xAxis,
+              y: state.virtualStick.y + state.virtualStick.radius,
+              yAxis: state.virtualStick.yAxis,
+            }
+          : null;
+      },
       gamepad() {
         const pad = FlxG.gamepads.firstActive;
         return pad === null
@@ -135,7 +156,7 @@ bootGame({
 
     if (status) {
       status.textContent =
-        'Action sample ready — use arrows/gamepad or the virtual pad';
+        'Action sample ready — use arrows/gamepad or the virtual analog stick';
       status.setAttribute('data-state', 'ready');
     }
   })

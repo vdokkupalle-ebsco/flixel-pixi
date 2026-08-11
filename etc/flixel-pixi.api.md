@@ -335,7 +335,7 @@ export class FlxActions {
 }
 
 // @public
-export type FlxActionSource = FlxActionKeyboardSource | FlxActionMouseSource | FlxActionWheelSource | FlxActionGamepadButtonSource | FlxActionKeyboardAxisSource | FlxActionGamepadAxisSource | FlxActionGamepadButtonAxisSource | FlxActionVirtualButtonSource | FlxActionVirtualButtonAxisSource;
+export type FlxActionSource = FlxActionKeyboardSource | FlxActionMouseSource | FlxActionWheelSource | FlxActionGamepadButtonSource | FlxActionKeyboardAxisSource | FlxActionGamepadAxisSource | FlxActionGamepadButtonAxisSource | FlxActionVirtualButtonSource | FlxActionVirtualButtonAxisSource | FlxActionVirtualStickAxisSource;
 
 // @public
 export interface FlxActionVirtualButtonAxisSource {
@@ -355,6 +355,18 @@ export interface FlxActionVirtualButtonSource {
     readonly device: 'virtual-button';
     // (undocumented)
     readonly id: string;
+}
+
+// @public
+export interface FlxActionVirtualStickAxisSource {
+    // (undocumented)
+    readonly axis: 'x' | 'y';
+    // (undocumented)
+    readonly device: 'virtual-stick-axis';
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly scale?: number;
 }
 
 // @public
@@ -4078,9 +4090,15 @@ export class FlxVirtualInput {
     // (undocumented)
     getButton(id: string): FlxVirtualButtonState | null;
     // (undocumented)
+    getStick(id: string): FlxVirtualStickState | null;
+    // (undocumented)
     registerButton(id: string, state: FlxVirtualButtonState): void;
     // (undocumented)
+    registerStick(id: string, state: FlxVirtualStickState): void;
+    // (undocumented)
     unregisterButton(id: string, state: FlxVirtualButtonState): boolean;
+    // (undocumented)
+    unregisterStick(id: string, state: FlxVirtualStickState): boolean;
 }
 
 // @public
@@ -4136,6 +4154,89 @@ export interface FlxVirtualPadOptions extends FlxVirtualButtonOptions {
     readonly idPrefix?: string;
     // (undocumented)
     readonly margin?: number;
+}
+
+// @public
+export class FlxVirtualStick extends FlxSprite implements FlxVirtualStickState {
+    constructor(id: string, x: number, y: number, options?: FlxVirtualStickOptions);
+    // (undocumented)
+    baseColor: number;
+    bindAxes(actions: FlxActions, map: FlxVirtualStickAxisMap): this;
+    // (undocumented)
+    createRenderHandle(): FlxVirtualStickRenderHandle;
+    // (undocumented)
+    readonly deadZone: number;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    knobColor: number;
+    // (undocumented)
+    readonly knobRadius: number;
+    // (undocumented)
+    outlineColor: number;
+    // (undocumented)
+    get pressed(): boolean;
+    // (undocumented)
+    pressedKnobColor: number;
+    // (undocumented)
+    readonly radius: number;
+    get rawX(): number;
+    get rawY(): number;
+    source(axis: 'x' | 'y'): FlxActionVirtualStickAxisSource;
+    // (undocumented)
+    update(): void;
+    // (undocumented)
+    readonly virtualInputId: string;
+    get xAxis(): number;
+    get yAxis(): number;
+}
+
+// @public
+export interface FlxVirtualStickAxisMap {
+    // (undocumented)
+    readonly horizontal?: string;
+    // (undocumented)
+    readonly vertical?: string;
+}
+
+// @public
+export interface FlxVirtualStickOptions {
+    // (undocumented)
+    readonly baseColor?: number;
+    readonly deadZone?: number;
+    // (undocumented)
+    readonly knobColor?: number;
+    readonly knobRadius?: number;
+    // (undocumented)
+    readonly outlineColor?: number;
+    // (undocumented)
+    readonly pressedKnobColor?: number;
+    readonly radius?: number;
+}
+
+// @public
+export class FlxVirtualStickRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxVirtualStick, onDestroy?: () => void);
+    // (undocumented)
+    readonly base: Graphics;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    readonly knob: Graphics;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
+export interface FlxVirtualStickState {
+    // (undocumented)
+    readonly xAxis: number;
+    // (undocumented)
+    readonly yAxis: number;
 }
 
 // @public

@@ -95,7 +95,10 @@ export {
   FLX_VIRTUAL_INPUT_SERVICE,
   FlxVirtualInput,
 } from './input/flx-virtual-input';
-export type { FlxVirtualButtonState } from './input/flx-virtual-input';
+export type {
+  FlxVirtualButtonState,
+  FlxVirtualStickState,
+} from './input/flx-virtual-input';
 export {
   FlxGamepad,
   FlxGamepadButton,
@@ -138,6 +141,11 @@ export type {
   FlxVirtualPadAxisMap,
   FlxVirtualPadOptions,
 } from './objects/flx-virtual-pad';
+export { FlxVirtualStick } from './objects/flx-virtual-stick';
+export type {
+  FlxVirtualStickAxisMap,
+  FlxVirtualStickOptions,
+} from './objects/flx-virtual-stick';
 export { FlxBar } from './objects/flx-bar';
 export type {
   FlxBarCallback,
@@ -189,6 +197,7 @@ export { FlxNineSliceButtonRenderHandle } from './rendering/flx-nine-slice-butto
 export { FlxNineSliceRenderHandle } from './rendering/flx-nine-slice-render-handle';
 export { FlxButtonRenderHandle } from './rendering/flx-button-render-handle';
 export { FlxVirtualButtonRenderHandle } from './rendering/flx-virtual-button-render-handle';
+export { FlxVirtualStickRenderHandle } from './rendering/flx-virtual-stick-render-handle';
 export { FlxBarRenderHandle } from './rendering/flx-bar-render-handle';
 export { FlxBitmapTextRenderHandle } from './rendering/flx-bitmap-text-render-handle';
 export { FlxTextRenderHandle } from './rendering/flx-text-render-handle';
@@ -310,6 +319,7 @@ export type {
   FlxActionSource,
   FlxActionVirtualButtonAxisSource,
   FlxActionVirtualButtonSource,
+  FlxActionVirtualStickAxisSource,
   FlxActionWheelSource,
 } from './input/flx-actions';
 

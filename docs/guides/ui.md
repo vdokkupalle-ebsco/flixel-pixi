@@ -162,9 +162,7 @@ The visible native field depends on the default accessibility bridge. If an
 application sets `accessibility: false`, it must provide its own DOM input
 adapter; Pixi remains a visual fallback but cannot provide browser IME.
 
-## Remaining UI checkpoint
-
-### Virtual controls
+## Virtual controls
 
 `FlxVirtualPad` provides a HUD-aligned D-pad and optional A/B action buttons.
 Each `FlxVirtualButton` publishes a stable, serializable source through
@@ -184,19 +182,38 @@ pad
 add(pad);
 ```
 
+For proportional movement, bind a radial `FlxVirtualStick`. Its X/Y sources
+are normalized to `[-1, 1]`; the dead zone is radial and the remaining range is
+remapped so full travel still reaches `1`:
+
+```ts
+const stick = new FlxVirtualStick('play-stick', 16, FlxG.height - 128, {
+  deadZone: 0.15,
+  radius: 56,
+});
+stick.bindAxes(FlxG.actions, {
+  horizontal: 'move-x',
+  vertical: 'move-y',
+});
+add(stick);
+```
+
 Virtual input advances after live or replayed pointer state and before state
 updates. It therefore preserves fixed-step `pressed`, `justPressed`, and
 `justReleased` transitions without synthesizing keyboard events. Recorded
-touch frames remain the replay authority; virtual button state is derived from
-them. Buttons also inherit the native semantic-button bridge, so their
+touch frames remain the replay authority; virtual button and stick state is
+derived from them. Buttons also inherit the native semantic-button bridge, so their
 `accessibleLabel`, focus, and keyboard activation follow regular `FlxButton`
 behavior.
+
+The analog stick is a continuous canvas control rather than a semantic DOM
+button. Always bind equivalent keyboard, gamepad, or switch-accessible actions;
+do not make it the only way to move or navigate menus.
 
 Use a stable `idPrefix` whenever bindings are saved. A context rejects duplicate
 virtual input IDs to prevent ambiguous action resolution. The public Action
 demo combines virtual, keyboard, and gamepad sources for the same movement and
 burst actions.
 
-Asset-backed multi-page bitmap-font loading and analog virtual sticks remain
-separate slices. They must keep the same asset-ownership, deterministic input,
-and native accessibility boundaries.
+Asset-backed multi-page bitmap-font loading remains a separate slice with its
+own asset-ownership and unload boundaries.
