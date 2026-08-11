@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  FlxAtlas,
   FlxContext,
   FlxGraphic,
   FlxG,
@@ -10,6 +11,11 @@ import {
   FlxNineSliceSprite,
   makeGraphicPixels,
 } from '../../src';
+import {
+  defaultNineSliceBorders,
+  resolveNineSliceBorders,
+  validateNineSliceBorders,
+} from '../../src/objects/flx-nine-slice';
 
 function panelGraphic(): FlxGraphic {
   const size = 32;
@@ -22,6 +28,47 @@ function panelGraphic(): FlxGraphic {
   }
   return FlxGraphic.fromPixels(pixels, 'nine-slice-panel');
 }
+
+describe('nine-slice border helpers', () => {
+  it('derives defaults and resolves partial overrides', () => {
+    expect(defaultNineSliceBorders(2, 2)).toEqual({
+      bottom: 1,
+      left: 1,
+      right: 1,
+      top: 1,
+    });
+    expect(defaultNineSliceBorders(100, 100).left).toBe(10);
+    expect(resolveNineSliceBorders({ left: 3, top: 4 }, 32, 32)).toEqual({
+      bottom: 8,
+      left: 3,
+      right: 8,
+      top: 4,
+    });
+    expect(resolveNineSliceBorders(undefined, 32, 32).left).toBe(8);
+  });
+
+  it('rejects invalid source, display, and inset dimensions', () => {
+    const borders = { bottom: 4, left: 4, right: 4, top: 4 };
+    expect(() =>
+      validateNineSliceBorders(borders, Number.NaN, 16, 32, 32),
+    ).toThrow('source and display');
+    expect(() => validateNineSliceBorders(borders, 16, 16, 0, 32)).toThrow(
+      'source and display',
+    );
+    expect(() =>
+      validateNineSliceBorders({ ...borders, top: 0 }, 16, 16, 32, 32),
+    ).toThrow('borders must be positive');
+    expect(() => validateNineSliceBorders(borders, 16, 8, 32, 32)).toThrow(
+      'source texture height',
+    );
+    expect(() => validateNineSliceBorders(borders, 16, 16, 8, 32)).toThrow(
+      'display width',
+    );
+    expect(() => validateNineSliceBorders(borders, 16, 16, 32, 8)).toThrow(
+      'display height',
+    );
+  });
+});
 
 describe('FlxNineSliceSprite', () => {
   beforeEach(() => {
@@ -91,6 +138,58 @@ describe('FlxNineSliceSprite', () => {
         64,
       ),
     ).toThrow('positive');
+    expect(() => sprite.resize(0, 32)).toThrow('width');
+    expect(() => sprite.resize(32, Number.NaN)).toThrow('height');
+    graphic.destroy();
+    sprite.destroy();
+  });
+
+  it('loads textures and atlas frames, updates borders, and tears down handles', () => {
+    const graphic = panelGraphic();
+    const atlas = FlxAtlas.fromTextureAndRects(
+      'nine-slice-unit-atlas',
+      graphic.texture,
+      [
+        {
+          height: 32,
+          name: 'panel',
+          width: 32,
+          x: 0,
+          y: 0,
+        },
+      ],
+    );
+    const sprite = new FlxNineSliceSprite(3, 4);
+    sprite.loadNineSliceTexture(graphic.texture, 80, 40, { left: 6 });
+    const handle = sprite.createRenderHandle() as FlxNineSliceRenderHandle;
+    expect(sprite.leftWidth).toBe(6);
+    expect(sprite.topHeight).toBe(8);
+    sprite.setBorders(4, 5, 6, 7);
+    expect(handle.slice.leftWidth).toBe(4);
+    sprite.loadNineSliceFrame(atlas, 'panel', 64, 48);
+    expect(sprite.width).toBe(64);
+
+    sprite.alpha = 0;
+    sprite.postUpdate();
+    expect(handle.view.visible).toBe(false);
+    handle.destroy();
+    handle.sync();
+    handle.destroy();
+    expect(handle.destroyed).toBe(true);
+    sprite.destroy();
+    graphic.destroy();
+  });
+
+  it('uses intrinsic dimensions and a render handle default callback', () => {
+    const graphic = panelGraphic();
+    const sprite = new FlxNineSliceSprite();
+    sprite.loadNineSliceGraphic(graphic, false, false, 32, 32);
+    expect(sprite.width).toBe(32);
+    expect(sprite.height).toBe(32);
+    const handle = new FlxNineSliceRenderHandle(sprite);
+    handle.destroy();
+    sprite.destroy();
+    graphic.destroy();
   });
 });
 
@@ -131,5 +230,63 @@ describe('FlxNineSliceButton', () => {
     button.frame = 1;
     button.drawFrame(true);
     expect(handle.slice.texture).toBe(button.renderTexture);
+
+    button.setBorders(5, 3, 5, 3);
+    expect(handle.slice.leftWidth).toBe(5);
+    button.alpha = 0;
+    button.postUpdate();
+    expect(handle.view.visible).toBe(false);
+    handle.destroy();
+    handle.sync();
+    handle.destroy();
+    button.destroy();
+    graphic.destroy();
+  });
+
+  it('supports unlabeled buttons, textures, and atlas frames', () => {
+    const graphic = panelGraphic();
+    const atlas = FlxAtlas.fromTextureAndRects(
+      'nine-button-unit-atlas',
+      graphic.texture,
+      [
+        {
+          height: 32,
+          name: 'panel',
+          width: 32,
+          x: 0,
+          y: 0,
+        },
+      ],
+    );
+    const button = new FlxNineSliceButton(0, 0, null);
+    button.loadNineSliceTexture(graphic.texture, 72, 36, {
+      bottom: 5,
+      left: 5,
+      right: 5,
+      top: 5,
+    });
+    const handle = button.createRenderHandle();
+    expect(handle.view.children).toHaveLength(1);
+    button.loadNineSliceFrame(atlas, 'panel', 80, 40);
+    expect(handle.slice.width).toBe(80);
+    expect(() => button.loadGraphic(graphic)).toThrow('loadNineSliceGraphic');
+    expect(() => button.setBorders(20, 4, 20, 4)).toThrow(
+      'source texture width',
+    );
+    handle.destroy();
+    button.destroy();
+    graphic.destroy();
+  });
+
+  it('uses intrinsic dimensions and a render handle default callback', () => {
+    const graphic = panelGraphic();
+    const button = new FlxNineSliceButton(0, 0, null);
+    button.loadNineSliceGraphic(graphic, false, false, 32, 32);
+    expect(button.width).toBe(32);
+    expect(button.height).toBe(32);
+    const handle = new FlxNineSliceButtonRenderHandle(button);
+    handle.destroy();
+    button.destroy();
+    graphic.destroy();
   });
 });

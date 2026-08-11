@@ -12,6 +12,7 @@ import {
   FlxG,
   FlxInputManager,
   FlxInputText,
+  FlxSprite,
 } from '../../src';
 
 function bounds(
@@ -198,6 +199,56 @@ describe('FlxButton', () => {
     input.destroy();
     button.destroy();
     host.remove();
+  });
+
+  it('supports semantic overrides, programmatic activation, and late labels', () => {
+    const activated = vi.fn();
+    const button = new FlxButton(4, 5, null, activated);
+    expect(button.text).toBe('');
+    expect(button.accessibleLabel).toBeNull();
+    button.text = 'Play';
+    expect(button.text).toBe('Play');
+    expect(button.accessibleLabel).toBe('Play');
+    button.text = 'Resume';
+    button.accessibleLabel = 'Resume game';
+    expect(button.accessibleLabel).toBe('Resume game');
+    expect(button.activate()).toBe(true);
+    expect(activated).toHaveBeenCalledOnce();
+    button.enabled = false;
+    expect(button.activate()).toBe(false);
+    button.enabled = true;
+    button.exists = false;
+    expect(button.activate()).toBe(false);
+    button.exists = true;
+    button.visible = false;
+    expect(button.activate()).toBe(false);
+    button.destroy();
+  });
+
+  it('syncs toggle labels and destroys shared sounds once', () => {
+    const context = new FlxContext(320, 160);
+    FlxG.installContext(context);
+    const input = new FlxInputManager(context);
+    const button = new FlxButton(10, 20, 'Toggle');
+    button.queueAccessibilityFocus(true);
+    button.update();
+    button.on = true;
+    expect(button.frame).toBe(FlxButton.NORMAL);
+    button.on = false;
+
+    button.labelOffsets.length = 1;
+    button.labelAlphas.length = 0;
+    expect(() => button.update()).not.toThrow();
+    const sharedSound = { destroy: vi.fn(), play: vi.fn() };
+    button.setSounds(
+      sharedSound as never,
+      sharedSound as never,
+      sharedSound as never,
+      sharedSound as never,
+    );
+    button.destroy();
+    expect(sharedSound.destroy).toHaveBeenCalledOnce();
+    input.destroy();
   });
 });
 
@@ -410,6 +461,108 @@ describe('browser UI accessibility bridge', () => {
     expect(field.isCanvasTextVisible()).toBe(true);
     keyboard.destroy();
     renderer.destroy();
+    field.destroy();
+  });
+
+  it('manages multiline controls, visibility, removal, and idempotent teardown', () => {
+    const context = new FlxContext(320, 160);
+    FlxG.installContext(context);
+    const renderer = new FlxCameraRenderer(
+      {
+        render: () => undefined,
+        resolution: 1,
+      } as unknown as Renderer,
+      new Container(),
+      context,
+    );
+    const button = new FlxButton(8, 8, 'Options');
+    const decorative = new FlxSprite();
+    const field = new FlxInputText(16, 40, 140, 'line one', {
+      height: 48,
+      maxLength: 0,
+      multiline: true,
+    });
+    field.enabled = false;
+    field.editable = false;
+    renderer.add(button);
+    renderer.add(field);
+    renderer.add(decorative);
+
+    const host = document.createElement('div');
+    host.style.position = 'absolute';
+    const canvas = document.createElement('canvas');
+    canvas.style.objectFit = 'contain';
+    host.appendChild(canvas);
+    document.body.appendChild(host);
+    host.getBoundingClientRect = () => bounds(0, 0, 640, 480);
+    canvas.getBoundingClientRect = () => bounds(0, 0, 640, 480);
+    const overlay = new FlxAccessibilityOverlay(
+      host,
+      canvas,
+      renderer,
+      320,
+      160,
+    );
+    const native = host.querySelector<HTMLTextAreaElement>('textarea');
+    const semanticButton = host.querySelector<HTMLButtonElement>('button');
+    expect(native).toBeInstanceOf(HTMLTextAreaElement);
+    expect(native?.disabled).toBe(true);
+    expect(native?.readOnly).toBe(true);
+    expect(native?.hasAttribute('maxlength')).toBe(false);
+    if (native !== null) {
+      Object.defineProperty(native, 'selectionStart', {
+        configurable: true,
+        value: null,
+      });
+      Object.defineProperty(native, 'selectionEnd', {
+        configurable: true,
+        value: null,
+      });
+      native.dispatchEvent(new Event('input'));
+    }
+    const camera = context.cameras[0];
+    if (camera === undefined) throw new Error('Expected the default camera.');
+    button.cameras = [camera];
+    overlay.sync();
+
+    semanticButton?.dispatchEvent(new Event('blur'));
+    native?.dispatchEvent(new Event('select'));
+    native?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', repeat: true }),
+    );
+    native?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', repeat: false }),
+    );
+    field.update();
+
+    native?.dispatchEvent(new Event('compositionstart'));
+    field.text = 'authored while composing';
+    overlay.sync();
+    expect(native?.value).toBe('line one');
+    native?.dispatchEvent(new Event('compositionend'));
+    field.update();
+
+    field.visible = false;
+    button.alpha = 0;
+    overlay.sync();
+    expect(native?.hidden).toBe(true);
+    expect(semanticButton?.hidden).toBe(true);
+
+    renderer.remove(field, false);
+    renderer.remove(button, false);
+    renderer.remove(decorative, false);
+    overlay.sync();
+    expect(host.querySelector('textarea')).toBeNull();
+    expect(host.querySelector('button')).toBeNull();
+    expect(field.isCanvasTextVisible()).toBe(true);
+
+    overlay.destroy();
+    overlay.sync();
+    overlay.destroy();
+    expect(host.style.position).toBe('absolute');
+    renderer.destroy();
+    button.destroy();
+    decorative.destroy();
     field.destroy();
   });
 });

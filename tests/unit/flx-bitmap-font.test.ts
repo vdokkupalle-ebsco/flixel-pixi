@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Cache } from 'pixi.js';
+import { BitmapFont, Cache } from 'pixi.js';
 
 import {
   FlxBitmapFont,
@@ -39,6 +39,71 @@ describe('parseBmFontXml', () => {
     expect(() =>
       parseBmFontXml(fixtureXml.replace('page="0"', 'page="1"')),
     ).toThrow('declared page id');
+  });
+
+  it('validates required metadata, pages, characters, and distance fields', () => {
+    expect(() => parseBmFontXml('<font>')).toThrow('parse error');
+    expect(() => parseBmFontXml('<font/>')).toThrow('<info> and <common>');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace('face="Pixel8"', '')),
+    ).toThrow('face attribute');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace('lineHeight="8"', 'lineHeight="0"')),
+    ).toThrow('must be positive');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace('file="pixel8.png"', '')),
+    ).toThrow('file attribute');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace('id="0" file=', 'id="-1" file=')),
+    ).toThrow('non-negative integer');
+    expect(() =>
+      parseBmFontXml(
+        fixtureXml.replace(
+          '<page id="0" file="pixel8.png" />',
+          '<page id="0" file="a.png" /><page id="0" file="b.png" />',
+        ),
+      ),
+    ).toThrow('duplicate page');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace(/<page[^>]+\/>/, '')),
+    ).toThrow('at least one <page>');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace('id="65"', 'id="1114112"')),
+    ).toThrow('valid Unicode');
+    expect(() =>
+      parseBmFontXml(fixtureXml.replace(/<char[^>]+\/>/g, '')),
+    ).toThrow('at least one <char>');
+
+    const withDistanceField = fixtureXml.replace(
+      '</font>',
+      '<distanceField fieldType="msdf" distanceRange="4" /></font>',
+    );
+    expect(parseBmFontXml(withDistanceField).distanceField).toEqual({
+      range: 4,
+      type: 'msdf',
+    });
+    expect(
+      parseBmFontXml(
+        withDistanceField.replace('fieldType="msdf"', 'fieldType="other"'),
+      ).distanceField?.type,
+    ).toBe('none');
+    expect(() =>
+      parseBmFontXml(
+        withDistanceField.replace('distanceRange="4"', 'distanceRange="-1"'),
+      ),
+    ).toThrow('non-negative');
+  });
+
+  it('maps explicit letters and known kernings while ignoring unknown pairs', () => {
+    const xml = fixtureXml
+      .replace('id="65"', 'id="32" letter="space"')
+      .replace(
+        '</chars>',
+        '</chars><kernings><kerning first="32" second="66" amount="-2"/><kerning first="999" second="66" amount="1"/></kernings>',
+      );
+    const data = parseBmFontXml(xml);
+    expect(data.chars[' ']?.letter).toBe(' ');
+    expect(data.chars.B?.kerning[' ']).toBe(-2);
   });
 });
 
@@ -118,6 +183,87 @@ describe('FlxBitmapFont', () => {
     font.destroy();
     graphic.destroy();
   });
+
+  it('validates monospace dimensions, spacing, and non-empty character sets', () => {
+    const graphic = monospaceGraphic();
+    expect(() => FlxBitmapFont.fromMonospace(graphic, 'A', 0, 8)).toThrow(
+      'charWidth',
+    );
+    expect(() =>
+      FlxBitmapFont.fromMonospace(graphic, 'A', 8, Number.NaN),
+    ).toThrow('charHeight');
+    expect(() =>
+      FlxBitmapFont.fromMonospace(graphic, 'A', 8, 8, { spacingX: -1 }),
+    ).toThrow('spacingX');
+    expect(() =>
+      FlxBitmapFont.fromMonospace(graphic, 'A', 8, 8, {
+        spacingY: Number.NaN,
+      }),
+    ).toThrow('spacingY');
+    expect(() => FlxBitmapFont.fromMonospace(graphic, '', 8, 8)).toThrow(
+      'at least one letter',
+    );
+    expect(() => FlxBitmapFont.fromMonospace(graphic, '\nA', 8, 8)).toThrow(
+      'fit inside',
+    );
+    graphic.destroy();
+  });
+
+  it('validates AngelCode page layout and supports family overrides', () => {
+    const graphic = monospaceGraphic();
+    expect(() =>
+      FlxBitmapFont.fromAngelCode(
+        graphic,
+        fixtureXml.replace(
+          '<page id="0" file="pixel8.png" />',
+          '<page id="0" file="a.png" /><page id="1" file="b.png" />',
+        ),
+      ),
+    ).toThrow('supports one page');
+    expect(() =>
+      FlxBitmapFont.fromAngelCode(
+        graphic,
+        fixtureXml.replace('x="0" y="0"', 'x="-1" y="0"'),
+      ),
+    ).toThrow('fit inside');
+
+    const font = FlxBitmapFont.fromAngelCode(
+      graphic.texture,
+      fixtureXml,
+      'UnitOverride8',
+    );
+    expect(font.fontFamily).toBe('UnitOverride8');
+    font.destroy();
+    font.destroy();
+    graphic.destroy();
+  });
+
+  it('reuses and recreates the default font around destruction', () => {
+    const first = FlxBitmapFont.getDefaultFont();
+    expect(FlxBitmapFont.getDefaultFont()).toBe(first);
+    first.destroy();
+    const second = FlxBitmapFont.getDefaultFont();
+    expect(second).not.toBe(first);
+    second.destroy();
+  });
+
+  it('rejects wrapping a differently cached Pixi font', () => {
+    const graphic = monospaceGraphic();
+    const font = FlxBitmapFont.fromMonospace(graphic, 'A', 8, 8, {
+      fontFamily: 'UnitCacheConflict8',
+    });
+    const other = new BitmapFont({
+      data: parseBmFontXml(
+        fixtureXml.replace('face="Pixel8"', 'face="UnitCacheConflict8"'),
+      ),
+      textures: [graphic.texture],
+    });
+    expect(() => new FlxBitmapFont(other)).toThrow('different font');
+    other.pages.length = 0;
+    other.destroy();
+    font.destroy();
+    graphic.destroy();
+  });
 });
 
 describe('FlxBitmapText', () => {
@@ -180,6 +326,79 @@ describe('FlxBitmapText', () => {
 
     font.destroy();
     text.destroy();
+    graphic.destroy();
+  });
+
+  it('validates mutable properties and preserves custom origins', () => {
+    const graphic = monospaceGraphic();
+    const font = FlxBitmapFont.fromMonospace(graphic, 'ABC', 8, 8, {
+      fontFamily: 'UnitValidation8',
+    });
+    const text = new FlxBitmapText(0, 0, 'A', font, 24);
+    const handle = text.createRenderHandle() as FlxBitmapTextRenderHandle;
+
+    text.origin.x = 3;
+    text.fieldWidth = 32;
+    expect(text.origin.x).toBe(3);
+    text.fieldWidth = 32;
+    text.alignment = 'center';
+    text.alignment = 'center';
+    text.text = 'ABC';
+    text.text = 'ABC';
+    text.letterSpacing = 1;
+    text.letterSpacing = 1;
+    text.lineSpacing = -2;
+    text.lineSpacing = -2;
+    text.font = font;
+    handle.sync();
+    expect(handle.textNode.position.x).toBeGreaterThanOrEqual(0);
+
+    text.alignment = 'right';
+    handle.sync();
+    expect(handle.textNode.position.x).toBeGreaterThanOrEqual(0);
+    text.visible = false;
+    handle.sync();
+    expect(handle.view.visible).toBe(false);
+    expect(() => {
+      text.letterSpacing = Number.NaN;
+    }).toThrow('finite');
+    expect(() => {
+      text.lineSpacing = -8;
+    }).toThrow('line height');
+
+    handle.destroy();
+    handle.sync();
+    handle.destroy();
+    expect(handle.destroyed).toBe(true);
+    font.destroy();
+    expect(() => {
+      text.font = font;
+    }).toThrow('destroyed');
+    expect(() => new FlxBitmapText(0, 0, '', font)).toThrow('destroyed');
+    text.destroy();
+    graphic.destroy();
+  });
+
+  it('uses constructor defaults and accepts a compatible replacement font', () => {
+    const defaultText = new FlxBitmapText();
+    expect(defaultText.fieldWidth).toBe(1);
+    defaultText.setFormat();
+    defaultText.destroy();
+    FlxBitmapFont.getDefaultFont().destroy();
+
+    const graphic = monospaceGraphic();
+    const first = FlxBitmapFont.fromMonospace(graphic, 'ABC', 8, 8, {
+      fontFamily: 'UnitReplaceA8',
+    });
+    const second = FlxBitmapFont.fromMonospace(graphic.texture, 'ABC', 8, 8, {
+      fontFamily: 'UnitReplaceB8',
+    });
+    const text = new FlxBitmapText(0, 0, 'A', first, 24);
+    text.font = second;
+    expect(text.font).toBe(second);
+    text.destroy();
+    first.destroy();
+    second.destroy();
     graphic.destroy();
   });
 });
