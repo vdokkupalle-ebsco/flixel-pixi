@@ -388,11 +388,14 @@ export type { FlxRenderable } from './rendering/flx-world-sync';
 export {
   FlxBlurFilter,
   FlxColorMatrixFilter,
+  FlxDisplacementFilter,
   FlxShaderFilter,
   FlxShaderUniforms,
 } from './rendering/flx-filter';
 export type {
   FlxBlurFilterOptions,
+  FlxDisplacementFilterOptions,
+  FlxDisplacementPoint,
   FlxFilter,
   FlxShaderFilterOptions,
   FlxShaderUniformDefinition,

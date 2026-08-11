@@ -64,9 +64,9 @@ real-device checks.
 The filter showcase runs in Chromium, Firefox, and WebKit. It validates actual
 rendered pixels for an unfiltered control and color-matrix output, exercises
 runtime filter-chain replacement, composite-level filtering, typed live shader
-uniforms, declared WebGL/WebGPU shader compatibility, and complete canvas
-teardown. WebGPU execution and context-loss recovery remain later
-advanced-rendering gates.
+uniforms, declared WebGL/WebGPU shader compatibility, animated displacement-map
+output, and complete canvas teardown. WebGPU execution and context-loss
+recovery remain later advanced-rendering gates.
 
 ## Reports
 

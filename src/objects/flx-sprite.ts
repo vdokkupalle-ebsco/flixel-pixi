@@ -17,6 +17,7 @@ import { FlxSpriteRenderHandle } from '../rendering/flx-sprite-render-handle';
 import {
   FlxBlurFilter,
   FlxColorMatrixFilter,
+  FlxDisplacementFilter,
   FlxShaderFilter,
   type FlxFilter,
 } from '../rendering/flx-filter';
@@ -569,6 +570,7 @@ export class FlxSprite extends FlxObject {
         (filter) =>
           !(filter instanceof FlxBlurFilter) &&
           !(filter instanceof FlxColorMatrixFilter) &&
+          !(filter instanceof FlxDisplacementFilter) &&
           !(filter instanceof FlxShaderFilter),
       )
     ) {

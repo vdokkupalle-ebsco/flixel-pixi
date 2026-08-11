@@ -1,26 +1,31 @@
 import {
   FlxBlurFilter,
   FlxColorMatrixFilter,
+  FlxDisplacementFilter,
   FlxG,
+  FlxGraphic,
   FlxShaderFilter,
   FlxSprite,
   FlxSpriteContainer,
   FlxState,
   FlxText,
+  makeGraphicPixels,
 } from '../../../src';
 
 export interface FilterShowcaseSnapshot {
   blurEnabled: boolean;
   compositeFilters: number;
+  displacementRevision: number;
+  displacementScale: readonly [number, number];
   grayscaleFilters: number;
   shaderRenderers: readonly ('webgl' | 'webgpu')[];
   shaderRevision: number;
   shaderStrength: number;
 }
 
-function label(state: FlxState, x: number, text: string): void {
+function label(state: FlxState, x: number, text: string, y = 214): void {
   state.add(
-    new FlxText(x - 25, 214, 120, text).setFormat(
+    new FlxText(x - 25, y, 120, text).setFormat(
       undefined,
       11,
       0xffe2e8f0,
@@ -35,6 +40,12 @@ export class FilterShowcaseState extends FlxState {
   readonly blurred = new FlxSprite(280, 116);
   readonly shaderSprite = new FlxSprite(395, 116);
   readonly composite = new FlxSpriteContainer(510, 116);
+  readonly displaced = new FlxSpriteContainer(280, 232);
+  readonly displacementMap = createDisplacementMap();
+  readonly displacement = new FlxDisplacementFilter(this.displacementMap, {
+    padding: 8,
+    scale: { x: 8, y: 4 },
+  });
   readonly shader = new FlxShaderFilter({
     webGL: { fragment: waveFragment },
     webGPU: { source: waveWgsl },
@@ -63,7 +74,7 @@ export class FilterShowcaseState extends FlxState {
         24,
         49,
         592,
-        'Immutable Flixel descriptors · camera-local Pixi resources · composite pass',
+        'Renderer-neutral descriptors · camera-local Pixi resources · live parameters',
       ).setFormat(undefined, 10, 0xff38bdf8, 'left'),
     );
 
@@ -91,20 +102,27 @@ export class FilterShowcaseState extends FlxState {
     this.add(this.composite);
     label(this, 510, 'Composite');
 
-    this.add(
-      new FlxText(
-        24,
-        272,
-        592,
-        'The composite applies one filter pass to both children. Gameplay bounds and collision stay unchanged.',
-      ).setFormat(undefined, 10, 0xff94a3b8, 'left'),
-    );
+    const colors = [0x38bdf8ff, 0xa855f7ff, 0xf472b6ff, 0xfacc15ff, 0x4ade80ff];
+    colors.forEach((color, index) => {
+      this.displaced.add(
+        new FlxSprite(index * 14, 0).makeGraphic(14, 62, color),
+      );
+    });
+    this.displaced.filters = [this.displacement];
+    this.add(this.displaced);
+    label(this, 280, 'Scrolling displacement', 308);
   }
 
   override update(): void {
     super.update();
     this.shaderTime += FlxG.elapsed;
     this.shader.uniforms.set('uTime', this.shaderTime);
+    this.displacement.setOffset(this.shaderTime * 0.12, 0);
+  }
+
+  override destroy(): void {
+    super.destroy();
+    this.displacementMap.destroy();
   }
 
   setBlurEnabled(enabled: boolean): void {
@@ -121,6 +139,8 @@ export class FilterShowcaseState extends FlxState {
     return {
       blurEnabled: this.blurEnabled,
       compositeFilters: this.composite.filters.length,
+      displacementRevision: this.displacement.revision,
+      displacementScale: [this.displacement.scaleX, this.displacement.scaleY],
       grayscaleFilters: this.grayscale.filters.length,
       shaderRenderers: this.shader.compatibleRenderers,
       shaderRevision: this.shader.uniforms.revision,
@@ -133,6 +153,21 @@ export class FilterShowcaseState extends FlxState {
       ? [new FlxBlurFilter(7, { quality: 3 })]
       : [];
   }
+}
+
+function createDisplacementMap(): FlxGraphic {
+  const pixels = makeGraphicPixels(32, 32, 0x808080ff);
+  for (let y = 0; y < pixels.height; y += 1) {
+    for (let x = 0; x < pixels.width; x += 1) {
+      const red = Math.round(127.5 + Math.sin((y / 32) * Math.PI * 4) * 127.5);
+      const green = Math.round(
+        127.5 + Math.cos((x / 32) * Math.PI * 4) * 127.5,
+      );
+      pixels.data[y * pixels.width + x] =
+        ((red << 24) | (green << 16) | 0x80ff) >>> 0;
+    }
+  }
+  return FlxGraphic.fromPixels(pixels, 'filter-displacement-map');
 }
 
 const waveFragment = `

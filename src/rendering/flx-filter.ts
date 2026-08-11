@@ -1,3 +1,5 @@
+import type { FlxGraphic } from '../assets/flx-graphic';
+
 /** Options for {@link FlxBlurFilter}. @public */
 export interface FlxBlurFilterOptions {
   /** Number of blur passes. Defaults to 4. */
@@ -60,6 +62,114 @@ export class FlxColorMatrixFilter {
       ],
       alpha,
     );
+  }
+}
+
+/** Point-like input used by displacement scale and texture offset. @public */
+export interface FlxDisplacementPoint {
+  /** Horizontal component. */
+  readonly x: number;
+  /** Vertical component. */
+  readonly y: number;
+}
+
+/** Options for {@link FlxDisplacementFilter}. @public */
+export interface FlxDisplacementFilterOptions {
+  /** Pixel displacement; a number applies equally to both axes. Defaults to 20. */
+  readonly scale?: number | FlxDisplacementPoint;
+  /** Normalized map-texture offset. Defaults to `{ x: 0, y: 0 }`. */
+  readonly offset?: FlxDisplacementPoint;
+  /** Repeat the map outside its normalized bounds. Defaults to true. */
+  readonly repeat?: boolean;
+  /** Extra logical pixels rendered around the object. Defaults to the scale. */
+  readonly padding?: number;
+}
+
+/** Texture-backed displacement effect with revisioned runtime parameters. @public */
+export class FlxDisplacementFilter {
+  /** Discriminator used by renderer adapters. */
+  readonly kind = 'displacement';
+  /** Non-owning displacement-map reference. */
+  readonly map: FlxGraphic;
+  /** Fixed logical padding reserved around the filtered object. */
+  readonly padding: number;
+  /** Whether normalized map coordinates repeat instead of clamp. */
+  readonly repeat: boolean;
+  #offsetX: number;
+  #offsetY: number;
+  #revision = 0;
+  #scaleX: number;
+  #scaleY: number;
+
+  constructor(map: FlxGraphic, options: FlxDisplacementFilterOptions = {}) {
+    if (map.destroyed) {
+      throw new TypeError('Displacement map graphic has been destroyed.');
+    }
+    const scale = normalizePoint(options.scale ?? 20, 'Displacement scale');
+    const offset = normalizePoint(
+      options.offset ?? { x: 0, y: 0 },
+      'Displacement offset',
+    );
+    const padding =
+      options.padding ?? Math.max(Math.abs(scale.x), Math.abs(scale.y));
+    if (!Number.isFinite(padding) || padding < 0) {
+      throw new RangeError(
+        'Displacement padding must be a non-negative finite number.',
+      );
+    }
+    this.map = map;
+    this.#scaleX = scale.x;
+    this.#scaleY = scale.y;
+    this.#offsetX = offset.x;
+    this.#offsetY = offset.y;
+    this.repeat = options.repeat ?? true;
+    this.padding = padding;
+    Object.freeze(this);
+  }
+
+  /** Horizontal displacement in logical pixels. */
+  get scaleX(): number {
+    return this.#scaleX;
+  }
+
+  /** Vertical displacement in logical pixels. */
+  get scaleY(): number {
+    return this.#scaleY;
+  }
+
+  /** Horizontal normalized map offset. */
+  get offsetX(): number {
+    return this.#offsetX;
+  }
+
+  /** Vertical normalized map offset. */
+  get offsetY(): number {
+    return this.#offsetY;
+  }
+
+  /** Monotonic parameter change counter used by renderer adapters. */
+  get revision(): number {
+    return this.#revision;
+  }
+
+  /** Change pixel displacement without rebuilding the filter chain. */
+  setScale(x: number, y = x): this {
+    validateFinitePair(x, y, 'Displacement scale');
+    if (x === this.#scaleX && y === this.#scaleY) return this;
+    this.#scaleX = x;
+    this.#scaleY = y;
+    this.#revision += 1;
+    return this;
+  }
+
+  /** Scroll the displacement map in normalized texture coordinates. */
+  setOffset(x: number, y: number): this {
+    validateFinitePair(x, y, 'Displacement offset');
+    if (x === this.#offsetX && y === this.#offsetY) return this;
+    this.#offsetX = x;
+    this.#offsetY = y;
+    this.#revision += 1;
+    return this;
   }
 }
 
@@ -285,7 +395,11 @@ export class FlxShaderFilter<
 }
 
 /** Built-in renderer-neutral sprite effects. @public */
-export type FlxFilter = FlxBlurFilter | FlxColorMatrixFilter | FlxShaderFilter;
+export type FlxFilter =
+  | FlxBlurFilter
+  | FlxColorMatrixFilter
+  | FlxDisplacementFilter
+  | FlxShaderFilter;
 
 /** @internal */
 export function readFlxShaderUniforms(
@@ -364,4 +478,20 @@ function clonePublicUniformValue(
   value: StoredUniformValue,
 ): number | readonly number[] {
   return typeof value === 'number' ? value : [...value];
+}
+
+function normalizePoint(
+  value: number | FlxDisplacementPoint,
+  label: string,
+): FlxDisplacementPoint {
+  const x = typeof value === 'number' ? value : value.x;
+  const y = typeof value === 'number' ? value : value.y;
+  validateFinitePair(x, y, label);
+  return { x, y };
+}
+
+function validateFinitePair(x: number, y: number, label: string): void {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    throw new RangeError(`${label} values must be finite numbers.`);
+  }
 }

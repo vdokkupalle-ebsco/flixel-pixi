@@ -389,10 +389,19 @@ Current slice:
 - The filter showcase includes a fixed-clock animated dual-renderer shader;
   unit and browser contracts cover validation, multi-camera ownership, runtime
   synchronization, rendered output, and teardown.
-- Displacement maps and explicit filter areas remain pending within this
-  checkpoint. See [`guides/filters.md`](guides/filters.md),
+- **Adapted:** `FlxDisplacementFilter` samples a non-owning `FlxGraphic` in
+  normalized target space, with logical-pixel scale, repeat/clamp policy, fixed
+  padding, and revisioned scale/offset animation.
+- The adapter creates camera-local texture bindings and uniform groups without
+  inserting hidden map sprites into logical or Pixi child order. Teardown never
+  destroys the caller-owned map, and early map destruction fails clearly.
+- The showcase animates a generated displacement map and browser coverage
+  verifies changing rendered pixels across the supported engines.
+- Explicit filter areas remain pending within this checkpoint. See
+  [`guides/filters.md`](guides/filters.md),
   [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md),
-  and [`adr/0019-typed-cross-renderer-shader-filters.md`](adr/0019-typed-cross-renderer-shader-filters.md).
+  [`adr/0019-typed-cross-renderer-shader-filters.md`](adr/0019-typed-cross-renderer-shader-filters.md),
+  and [`adr/0020-non-owning-displacement-maps.md`](adr/0020-non-owning-displacement-maps.md).
 
 ### Debugger and runtime inspection
 

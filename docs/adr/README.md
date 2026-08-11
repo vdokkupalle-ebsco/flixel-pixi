@@ -35,3 +35,4 @@ and storage backends with gesture-unlock queuing and versioned save slots.
 | [0017](0017-native-accessibility-over-render-textures.md) | Native DOM accessibility over camera render textures       | Accepted |
 | [0018](0018-renderer-neutral-filter-descriptors.md)       | Handle-local Pixi filters from neutral descriptors         | Accepted |
 | [0019](0019-typed-cross-renderer-shader-filters.md)       | Typed cross-renderer shader filters                        | Accepted |
+| [0020](0020-non-owning-displacement-maps.md)              | Non-owning normalized displacement maps                    | Accepted |

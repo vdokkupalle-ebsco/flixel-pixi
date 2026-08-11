@@ -1675,6 +1675,36 @@ export interface FlxDebuggerVCRCallbacks {
 }
 
 // @public
+export class FlxDisplacementFilter {
+    constructor(map: FlxGraphic, options?: FlxDisplacementFilterOptions);
+    readonly kind = "displacement";
+    readonly map: FlxGraphic;
+    get offsetX(): number;
+    get offsetY(): number;
+    readonly padding: number;
+    readonly repeat: boolean;
+    get revision(): number;
+    get scaleX(): number;
+    get scaleY(): number;
+    setOffset(x: number, y: number): this;
+    setScale(x: number, y?: number): this;
+}
+
+// @public
+export interface FlxDisplacementFilterOptions {
+    readonly offset?: FlxDisplacementPoint;
+    readonly padding?: number;
+    readonly repeat?: boolean;
+    readonly scale?: number | FlxDisplacementPoint;
+}
+
+// @public
+export interface FlxDisplacementPoint {
+    readonly x: number;
+    readonly y: number;
+}
+
+// @public
 export class FlxEase {
     // (undocumented)
     static backIn(t: number): number;
@@ -1842,7 +1872,7 @@ export interface FlxEmitterRenderOptions {
 }
 
 // @public
-export type FlxFilter = FlxBlurFilter | FlxColorMatrixFilter | FlxShaderFilter;
+export type FlxFilter = FlxBlurFilter | FlxColorMatrixFilter | FlxDisplacementFilter | FlxShaderFilter;
 
 // @public
 export class FlxFlickerTween extends FlxTween {

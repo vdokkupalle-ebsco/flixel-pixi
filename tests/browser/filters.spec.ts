@@ -17,12 +17,16 @@ test('renders neutral sprite/composite filters and replaces chains', async ({
   await expect.poll(snapshot).toMatchObject({
     blurEnabled: true,
     compositeFilters: 1,
+    displacementScale: [8, 4],
     grayscaleFilters: 1,
     shaderRenderers: ['webgl', 'webgpu'],
     shaderStrength: 0.7,
   });
   await expect
     .poll(async () => (await snapshot())?.shaderRevision ?? 0)
+    .toBeGreaterThan(1);
+  await expect
+    .poll(async () => (await snapshot())?.displacementRevision ?? 0)
     .toBeGreaterThan(1);
 
   const pixels = await page.evaluate(() => {
@@ -50,6 +54,32 @@ test('renders neutral sprite/composite filters and replaces chains', async ({
   const originalSpread =
     Math.max(...originalChannels) - Math.min(...originalChannels);
   expect(grayscaleSpread).toBeLessThan(originalSpread / 4);
+
+  const displacementPixels = () =>
+    page.evaluate(() => {
+      const app = window.__FLIXEL_PIXI_FILTERS__?.app;
+      if (!app) throw new Error('Missing filter showcase application.');
+      const output = app.app.renderer.extract.pixels(app.app.stage);
+      const result: number[] = [];
+      for (let y = 236; y < 294; y += 2) {
+        for (let x = 284; x < 346; x += 2) {
+          const pixelX = Math.floor((x / 640) * output.width);
+          const pixelY = Math.floor((y / 360) * output.height);
+          const index = (pixelY * output.width + pixelX) * 4;
+          result.push(...output.pixels.slice(index, index + 3));
+        }
+      }
+      return result;
+    });
+  const displacementBefore = await displacementPixels();
+  await page.waitForTimeout(250);
+  const displacementAfter = await displacementPixels();
+  const displacementDifference = displacementBefore.reduce(
+    (sum, value, index) =>
+      sum + Math.abs(value - (displacementAfter[index] ?? value)),
+    0,
+  );
+  expect(displacementDifference).toBeGreaterThan(100);
 
   await page.locator('[data-action="blur"]').click();
   await expect.poll(snapshot).toMatchObject({ blurEnabled: false });

@@ -1,7 +1,7 @@
 # Filters
 
-`FlxSprite.filters` accepts immutable renderer-neutral descriptors. Game code
-does not import or own Pixi filters:
+`FlxSprite.filters` accepts renderer-neutral descriptors. Game code does not
+import or own Pixi filters:
 
 ```ts
 const ghost = new FlxSprite(80, 80).makeGraphic(48, 48, 0x38bdf8ff);
@@ -13,9 +13,9 @@ panel.add(label);
 panel.filters = [new FlxBlurFilter(4, { quality: 2 })];
 ```
 
-Descriptor order is filter order. Assign a new list to change an effect; lists
-and descriptors are immutable so the renderer can rebuild only when identity
-changes:
+Descriptor order is filter order. Assign a new list to add, remove, or reorder
+effects. Lists and resource/program identities are immutable, while shader and
+displacement parameters use explicit revisioned state:
 
 ```ts
 sprite.filters = []; // Releases every camera-local Pixi filter instance.
@@ -68,9 +68,36 @@ whose art direction requires the effect should supply both sources or check
 compatibility during boot. Shader source is intentionally not translated or
 parsed by the engine.
 
+## Displacement maps
+
+Use a loaded or generated `FlxGraphic` as a red/green displacement map. The map
+is stretched across the filtered object's bounds and repeats by default:
+
+```ts
+const ripple = new FlxDisplacementFilter(displacementGraphic, {
+  scale: { x: 12, y: 6 },
+  padding: 12,
+});
+
+water.filters = [ripple];
+
+// Fixed-step animation; no filter-chain rebuild.
+ripple.setOffset(elapsed * 0.1, 0);
+```
+
+Red controls horizontal displacement and green controls vertical displacement;
+the midpoint value `128` is approximately neutral. Scale uses logical pixels,
+while offset uses normalized map coordinates. Use `repeat: false` to clamp the
+map at its edges.
+
+The filter does not own `displacementGraphic`. Keep the graphic or its asset
+bundle loaded until all referencing filters have been removed or destroyed.
+Conversely, destroying a sprite or camera releases its filter bindings without
+destroying the shared map. Padding does not grow when `setScale()` changes, so
+choose it for the largest animated scale to prevent clipping.
+
 Filters render through intermediate framebuffers. Prefer one filter on a
 `FlxSpriteContainer` when the same effect applies to several children, keep
 blur quality as low as the art permits, and avoid replacing descriptors every
-frame. Displacement textures and explicit filter-area tuning are later
-advanced-rendering slices because they require additional ownership and backend
-contracts.
+frame. Explicit filter-area tuning is a later advanced-rendering slice because
+it requires a camera-aware coordinate and invalidation contract.

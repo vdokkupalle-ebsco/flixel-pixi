@@ -6,6 +6,7 @@ import {
   FlxBlurFilter,
   FlxColorMatrixFilter,
   FlxContext,
+  FlxDisplacementFilter,
   FlxG,
   FlxGraphic,
   FlxObject,
@@ -306,6 +307,82 @@ describe('FlxSprite', () => {
       vectors.uniforms.set('uOffset', [1] as unknown as [number, number]),
     ).toThrow(TypeError);
     expect(() => vectors.uniforms.set('uMode', 1.5)).toThrow(TypeError);
+  });
+
+  it('owns displacement bindings per camera without owning the map graphic', () => {
+    const map = FlxGraphic.fromPixels(
+      makeGraphicPixels(4, 4, 0x808080ff),
+      'unit-displacement-map',
+    );
+    const displacement = new FlxDisplacementFilter(map, {
+      scale: { x: 8, y: -5 },
+    });
+    const sprite = new FlxSprite();
+    sprite.filters = [displacement];
+    const first = sprite.createRenderHandle();
+    const second = sprite.createRenderHandle();
+    if (
+      !(first instanceof FlxSpriteRenderHandle) ||
+      !(second instanceof FlxSpriteRenderHandle)
+    ) {
+      throw new Error('Expected sprite handles.');
+    }
+    const firstFilter = first.view.filters?.[0];
+    const secondFilter = second.view.filters?.[0];
+    expect(firstFilter).not.toBe(secondFilter);
+    expect(firstFilter?.resources.uMapTexture).toBe(map.texture.source);
+    expect(secondFilter?.resources.uMapTexture).toBe(map.texture.source);
+    expect(firstFilter?.resources.flxDisplacementUniforms).not.toBe(
+      secondFilter?.resources.flxDisplacementUniforms,
+    );
+    expect(displacement.padding).toBe(8);
+
+    displacement.setScale(3, 4).setOffset(0.25, -0.5);
+    first.sync();
+    second.sync();
+    expect(
+      Array.from(
+        firstFilter?.resources.flxDisplacementUniforms.uniforms.uScale ?? [],
+      ),
+    ).toEqual([3, 4]);
+    expect(
+      Array.from(
+        firstFilter?.resources.flxDisplacementUniforms.uniforms.uOffset ?? [],
+      ),
+    ).toEqual([0.25, -0.5]);
+
+    first.destroy();
+    second.destroy();
+    expect(map.destroyed).toBe(false);
+    sprite.destroy();
+    map.destroy();
+  });
+
+  it('validates displacement parameters and map lifetime', () => {
+    const destroyedMap = FlxGraphic.fromPixels(
+      makeGraphicPixels(1, 1, 0x808080ff),
+    );
+    destroyedMap.destroy();
+    expect(() => new FlxDisplacementFilter(destroyedMap)).toThrow(TypeError);
+
+    const map = FlxGraphic.fromPixels(makeGraphicPixels(1, 1, 0x808080ff));
+    expect(
+      () =>
+        new FlxDisplacementFilter(map, {
+          scale: { x: Number.NaN, y: 1 },
+        }),
+    ).toThrow(RangeError);
+    const displacement = new FlxDisplacementFilter(map);
+    expect(() => displacement.setOffset(Number.POSITIVE_INFINITY, 0)).toThrow(
+      RangeError,
+    );
+    const sprite = new FlxSprite();
+    sprite.filters = [displacement];
+    const handle = sprite.createRenderHandle();
+    map.destroy();
+    expect(() => handle.sync()).toThrow('must outlive');
+    handle.destroy();
+    sprite.destroy();
   });
 
   it('supports direct frames, random frames, offsets, generated graphics, and culling', () => {
