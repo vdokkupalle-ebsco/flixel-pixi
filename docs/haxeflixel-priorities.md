@@ -403,13 +403,24 @@ Current slice:
 - The showcase toggles explicit and automatic bounds on a composite and asserts
   identical output. Explicit areas remain opt-in because stale rectangles clip
   content; automatic measurement is the safe default.
-- The filter/shader portion of this checkpoint is complete. Mesh/strip rendering
-  is the next independent advanced-rendering slice. See
+- **Adapted:** `FlxStrip` provides cloned vertices, triangle indices, normalized
+  UVs, and list/strip topology without exposing Pixi objects to gameplay code.
+- Batched direct edits publish through one explicit geometry revision. Each
+  camera owns reusable Pixi buffers, topology changes replace only that
+  camera's geometry, and teardown never destroys the shared graphic.
+- Visual culling follows transformed vertices while collision remains the
+  authoritative `FlxObject` rectangle. The harbor showcase covers a deforming
+  water surface, a crane chain attached to a moving weight, pause behavior,
+  rendered pixels, and teardown across the supported browser engines.
+- The filter/shader/mesh portion of this checkpoint is complete. Gradients and
+  reusable drawing helpers are the next independent advanced-rendering slice.
+  See [`guides/meshes.md`](guides/meshes.md),
   [`guides/filters.md`](guides/filters.md),
   [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md),
   [`adr/0019-typed-cross-renderer-shader-filters.md`](adr/0019-typed-cross-renderer-shader-filters.md),
   [`adr/0020-non-owning-displacement-maps.md`](adr/0020-non-owning-displacement-maps.md),
-  and [`adr/0021-local-explicit-filter-areas.md`](adr/0021-local-explicit-filter-areas.md).
+  [`adr/0021-local-explicit-filter-areas.md`](adr/0021-local-explicit-filter-areas.md),
+  and [`adr/0022-revisioned-camera-local-strip-geometry.md`](adr/0022-revisioned-camera-local-strip-geometry.md).
 
 ### Debugger and runtime inspection
 

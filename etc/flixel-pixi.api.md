@@ -11,6 +11,8 @@ import { BLEND_MODES } from 'pixi.js';
 import { Container } from 'pixi.js';
 import { ContainerChild } from 'pixi.js';
 import { Graphics } from 'pixi.js';
+import { Mesh } from 'pixi.js';
+import { MeshGeometry } from 'pixi.js';
 import { NineSliceSprite } from 'pixi.js';
 import { Particle } from 'pixi.js';
 import { ParticleContainer } from 'pixi.js';
@@ -3738,6 +3740,50 @@ export interface FlxStorageBackend {
     read(key: string): Record<string, unknown> | null;
     write(key: string, data: Record<string, unknown>): FlxSaveResult;
 }
+
+// @public
+export class FlxStrip extends FlxSprite {
+    constructor(x?: number, y?: number, simpleGraphic?: FlxGraphic | Texture | null);
+    // (undocumented)
+    createRenderHandle(): FlxRenderHandle;
+    get geometryRevision(): number;
+    get indices(): Uint32Array;
+    invalidateGeometry(): this;
+    onScreen(camera?: FlxCameraLike): boolean;
+    setGeometry(geometry: FlxStripGeometry): this;
+    setUv(index: number, u: number, v: number): this;
+    setVertex(index: number, x: number, y: number): this;
+    // (undocumented)
+    get topology(): FlxStripTopology;
+    get uvs(): Float32Array;
+    get vertices(): Float32Array;
+}
+
+// @public
+export interface FlxStripGeometry {
+    readonly indices?: ArrayLike<number>;
+    readonly topology?: FlxStripTopology;
+    readonly uvs: ArrayLike<number>;
+    readonly vertices: ArrayLike<number>;
+}
+
+// @public
+export class FlxStripRenderHandle implements FlxRenderHandle {
+    constructor(owner: FlxStrip, onDestroy?: () => void);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get destroyed(): boolean;
+    // (undocumented)
+    readonly mesh: Mesh<MeshGeometry>;
+    // (undocumented)
+    sync(camera?: FlxCamera, interpolationAlpha?: number): void;
+    // (undocumented)
+    readonly view: Container<ContainerChild>;
+}
+
+// @public
+export type FlxStripTopology = 'triangle-list' | 'triangle-strip';
 
 // @public
 export class FlxSubState extends FlxState {

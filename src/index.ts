@@ -169,6 +169,8 @@ export type {
   FlxAnimationPlayOptions,
   FlxAtlasAnimationOptions,
 } from './objects/flx-sprite';
+export { FlxStrip } from './objects/flx-strip';
+export type { FlxStripGeometry, FlxStripTopology } from './objects/flx-strip';
 export { FlxBackdrop } from './objects/flx-backdrop';
 export { FlxSpriteContainer, FlxSpriteGroup } from './objects/flx-sprite-group';
 export type { FlxSpriteTransform } from './objects/flx-sprite-group';
@@ -195,6 +197,7 @@ export type { FlxRenderHandle } from './rendering/flx-render-handle';
 export { FlxCameraRenderer } from './rendering/flx-camera-renderer';
 export type { FlxCameraView } from './rendering/flx-camera-renderer';
 export { FlxSpriteRenderHandle } from './rendering/flx-sprite-render-handle';
+export { FlxStripRenderHandle } from './rendering/flx-strip-render-handle';
 export { FlxBackdropRenderHandle } from './rendering/flx-backdrop-render-handle';
 export { FlxSpriteGroupRenderHandle } from './rendering/flx-sprite-group-render-handle';
 export { FlxEmitterRenderHandle } from './rendering/flx-emitter-render-handle';

@@ -69,6 +69,14 @@ output, explicit-versus-automatic composite bounds equivalence, and complete
 canvas teardown. WebGPU execution and context-loss recovery remain later
 advanced-rendering gates.
 
+The mesh showcase runs in Chromium, Firefox, and WebKit. It validates actual
+textured triangle output, revision-driven water and chain deformation,
+`triangle-list` and `triangle-strip` topology, animation pause, and
+complete canvas teardown. Unit coverage additionally verifies independent
+camera geometry, buffer reuse, topology replacement, validation, transformed
+visual culling, filter inheritance, and non-owning texture teardown. WebGPU
+execution and forced context-loss recovery remain later release gates.
+
 ## Reports
 
 CI uploads coverage, API model, benchmark, bundle-size, and Playwright reports.

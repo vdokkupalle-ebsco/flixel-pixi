@@ -37,3 +37,4 @@ and storage backends with gesture-unlock queuing and versioned save slots.
 | [0019](0019-typed-cross-renderer-shader-filters.md)       | Typed cross-renderer shader filters                        | Accepted |
 | [0020](0020-non-owning-displacement-maps.md)              | Non-owning normalized displacement maps                    | Accepted |
 | [0021](0021-local-explicit-filter-areas.md)               | Local explicit filter areas with automatic fallback        | Accepted |
+| [0022](0022-revisioned-camera-local-strip-geometry.md)    | Revisioned camera-local strip geometry                     | Accepted |
