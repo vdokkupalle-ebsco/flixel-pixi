@@ -76,6 +76,8 @@ class FakeAudioElement {
 class FakeAudioContext {
   static instances: FakeAudioContext[] = [];
   state: AudioContextState = 'suspended';
+  resumeCalls = 0;
+  suspendCalls = 0;
   currentTime = 0;
   destination = {};
   readonly bufferSources: FakeBufferSourceNode[] = [];
@@ -99,10 +101,12 @@ class FakeAudioContext {
     return new FakeMediaSourceNode();
   }
   resume(): Promise<void> {
+    this.resumeCalls += 1;
     this.state = 'running';
     return Promise.resolve();
   }
   suspend(): Promise<void> {
+    this.suspendCalls += 1;
     this.state = 'suspended';
     return Promise.resolve();
   }
@@ -172,6 +176,48 @@ describe('WebAudioBackend', () => {
     expect(() => backend.createSound({ alias: 'missing' }, false)).toThrow(
       TypeError,
     );
+    backend.destroy();
+  });
+
+  it('suspends and resumes with document visibility by default', () => {
+    const backend = new WebAudioBackend();
+    backend.createSound('/music.ogg', true);
+    const context = FakeAudioContext.instances[0];
+    expect(context).toBeDefined();
+    if (!context) throw new Error('Expected an AudioContext instance.');
+
+    context.state = 'running';
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(context?.suspendCalls).toBe(1);
+
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: false,
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(context?.resumeCalls).toBe(1);
+    backend.destroy();
+  });
+
+  it('can leave audio running across document visibility changes', () => {
+    const backend = new WebAudioBackend({ visibilityPolicy: 'continue' });
+    backend.createSound('/music.ogg', true);
+    const context = FakeAudioContext.instances[0];
+    expect(context).toBeDefined();
+    if (!context) throw new Error('Expected an AudioContext instance.');
+
+    context.state = 'running';
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(context?.suspendCalls).toBe(0);
+    expect(context?.resumeCalls).toBe(0);
     backend.destroy();
   });
 });

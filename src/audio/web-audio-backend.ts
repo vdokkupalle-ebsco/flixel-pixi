@@ -6,6 +6,15 @@ interface PendingSoundRequest {
   loop: boolean;
 }
 
+/** Policy used by {@link WebAudioBackend} when document visibility changes. @public */
+export type WebAudioVisibilityPolicy = 'continue' | 'suspend';
+
+/** Options for {@link WebAudioBackend}. @public */
+export interface WebAudioBackendOptions {
+  /** Suspend while hidden and resume when visible. Defaults to `suspend`. */
+  visibilityPolicy?: WebAudioVisibilityPolicy;
+}
+
 /** @internal */
 class WebSoundHandle implements FlxSoundHandle {
   playing = false;
@@ -181,8 +190,8 @@ class WebSoundHandle implements FlxSoundHandle {
  *
  * Creates the `AudioContext` lazily on first play or `unlockAudio()`.
  * Handles autoplay policy via a queue: sounds played before unlock are
- * recorded and replayed on the first user gesture. Focus loss suspends
- * the context; visibility return resumes it.
+ * recorded and replayed on the first user gesture. By default, hiding the
+ * document suspends the context and returning resumes it.
  *
  * @public
  */
@@ -193,12 +202,17 @@ export class WebAudioBackend implements FlxAudioBackend {
   #destroyed = false;
   #globalVolume = 1;
   #globalMuted = false;
+  readonly #visibilityPolicy: WebAudioVisibilityPolicy;
   readonly #handles: Set<WebSoundHandle> = new Set<WebSoundHandle>();
   readonly #pendingQueue: PendingSoundRequest[] = [];
 
   readonly #gestureEvents = ['click', 'keydown', 'touchstart'] as const;
   readonly #boundUnlock = (): void => this.#handleUnlock();
   readonly #boundVisibility = (): void => this.#handleVisibility();
+
+  constructor(options: WebAudioBackendOptions = {}) {
+    this.#visibilityPolicy = options.visibilityPolicy ?? 'suspend';
+  }
 
   get unlocked(): boolean {
     return this.#unlocked;
@@ -346,7 +360,9 @@ export class WebAudioBackend implements FlxAudioBackend {
     this.#masterGain.gain.value = this.#globalMuted ? 0 : this.#globalVolume;
     this.#masterGain.connect(this.#ctx.destination);
 
-    document.addEventListener('visibilitychange', this.#boundVisibility);
+    if (this.#visibilityPolicy === 'suspend') {
+      document.addEventListener('visibilitychange', this.#boundVisibility);
+    }
   }
 
   #handleUnlock(): void {

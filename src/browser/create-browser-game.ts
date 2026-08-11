@@ -99,6 +99,8 @@ export interface CreateBrowserGameOptions {
   scaling?: FlxBrowserScaleMode | FlxBrowserScaleOptions;
   /** Upper bound for renderer resolution as browser DPR changes. Defaults to 2. */
   maxDevicePixelRatio?: number;
+  /** Pause fixed simulation updates while the page is hidden or unfocused. Defaults to true. */
+  autoPause?: boolean;
   backgroundColor?: number;
   audioBackend?: FlxAudioBackend;
   zoom?: number;
@@ -127,6 +129,10 @@ export interface BrowserGameApplication {
   readonly updateFramerate: number;
   /** Visual frame-rate cap, or undefined when following the display. */
   readonly renderFramerate: number | undefined;
+  /** Whether focus loss pauses fixed simulation updates. */
+  readonly autoPause: boolean;
+  /** Whether the document is visible and its window currently has focus. */
+  readonly focused: boolean;
   /** Subscribe to completed browser render frames. Returns an unsubscribe callback. */
   onFrame(callback: (frame: BrowserGameFrame) => void): () => void;
   /** Re-sync all state members into the camera renderer (call after switchState or manual mutations). */
@@ -174,6 +180,7 @@ export async function createBrowserGame(
     renderInterpolation = true,
     accessibility = true,
     maxDevicePixelRatio = 2,
+    autoPause = true,
   } = options;
 
   validateFramerate('updateFramerate', updateFramerate);
@@ -297,6 +304,7 @@ export async function createBrowserGame(
         renderInterpolation,
         accessibility,
         maxDevicePixelRatio,
+        autoPause,
         unsubscribeObserver,
       );
       unsubscribeView?.();
@@ -423,6 +431,7 @@ function startApplication(
   renderInterpolation: boolean,
   accessibilityEnabled: boolean,
   maxDevicePixelRatio: number,
+  autoPause: boolean,
   unsubscribeObserver?: () => void,
 ): BrowserGameApplication {
   const frameListeners = new Set<(frame: BrowserGameFrame) => void>();
@@ -434,6 +443,8 @@ function startApplication(
   let simulationStepsSinceRender = 0;
   let animationFrame = 0;
   let fpsDisplay: FlxFpsDisplay | null = null;
+  let windowFocused = document.hasFocus();
+  let focused = document.visibilityState === 'visible' && windowFocused;
   const accessibility = accessibilityEnabled
     ? new FlxAccessibilityOverlay(
         host,
@@ -462,19 +473,35 @@ function startApplication(
   };
   void preloaderCompletion.then(mountFpsDisplay, mountFpsDisplay);
 
-  const handleVisibilityChange = (): void => {
+  const refreshFocus = (): void => {
+    const nextFocused = document.visibilityState === 'visible' && windowFocused;
     fpsDisplay?.reset();
-    if (document.visibilityState === 'visible') {
-      previousActualRenderTime = performance.now();
-    }
+    if (nextFocused === focused) return;
+    focused = nextFocused;
+    const now = performance.now();
+    previousUpdateTime = now;
+    previousRenderTime = now;
+    previousActualRenderTime = now;
+    simulationStepsSinceRender = 0;
+  };
+  const handleVisibilityChange = (): void => refreshFocus();
+  const handleWindowFocus = (): void => {
+    windowFocused = true;
+    refreshFocus();
+  };
+  const handleWindowBlur = (): void => {
+    windowFocused = false;
+    refreshFocus();
   };
   document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('focus', handleWindowFocus);
+  window.addEventListener('blur', handleWindowBlur);
 
   const frame = (now: number): void => {
     if (destroyed) return;
     const updateElapsedMS = Math.max(0, now - previousUpdateTime);
     previousUpdateTime = now;
-    if (!FlxG.paused) {
+    if (!FlxG.paused && (!autoPause || focused)) {
       simulationStepsSinceRender += game.advance(updateElapsedMS / 1000).steps;
     }
 
@@ -518,6 +545,10 @@ function startApplication(
     viewport,
     renderFramerate,
     updateFramerate,
+    autoPause,
+    get focused() {
+      return focused;
+    },
     get frameCount() {
       return frameCount;
     },
@@ -535,6 +566,8 @@ function startApplication(
       cancelAnimationFrame(animationFrame);
       frameListeners.clear();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('blur', handleWindowBlur);
       fpsDisplay?.destroy();
       fpsDisplay = null;
       accessibility?.destroy();

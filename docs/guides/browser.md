@@ -10,6 +10,16 @@ keydown, or touch is queued. `WebAudioBackend` accepts decoded `AudioBuffer`
 objects, `HTMLAudioElement` objects, and URL strings. Resolve asset aliases
 before passing them to the audio manager.
 
+Audio visibility and simulation focus are independent policies. Audio suspends
+while the document is hidden by default; opt out for games that intentionally
+continue music in the background:
+
+```ts
+const audioBackend = new WebAudioBackend({
+  visibilityPolicy: 'continue',
+});
+```
+
 ## Storage
 
 `FlxSave` uses `LocalStorageBackend` or `IndexedDBBackend` (ADR 0011). Expect
@@ -35,6 +45,7 @@ const app = await createBrowserGame({
   width: 640,
   height: 360,
   maxDevicePixelRatio: 2,
+  autoPause: true,
   scaling: { mode: 'fit', alignX: 0.5, alignY: 0.5 },
 });
 
@@ -60,6 +71,14 @@ When browser DPR changes—such as moving a window between displays—the browse
 boot path resizes Pixi's backing framebuffer and every camera render texture
 without changing logical dimensions. `maxDevicePixelRatio` limits GPU memory
 and fill-rate cost; it defaults to `2`.
+
+`autoPause` defaults to `true` and stops fixed simulation updates while the
+document is hidden or its window lacks focus. Rendering may still occur when
+the browser schedules it. Returning to the game resets loop timestamps instead
+of attempting to catch up the time spent away. Set `autoPause: false` for
+multiplayer or idle games whose simulation must continue; input still clears
+held controls on blur/visibility loss. `app.focused` exposes the current state
+without mutating the user-controlled `FlxG.paused` flag.
 
 ### Safe HUD placement
 

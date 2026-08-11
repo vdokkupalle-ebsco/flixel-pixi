@@ -228,3 +228,52 @@ test('updates Pixi and camera backing resolution when browser DPR changes', asyn
     renderer: 2,
   });
 });
+
+test('pauses simulation on focus loss without a resume catch-up burst', async ({
+  page,
+}) => {
+  await page.goto(VIEWPORT_DEMO);
+  await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+    'data-state',
+    'ready',
+    { timeout: 10_000 },
+  );
+
+  const result = await page.evaluate(async () => {
+    const application = window.__FLIXEL_PIXI_VIEWPORT__?.app;
+    if (!application) return null;
+    let pausedSteps = 0;
+    let resumedSteps = 0;
+    let phase: 'paused' | 'resumed' = 'paused';
+    const unsubscribe = application.onFrame(({ simulationSteps }) => {
+      if (phase === 'paused') pausedSteps += simulationSteps;
+      else resumedSteps += simulationSteps;
+    });
+
+    window.dispatchEvent(new Event('blur'));
+    const focusedWhileBlurred = application.focused;
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    phase = 'resumed';
+    window.dispatchEvent(new Event('focus'));
+    const focusedAfterReturn = application.focused;
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    unsubscribe();
+    return {
+      autoPause: application.autoPause,
+      focusedAfterReturn,
+      focusedWhileBlurred,
+      pausedSteps,
+      resumedSteps,
+    };
+  });
+
+  expect(result).toEqual({
+    autoPause: true,
+    focusedAfterReturn: true,
+    focusedWhileBlurred: false,
+    pausedSteps: 0,
+    resumedSteps: expect.any(Number),
+  });
+  expect(result?.resumedSteps ?? 0).toBeGreaterThan(0);
+  expect(result?.resumedSteps ?? 0).toBeLessThan(12);
+});

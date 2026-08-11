@@ -27,8 +27,10 @@ export interface BrowserGameApplication {
     // (undocumented)
     readonly app: Application;
     readonly assets: FlxAssets;
+    readonly autoPause: boolean;
     // (undocumented)
     destroy(): void;
+    readonly focused: boolean;
     readonly frameCount: number;
     // (undocumented)
     readonly game: FlxGame;
@@ -100,6 +102,7 @@ export interface CreateBrowserGameOptions {
     assets?: BrowserGameAssetOptions;
     // (undocumented)
     audioBackend?: FlxAudioBackend;
+    autoPause?: boolean;
     // (undocumented)
     backgroundColor?: number;
     fpsDisplay?: boolean | FlxFpsDisplayOptions;
@@ -4935,6 +4938,7 @@ export interface WatchSnapshot {
 
 // @public
 export class WebAudioBackend implements FlxAudioBackend {
+    constructor(options?: WebAudioBackendOptions);
     // (undocumented)
     createSound(source: unknown, streaming: boolean): FlxSoundHandle;
     // (undocumented)
@@ -4954,5 +4958,13 @@ export class WebAudioBackend implements FlxAudioBackend {
     // (undocumented)
     get unlocked(): boolean;
 }
+
+// @public
+export interface WebAudioBackendOptions {
+    visibilityPolicy?: WebAudioVisibilityPolicy;
+}
+
+// @public
+export type WebAudioVisibilityPolicy = 'continue' | 'suspend';
 
 ```

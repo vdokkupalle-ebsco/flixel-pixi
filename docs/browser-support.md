@@ -48,8 +48,10 @@ fixed-step value publication, Enter submission, and complete DOM teardown.
 
 The viewport suite runs in Chromium, Firefox, and WebKit. It verifies fit/fill
 layout changes, cropped logical bounds, safe HUD padding, pointer conversion,
-alignment changes, and native accessibility projection against the same canvas
-bounds. Device-notch values still require real-device coverage before 1.0.
+alignment changes, DPR-backed renderer/camera resolution, focus-loss simulation
+pause, resume timing, and native accessibility projection against the same
+canvas bounds. Device-notch values still require real-device coverage before
+1.0.
 
 ## Reports
 

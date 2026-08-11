@@ -50,7 +50,7 @@ started merely to match a Haxe class count.
 |     6 |    P0    | Input expansion                                 | Complete (`f197d9f`) | Gamepad/touch/action behavior is deterministic, remappable, and tested across supported browsers.  |
 |     7 |    P1    | UI and text authoring                           | Complete             | Common HUD/control/input-text needs no application-specific framework code.                        |
 |     8 |    P1    | Atlas and content-pipeline expansion            | Complete             | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
-|     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | In progress          | Logical coordinates remain correct through browser/window lifecycle changes.                       |
+|     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Complete             | Logical coordinates remain correct through browser/window lifecycle changes.                       |
 |    10 |    P1    | Audio organization and system UX                | Planned              | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Planned              | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
@@ -304,9 +304,14 @@ Current slice:
   fullscreen, logical pointer coordinates, and safe HUD anchoring.
 - Browser DPR changes resize Pixi's framebuffer and camera render textures up
   to a configurable cap without changing logical game or camera dimensions.
+- `autoPause` pauses fixed simulation updates on blur or visibility loss without
+  overwriting manual pause state or creating a catch-up burst after focus returns.
+- Web Audio visibility suspension is independently configurable, so background
+  audio policy does not need to match simulation focus policy.
 - Pure layout coverage verifies letterboxing, crop offsets, fixed sizing,
   integer enlargement, safe boundaries, and invalid configuration. Dedicated
-  browser coverage verifies pointer and native-overlay coordinates.
+  browser coverage verifies pointer, native-overlay, DPR, and focus coordinates
+  and lifecycle behavior in Chromium, Firefox, and WebKit.
 
 ### Audio organization and system UX
 

@@ -256,6 +256,10 @@ export { FlxAudioManager } from './audio/flx-audio-manager';
 export type { FlxAudioService } from './audio/flx-audio-manager';
 export { NullAudioBackend } from './audio/null-audio-backend';
 export { WebAudioBackend } from './audio/web-audio-backend';
+export type {
+  WebAudioBackendOptions,
+  WebAudioVisibilityPolicy,
+} from './audio/web-audio-backend';
 
 // --- Persistent storage ---
 export { FLX_STORAGE_SERVICE } from './storage/flx-storage-backend';
