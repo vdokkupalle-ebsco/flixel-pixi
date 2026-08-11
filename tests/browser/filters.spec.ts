@@ -18,7 +18,12 @@ test('renders neutral sprite/composite filters and replaces chains', async ({
     blurEnabled: true,
     compositeFilters: 1,
     grayscaleFilters: 1,
+    shaderRenderers: ['webgl', 'webgpu'],
+    shaderStrength: 0.7,
   });
+  await expect
+    .poll(async () => (await snapshot())?.shaderRevision ?? 0)
+    .toBeGreaterThan(1);
 
   const pixels = await page.evaluate(() => {
     const app = window.__FLIXEL_PIXI_FILTERS__?.app;
@@ -31,8 +36,8 @@ test('renders neutral sprite/composite filters and replaces chains', async ({
       return [...output.pixels.slice(index, index + 4)];
     };
     return {
-      grayscale: sample(260, 156),
-      original: sample(110, 156),
+      grayscale: sample(200, 151),
+      original: sample(85, 151),
     };
   });
   expect(pixels.original[0] ?? 0).toBeGreaterThan(
@@ -48,6 +53,10 @@ test('renders neutral sprite/composite filters and replaces chains', async ({
 
   await page.locator('[data-action="blur"]').click();
   await expect.poll(snapshot).toMatchObject({ blurEnabled: false });
+  await page.evaluate(() =>
+    window.__FLIXEL_PIXI_FILTERS__?.setShaderStrength?.(0),
+  );
+  await expect.poll(snapshot).toMatchObject({ shaderStrength: 0 });
   await page.locator('[data-action="destroy"]').click();
   await expect(page.locator('canvas')).not.toBeAttached();
 });

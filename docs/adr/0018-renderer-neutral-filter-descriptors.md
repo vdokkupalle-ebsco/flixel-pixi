@@ -21,9 +21,10 @@ stateful GPU resource when one sprite is projected into multiple cameras.
 3. Replacing a descriptor list destroys the superseded handle-local filters.
    Destroying a handle releases its filters without touching descriptors,
    textures, or gameplay objects.
-4. The first supported descriptors are blur and a 4×5 color matrix. Shader and
-   displacement extensions remain separate slices because they require explicit
-   texture ownership and WebGL/WebGPU compatibility contracts.
+4. The first supported descriptors are blur and a 4×5 color matrix. Custom
+   shaders follow the separate compatibility and uniform-lifecycle contract in
+   [ADR-0019](0019-typed-cross-renderer-shader-filters.md). Displacement remains
+   separate because it introduces texture ownership.
 5. Filters remain visual-only: collision, bounds, input, and fixed-step state do
    not query filtered Pixi output.
 
@@ -36,5 +37,5 @@ stateful GPU resource when one sprite is projected into multiple cameras.
 - Applying filters introduces offscreen render passes. Authors should prefer a
   filtered composite over repeating the same filter on many children, and blur
   quality must be chosen with its framebuffer cost in mind.
-- Custom shaders, displacement maps, and explicit filter areas are deferred
-  until their ownership and performance policies are implemented and measured.
+- Displacement maps and explicit filter areas are deferred until their
+  ownership and performance policies are implemented and measured.

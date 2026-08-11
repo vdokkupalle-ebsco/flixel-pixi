@@ -10,6 +10,7 @@ import {
   FlxGraphic,
   FlxObject,
   FlxPoint,
+  FlxShaderFilter,
   FlxSprite,
   FlxSpriteRenderHandle,
   makeGraphicPixels,
@@ -222,6 +223,89 @@ describe('FlxSprite', () => {
       sprite.filters = [{} as FlxBlurFilter];
     }).toThrow(TypeError);
     sprite.destroy();
+  });
+
+  it('synchronizes typed shader uniforms without rebuilding camera filters', () => {
+    const shader = new FlxShaderFilter({
+      webGL: {
+        fragment: `
+          in vec2 vTextureCoord;
+          out vec4 finalColor;
+          uniform sampler2D uTexture;
+          uniform float uStrength;
+          void main(void) {
+            vec4 color = texture(uTexture, vTextureCoord);
+            finalColor = vec4(color.rgb * uStrength, color.a);
+          }
+        `,
+      },
+      uniforms: { uStrength: { type: 'f32', value: 0.25 } },
+    });
+    const sprite = new FlxSprite();
+    sprite.filters = [shader];
+    const first = sprite.createRenderHandle();
+    const second = sprite.createRenderHandle();
+    if (
+      !(first instanceof FlxSpriteRenderHandle) ||
+      !(second instanceof FlxSpriteRenderHandle)
+    ) {
+      throw new Error('Expected sprite handles.');
+    }
+    const firstFilter = first.view.filters?.[0];
+    const secondFilter = second.view.filters?.[0];
+    expect(firstFilter).toBeDefined();
+    expect(firstFilter).not.toBe(secondFilter);
+    expect(shader.compatibleRenderers).toEqual(['webgl']);
+    expect(shader.uniforms.get('uStrength')).toBe(0.25);
+
+    shader.uniforms.set('uStrength', 0.75);
+    first.sync();
+    second.sync();
+    expect(first.view.filters?.[0]).toBe(firstFilter);
+    expect(firstFilter?.resources.flxShaderUniforms.uniforms.uStrength).toBe(
+      0.75,
+    );
+    expect(secondFilter?.resources.flxShaderUniforms.uniforms.uStrength).toBe(
+      0.75,
+    );
+    expect(firstFilter?.resources.flxShaderUniforms).not.toBe(
+      secondFilter?.resources.flxShaderUniforms,
+    );
+
+    first.destroy();
+    second.destroy();
+    sprite.destroy();
+  });
+
+  it('validates shader programs and typed uniform values', () => {
+    expect(() => new FlxShaderFilter({})).toThrow(TypeError);
+    expect(() => new FlxShaderFilter({ webGL: { fragment: '  ' } })).toThrow(
+      TypeError,
+    );
+    expect(
+      () =>
+        new FlxShaderFilter({
+          webGL: { fragment: 'void main() {}' },
+          uniforms: {
+            'bad-name': { type: 'f32', value: 1 },
+          },
+        }),
+    ).toThrow(TypeError);
+    const vectors = new FlxShaderFilter({
+      webGPU: { source: '@vertex fn mainVertex() {}' },
+      uniforms: {
+        uOffset: { type: 'vec2<f32>', value: [1, 2] },
+        uMode: { type: 'i32', value: 1 },
+      },
+    });
+    const offset = vectors.uniforms.get('uOffset');
+    expect(offset).toEqual([1, 2]);
+    expect(Object.isFrozen(vectors)).toBe(true);
+    expect(vectors.compatibleRenderers).toEqual(['webgpu']);
+    expect(() =>
+      vectors.uniforms.set('uOffset', [1] as unknown as [number, number]),
+    ).toThrow(TypeError);
+    expect(() => vectors.uniforms.set('uMode', 1.5)).toThrow(TypeError);
   });
 
   it('supports direct frames, random frames, offsets, generated graphics, and culling', () => {

@@ -2,6 +2,7 @@ import {
   FlxBlurFilter,
   FlxColorMatrixFilter,
   FlxG,
+  FlxShaderFilter,
   FlxSprite,
   FlxSpriteContainer,
   FlxState,
@@ -12,11 +13,14 @@ export interface FilterShowcaseSnapshot {
   blurEnabled: boolean;
   compositeFilters: number;
   grayscaleFilters: number;
+  shaderRenderers: readonly ('webgl' | 'webgpu')[];
+  shaderRevision: number;
+  shaderStrength: number;
 }
 
 function label(state: FlxState, x: number, text: string): void {
   state.add(
-    new FlxText(x - 20, 226, 130, text).setFormat(
+    new FlxText(x - 25, 214, 120, text).setFormat(
       undefined,
       11,
       0xffe2e8f0,
@@ -27,10 +31,21 @@ function label(state: FlxState, x: number, text: string): void {
 
 /** Public-API showcase for renderer-neutral sprite and composite filters. */
 export class FilterShowcaseState extends FlxState {
-  readonly grayscale = new FlxSprite(220, 116);
-  readonly blurred = new FlxSprite(360, 116);
-  readonly composite = new FlxSpriteContainer(490, 116);
+  readonly grayscale = new FlxSprite(165, 116);
+  readonly blurred = new FlxSprite(280, 116);
+  readonly shaderSprite = new FlxSprite(395, 116);
+  readonly composite = new FlxSpriteContainer(510, 116);
+  readonly shader = new FlxShaderFilter({
+    webGL: { fragment: waveFragment },
+    webGPU: { source: waveWgsl },
+    uniforms: {
+      uTime: { type: 'f32', value: 0 },
+      uStrength: { type: 'f32', value: 0.7 },
+    },
+  });
   blurEnabled = true;
+  shaderStrength = 0.7;
+  shaderTime = 0;
 
   override create(): void {
     super.create();
@@ -52,33 +67,44 @@ export class FilterShowcaseState extends FlxState {
       ).setFormat(undefined, 10, 0xff38bdf8, 'left'),
     );
 
-    this.add(new FlxSprite(70, 116).makeGraphic(80, 80, 0xef4444ff));
-    label(this, 70, 'Original');
+    this.add(new FlxSprite(50, 116).makeGraphic(70, 70, 0xef4444ff));
+    label(this, 50, 'Original');
 
-    this.grayscale.makeGraphic(80, 80, 0xef4444ff);
+    this.grayscale.makeGraphic(70, 70, 0xef4444ff);
     this.grayscale.filters = [FlxColorMatrixFilter.grayscale()];
     this.add(this.grayscale);
-    label(this, 220, 'Grayscale');
+    label(this, 165, 'Grayscale');
 
-    this.blurred.makeGraphic(80, 80, 0x22d3eeff);
+    this.blurred.makeGraphic(70, 70, 0x22d3eeff);
     this.#syncBlur();
     this.add(this.blurred);
-    label(this, 360, 'Blur');
+    label(this, 280, 'Blur');
 
-    this.composite.add(new FlxSprite(0, 0).makeGraphic(56, 80, 0xfacc15ff));
-    this.composite.add(new FlxSprite(34, 20).makeGraphic(56, 60, 0xf472b6ff));
+    this.shaderSprite.makeGraphic(70, 70, 0xa855f7ff);
+    this.shaderSprite.filters = [this.shader];
+    this.add(this.shaderSprite);
+    label(this, 395, 'Live shader');
+
+    this.composite.add(new FlxSprite(0, 0).makeGraphic(48, 70, 0xfacc15ff));
+    this.composite.add(new FlxSprite(28, 18).makeGraphic(48, 52, 0xf472b6ff));
     this.composite.filters = [FlxColorMatrixFilter.grayscale(0.65)];
     this.add(this.composite);
-    label(this, 490, 'Composite');
+    label(this, 510, 'Composite');
 
     this.add(
       new FlxText(
         24,
-        286,
+        272,
         592,
         'The composite applies one filter pass to both children. Gameplay bounds and collision stay unchanged.',
       ).setFormat(undefined, 10, 0xff94a3b8, 'left'),
     );
+  }
+
+  override update(): void {
+    super.update();
+    this.shaderTime += FlxG.elapsed;
+    this.shader.uniforms.set('uTime', this.shaderTime);
   }
 
   setBlurEnabled(enabled: boolean): void {
@@ -86,11 +112,19 @@ export class FilterShowcaseState extends FlxState {
     this.#syncBlur();
   }
 
+  setShaderStrength(strength: number): void {
+    this.shaderStrength = strength;
+    this.shader.uniforms.set('uStrength', strength);
+  }
+
   snapshot(): FilterShowcaseSnapshot {
     return {
       blurEnabled: this.blurEnabled,
       compositeFilters: this.composite.filters.length,
       grayscaleFilters: this.grayscale.filters.length,
+      shaderRenderers: this.shader.compatibleRenderers,
+      shaderRevision: this.shader.uniforms.revision,
+      shaderStrength: this.shaderStrength,
     };
   }
 
@@ -100,3 +134,61 @@ export class FilterShowcaseState extends FlxState {
       : [];
   }
 }
+
+const waveFragment = `
+  in vec2 vTextureCoord;
+  out vec4 finalColor;
+  uniform sampler2D uTexture;
+  uniform float uTime;
+  uniform float uStrength;
+
+  void main(void) {
+    vec4 color = texture(uTexture, vTextureCoord);
+    float pulse = 0.5 + 0.5 * sin(uTime * 4.0 + vTextureCoord.y * 18.0);
+    vec3 shifted = vec3(color.b, color.r, color.g);
+    finalColor = vec4(mix(color.rgb, shifted, pulse * uStrength), color.a);
+  }
+`;
+
+const waveWgsl = `
+  struct GlobalFilterUniforms {
+    uInputSize: vec4<f32>,
+    uInputPixel: vec4<f32>,
+    uInputClamp: vec4<f32>,
+    uOutputFrame: vec4<f32>,
+    uGlobalFrame: vec4<f32>,
+    uOutputTexture: vec4<f32>,
+  };
+  struct FlxShaderUniforms {
+    uTime: f32,
+    uStrength: f32,
+  };
+  @group(0) @binding(0) var<uniform> gfu: GlobalFilterUniforms;
+  @group(0) @binding(1) var uTexture: texture_2d<f32>;
+  @group(0) @binding(2) var uSampler: sampler;
+  @group(1) @binding(0) var<uniform> flxShaderUniforms: FlxShaderUniforms;
+
+  struct VSOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+  };
+
+  fn filterVertexPosition(position: vec2<f32>) -> vec4<f32> {
+    var output = position * gfu.uOutputFrame.zw + gfu.uOutputFrame.xy;
+    output.x = output.x * (2.0 / gfu.uOutputTexture.x) - 1.0;
+    output.y = output.y * (2.0 * gfu.uOutputTexture.z / gfu.uOutputTexture.y) - gfu.uOutputTexture.z;
+    return vec4(output, 0.0, 1.0);
+  }
+
+  @vertex fn mainVertex(@location(0) position: vec2<f32>) -> VSOutput {
+    let uv = position * (gfu.uOutputFrame.zw * gfu.uInputSize.zw);
+    return VSOutput(filterVertexPosition(position), uv);
+  }
+
+  @fragment fn mainFragment(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+    let color = textureSample(uTexture, uSampler, uv);
+    let pulse = 0.5 + 0.5 * sin(flxShaderUniforms.uTime * 4.0 + uv.y * 18.0);
+    let shifted = vec3(color.b, color.r, color.g);
+    return vec4(mix(color.rgb, shifted, pulse * flxShaderUniforms.uStrength), color.a);
+  }
+`;

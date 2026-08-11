@@ -1842,7 +1842,7 @@ export interface FlxEmitterRenderOptions {
 }
 
 // @public
-export type FlxFilter = FlxBlurFilter | FlxColorMatrixFilter;
+export type FlxFilter = FlxBlurFilter | FlxColorMatrixFilter | FlxShaderFilter;
 
 // @public
 export class FlxFlickerTween extends FlxTween {
@@ -3226,6 +3226,89 @@ export type FlxSaveResult = {
     error: 'async' | 'quota' | 'serialization' | 'unknown';
     message: string;
 };
+
+// @public
+export class FlxShaderFilter<TSchema extends FlxShaderUniformSchema = FlxShaderUniformSchema> {
+    constructor(options: FlxShaderFilterOptions<TSchema>);
+    get compatibleRenderers(): readonly ('webgl' | 'webgpu')[];
+    readonly kind = "shader";
+    readonly padding: number;
+    readonly resolution: number;
+    readonly uniforms: FlxShaderUniforms<TSchema>;
+    readonly webGL?: Readonly<FlxShaderWebGLProgram>;
+    readonly webGPU?: Readonly<FlxShaderWebGPUProgram>;
+}
+
+// @public
+export interface FlxShaderFilterOptions<TSchema extends FlxShaderUniformSchema = FlxShaderUniformSchema> {
+    readonly padding?: number;
+    readonly resolution?: number;
+    readonly uniforms?: TSchema;
+    readonly webGL?: FlxShaderWebGLProgram;
+    readonly webGPU?: FlxShaderWebGPUProgram;
+}
+
+// @public
+export interface FlxShaderUniformDefinition<T extends FlxShaderUniformType = FlxShaderUniformType> {
+    readonly type: T;
+    readonly value: FlxShaderUniformValue<T>;
+}
+
+// @public
+export class FlxShaderUniforms<TSchema extends FlxShaderUniformSchema = FlxShaderUniformSchema> {
+    constructor(schema: TSchema);
+    get<K extends keyof TSchema>(name: K): FlxShaderUniformValue<TSchema[K]['type']>;
+    get revision(): number;
+    set<K extends keyof TSchema>(name: K, value: FlxShaderUniformValue<TSchema[K]['type']>): this;
+}
+
+// @public
+export type FlxShaderUniformSchema = Record<string, FlxShaderUniformDefinition>;
+
+// @public
+export type FlxShaderUniformType = 'f32' | 'i32' | 'vec2<f32>' | 'vec3<f32>' | 'vec4<f32>' | 'vec2<i32>' | 'vec3<i32>' | 'vec4<i32>' | 'mat2x2<f32>' | 'mat3x3<f32>' | 'mat4x4<f32>';
+
+// @public
+export type FlxShaderUniformValue<T extends FlxShaderUniformType> = T extends 'f32' | 'i32' ? number : T extends 'vec2<f32>' | 'vec2<i32>' ? readonly [number, number] : T extends 'vec3<f32>' | 'vec3<i32>' ? readonly [number, number, number] : T extends 'vec4<f32>' | 'vec4<i32>' | 'mat2x2<f32>' ? readonly [number, number, number, number] : T extends 'mat3x3<f32>' ? readonly [
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number
+] : readonly [
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number,
+number
+];
+
+// @public
+export interface FlxShaderWebGLProgram {
+    readonly fragment: string;
+}
+
+// @public
+export interface FlxShaderWebGPUProgram {
+    readonly fragmentEntryPoint?: string;
+    readonly source: string;
+    readonly vertexEntryPoint?: string;
+}
 
 // @public
 export class FlxShakeTween extends FlxTween {

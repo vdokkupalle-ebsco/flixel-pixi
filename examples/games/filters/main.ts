@@ -8,6 +8,7 @@ declare global {
       destroyed: boolean;
       ready: boolean;
       setBlurEnabled?: (enabled: boolean) => void;
+      setShaderStrength?: (strength: number) => void;
       snapshot?: () => FilterShowcaseSnapshot | null;
     };
   }
@@ -17,6 +18,9 @@ const host = document.querySelector<HTMLElement>('[data-testid="canvas-host"]');
 const status = document.querySelector<HTMLElement>('[data-testid="status"]');
 const toggle = document.querySelector<HTMLButtonElement>(
   '[data-action="blur"]',
+);
+const shaderToggle = document.querySelector<HTMLButtonElement>(
+  '[data-action="shader"]',
 );
 const destroy = document.querySelector<HTMLButtonElement>(
   '[data-action="destroy"]',
@@ -43,15 +47,27 @@ bootGame({
       setBlurEnabled(enabled) {
         state()?.setBlurEnabled(enabled);
       },
+      setShaderStrength(strength) {
+        state()?.setShaderStrength(strength);
+      },
       snapshot: () => state()?.snapshot() ?? null,
     };
     toggle?.removeAttribute('disabled');
+    shaderToggle?.removeAttribute('disabled');
     destroy?.removeAttribute('disabled');
     toggle?.addEventListener('click', () => {
       const current = state();
       if (!current) return;
       current.setBlurEnabled(!current.blurEnabled);
       toggle.textContent = current.blurEnabled ? 'Disable blur' : 'Enable blur';
+    });
+    shaderToggle?.addEventListener('click', () => {
+      const current = state();
+      if (!current) return;
+      const strength = current.shaderStrength > 0 ? 0 : 0.7;
+      current.setShaderStrength(strength);
+      shaderToggle.textContent =
+        strength > 0 ? 'Disable shader' : 'Enable shader';
     });
     destroy?.addEventListener('click', () => {
       app.destroy();

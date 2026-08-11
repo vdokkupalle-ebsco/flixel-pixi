@@ -381,9 +381,18 @@ Current slice:
 - The public filter showcase compares unfiltered, grayscale, blur, and
   composite output, replaces a live chain, and verifies rendered pixels across
   Chromium, Firefox, and WebKit.
-- Custom shaders, displacement maps, and explicit filter areas remain pending
-  within this checkpoint. See [`guides/filters.md`](guides/filters.md) and
-  [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md).
+- **Adapted:** `FlxShaderFilter` declares separate GLSL/WGSL programs and a
+  shared typed-uniform schema without exposing Pixi objects to gameplay code.
+- Mutable uniform values synchronize by revision into independent camera-local
+  uniform groups, so per-frame changes neither rebuild programs nor replace
+  filter chains. Missing renderer programs explicitly mean pass-through output.
+- The filter showcase includes a fixed-clock animated dual-renderer shader;
+  unit and browser contracts cover validation, multi-camera ownership, runtime
+  synchronization, rendered output, and teardown.
+- Displacement maps and explicit filter areas remain pending within this
+  checkpoint. See [`guides/filters.md`](guides/filters.md),
+  [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md),
+  and [`adr/0019-typed-cross-renderer-shader-filters.md`](adr/0019-typed-cross-renderer-shader-filters.md).
 
 ### Debugger and runtime inspection
 
