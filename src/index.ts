@@ -385,3 +385,5 @@ export {
   syncWorldToRenderer,
 } from './rendering/flx-world-sync';
 export type { FlxRenderable } from './rendering/flx-world-sync';
+export { FlxBlurFilter, FlxColorMatrixFilter } from './rendering/flx-filter';
+export type { FlxBlurFilterOptions, FlxFilter } from './rendering/flx-filter';

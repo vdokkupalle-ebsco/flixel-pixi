@@ -52,7 +52,7 @@ started merely to match a Haxe class count.
 |     8 |    P1    | Atlas and content-pipeline expansion            | Complete             | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Complete             | Logical coordinates remain correct through browser/window lifecycle changes.                       |
 |    10 |    P1    | Audio organization and system UX                | Complete             | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
-|    11 |    P2    | Advanced rendering extensions                   | Planned              | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
+|    11 |    P2    | Advanced rendering extensions                   | In progress          | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
 |    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
@@ -367,6 +367,23 @@ Evaluate as independent slices:
 Each slice needs ownership, context-loss, multi-camera, batching, and teardown
 contracts. Mutable Flash `BitmapData` behavior remains compatibility-only and
 must not leak into authoritative gameplay.
+
+Current slice:
+
+- **Adapted:** immutable `FlxBlurFilter` and `FlxColorMatrixFilter`
+  descriptors live on gameplay sprites without importing Pixi objects.
+- Each sprite render handle creates and destroys its own Pixi filter chain, so
+  multi-camera projections do not share stateful renderer resources.
+- Sprite groups apply a single chain to their adapter-owned container root,
+  avoiding one framebuffer pass per child when a composite shares an effect.
+- Filter changes are visual-only and occur by replacing the descriptor list;
+  collision and deterministic simulation remain unaffected.
+- The public filter showcase compares unfiltered, grayscale, blur, and
+  composite output, replaces a live chain, and verifies rendered pixels across
+  Chromium, Firefox, and WebKit.
+- Custom shaders, displacement maps, and explicit filter areas remain pending
+  within this checkpoint. See [`guides/filters.md`](guides/filters.md) and
+  [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md).
 
 ### Debugger and runtime inspection
 

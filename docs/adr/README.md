@@ -32,3 +32,5 @@ and storage backends with gesture-unlock queuing and versioned save slots.
 | [0014](0014-step-polled-gamepads-and-stable-identity.md)  | Fixed-step gamepads with stable logical device IDs         | Accepted |
 | [0015](0015-serializable-multi-source-actions.md)         | Serializable keyboard, pointer, and gamepad actions        | Accepted |
 | [0016](0016-deterministic-pointer-event-touches.md)       | Step-published multi-touch and swipe recognition           | Accepted |
+| [0017](0017-native-accessibility-over-render-textures.md) | Native DOM accessibility over camera render textures       | Accepted |
+| [0018](0018-renderer-neutral-filter-descriptors.md)       | Handle-local Pixi filters from neutral descriptors         | Accepted |

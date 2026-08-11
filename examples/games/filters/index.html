@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi — Filter Showcase</title>
+    <link rel="stylesheet" href="../_kit/shell.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header>
+        <p class="eyebrow">P2 RENDERING CHECKPOINT</p>
+        <h1>Filter Showcase</h1>
+        <p>Blur and color matrices with explicit multi-camera ownership.</p>
+      </header>
+      <section class="game-card" aria-label="Filter showcase game">
+        <div data-testid="canvas-host"></div>
+        <div class="game-controls">
+          <span data-testid="status" data-state="loading">Loading…</span>
+          <button data-action="blur" type="button" disabled>
+            Disable blur
+          </button>
+          <button data-action="destroy" type="button" disabled>Destroy</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

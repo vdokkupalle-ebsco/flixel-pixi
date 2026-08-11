@@ -4,6 +4,7 @@ import type { FlxCamera } from '../core/flx-camera';
 import type { FlxSprite } from '../objects/flx-sprite';
 import type { FlxSpriteGroup } from '../objects/flx-sprite-group';
 import type { FlxRenderHandle } from './flx-render-handle';
+import { FlxFilterChain } from './flx-filter-chain';
 import {
   interpolateObjectX,
   interpolateObjectY,
@@ -16,6 +17,7 @@ export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
   readonly #owner: FlxSpriteGroup;
   readonly #onDestroy: () => void;
   readonly #members = new Map<FlxSprite, FlxRenderHandle>();
+  readonly #filterChain = new FlxFilterChain();
   #destroyed = false;
 
   constructor(owner: FlxSpriteGroup, onDestroy: () => void = () => undefined) {
@@ -76,6 +78,7 @@ export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
     this.view.blendMode = 'normal';
     this.view.visible =
       this.#owner.exists && this.#owner.visible && this.#owner.alpha > 0;
+    this.#filterChain.sync(this.view, this.#owner.filters);
   }
 
   destroy(): void {
@@ -83,6 +86,7 @@ export class FlxSpriteGroupRenderHandle implements FlxRenderHandle {
     this.#destroyed = true;
     for (const handle of this.#members.values()) handle.destroy();
     this.#members.clear();
+    this.#filterChain.destroy(this.view);
     this.view.destroy();
     this.#onDestroy();
   }

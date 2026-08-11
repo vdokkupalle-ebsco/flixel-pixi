@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
 import { Container, Sprite } from 'pixi.js';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   FlxBasic,
+  FlxBlurFilter,
   FlxCamera,
   FlxContainer,
   FlxContext,
@@ -267,6 +268,20 @@ describe('FlxSpriteContainer coordinate and transform contract', () => {
     expect(handle).toBeInstanceOf(FlxSpriteGroupRenderHandle);
     expect(handle.view).toBeInstanceOf(Container);
     expect(handle.view.children).toHaveLength(2);
+
+    group.filters = [new FlxBlurFilter(2, { quality: 1 })];
+    handle.sync();
+    expect(handle.view.filters).toHaveLength(1);
+    expect(handle.view.children.every((child) => child.filters === null)).toBe(
+      true,
+    );
+    const rootFilter = handle.view.filters?.[0];
+    const destroyRootFilter = rootFilter
+      ? vi.spyOn(rootFilter, 'destroy')
+      : null;
+    group.filters = [];
+    handle.sync();
+    expect(destroyRootFilter).toHaveBeenCalledOnce();
 
     const visit = (node: Container): void => {
       if (node instanceof Sprite) expect(node.children).toHaveLength(0);

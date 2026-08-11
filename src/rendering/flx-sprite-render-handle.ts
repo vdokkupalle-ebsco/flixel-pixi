@@ -2,6 +2,7 @@ import { Container, Sprite, Texture } from 'pixi.js';
 
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxSprite } from '../objects/flx-sprite';
+import { FlxFilterChain } from './flx-filter-chain';
 import type { FlxRenderHandle } from './flx-render-handle';
 import {
   interpolateObjectAngle,
@@ -17,6 +18,7 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
   readonly #owner: FlxSprite;
   readonly #onDestroy: () => void;
   #destroyed = false;
+  readonly #filterChain = new FlxFilterChain();
 
   constructor(owner: FlxSprite, onDestroy: () => void = () => undefined) {
     this.#owner = owner;
@@ -57,11 +59,13 @@ export class FlxSpriteRenderHandle implements FlxRenderHandle {
     this.view.tint = owner.color;
     this.view.blendMode = owner.blend ?? 'normal';
     this.view.visible = owner.exists && owner.visible && owner.alpha > 0;
+    this.#filterChain.sync(this.view, owner.filters);
   }
 
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
+    this.#filterChain.destroy(this.view);
     this.view.destroy({ children: true });
     this.#onDestroy();
   }

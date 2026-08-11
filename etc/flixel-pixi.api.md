@@ -1105,6 +1105,25 @@ export class FlxBitmapTextRenderHandle implements FlxRenderHandle {
 }
 
 // @public
+export class FlxBlurFilter {
+    constructor(strength?: number, options?: FlxBlurFilterOptions);
+    // (undocumented)
+    readonly kind = "blur";
+    // (undocumented)
+    readonly quality: number;
+    // (undocumented)
+    readonly repeatEdgePixels: boolean;
+    // (undocumented)
+    readonly strength: number;
+}
+
+// @public
+export interface FlxBlurFilterOptions {
+    quality?: number;
+    repeatEdgePixels?: boolean;
+}
+
+// @public
 export interface FlxBmFontData {
     // (undocumented)
     baseLineOffset: number;
@@ -1491,6 +1510,18 @@ export class FlxCircularMotion extends FlxMotion {
 }
 
 // @public
+export class FlxColorMatrixFilter {
+    constructor(matrix: readonly number[], alpha?: number);
+    // (undocumented)
+    readonly alpha: number;
+    static grayscale(alpha?: number): FlxColorMatrixFilter;
+    // (undocumented)
+    readonly kind = "color-matrix";
+    // (undocumented)
+    readonly matrix: readonly number[];
+}
+
+// @public
 export class FlxColorTween extends FlxTween {
     // (undocumented)
     color: number;
@@ -1809,6 +1840,9 @@ export interface FlxEmitterRenderOptions {
     // (undocumented)
     roundPixels?: boolean;
 }
+
+// @public
+export type FlxFilter = FlxBlurFilter | FlxColorMatrixFilter;
 
 // @public
 export class FlxFlickerTween extends FlxTween {
@@ -3357,6 +3391,8 @@ export class FlxSprite extends FlxObject {
     // (undocumented)
     get facing(): number;
     set facing(direction: number);
+    get filters(): readonly FlxFilter[];
+    set filters(value: readonly FlxFilter[]);
     // (undocumented)
     finished: boolean;
     // (undocumented)

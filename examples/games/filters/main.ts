@@ -1,0 +1,71 @@
+import { bootGame, type GameApplication } from '../_kit/boot-game';
+import { FilterShowcaseState, type FilterShowcaseSnapshot } from './game';
+
+declare global {
+  interface Window {
+    __FLIXEL_PIXI_FILTERS__?: {
+      app?: GameApplication;
+      destroyed: boolean;
+      ready: boolean;
+      setBlurEnabled?: (enabled: boolean) => void;
+      snapshot?: () => FilterShowcaseSnapshot | null;
+    };
+  }
+}
+
+const host = document.querySelector<HTMLElement>('[data-testid="canvas-host"]');
+const status = document.querySelector<HTMLElement>('[data-testid="status"]');
+const toggle = document.querySelector<HTMLButtonElement>(
+  '[data-action="blur"]',
+);
+const destroy = document.querySelector<HTMLButtonElement>(
+  '[data-action="destroy"]',
+);
+if (!host) throw new Error('Missing canvas host.');
+window.__FLIXEL_PIXI_FILTERS__ = { destroyed: false, ready: false };
+
+bootGame({
+  backgroundColor: 0x07111f,
+  fpsDisplay: true,
+  height: 360,
+  host,
+  initialState: FilterShowcaseState,
+  title: 'Filter Showcase',
+  width: 640,
+})
+  .then((app) => {
+    const state = (): FilterShowcaseState | null =>
+      app.game.state instanceof FilterShowcaseState ? app.game.state : null;
+    window.__FLIXEL_PIXI_FILTERS__ = {
+      app,
+      destroyed: false,
+      ready: true,
+      setBlurEnabled(enabled) {
+        state()?.setBlurEnabled(enabled);
+      },
+      snapshot: () => state()?.snapshot() ?? null,
+    };
+    toggle?.removeAttribute('disabled');
+    destroy?.removeAttribute('disabled');
+    toggle?.addEventListener('click', () => {
+      const current = state();
+      if (!current) return;
+      current.setBlurEnabled(!current.blurEnabled);
+      toggle.textContent = current.blurEnabled ? 'Disable blur' : 'Enable blur';
+    });
+    destroy?.addEventListener('click', () => {
+      app.destroy();
+      window.__FLIXEL_PIXI_FILTERS__ = { destroyed: true, ready: false };
+      if (status) status.textContent = 'Destroyed';
+    });
+    if (status) {
+      status.textContent = 'Filter showcase ready';
+      status.dataset.state = 'ready';
+    }
+  })
+  .catch((cause: unknown) => {
+    if (status) {
+      status.textContent = `Failed: ${String(cause)}`;
+      status.dataset.state = 'error';
+    }
+  });

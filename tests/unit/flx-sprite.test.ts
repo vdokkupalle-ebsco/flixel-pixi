@@ -1,7 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+// @vitest-environment happy-dom
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   FlxAnim,
+  FlxBlurFilter,
+  FlxColorMatrixFilter,
   FlxContext,
   FlxG,
   FlxGraphic,
@@ -176,6 +179,49 @@ describe('FlxSprite', () => {
     expect(handle.destroyed).toBe(true);
     sprite.destroy();
     graphic.destroy();
+  });
+
+  it('creates camera-local Pixi filters from renderer-neutral descriptors', () => {
+    const sprite = new FlxSprite();
+    const grayscale = FlxColorMatrixFilter.grayscale(0.75);
+    sprite.filters = [new FlxBlurFilter(3, { quality: 2 }), grayscale];
+    expect(Object.isFrozen(sprite.filters)).toBe(true);
+    const first = sprite.createRenderHandle();
+    const second = sprite.createRenderHandle();
+    if (
+      !(first instanceof FlxSpriteRenderHandle) ||
+      !(second instanceof FlxSpriteRenderHandle)
+    ) {
+      throw new Error('Expected sprite handles.');
+    }
+
+    expect(first.view.filters).toHaveLength(2);
+    expect(first.view.filters?.[0]?.constructor.name).toBe('BlurFilter');
+    expect(first.view.filters?.[1]?.constructor.name).toBe('ColorMatrixFilter');
+    expect(first.view.filters?.[1]).not.toBe(second.view.filters?.[1]);
+
+    const previous = first.view.filters?.[0];
+    const destroyPrevious = previous ? vi.spyOn(previous, 'destroy') : null;
+    sprite.filters = [grayscale];
+    first.sync();
+    expect(first.view.filters).toHaveLength(1);
+    expect(destroyPrevious).toHaveBeenCalledOnce();
+
+    first.destroy();
+    second.destroy();
+    sprite.destroy();
+  });
+
+  it('validates built-in filter descriptors', () => {
+    expect(() => new FlxBlurFilter(-1)).toThrow(RangeError);
+    expect(() => new FlxBlurFilter(2, { quality: 0 })).toThrow(RangeError);
+    expect(() => new FlxColorMatrixFilter([1, 2, 3])).toThrow(RangeError);
+    expect(() => FlxColorMatrixFilter.grayscale(2)).toThrow(RangeError);
+    const sprite = new FlxSprite();
+    expect(() => {
+      sprite.filters = [{} as FlxBlurFilter];
+    }).toThrow(TypeError);
+    sprite.destroy();
   });
 
   it('supports direct frames, random frames, offsets, generated graphics, and culling', () => {

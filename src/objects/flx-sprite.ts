@@ -14,6 +14,11 @@ import { makeGraphicPixels, type PixelBuffer } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
 import { FlxPoint } from '../math/flx-point';
 import { FlxSpriteRenderHandle } from '../rendering/flx-sprite-render-handle';
+import {
+  FlxBlurFilter,
+  FlxColorMatrixFilter,
+  type FlxFilter,
+} from '../rendering/flx-filter';
 import type { FlxRenderHandle } from '../rendering/flx-render-handle';
 import { FlxAnim } from './flx-anim';
 import { FlxObject, type FlxCameraLike } from './flx-object';
@@ -117,6 +122,7 @@ export class FlxSprite extends FlxObject {
   #facing = FlxObject.RIGHT;
   #alpha = 1;
   #color = 0xffffff;
+  #filters: readonly FlxFilter[] = Object.freeze([]);
   #animationPaused = false;
   #destroyed = false;
   /** Per-playback loop override (set by play). */
@@ -549,6 +555,26 @@ export class FlxSprite extends FlxObject {
   set facing(direction: number) {
     if (this.#facing !== direction) this.dirty = true;
     this.#facing = direction;
+  }
+
+  /** Immutable renderer-neutral effects applied in declaration order. */
+  get filters(): readonly FlxFilter[] {
+    return this.#filters;
+  }
+
+  set filters(value: readonly FlxFilter[]) {
+    if (
+      value.some(
+        (filter) =>
+          !(filter instanceof FlxBlurFilter) &&
+          !(filter instanceof FlxColorMatrixFilter),
+      )
+    ) {
+      throw new TypeError(
+        'Sprite filters must be supported FlxFilter descriptors.',
+      );
+    }
+    this.#filters = Object.freeze([...value]);
   }
 
   get alpha(): number {
