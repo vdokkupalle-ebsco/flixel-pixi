@@ -1,6 +1,10 @@
 import { bootGame, type GameApplication } from '../_kit/boot-game';
 import { UiDemoState, type UiDemoSnapshot } from './game';
 import { preloadKenneyUiAtlas } from './kenney-ui';
+import {
+  MULTI_PAGE_FONT_ALIAS,
+  multiPageFontDescriptor,
+} from './multi-page-font';
 
 declare global {
   interface Window {
@@ -25,6 +29,12 @@ if (!host) throw new Error('Missing [data-testid="canvas-host"]');
 preloadKenneyUiAtlas()
   .then(() =>
     bootGame({
+      assets: {
+        bundles: [
+          { assets: [multiPageFontDescriptor], name: MULTI_PAGE_FONT_ALIAS },
+        ],
+        initialBundles: MULTI_PAGE_FONT_ALIAS,
+      },
       backgroundColor: 0x2c3e50,
       fpsDisplay: { mode: 'compact' },
       height: 320,
@@ -54,7 +64,7 @@ preloadKenneyUiAtlas()
     });
     if (status) {
       status.textContent =
-        'Kenney UI demo ready — Tab to focus buttons, click to change health';
+        'UI demo ready — native controls and a two-page asset font';
       status.setAttribute('data-state', 'ready');
     }
   })

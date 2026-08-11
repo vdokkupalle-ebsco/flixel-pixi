@@ -28,6 +28,7 @@ export type {
 } from './assets/flx-assets';
 export { FlxGraphic } from './assets/flx-graphic';
 export { FlxBitmapFont } from './assets/flx-bitmap-font';
+export type { FlxBitmapFontPageSource } from './assets/flx-bitmap-font';
 export { parseBmFontXml } from './assets/flx-bmfont-parse';
 export type { FlxBmFontData } from './assets/flx-bmfont-parse';
 

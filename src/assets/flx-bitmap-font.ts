@@ -44,16 +44,31 @@ function destroyFontWithoutSourceTextures(font: BitmapFont): void {
   font.destroy();
 }
 
-function validateSinglePageFont(data: FlxBmFontData, texture: Texture): void {
-  if (data.pages.length !== 1 || data.pages[0]?.id !== 0) {
+/** Texture or engine graphic supplying one AngelCode bitmap-font page. @public */
+export type FlxBitmapFontPageSource = FlxGraphic | Texture;
+
+function validatePageTextures(
+  data: FlxBmFontData,
+  textures: readonly Texture[],
+): void {
+  if (textures.length !== data.pages.length) {
     throw new Error(
-      'FlxBitmapFont.fromAngelCode currently supports one page with id 0.',
+      `Bitmap font declares ${data.pages.length} pages but received ${textures.length} page textures.`,
     );
   }
-  for (const char of Object.values(data.chars)) {
-    if (char.page !== 0) {
+  const orderedPages = [...data.pages].sort((a, b) => a.id - b.id);
+  for (let index = 0; index < orderedPages.length; index += 1) {
+    if (orderedPages[index]?.id !== index) {
       throw new Error(
-        'FlxBitmapFont.fromAngelCode currently supports glyphs on page 0 only.',
+        'Bitmap font page ids must be contiguous and start at zero.',
+      );
+    }
+  }
+  for (const char of Object.values(data.chars)) {
+    const texture = textures[char.page];
+    if (texture === undefined) {
+      throw new Error(
+        `Bitmap font glyph "${char.letter}" references missing page ${char.page}.`,
       );
     }
     if (
@@ -127,7 +142,7 @@ export class FlxBitmapFont {
   }
 
   static fromAngelCode(
-    source: FlxGraphic | Texture,
+    source: FlxBitmapFontPageSource | readonly FlxBitmapFontPageSource[],
     xmlText: string,
     fontFamily?: string,
   ): FlxBitmapFont {
@@ -135,9 +150,14 @@ export class FlxBitmapFont {
     if (fontFamily !== undefined && fontFamily.length > 0) {
       data.fontFamily = fontFamily;
     }
-    const texture = textureFromSource(source);
-    validateSinglePageFont(data, texture);
-    const font = installPixiBitmapFont(data, [texture]);
+    const pageSources: readonly FlxBitmapFontPageSource[] = Array.isArray(
+      source,
+    )
+      ? source
+      : [source as FlxBitmapFontPageSource];
+    const textures = pageSources.map(textureFromSource);
+    validatePageTextures(data, textures);
+    const font = installPixiBitmapFont(data, textures);
     return new FlxBitmapFont(font, true);
   }
 

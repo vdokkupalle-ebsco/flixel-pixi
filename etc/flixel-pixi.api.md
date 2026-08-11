@@ -618,6 +618,7 @@ export class FlxAssets {
     static fromContext(context: FlxContext): FlxAssets | undefined;
     // (undocumented)
     get<T>(id: string): T | undefined;
+    getBitmapFont(id: string): FlxBitmapFont | undefined;
     // (undocumented)
     getGraphic(id: string): FlxGraphic | undefined;
     // (undocumented)
@@ -628,6 +629,7 @@ export class FlxAssets {
     isLoaded(id: string): boolean;
     // (undocumented)
     load<T>(id: string | FlxAssetDescriptor, options?: FlxAssetLoadOptions): Promise<T>;
+    loadBitmapFont(id: string | FlxAssetDescriptor, options?: FlxAssetLoadOptions): Promise<FlxBitmapFont>;
     // (undocumented)
     loadBundle<T = Record<string, unknown>>(name: string | string[], onProgress?: (progress: number) => void): Promise<T>;
     // (undocumented)
@@ -942,7 +944,7 @@ export class FlxBitmapFont {
     // (undocumented)
     get fontFamily(): string;
     // (undocumented)
-    static fromAngelCode(source: FlxGraphic | Texture, xmlText: string, fontFamily?: string): FlxBitmapFont;
+    static fromAngelCode(source: FlxBitmapFontPageSource | readonly FlxBitmapFontPageSource[], xmlText: string, fontFamily?: string): FlxBitmapFont;
     // (undocumented)
     static fromMonospace(source: FlxGraphic | Texture, letters: string | undefined, charWidth: number, charHeight: number, options?: {
         fontFamily?: string;
@@ -956,6 +958,9 @@ export class FlxBitmapFont {
     // (undocumented)
     get size(): number;
 }
+
+// @public
+export type FlxBitmapFontPageSource = FlxGraphic | Texture;
 
 // @public
 export class FlxBitmapText extends FlxSprite {

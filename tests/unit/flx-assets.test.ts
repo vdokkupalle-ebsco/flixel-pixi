@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FlxAssetLoadError,
   FlxAssets,
+  FlxBitmapFont,
   FlxContext,
   FlxGraphic,
   makeGraphicPixels,
@@ -186,6 +187,44 @@ describe('FlxAssets', () => {
     expect(assets.isLoaded('hero')).toBe(false);
     await assets.unload(['hero']);
     await assets.unloadBundle(['level']);
+    source.destroy();
+  });
+
+  it('wraps asset-owned bitmap fonts and invalidates wrappers on unload', async () => {
+    const backend = new FakeAssets();
+    const assets = new FlxAssets(backend);
+    const source = FlxGraphic.fromPixels(
+      makeGraphicPixels(8, 8, 0xffffffff),
+      'asset-font-page',
+    );
+    const owner = FlxBitmapFont.fromMonospace(source, 'A', 8, 8, {
+      fontFamily: 'AssetFont8',
+    });
+    backend.cache.set('hud-font', owner.pixiFont);
+
+    const loaded = await assets.loadBitmapFont('hud-font');
+    expect(loaded).toBe(assets.getBitmapFont('hud-font'));
+    expect(loaded.fontFamily).toBe('AssetFont8');
+    await assets.unload('hud-font');
+    expect(loaded.destroyed).toBe(true);
+    expect(owner.destroyed).toBe(false);
+
+    assets.addBundle('font-bundle', [
+      { alias: 'hud-font', parser: 'bitmap-font', src: 'hud.fnt' },
+    ]);
+    backend.cache.set('hud-font', owner.pixiFont);
+    await assets.loadBundle('font-bundle');
+    const bundled = assets.getBitmapFont('hud-font');
+    expect(bundled?.destroyed).toBe(false);
+    await assets.unloadBundle('font-bundle');
+    expect(bundled?.destroyed).toBe(true);
+
+    backend.cache.set('not-font', { value: 1 });
+    expect(assets.getBitmapFont('not-font')).toBeUndefined();
+    await expect(assets.loadBitmapFont('not-font')).rejects.toThrow(
+      'not a Pixi BitmapFont',
+    );
+    owner.destroy();
     source.destroy();
   });
 

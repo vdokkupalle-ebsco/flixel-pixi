@@ -227,16 +227,20 @@ Current slice:
 - `FlxButton` exposes text, enabled, focus, accessibility label/tab order, and
   shared activation behavior. The public browser boot path owns the native DOM
   bridge and lifecycle.
-- `FlxBitmapFont` and `FlxBitmapText` parse AngelCode XML and monospace grids,
-  register Pixi `BitmapFont` instances, and project labels through a dedicated
-  render handle with alignment, spacing, and tint.
+- `FlxBitmapFont` and `FlxBitmapText` parse single- or multi-page AngelCode XML
+  and monospace grids, register Pixi `BitmapFont` instances, and project labels
+  through a dedicated render handle with alignment, spacing, and tint.
+- `FlxAssets.loadBitmapFont()` loads `.fnt`/XML descriptors and their page
+  textures through Pixi bundles, preserves cache identity, and invalidates its
+  non-owning font view when an asset or bundle is unloaded.
 - `FlxInputText` projects to native single-line or multiline browser controls
   for selection, mobile keyboards, and IME. DOM edits, focus, composition, and
   submission are consumed on fixed updates, and editable DOM key-downs are
   isolated from gameplay keyboard bindings.
 - The public UI demo and cross-browser test cover camera placement, semantic
   labels, disabled state, Enter/Space activation, Kenney atlas bars/buttons,
-  bitmap-font HUD labels, and native IME text entry.
+  an asset-backed two-page bitmap font, bitmap-font HUD labels, and native IME
+  text entry.
 - `FlxVirtualPad` and `FlxVirtualButton` provide deterministic D-pad/action
   input, serializable digital/scalar action sources, native semantic buttons,
   HUD placement, and replay derivation from recorded pointer/touch frames. The
@@ -245,8 +249,7 @@ Current slice:
   dead-zone remapping, normalized serializable axes, stable texture-free Pixi
   geometry, and replay derivation through the same virtual-input registry.
 
-Remaining slice: asset-backed multi-page bitmap fonts. See
-[`guides/ui.md`](guides/ui.md) and
+Checkpoint complete. See [`guides/ui.md`](guides/ui.md) and
 [`adr/0017-native-accessibility-over-render-textures.md`](adr/0017-native-accessibility-over-render-textures.md).
 
 ### Atlas and content-pipeline expansion
@@ -256,7 +259,8 @@ Current atlas support remains the base. Candidate additions:
 - TexturePacker JSON/XML variants and richer HaxeFlixel atlas queries;
 - Aseprite JSON metadata, tags, slices, frame durations, and trimmed/rotated
   frames;
-- BMFont text/XML/JSON parsing, pages, kerning, and bundle ownership;
+- BMFont text/JSON parsing beyond the completed multi-page XML, kerning, and
+  bundle-ownership path;
 - filtered/derived frame collections where Pixi can implement them without
   mutable GPU readback;
 - development-time validation with actionable duplicate, missing-frame, and

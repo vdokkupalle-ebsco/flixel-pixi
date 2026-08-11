@@ -119,12 +119,37 @@ score.setFormat(null, 0, 0x4a3b30, 'left');
 add(score);
 ```
 
+For a multi-page AngelCode font, pass page sources in page-ID order. Page IDs
+must be contiguous from zero, and every glyph must reference a declared page:
+
+```ts
+const font = FlxBitmapFont.fromAngelCode([page0, page1], xmlText);
+```
+
+Prefer `FlxAssets.loadBitmapFont()` when the `.fnt` or `.xml` file and its page
+images are shipped as assets. Pixi resolves page filenames relative to the font
+descriptor and caches the complete font:
+
+```ts
+const assets = FlxAssets.fromContext(FlxG.context)!;
+const hudFont = await assets.loadBitmapFont({
+  alias: 'hud-font',
+  parser: 'bitmap-font',
+  src: '/fonts/hud.fnt',
+});
+```
+
 Use `FlxBitmapText` for HUD counters and labels that update every frame; keep
 styled `FlxText` for infrequent labels with borders and shadows.
 
 Bitmap-font family names must be unique while registered. Destroying an owned
 `FlxBitmapFont` removes that registration and its glyph metadata, but leaves the
 source `FlxGraphic` or texture under its original owner's control.
+
+Fonts returned by `FlxAssets` are non-owning views of Pixi's asset cache. Destroy
+or detach every `FlxBitmapText` using the font before unloading its asset or
+bundle. Unload invalidates the `FlxBitmapFont` view and Pixi releases the font
+and page textures; calling `destroy()` on the view alone does not unload them.
 
 ## Native text input and IME
 
@@ -214,6 +239,3 @@ Use a stable `idPrefix` whenever bindings are saved. A context rejects duplicate
 virtual input IDs to prevent ambiguous action resolution. The public Action
 demo combines virtual, keyboard, and gamepad sources for the same movement and
 burst actions.
-
-Asset-backed multi-page bitmap-font loading remains a separate slice with its
-own asset-ownership and unload boundaries.

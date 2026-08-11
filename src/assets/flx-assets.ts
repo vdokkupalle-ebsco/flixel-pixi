@@ -1,5 +1,6 @@
 import {
   Assets,
+  BitmapFont,
   Texture,
   type AssetInitOptions,
   type LoadOptions,
@@ -8,6 +9,7 @@ import {
 
 import type { FlxContext } from '../core/flx-context';
 import { FlxGraphic } from './flx-graphic';
+import { FlxBitmapFont } from './flx-bitmap-font';
 
 let pixiInitialization: Promise<void> | null = null;
 
@@ -167,6 +169,7 @@ export class FlxAssetLoadError extends Error {
 export class FlxAssets {
   readonly #backend: FlxAssetBackend;
   readonly #graphics = new WeakMap<Texture, FlxGraphic>();
+  readonly #bitmapFonts = new Map<string, FlxBitmapFont>();
   readonly #loadedIds = new Set<string>();
   readonly #failures = new Map<string, FlxAssetLoadError>();
   #initialized = false;
@@ -270,6 +273,29 @@ export class FlxAssets {
     return graphic;
   }
 
+  /** Return an already-loaded Pixi bitmap font as a non-owning engine wrapper. */
+  getBitmapFont(id: string): FlxBitmapFont | undefined {
+    const font = this.get<BitmapFont>(id);
+    if (!(font instanceof BitmapFont)) return undefined;
+    return this.#wrapBitmapFont(id, font);
+  }
+
+  /**
+   * Load a `.fnt`/`.xml` bitmap font and every page it references.
+   * Page textures and the Pixi font remain owned by the asset cache.
+   */
+  async loadBitmapFont(
+    id: string | FlxAssetDescriptor,
+    options?: FlxAssetLoadOptions,
+  ): Promise<FlxBitmapFont> {
+    const key = typeof id === 'string' ? id : firstAlias(id.alias);
+    const font = await this.load<BitmapFont>(id, options);
+    if (!(font instanceof BitmapFont)) {
+      throw new TypeError('The loaded asset is not a Pixi BitmapFont.');
+    }
+    return this.#wrapBitmapFont(key, font);
+  }
+
   failureFor(id: string): FlxAssetLoadError | undefined {
     return this.#failures.get(id);
   }
@@ -284,12 +310,37 @@ export class FlxAssets {
       this.#loadedIds.delete(key);
       this.#failures.delete(key);
     }
+    this.#pruneBitmapFonts();
   }
 
   async unloadBundle(name: string | string[]): Promise<void> {
     await this.#backend.unloadBundle(name);
     for (const key of Array.isArray(name) ? name : [name]) {
       this.#failures.delete(key);
+    }
+    this.#pruneBitmapFonts();
+  }
+
+  #wrapBitmapFont(id: string, font: BitmapFont): FlxBitmapFont {
+    const current = this.#bitmapFonts.get(id);
+    if (
+      current !== undefined &&
+      !current.destroyed &&
+      current.pixiFont === font
+    ) {
+      return current;
+    }
+    current?.destroy();
+    const wrapper = new FlxBitmapFont(font, false);
+    this.#bitmapFonts.set(id, wrapper);
+    return wrapper;
+  }
+
+  #pruneBitmapFonts(): void {
+    for (const [id, font] of this.#bitmapFonts) {
+      if (this.#backend.get<BitmapFont>(id) === font.pixiFont) continue;
+      font.destroy();
+      this.#bitmapFonts.delete(id);
     }
   }
 }

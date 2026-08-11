@@ -12,6 +12,14 @@ test('operates rendered UI through native keyboard accessibility controls', asyn
     { timeout: 10_000 },
   );
   const controls = page.locator('[data-flx-accessible-button]');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__FLIXEL_PIXI_UI__?.snapshot?.()?.multiPageFontFamily ?? null,
+      ),
+    )
+    .toBe('UiMultiPage24');
   await expect(controls).toHaveCount(2);
   await expect(controls.nth(0)).toHaveAttribute(
     'aria-label',

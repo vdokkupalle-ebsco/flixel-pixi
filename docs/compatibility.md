@@ -86,7 +86,7 @@ plain TypeScript state; Pixi display objects are synchronized views.
 | `FlxSprite.loadRotatedGraphic`                        | Deprecated     | Runtime Pixi rotation replaces pre-baked Flash rotation sheets.                                                                                                              |
 | `framePixels`, mutable `pixels`, `stamp`, and overlap | Emulated       | CPU packed-buffer helpers remain in the explicit compatibility module; arbitrary gameplay GPU readback remains unsupported by the rendering architecture.                    |
 | `FlxText`                                             | Adapted        | Text, width wrapping, alignment, font, size, fill, one-pixel shadow, border, multiline bounds, transforms, and alpha use Pixi `Text`; `BitmapText` is an explicit fast mode. |
-| Modern HaxeFlixel `FlxBitmapFont`                     | Adapted        | AngelCode BMFont XML and monospace grid builders register Pixi `BitmapFont` instances through `FlxGraphic`/texture sources and Pixi `Cache`.                                 |
+| Modern HaxeFlixel `FlxBitmapFont`                     | Adapted        | Single- and multi-page AngelCode BMFont XML plus monospace grids register Pixi `BitmapFont` instances; `FlxAssets` adds Pixi bundle identity and unload invalidation.        |
 | Modern HaxeFlixel `FlxBitmapText`                     | Adapted        | Bitmap-font labels use Pixi `BitmapText` with field width, alignment, spacing, tint, and transform sync through a dedicated render handle.                                   |
 | `FlxTileblock`                                        | Adapted        | Seeded tile selection generates one uploadable texture from pixel-backed/preprocessed tile graphics; URL textures must be preprocessed rather than read back from the GPU.   |
 | `FlxAssets` (browser-native)                          | New            | Typed descriptors, aliases, manifests, bundles, progress, retries, failure state, background loading, cache lookup, and unload wrap Pixi `Assets`.                           |
@@ -292,7 +292,10 @@ node scripts/extract-as3-api.mjs /path/to/flixel/org/flixel
 
 - Source: HaxeFlixel `flixel.text.FlxBitmapFont`
 - Public API (subset): `fromAngelCode`, `fromMonospace`, `getDefaultFont`, `fontFamily`, `size`, `lineHeight`, `destroy`
-- Compatibility status: Adapted — AngelCode XML via `parseBmFontXml`, monospace grids, and Pixi `BitmapFont`/`Cache` registration; `fromXNA` and text `.fnt` parsers remain scheduled.
+- Compatibility status: Adapted — single- and multi-page AngelCode XML via
+  `parseBmFontXml`, monospace grids, Pixi `BitmapFont`/`Cache` registration, and
+  asset-backed bundle loading with unload invalidation; `fromXNA` and text
+  `.fnt` parsers remain scheduled.
 
 ### Modern HaxeFlixel `FlxBitmapText`
 

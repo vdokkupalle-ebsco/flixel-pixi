@@ -23,6 +23,22 @@ function monospaceGraphic(): FlxGraphic {
   return FlxGraphic.fromPixels(pixels, 'unit-bmfont-sheet');
 }
 
+function multiPageXml(): string {
+  return fixtureXml
+    .replace('pages="1"', 'pages="2"')
+    .replace(
+      '<page id="0" file="pixel8.png" />',
+      '<page id="0" file="pixel8-0.png" /><page id="1" file="pixel8-1.png" />',
+    )
+    .replace('id="66" x="8" y="0"', 'id="66" x="0" y="0"')
+    .replace('id="67" x="16" y="0"', 'id="67" x="0" y="0"')
+    .replaceAll('page="0" />', 'page="1" />')
+    .replace(
+      'id="65" x="0" y="0" width="8" height="8" xoffset="0" yoffset="0" xadvance="8" page="1"',
+      'id="65" x="0" y="0" width="8" height="8" xoffset="0" yoffset="0" xadvance="8" page="0"',
+    );
+}
+
 describe('parseBmFontXml', () => {
   it('parses AngelCode XML into Pixi-compatible font data', () => {
     const data = parseBmFontXml(fixtureXml);
@@ -144,6 +160,34 @@ describe('FlxBitmapFont', () => {
     graphic.destroy();
   });
 
+  it('builds multi-page AngelCode fonts without taking texture ownership', () => {
+    const first = FlxGraphic.fromPixels(
+      makeGraphicPixels(8, 8, 0xff3344ff),
+      'unit-bmfont-page-0',
+    );
+    const second = FlxGraphic.fromPixels(
+      makeGraphicPixels(8, 8, 0x33ccffff),
+      'unit-bmfont-page-1',
+    );
+    const font = FlxBitmapFont.fromAngelCode(
+      [first, second.texture],
+      multiPageXml(),
+      'UnitMultiPage8',
+    );
+    const text = new FlxBitmapText(0, 0, 'AB', font, 32);
+    const handle = text.createRenderHandle() as FlxBitmapTextRenderHandle;
+
+    expect(font.pixiFont.pages).toHaveLength(2);
+    expect(handle.textNode.text).toBe('AB');
+    font.destroy();
+    expect(first.texture.source.destroyed).toBe(false);
+    expect(second.texture.source.destroyed).toBe(false);
+
+    text.destroy();
+    first.destroy();
+    second.destroy();
+  });
+
   it('preserves caller-owned textures and cache entries for non-owning wrappers', () => {
     const graphic = monospaceGraphic();
     const font = FlxBitmapFont.fromMonospace(graphic, 'ABC', 8, 8, {
@@ -219,7 +263,15 @@ describe('FlxBitmapFont', () => {
           '<page id="0" file="a.png" /><page id="1" file="b.png" />',
         ),
       ),
-    ).toThrow('supports one page');
+    ).toThrow('received 1 page textures');
+    expect(() =>
+      FlxBitmapFont.fromAngelCode(
+        [graphic, graphic],
+        multiPageXml()
+          .replace('id="1" file=', 'id="2" file=')
+          .replaceAll('page="1"', 'page="2"'),
+      ),
+    ).toThrow('contiguous');
     expect(() =>
       FlxBitmapFont.fromAngelCode(
         graphic,

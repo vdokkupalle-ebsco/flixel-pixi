@@ -7,6 +7,7 @@ import {
   requireKenneyUiAtlas,
   requireKenneyUiFont,
 } from './kenney-ui';
+import { requireMultiPageUiFont } from './multi-page-font';
 
 export interface UiDemoSnapshot {
   damageDisabled: boolean;
@@ -16,6 +17,7 @@ export interface UiDemoSnapshot {
   percent: number;
   playerName: string;
   submittedName: string;
+  multiPageFontFamily: string;
 }
 
 const PANEL_W = 380;
@@ -114,6 +116,16 @@ export class UiDemoState extends FlxState {
     title.setFormat(null, 0, 0x3d2f24, 'center');
     title.scrollFactor.make(0, 0);
 
+    const multiPageLabel = new FlxBitmapText(
+      PANEL_LEFT,
+      288,
+      'AB AB AB AB',
+      requireMultiPageUiFont(),
+      PANEL_W,
+    );
+    multiPageLabel.setFormat(null, 0, 0xe2e8f0, 'center');
+    multiPageLabel.scrollFactor.make(0, 0);
+
     this.#healthText.setFormat(null, 0, 0x4a3b30, 'left');
     this.#healthText.origin.make(0, 0);
     this.#healthText.x = BAR_X;
@@ -148,6 +160,7 @@ export class UiDemoState extends FlxState {
 
     this.add(panel);
     this.add(title);
+    this.add(multiPageLabel);
     this.add(this.#healthText);
     this.add(this.#manaText);
     for (const sprite of this.#healthBar.sprites) this.add(sprite);
@@ -171,6 +184,7 @@ export class UiDemoState extends FlxState {
       healDisabled: !this.#healButton.enabled,
       health: this.health,
       mana: this.mana,
+      multiPageFontFamily: requireMultiPageUiFont().fontFamily,
       percent: this.#healthBar.bar.percent,
       playerName: this.#nameInput.text,
       submittedName: this.submittedName,
