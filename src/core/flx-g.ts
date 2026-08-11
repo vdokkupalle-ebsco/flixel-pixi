@@ -2,6 +2,7 @@
 import { FLX_AUDIO_SERVICE } from '../audio/flx-audio-backend';
 import type { FlxAudioService } from '../audio/flx-audio-manager';
 import type { FlxSound } from '../audio/flx-sound';
+import type { FlxSoundGroup } from '../audio/flx-sound-group';
 import {
   FlxQuadTree,
   type FlxOverlapCallback,
@@ -480,6 +481,16 @@ export class FlxG {
     return FlxG.#audio.sounds;
   }
 
+  /** Default bus for sound effects. */
+  static get soundGroup(): FlxSoundGroup {
+    return FlxG.#audio.soundGroup;
+  }
+
+  /** Default bus for music. */
+  static get musicGroup(): FlxSoundGroup {
+    return FlxG.#audio.musicGroup;
+  }
+
   /** Global volume (0–1). */
   static get volume(): number {
     return FlxG.#audio.volume;
@@ -510,8 +521,9 @@ export class FlxG {
     volume?: number,
     loop?: boolean,
     autoDestroy?: boolean,
+    group?: FlxSoundGroup,
   ): FlxSound {
-    return FlxG.#audio.play(source, volume, loop, autoDestroy);
+    return FlxG.#audio.play(source, volume, loop, autoDestroy, group);
   }
 
   /**
@@ -519,8 +531,12 @@ export class FlxG {
    * @param source - `AudioBuffer`, URL string, or asset alias.
    * @param volume - Volume (0–1).  Defaults to 1.
    */
-  static playMusic(source: unknown, volume?: number): void {
-    FlxG.#audio.playMusic(source, volume);
+  static playMusic(
+    source: unknown,
+    volume?: number,
+    group?: FlxSoundGroup,
+  ): void {
+    FlxG.#audio.playMusic(source, volume, group);
   }
 
   /**
@@ -535,8 +551,9 @@ export class FlxG {
     volume?: number,
     loop?: boolean,
     autoDestroy?: boolean,
+    group?: FlxSoundGroup,
   ): FlxSound {
-    return FlxG.#audio.stream(url, volume, loop, autoDestroy);
+    return FlxG.#audio.stream(url, volume, loop, autoDestroy, group);
   }
 
   /** Pause all sounds and music. */

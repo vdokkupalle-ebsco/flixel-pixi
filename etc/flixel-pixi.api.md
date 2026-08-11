@@ -766,15 +766,19 @@ export class FlxAudioManager implements FlxAudioService {
     // (undocumented)
     music: FlxSound | null;
     // (undocumented)
+    readonly musicGroup: FlxSoundGroup;
+    // (undocumented)
     get mute(): boolean;
     set mute(value: boolean);
     pauseSounds(): void;
-    play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
-    playMusic(source: unknown, volume?: number): void;
+    play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean, group?: FlxSoundGroup): FlxSound;
+    playMusic(source: unknown, volume?: number, group?: FlxSoundGroup): void;
     resumeSounds(): void;
     // (undocumented)
+    readonly soundGroup: FlxSoundGroup;
+    // (undocumented)
     readonly sounds: FlxGroup;
-    stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean, group?: FlxSoundGroup): FlxSound;
     updateSounds(elapsed: number): void;
     // (undocumented)
     get volume(): number;
@@ -790,19 +794,23 @@ export interface FlxAudioService {
     // (undocumented)
     music: FlxSound | null;
     // (undocumented)
+    readonly musicGroup: FlxSoundGroup;
+    // (undocumented)
     mute: boolean;
     // (undocumented)
     pauseSounds(): void;
     // (undocumented)
-    play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean, group?: FlxSoundGroup): FlxSound;
     // (undocumented)
-    playMusic(source: unknown, volume?: number): void;
+    playMusic(source: unknown, volume?: number, group?: FlxSoundGroup): void;
     // (undocumented)
     resumeSounds(): void;
     // (undocumented)
+    readonly soundGroup: FlxSoundGroup;
+    // (undocumented)
     readonly sounds: FlxGroup;
     // (undocumented)
-    stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean, group?: FlxSoundGroup): FlxSound;
     // (undocumented)
     updateSounds(elapsed: number): void;
     // (undocumented)
@@ -1992,6 +2000,7 @@ export class FlxG {
     // (undocumented)
     static get mouse(): Mouse;
     static get music(): FlxSound | null;
+    static get musicGroup(): FlxSoundGroup;
     static get mute(): boolean;
     static set mute(value: boolean);
     // (undocumented)
@@ -2002,8 +2011,8 @@ export class FlxG {
     static pauseSounds(): void;
     // (undocumented)
     static readonly PINK = 4293926655;
-    static play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
-    static playMusic(source: unknown, volume?: number): void;
+    static play(source: unknown, volume?: number, loop?: boolean, autoDestroy?: boolean, group?: FlxSoundGroup): FlxSound;
+    static playMusic(source: unknown, volume?: number, group?: FlxSoundGroup): void;
     // (undocumented)
     static get plugins(): readonly FlxBasic[];
     // (undocumented)
@@ -2036,12 +2045,13 @@ export class FlxG {
     static shake(intensity?: number, duration?: number, onComplete?: FlxCameraEffectCallback | null, force?: boolean, direction?: FlxCameraShakeDirection): void;
     // (undocumented)
     static shuffle<T>(objects: T[], howManyTimes: number): T[];
+    static get soundGroup(): FlxSoundGroup;
     static get sounds(): FlxGroup;
     // (undocumented)
     static get state(): FlxState | null;
     static stopRecording(): string;
     static stopReplay(): void;
-    static stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean): FlxSound;
+    static stream(url: string, volume?: number, loop?: boolean, autoDestroy?: boolean, group?: FlxSoundGroup): FlxSound;
     // (undocumented)
     static switchState(state: FlxState): void;
     // (undocumented)
@@ -3192,11 +3202,16 @@ export class FlxSound extends FlxBasic {
     amplitudeLeft: number;
     amplitudeRight: number;
     artist: string;
+    attachTo(source: FlxObject, options: FlxSoundAttachmentOptions): FlxSound;
     autoDestroy: boolean;
     destroy(): void;
+    detach(): FlxSound;
+    get effectiveVolume(): number;
     fadeIn(duration: number): void;
     fadeOut(duration: number, callback?: (() => void) | null): void;
     getActualVolume(): number;
+    get group(): FlxSoundGroup | null;
+    set group(value: FlxSoundGroup | null);
     kill(): void;
     loadEmbedded(source: unknown, loop?: boolean, autoDestroy?: boolean): FlxSound;
     loadStream(url: string, loop?: boolean, autoDestroy?: boolean): FlxSound;
@@ -3212,6 +3227,40 @@ export class FlxSound extends FlxBasic {
     set volume(value: number);
     x: number;
     y: number;
+}
+
+// @public
+export interface FlxSoundAttachmentOptions {
+    cameras?: readonly FlxCameraLike[];
+    listener: FlxObject;
+    margin?: number;
+    offscreen?: FlxSoundOffscreenBehavior;
+    pan?: boolean;
+    radius: number;
+    viewport?: 'ignore' | 'visible';
+}
+
+// @public
+export class FlxSoundGroup {
+    constructor(name: string, parent?: FlxSoundGroup | null);
+    get actualVolume(): number;
+    add(sound: FlxSound): FlxSound;
+    createChild(name: string): FlxSoundGroup;
+    destroy(): void;
+    // (undocumented)
+    get mute(): boolean;
+    set mute(value: boolean);
+    get muted(): boolean;
+    // (undocumented)
+    readonly name: string;
+    // (undocumented)
+    readonly parent: FlxSoundGroup | null;
+    remove(sound: FlxSound): FlxSound;
+    // (undocumented)
+    get soundCount(): number;
+    // (undocumented)
+    get volume(): number;
+    set volume(value: number);
 }
 
 // @public
@@ -3237,6 +3286,9 @@ export interface FlxSoundHandle {
     // (undocumented)
     stop(): void;
 }
+
+// @public
+export type FlxSoundOffscreenBehavior = 'pause' | 'stop';
 
 // @public
 export class FlxSprite extends FlxObject {

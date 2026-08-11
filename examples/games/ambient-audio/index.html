@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi — Ambient Audio</title>
+    <link rel="stylesheet" href="../_kit/shell.css" />
+    <style>
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .controls label {
+        display: grid;
+        gap: 4px;
+        color: #94a3b8;
+        font-size: 0.75rem;
+      }
+      select {
+        min-height: 34px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        color: #e2e8f0;
+        background: #1e293b;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div>
+          <h1>Ambient spatial audio</h1>
+          <p class="status" data-testid="status" data-state="loading">
+            Initializing…
+          </p>
+        </div>
+        <div class="actions">
+          <a href="../"><button type="button">All demos</button></a>
+          <button type="button" data-action="destroy" disabled>Destroy</button>
+        </div>
+      </header>
+      <div class="controls">
+        <button type="button" data-action="tour" disabled>Pause tour</button>
+        <button type="button" data-action="mute" disabled>Mute ambience</button>
+        <label>
+          Outside viewport
+          <select data-offscreen disabled>
+            <option value="pause">Pause and resume</option>
+            <option value="stop">Stop and restart</option>
+          </select>
+        </label>
+      </div>
+      <div data-testid="canvas-host" class="canvas-host"></div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

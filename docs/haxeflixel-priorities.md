@@ -51,7 +51,7 @@ started merely to match a Haxe class count.
 |     7 |    P1    | UI and text authoring                           | Complete             | Common HUD/control/input-text needs no application-specific framework code.                        |
 |     8 |    P1    | Atlas and content-pipeline expansion            | Complete             | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Complete             | Logical coordinates remain correct through browser/window lifecycle changes.                       |
-|    10 |    P1    | Audio organization and system UX                | Planned              | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
+|    10 |    P1    | Audio organization and system UX                | In progress          | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Planned              | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
 |    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
@@ -326,6 +326,24 @@ Planned capabilities:
 - optional accessible DOM volume/mute indicator rather than a mandatory canvas
   tray;
 - explicit autoplay unlock, suspended-context, focus, and device-loss policy.
+
+Current slice:
+
+- `FlxSoundGroup` provides named hierarchical volume/mute buses with runtime
+  sound rerouting and recursive propagation.
+- `FlxG.soundGroup` and `FlxG.musicGroup` provide independent default routes;
+  `play`, `stream`, and `playMusic` accept an optional group without breaking
+  their existing positional calls.
+- Sound and group teardown detach routing references without changing sound
+  ownership or backend lifecycle.
+- `FlxSound.attachTo()` follows a world object, performs player-relative
+  distance attenuation and stereo panning, and gates looping playback against
+  any assigned camera with pause/stop and edge-hysteresis policies.
+- The ambient-audio demo preloads and auto-tours three supplied looping emitters,
+  then exposes live volume/pan/visibility diagnostics, group mute, and
+  pause-vs-stop controls.
+- Browser coverage deterministically verifies spatial direction, attenuation,
+  viewport gating, routing mute, and policy changes in all three engine lanes.
 
 ## P2 — advanced workflows
 

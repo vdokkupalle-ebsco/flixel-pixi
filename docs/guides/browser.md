@@ -20,6 +20,50 @@ const audioBackend = new WebAudioBackend({
 });
 ```
 
+## Audio groups
+
+Effects and music use independent `FlxG.soundGroup` and `FlxG.musicGroup`
+buses. Child groups multiply their volume with every ancestor and inherit mute:
+
+```ts
+const ambience = FlxG.soundGroup.createChild('ambience');
+ambience.volume = 0.4;
+
+const rain = FlxG.stream('/audio/rain.ogg', 0.8, true, false, ambience);
+FlxG.soundGroup.mute = true; // Mutes ambience and every other effects child.
+rain.group = FlxG.soundGroup; // Sounds can be rerouted while playing.
+```
+
+Per-sound, group, and global volume are multiplied once. Destroying a sound
+detaches it from its group; destroying a group recursively detaches its child
+groups without destroying their sounds.
+
+### Sprite-attached spatial audio
+
+Looping effects can follow a world object, attenuate and pan relative to the
+player, and suspend outside the object's camera viewport:
+
+```ts
+FlxG.stream('/audio/waterfall.ogg', 0.8, true, false, ambience).attachTo(
+  waterfall,
+  {
+    listener: player,
+    radius: 400,
+    pan: true,
+    viewport: 'visible',
+    offscreen: 'pause',
+    margin: 32,
+  },
+);
+```
+
+`pause` preserves the playback position; `stop` restarts the loop when it
+returns. A positive margin keeps playback active just outside the camera and
+acts as hysteresis: after suspension, the source must re-enter the real
+viewport before resuming. A source assigned to multiple cameras is audible
+when any of them can see it. Use `viewport: 'ignore'` for distance-only spatial
+audio and `detach()` to return the sound to ordinary playback.
+
 ## Storage
 
 `FlxSave` uses `LocalStorageBackend` or `IndexedDBBackend` (ADR 0011). Expect

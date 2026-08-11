@@ -131,8 +131,13 @@ class WebSoundHandle implements FlxSoundHandle {
     if (this.playing || this.#destroyed) return;
 
     if (this.#streaming && this.#source instanceof HTMLAudioElement) {
+      if (this.#sourceNode === null) {
+        const pausedAt = this.#source.currentTime;
+        this.play(pausedAt, this.#loop);
+        return;
+      }
       this.#source.play().catch(() => {
-        /* No-op */
+        this.playing = false;
       });
       this.playing = true;
     } else if (this.#source instanceof AudioBuffer) {

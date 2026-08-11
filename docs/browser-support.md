@@ -53,6 +53,13 @@ pause, resume timing, and native accessibility projection against the same
 canvas bounds. Device-notch values still require real-device coverage before
 1.0.
 
+The ambient-audio suite runs in Chromium, Firefox, and WebKit. It moves a
+listener deterministically across generated looping emitters and verifies
+camera visibility gating, distance attenuation, left/right pan, hierarchical
+mute, and offscreen playback policy. Automated tests validate engine state;
+speaker output and mobile interruption recovery remain manual real-device
+checks.
+
 ## Reports
 
 CI uploads coverage, API model, benchmark, bundle-size, and Playwright reports.

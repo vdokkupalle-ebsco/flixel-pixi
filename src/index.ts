@@ -252,6 +252,11 @@ export type {
   FlxSoundHandle,
 } from './audio/flx-audio-backend';
 export { FlxSound } from './audio/flx-sound';
+export type {
+  FlxSoundAttachmentOptions,
+  FlxSoundOffscreenBehavior,
+} from './audio/flx-sound';
+export { FlxSoundGroup } from './audio/flx-sound-group';
 export { FlxAudioManager } from './audio/flx-audio-manager';
 export type { FlxAudioService } from './audio/flx-audio-manager';
 export { NullAudioBackend } from './audio/null-audio-backend';

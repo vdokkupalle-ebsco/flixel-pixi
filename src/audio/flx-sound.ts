@@ -1,6 +1,39 @@
 import { FlxBasic } from '../core/flx-basic';
-import type { FlxObject } from '../objects/flx-object';
+import { FlxG } from '../core/flx-g';
+import type { FlxCameraLike, FlxObject } from '../objects/flx-object';
 import type { FlxSoundHandle } from './flx-audio-backend';
+import type { FlxSoundGroup } from './flx-sound-group';
+
+/** Behavior used by an attached sound after its source leaves the viewport. @public */
+export type FlxSoundOffscreenBehavior = 'pause' | 'stop';
+
+/** Configuration for {@link FlxSound.attachTo}. @public */
+export interface FlxSoundAttachmentOptions {
+  /** Object used as the center of hearing, normally the player. */
+  listener: FlxObject;
+  /** Maximum audible distance in logical world units. */
+  radius: number;
+  /** Apply player-relative left/right stereo panning. Defaults to true. */
+  pan?: boolean;
+  /** Gate playback by camera visibility. Defaults to `visible`. */
+  viewport?: 'ignore' | 'visible';
+  /** Pause in place or stop/restart after leaving the viewport. Defaults to `pause`. */
+  offscreen?: FlxSoundOffscreenBehavior;
+  /** Extra logical pixels beyond the viewport before suspending. Defaults to 0. */
+  margin?: number;
+  /** Override the source object's cameras for visibility checks. */
+  cameras?: readonly FlxCameraLike[];
+}
+
+interface ResolvedSoundAttachmentOptions {
+  listener: FlxObject;
+  radius: number;
+  pan: boolean;
+  viewport: 'ignore' | 'visible';
+  offscreen: FlxSoundOffscreenBehavior;
+  margin: number;
+  cameras?: readonly FlxCameraLike[];
+}
 
 /**
  * Port of `org.flixel.FlxSound`.
@@ -51,6 +84,7 @@ export class FlxSound extends FlxBasic {
 
   /** The backend playback handle. */
   #handle: FlxSoundHandle | null = null;
+  #group: FlxSoundGroup | null = null;
 
   // --- Fade state ---
   #fadeDirection: 'in' | 'out' | null = null;
@@ -64,6 +98,10 @@ export class FlxSound extends FlxBasic {
   #proximityTarget: FlxObject | null = null;
   #proximityRadius = 0;
   #proximityPan = false;
+  #proximityVolume = 1;
+  #attachmentSource: FlxObject | null = null;
+  #attachmentOptions: ResolvedSoundAttachmentOptions | null = null;
+  #attachmentSuspended = false;
 
   /** Global volume multiplier, set by FlxAudioManager. @internal */
   _globalVolume = 1;
@@ -81,10 +119,26 @@ export class FlxSound extends FlxBasic {
     this.#syncVolume();
   }
 
+  /** Hierarchical volume/mute bus used by this sound. */
+  get group(): FlxSoundGroup | null {
+    return this.#group;
+  }
+
+  set group(value: FlxSoundGroup | null) {
+    if (value === this.#group) return;
+    if (value === null) this.#group?.remove(this);
+    else value.add(this);
+  }
+
   /** Effective volume accounting for global volume and mute. */
   getActualVolume(): number {
-    if (this._globalMuted) return 0;
-    return this.#volume * this._globalVolume;
+    if (this._globalMuted || this.#group?.muted) return 0;
+    return this.#volume * this._globalVolume * (this.#group?.actualVolume ?? 1);
+  }
+
+  /** Effective gain after global, group, instance, and proximity attenuation. */
+  get effectiveVolume(): number {
+    return this.getActualVolume() * this.#proximityVolume;
   }
 
   /**
@@ -137,6 +191,57 @@ export class FlxSound extends FlxBasic {
     this.#proximityTarget = target;
     this.#proximityRadius = Math.max(1, radius);
     this.#proximityPan = pan;
+    return this;
+  }
+
+  /**
+   * Follow a world object and spatialize it relative to a listener.
+   * Camera visibility may pause or stop playback automatically.
+   */
+  attachTo(source: FlxObject, options: FlxSoundAttachmentOptions): FlxSound {
+    if (!(options.radius > 0) || !Number.isFinite(options.radius)) {
+      throw new RangeError(
+        'FlxSound attachment radius must be finite and greater than 0.',
+      );
+    }
+    const margin = options.margin ?? 0;
+    if (!Number.isFinite(margin) || margin < 0) {
+      throw new RangeError(
+        'FlxSound attachment margin must be finite and at least 0.',
+      );
+    }
+    if (this.#attachmentSource !== null) this.detach();
+    this.#attachmentSource = source;
+    this.#attachmentOptions = {
+      listener: options.listener,
+      radius: options.radius,
+      pan: options.pan ?? true,
+      viewport: options.viewport ?? 'visible',
+      offscreen: options.offscreen ?? 'pause',
+      margin,
+      ...(options.cameras === undefined ? {} : { cameras: options.cameras }),
+    };
+    this.#syncAttachmentPosition();
+    this.proximity(
+      this.x,
+      this.y,
+      options.listener,
+      options.radius,
+      options.pan ?? true,
+    );
+    return this;
+  }
+
+  /** Stop following the attached object and restore ordinary playback. */
+  detach(): FlxSound {
+    if (this.#attachmentSuspended) this.#resumeAttachmentPlayback();
+    this.#attachmentSource = null;
+    this.#attachmentOptions = null;
+    this.#attachmentSuspended = false;
+    this.#proximityTarget = null;
+    this.#proximityVolume = 1;
+    this.#handle?.setPan(0);
+    this.#syncVolume();
     return this;
   }
 
@@ -214,6 +319,19 @@ export class FlxSound extends FlxBasic {
   override update(): void {
     if (!this.exists || !this.active) return;
 
+    if (this.#attachmentSource !== null && this.#attachmentOptions !== null) {
+      this.#syncAttachmentPosition();
+      if (!this.#attachmentVisible()) {
+        this.#proximityVolume = 0;
+        this.#suspendAttachmentPlayback();
+        this.amplitude = 0;
+        this.amplitudeLeft = 0;
+        this.amplitudeRight = 0;
+        return;
+      }
+      if (this.#attachmentSuspended) this.#resumeAttachmentPlayback();
+    }
+
     // --- Fade ---
     if (this.#fadeDirection !== null) {
       this.#fadeElapsed += this._elapsed;
@@ -234,25 +352,36 @@ export class FlxSound extends FlxBasic {
     }
 
     // --- Proximity ---
+    let effectiveVolume = this.getActualVolume();
     if (this.#proximityTarget !== null) {
-      const dx = this.x - this.#proximityTarget.x;
-      const dy = this.y - this.#proximityTarget.y;
+      const useCenter = this.#attachmentOptions !== null;
+      const targetX =
+        this.#proximityTarget.x +
+        (useCenter ? this.#proximityTarget.width / 2 : 0);
+      const targetY =
+        this.#proximityTarget.y +
+        (useCenter ? this.#proximityTarget.height / 2 : 0);
+      const dx = this.x - targetX;
+      const dy = this.y - targetY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       const proximityVolume = Math.max(0, 1 - dist / this.#proximityRadius);
 
-      this.#handle?.setVolume(proximityVolume * this.getActualVolume());
+      this.#proximityVolume = proximityVolume;
+      effectiveVolume *= this.#proximityVolume;
+      this.#handle?.setVolume(effectiveVolume);
 
       if (this.#proximityPan && this.#handle) {
         const pan = Math.max(-1, Math.min(1, dx / this.#proximityRadius));
         this.#handle.setPan(pan);
       }
     } else {
+      this.#proximityVolume = 1;
       this.#syncVolume();
     }
 
     // --- Amplitude (approximate) ---
     if (this.#handle?.playing) {
-      this.amplitude = this.getActualVolume();
+      this.amplitude = effectiveVolume;
     } else {
       this.amplitude = 0;
     }
@@ -277,7 +406,12 @@ export class FlxSound extends FlxBasic {
     this.active = false;
     this.#handle?.destroy();
     this.#handle = null;
+    this.#group?.remove(this);
+    this.#attachmentSource = null;
+    this.#attachmentOptions = null;
+    this.#attachmentSuspended = false;
     this.#proximityTarget = null;
+    this.#proximityVolume = 1;
     this.#fadeCallback = null;
     this.#loaded = false;
     super.destroy();
@@ -314,8 +448,61 @@ export class FlxSound extends FlxBasic {
     return this.#handle;
   }
 
+  /** @internal */
+  _setGroup(group: FlxSoundGroup | null): void {
+    this.#group = group;
+    this.#syncVolume();
+  }
+
+  /** @internal */
+  _syncGroupVolume(): void {
+    this.#syncVolume();
+  }
+
   #syncVolume(): void {
-    this.#handle?.setVolume(this.getActualVolume());
+    this.#handle?.setVolume(this.effectiveVolume);
+  }
+
+  #syncAttachmentPosition(): void {
+    const source = this.#attachmentSource;
+    if (source === null) return;
+    this.x = source.x + source.width / 2;
+    this.y = source.y + source.height / 2;
+  }
+
+  #attachmentVisible(): boolean {
+    const source = this.#attachmentSource;
+    const options = this.#attachmentOptions;
+    if (source === null || options === null || options.viewport === 'ignore') {
+      return true;
+    }
+    if (!source.exists || !source.visible) return false;
+    const cameras = options.cameras ?? source.cameras ?? FlxG.cameras;
+    const margin = this.#attachmentSuspended ? 0 : options.margin;
+    return cameras.some((camera) => {
+      const point = source.getScreenXY(undefined, camera);
+      return (
+        point.x + source.width > -margin &&
+        point.x < camera.width + margin &&
+        point.y + source.height > -margin &&
+        point.y < camera.height + margin
+      );
+    });
+  }
+
+  #suspendAttachmentPlayback(): void {
+    if (this.#attachmentSuspended || !this.#handle?.playing) return;
+    this.#attachmentSuspended = true;
+    if (this.#attachmentOptions?.offscreen === 'stop') this.stop();
+    else this.pause();
+  }
+
+  #resumeAttachmentPlayback(): void {
+    if (!this.#attachmentSuspended) return;
+    const behavior = this.#attachmentOptions?.offscreen;
+    this.#attachmentSuspended = false;
+    if (behavior === 'stop') this.play(true);
+    else this.resume();
   }
 
   #resetFade(): void {

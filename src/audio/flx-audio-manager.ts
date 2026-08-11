@@ -2,6 +2,7 @@ import type { FlxContext } from '../core/flx-context';
 import { FlxGroup } from '../core/flx-group';
 import { FLX_AUDIO_SERVICE, type FlxAudioBackend } from './flx-audio-backend';
 import { FlxSound } from './flx-sound';
+import { FlxSoundGroup } from './flx-sound-group';
 
 /**
  * Audio service interface consumed by `FlxG` and `FlxGame`.
@@ -12,21 +13,25 @@ export interface FlxAudioService {
   readonly sounds: FlxGroup;
   volume: number;
   mute: boolean;
+  readonly soundGroup: FlxSoundGroup;
+  readonly musicGroup: FlxSoundGroup;
 
   play(
     source: unknown,
     volume?: number,
     loop?: boolean,
     autoDestroy?: boolean,
+    group?: FlxSoundGroup,
   ): FlxSound;
 
-  playMusic(source: unknown, volume?: number): void;
+  playMusic(source: unknown, volume?: number, group?: FlxSoundGroup): void;
 
   stream(
     url: string,
     volume?: number,
     loop?: boolean,
     autoDestroy?: boolean,
+    group?: FlxSoundGroup,
   ): FlxSound;
 
   pauseSounds(): void;
@@ -49,6 +54,8 @@ export interface FlxAudioService {
 export class FlxAudioManager implements FlxAudioService {
   music: FlxSound | null = null;
   readonly sounds: FlxGroup = new FlxGroup();
+  readonly soundGroup = new FlxSoundGroup('sound');
+  readonly musicGroup = new FlxSoundGroup('music');
 
   #volume = 0.5;
   #muted = false;
@@ -62,7 +69,6 @@ export class FlxAudioManager implements FlxAudioService {
     }
     this.#context = context;
     this.#backend = backend;
-    this.#backend.setGlobalVolume(this.#volume);
     this.#backend.unlockAudio();
     context.setService(FLX_AUDIO_SERVICE, this);
   }
@@ -73,7 +79,6 @@ export class FlxAudioManager implements FlxAudioService {
 
   set volume(value: number) {
     this.#volume = Math.max(0, Math.min(1, value));
-    this.#backend.setGlobalVolume(this.#volume);
     this.#propagateGlobals();
   }
 
@@ -83,7 +88,6 @@ export class FlxAudioManager implements FlxAudioService {
 
   set mute(value: boolean) {
     this.#muted = value;
-    this.#backend.setGlobalMute(value);
     this.#propagateGlobals();
   }
 
@@ -99,8 +103,16 @@ export class FlxAudioManager implements FlxAudioService {
     volume = 1,
     loop = false,
     autoDestroy = true,
+    group = this.soundGroup,
   ): FlxSound {
-    const sound = this.#createSound(source, false, volume, loop, autoDestroy);
+    const sound = this.#createSound(
+      source,
+      false,
+      volume,
+      loop,
+      autoDestroy,
+      group,
+    );
     this.sounds.add(sound);
     sound.play();
     return sound;
@@ -111,12 +123,12 @@ export class FlxAudioManager implements FlxAudioService {
    * @param source - `AudioBuffer`, `HTMLAudioElement`, or URL string.
    * @param volume - Volume (0–1). Defaults to 1.
    */
-  playMusic(source: unknown, volume = 1): void {
+  playMusic(source: unknown, volume = 1, group = this.musicGroup): void {
     if (this.music !== null) {
       this.music.stop();
       this.music.destroy();
     }
-    this.music = this.#createSound(source, false, volume, true, false);
+    this.music = this.#createSound(source, false, volume, true, false, group);
     this.music.survive = true;
     this.music.play();
   }
@@ -128,8 +140,21 @@ export class FlxAudioManager implements FlxAudioService {
    * @param loop - Whether to loop. Defaults to false.
    * @param autoDestroy - Whether to auto-destroy when done. Defaults to true.
    */
-  stream(url: string, volume = 1, loop = false, autoDestroy = true): FlxSound {
-    const sound = this.#createSound(url, true, volume, loop, autoDestroy);
+  stream(
+    url: string,
+    volume = 1,
+    loop = false,
+    autoDestroy = true,
+    group = this.soundGroup,
+  ): FlxSound {
+    const sound = this.#createSound(
+      url,
+      true,
+      volume,
+      loop,
+      autoDestroy,
+      group,
+    );
     this.sounds.add(sound);
     sound.play();
     return sound;
@@ -200,6 +225,8 @@ export class FlxAudioManager implements FlxAudioService {
   destroy(): void {
     this.destroySounds(true);
     this.sounds.destroy();
+    this.soundGroup.destroy();
+    this.musicGroup.destroy();
     this.#backend.destroy();
     this.#context.removeService(FLX_AUDIO_SERVICE);
   }
@@ -210,11 +237,13 @@ export class FlxAudioManager implements FlxAudioService {
     volume: number,
     loop: boolean,
     autoDestroy: boolean,
+    group: FlxSoundGroup,
   ): FlxSound {
     const sound = new FlxSound();
     sound._globalVolume = this.#volume;
     sound._globalMuted = this.#muted;
     sound._createHandle = () => this.#backend.createSound(source, streaming);
+    sound.group = group;
 
     if (streaming) {
       sound.loadStream(source as string, loop, autoDestroy);

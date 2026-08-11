@@ -20,9 +20,12 @@ volume, loop, fade target, proximity coordinates, and alive/exists flags. It
 delegates actual playback to a `FlxSoundHandle` obtained from a replaceable
 `FlxAudioBackend`.
 
-`FlxAudioManager` owns the backend, the `music` singleton, the `sounds` group,
-and global volume/mute. It is registered on the `FlxContext` service map via
-`FLX_AUDIO_SERVICE` and resolved through `FlxG` statics.
+`FlxAudioManager` owns the backend, the `music` singleton, the `sounds`
+lifecycle group, independent `musicGroup` and `soundGroup` routing buses, and
+global volume/mute. `FlxSoundGroup` child buses multiply ancestor volume and
+inherit ancestor mute without taking ownership of routed sounds. The manager
+is registered on the `FlxContext` service map via `FLX_AUDIO_SERVICE` and
+resolved through `FlxG` statics.
 
 The browser implementation (`WebAudioBackend`) creates an `AudioContext` lazily
 and manages gesture-unlock as a play queue: any `play()` call before unlock
@@ -38,6 +41,11 @@ resolved to one of those supported source forms before playback.
 Proximity audio uses `StereoPannerNode` for left/right pan with linear
 distance-based volume attenuation, matching the AS3 2D behavior without the
 overhead of 3D `PannerNode` HRTF processing.
+
+Sprite attachment also remains renderer-neutral. `FlxSound` follows an
+`FlxObject`, derives visibility from its logical cameras, and pauses or stops
+the backend handle outside the viewport. The backend receives only final gain,
+pan, and playback commands; it does not inspect sprites or cameras.
 
 A `NullAudioBackend` enables headless unit tests with no browser dependencies.
 All methods are stubs; `unlocked` is always true.

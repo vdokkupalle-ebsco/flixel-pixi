@@ -81,15 +81,21 @@ class FakeAudioContext {
   currentTime = 0;
   destination = {};
   readonly bufferSources: FakeBufferSourceNode[] = [];
+  readonly gains: FakeGainNode[] = [];
   readonly mediaElements: FakeAudioElement[] = [];
+  readonly panners: FakeStereoPannerNode[] = [];
   constructor() {
     FakeAudioContext.instances.push(this);
   }
   createGain(): FakeGainNode {
-    return new FakeGainNode();
+    const node = new FakeGainNode();
+    this.gains.push(node);
+    return node;
   }
   createStereoPanner(): FakeStereoPannerNode {
-    return new FakeStereoPannerNode();
+    const node = new FakeStereoPannerNode();
+    this.panners.push(node);
+    return node;
   }
   createBufferSource(): FakeBufferSourceNode {
     const node = new FakeBufferSourceNode();
@@ -168,6 +174,29 @@ describe('WebAudioBackend', () => {
     expect(context?.mediaElements).toHaveLength(1);
     expect(context?.mediaElements[0]?.src).toBe('/music.ogg');
     expect(context?.mediaElements[0]?.playCalls).toBe(1);
+    backend.destroy();
+  });
+
+  it('reconnects a queued stream to gain and pan after pausing offscreen', () => {
+    const backend = new WebAudioBackend();
+    backend.unlockAudio();
+    const handle = backend.createSound('/ambience.wav', true);
+    const context = FakeAudioContext.instances[0];
+    expect(context).toBeDefined();
+    if (!context) throw new Error('Expected an AudioContext instance.');
+
+    handle.play();
+    handle.pause();
+    handle.setVolume(0.25);
+    handle.setPan(-0.5);
+    handle.resume();
+
+    expect(context.mediaElements).toHaveLength(0);
+    document.dispatchEvent(new Event('click'));
+    expect(context.mediaElements).toHaveLength(1);
+    expect(context.gains[1]?.gain.value).toBe(0.25);
+    expect(context.panners[0]?.pan.value).toBe(-0.5);
+    expect(context.mediaElements[0]?.playCalls).toBe(1);
     backend.destroy();
   });
 

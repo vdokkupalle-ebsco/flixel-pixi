@@ -37,6 +37,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/viewport/index.html',
         ),
+        'ambient-audio': resolve(
+          import.meta.dirname,
+          'examples/games/ambient-audio/index.html',
+        ),
         substates: resolve(
           import.meta.dirname,
           'examples/games/substates/index.html',
