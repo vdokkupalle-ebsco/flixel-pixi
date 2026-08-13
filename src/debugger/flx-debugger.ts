@@ -3,6 +3,7 @@ import { FlxConsole, type FlxConsoleResult } from './flx-console';
 import type { FlxLog } from './flx-log';
 import type { FlxVCR } from '../replay/flx-vcr';
 import type { FlxWatch } from './flx-watch';
+import type { WatchSnapshot } from './flx-watch';
 
 // ─── Inline CSS ──────────────────────────────────────────────────────────────
 const DEBUGGER_CSS = `
@@ -110,6 +111,21 @@ const DEBUGGER_CSS = `
 .flxdbg-watch-table td { padding: 2px 8px 2px 0; }
 .flxdbg-watch-name { color: #94a3b8; }
 .flxdbg-watch-value { color: #4ade80; font-weight: bold; }
+.flxdbg-watch-editor { display: flex; align-items: center; gap: 6px; }
+.flxdbg-watch-input {
+  width: min(180px, 40vw); box-sizing: border-box;
+  border: 1px solid #334155; border-radius: 3px;
+  background: #020617; color: #4ade80; font: inherit; padding: 2px 5px;
+}
+.flxdbg-watch-input[aria-invalid='true'] { border-color: #f87171; }
+.flxdbg-watch-input:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
+.flxdbg-watch-apply {
+  border: 1px solid #334155; border-radius: 3px; background: #1e293b;
+  color: #cbd5e1; cursor: pointer; font: inherit; padding: 2px 7px;
+}
+.flxdbg-watch-apply:hover { color: #38bdf8; }
+.flxdbg-watch-status { color: #94a3b8; font-weight: normal; }
+.flxdbg-watch-status.error { color: #f87171; }
 
 /* Perf panel */
 .flxdbg-perf-row { display: flex; gap: 20px; align-items: center; padding: 4px 0; }
@@ -208,6 +224,16 @@ export class FlxDebugger {
   #consoleOutput!: HTMLDivElement;
   #consoleHistoryIndex = 0;
   #watchBody!: HTMLTableSectionElement;
+  readonly #watchRows = new Map<
+    string,
+    {
+      input: HTMLInputElement | null;
+      name: HTMLTableCellElement;
+      row: HTMLTableRowElement;
+      status: HTMLSpanElement | null;
+      value: HTMLSpanElement | null;
+    }
+  >();
   #perfFps!: HTMLSpanElement;
   #perfUpdateMs!: HTMLSpanElement;
   #perfBar!: HTMLDivElement;
@@ -666,7 +692,7 @@ export class FlxDebugger {
 
     // Watch
     if (this.#activeTab === 'watch') {
-      this.#refreshWatch(watch.snapshot());
+      this.#refreshWatch(watch);
     }
 
     // VCR status
@@ -698,13 +724,102 @@ export class FlxDebugger {
     this.#logList.scrollTop = this.#logList.scrollHeight;
   }
 
-  #refreshWatch(snapshots: readonly { name: string; value: string }[]): void {
-    this.#watchBody.innerHTML = '';
-    for (const s of snapshots) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="flxdbg-watch-name">${this.#esc(s.name)}</td><td class="flxdbg-watch-value">${this.#esc(s.value)}</td>`;
-      this.#watchBody.appendChild(tr);
+  #refreshWatch(watch: FlxWatch): void {
+    const snapshots = watch.snapshot();
+    const activeIds = new Set<string>();
+    for (const snapshot of snapshots) {
+      activeIds.add(snapshot.id);
+      let elements = this.#watchRows.get(snapshot.id);
+      if (elements === undefined) {
+        elements = this.#createWatchRow(snapshot, watch);
+        this.#watchRows.set(snapshot.id, elements);
+        this.#watchBody.appendChild(elements.row);
+      }
+      elements.name.textContent = snapshot.name;
+      if (elements.input && document.activeElement !== elements.input) {
+        elements.input.value = snapshot.value;
+      } else if (elements.value) {
+        elements.value.textContent = snapshot.value;
+      }
     }
+    for (const [id, elements] of this.#watchRows) {
+      if (activeIds.has(id)) continue;
+      elements.row.remove();
+      this.#watchRows.delete(id);
+    }
+  }
+
+  #createWatchRow(
+    snapshot: WatchSnapshot,
+    watch: FlxWatch,
+  ): {
+    input: HTMLInputElement | null;
+    name: HTMLTableCellElement;
+    row: HTMLTableRowElement;
+    status: HTMLSpanElement | null;
+    value: HTMLSpanElement | null;
+  } {
+    const row = document.createElement('tr');
+    row.setAttribute('data-watch-id', snapshot.id);
+    const name = document.createElement('td');
+    name.className = 'flxdbg-watch-name';
+    const valueCell = document.createElement('td');
+    valueCell.className = 'flxdbg-watch-value';
+    row.append(name, valueCell);
+
+    if (!snapshot.editable) {
+      const value = document.createElement('span');
+      value.textContent = snapshot.value;
+      valueCell.appendChild(value);
+      return { input: null, name, row, status: null, value };
+    }
+
+    const editor = document.createElement('div');
+    editor.className = 'flxdbg-watch-editor';
+    const input = document.createElement('input');
+    input.className = 'flxdbg-watch-input';
+    input.type = 'text';
+    input.value = snapshot.value;
+    input.setAttribute('aria-label', `Edit ${snapshot.name}`);
+    input.setAttribute('data-watch-input', snapshot.id);
+    const apply = document.createElement('button');
+    apply.className = 'flxdbg-watch-apply';
+    apply.type = 'button';
+    apply.textContent = 'Apply';
+    apply.setAttribute('aria-label', `Apply ${snapshot.name}`);
+    const status = document.createElement('span');
+    status.className = 'flxdbg-watch-status';
+    status.setAttribute('role', 'status');
+
+    const applyEdit = (): void => {
+      const result = watch.edit(snapshot.id, input.value);
+      input.setAttribute('aria-invalid', String(!result.ok));
+      status.classList.toggle('error', !result.ok);
+      if (result.ok) {
+        input.value = result.snapshot?.value ?? input.value;
+        status.textContent = 'Updated';
+      } else {
+        status.textContent = result.error ?? 'Update rejected';
+      }
+    };
+    apply.addEventListener('click', applyEdit);
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        applyEdit();
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        const current = watch
+          .snapshot()
+          .find((candidate) => candidate.id === snapshot.id);
+        if (current) input.value = current.value;
+        input.setAttribute('aria-invalid', 'false');
+        status.textContent = '';
+      }
+    });
+    editor.append(input, apply, status);
+    valueCell.appendChild(editor);
+    return { input, name, row, status, value: null };
   }
 
   #refreshPerf(updateMs: number): void {

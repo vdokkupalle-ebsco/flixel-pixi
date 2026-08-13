@@ -29,6 +29,56 @@ The console does not use `eval` and cannot access game state unless a consumer
 explicitly closes over that state in a registered handler. Command failures are
 returned as structured results instead of escaping into the render loop.
 
+### Tracked and editable values
+
+`FlxG.watch.add()` remains a read-only compatibility helper. Use `track()` for
+getter-backed inspection. A tracked value is read-only unless the game
+explicitly supplies its parser, validator, and setter:
+
+```ts
+const stopInspecting = FlxG.watch.trackObject('player', player, [
+  'x',
+  'y',
+  'health',
+]);
+```
+
+`trackObject()` only reads the explicitly listed shallow fields; it does not
+walk prototypes or discover properties. The returned disposer removes the
+whole tracked field set.
+
+```ts
+FlxG.watch.track({
+  name: 'player.health',
+  read: () => player.health,
+  editor: {
+    parse: (input) => Number(input),
+    validate: (value) =>
+      Number.isFinite(value) && value >= 0 && value <= 100
+        ? null
+        : 'Health must be between 0 and 100.',
+    set: (value) => {
+      player.health = value;
+    },
+  },
+});
+```
+
+Install a global guard for states where external mutation would be unsafe:
+
+```ts
+FlxG.watch.setMutationGuard(() =>
+  FlxG.vcr.recording || FlxG.vcr.replaying
+    ? 'Watch editing is locked during record/replay.'
+    : true,
+);
+```
+
+The Watch panel keeps keyed rows instead of rebuilding its table each frame, so
+focused drafts survive live updates. Enter or **Apply** submits an edit; Escape
+restores the current value. Parser, validation, guard, getter, and setter errors
+are reported inline without escaping into the game loop.
+
 Keyboard: arrow keys move between tabs. In the Console input, Up/Down recalls
 history and Tab completes an unambiguous command. Controls expose `aria-*`
 labels for assistive tech.

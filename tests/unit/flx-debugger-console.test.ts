@@ -2,7 +2,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { FlxConsole } from '../../src/debugger/flx-console';
+import { DebugChannel } from '../../src/debugger/debug-channel';
 import { FlxDebugger } from '../../src/debugger/flx-debugger';
+import { FlxLog } from '../../src/debugger/flx-log';
+import { FlxWatch } from '../../src/debugger/flx-watch';
 
 describe('FlxDebugger console panel', () => {
   afterEach(() => {
@@ -130,5 +133,59 @@ describe('FlxDebugger console panel', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
     expect(input.value).toBe('teleport ');
     debugger_.destroy();
+  });
+
+  it('preserves editable watch drafts and applies guarded mutations', () => {
+    const channel = new DebugChannel();
+    const log = new FlxLog();
+    const watch = new FlxWatch();
+    const state = { health: 75 };
+    watch.track({
+      editor: {
+        parse: (input) => Number(input),
+        set: (value) => {
+          state.health = value;
+        },
+        validate: (value) =>
+          value >= 0 && value <= 100 ? null : 'Health must be 0–100.',
+      },
+      name: 'player.health',
+      read: () => state.health,
+    });
+    const debugger_ = new FlxDebugger();
+    debugger_.subscribeToChannel(channel, log, watch);
+    document
+      .querySelector<HTMLButtonElement>('[data-testid="flxdbg-tab-watch"]')
+      ?.click();
+    channel.emit('step-complete', { frame: 1, updateMs: 1 });
+
+    const input =
+      document.querySelector<HTMLInputElement>('[data-watch-input]');
+    const status = document.querySelector<HTMLElement>('.flxdbg-watch-status');
+    if (input === null || status === null) {
+      throw new Error('Expected an editable watch row.');
+    }
+    input.focus();
+    input.value = 'draft';
+    channel.emit('step-complete', { frame: 2, updateMs: 1 });
+    expect(input.value).toBe('draft');
+
+    input.value = '45';
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }),
+    );
+    expect(state.health).toBe(45);
+    expect(status.textContent).toBe('Updated');
+
+    watch.setMutationGuard(() => 'Replay is locked.');
+    input.value = '20';
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }),
+    );
+    expect(state.health).toBe(45);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(status.textContent).toBe('Replay is locked.');
+    debugger_.destroy();
+    channel.destroy();
   });
 });

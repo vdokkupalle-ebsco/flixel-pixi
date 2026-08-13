@@ -106,6 +106,22 @@ test.describe('Debugger and preloader', () => {
     await page.waitForTimeout(500);
     const watchBody = page.locator('[data-testid="flxdbg-watch-body"]');
     await expect(watchBody).not.toBeEmpty({ timeout: 3000 });
+
+    const editableVelocity = page.locator('[data-watch-input]').first();
+    await expect(editableVelocity).toBeVisible();
+    await editableVelocity.fill('250');
+    await editableVelocity.press('Enter');
+    await expect(editableVelocity).toHaveValue('250.00');
+    await expect(page.locator('.flxdbg-watch-status').first()).toContainText(
+      'Updated',
+    );
+
+    await editableVelocity.fill('999');
+    await editableVelocity.press('Enter');
+    await expect(editableVelocity).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('.flxdbg-watch-status').first()).toContainText(
+      'Velocity must be between -400 and 400.',
+    );
   });
 
   test('Perf panel shows FPS value', async ({ page }) => {

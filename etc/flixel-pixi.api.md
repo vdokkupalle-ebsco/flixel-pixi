@@ -162,10 +162,7 @@ export interface DebugEvents {
         timestamp: number;
     };
     watch: {
-        entries: readonly {
-            name: string;
-            value: string;
-        }[];
+        entries: readonly WatchSnapshot[];
     };
 }
 
@@ -4849,8 +4846,47 @@ export interface FlxVirtualStickState {
 export class FlxWatch {
     add(obj: Record<string, any>, field: string, displayName?: string): void;
     clear(): void;
+    edit(id: string, input: string): FlxWatchMutationResult;
     remove(obj: Record<string, any>, field: string): void;
+    setMutationGuard(guard: FlxWatchMutationGuard | null): void;
     snapshot(): WatchSnapshot[];
+    track<T>(definition: FlxWatchDefinition<T>): () => void;
+    trackObject<T extends object, K extends Extract<keyof T, string>>(name: string, obj: T, fields: readonly K[]): () => void;
+}
+
+// @public
+export interface FlxWatchDefinition<T> {
+    // (undocumented)
+    readonly editor?: FlxWatchEditor<T>;
+    // (undocumented)
+    readonly format?: (value: T) => string;
+    // (undocumented)
+    readonly name: string;
+    // (undocumented)
+    readonly read: () => T;
+}
+
+// @public
+export interface FlxWatchEditor<T> {
+    // (undocumented)
+    readonly parse: (input: string, currentValue: T) => T;
+    // (undocumented)
+    readonly set: (value: T, currentValue: T) => void;
+    // (undocumented)
+    readonly validate?: (value: T, currentValue: T) => string | null | undefined;
+}
+
+// @public
+export type FlxWatchMutationGuard = () => boolean | string;
+
+// @public
+export interface FlxWatchMutationResult {
+    // (undocumented)
+    readonly error?: string;
+    // (undocumented)
+    readonly ok: boolean;
+    // (undocumented)
+    readonly snapshot?: WatchSnapshot;
 }
 
 // @public
@@ -5375,6 +5411,10 @@ export interface WatchEntry {
 
 // @public
 export interface WatchSnapshot {
+    // (undocumented)
+    readonly editable: boolean;
+    // (undocumented)
+    readonly id: string;
     // (undocumented)
     readonly name: string;
     // (undocumented)

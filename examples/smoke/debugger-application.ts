@@ -58,21 +58,21 @@ class PlayState extends FlxState {
     }
 
     // Register watch entries
-    FlxG.watch.add(
-      this.player as unknown as Record<string, unknown>,
-      'x',
-      'player.x',
-    );
-    FlxG.watch.add(
-      this.player as unknown as Record<string, unknown>,
-      'y',
-      'player.y',
-    );
-    FlxG.watch.add(
-      this.player.velocity as unknown as Record<string, unknown>,
-      'x',
-      'velocity.x',
-    );
+    FlxG.watch.trackObject('player', this.player, ['x', 'y']);
+    FlxG.watch.track({
+      editor: {
+        parse: (input) => Number(input),
+        set: (value) => {
+          this.player.velocity.x = value;
+        },
+        validate: (value) =>
+          Number.isFinite(value) && Math.abs(value) <= 400
+            ? null
+            : 'Velocity must be between -400 and 400.',
+      },
+      name: 'velocity.x',
+      read: () => this.player.velocity.x,
+    });
     FlxG.watch.add(
       this.player.velocity as unknown as Record<string, unknown>,
       'y',
@@ -187,6 +187,11 @@ export async function bootDebuggerDemo(
 
   // ── Debugger ──────────────────────────────────────────────────────────────
   const dbg = new FlxDebugger({ container: document.body });
+  game.watch.setMutationGuard(() =>
+    FlxG.vcr.recording || FlxG.vcr.replaying
+      ? 'Watch editing is locked during record/replay.'
+      : true,
+  );
   dbg.console.register({
     description: 'List commands exposed by this demo.',
     execute: () =>

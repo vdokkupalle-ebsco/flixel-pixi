@@ -453,6 +453,9 @@ Current slice:
   arguments, normalized async results, bounded history, and prefix completion.
 - `FlxDebugger` exposes it through an accessible Console panel. No arbitrary
   JavaScript evaluation or implicit game-state mutation is permitted.
+- Getter-backed `FlxWatch.track()` values are read-only by default. Editing
+  requires explicit parse/validate/set callbacks and passes through a global
+  mutation guard; keyed Watch rows preserve focused drafts across frames.
 
 ### Utilities and frontend normalization
 

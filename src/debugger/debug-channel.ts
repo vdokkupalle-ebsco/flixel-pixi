@@ -4,6 +4,8 @@
  * @public
  */
 
+import type { WatchSnapshot } from './flx-watch';
+
 /** Payload shapes for each debug event type. @public */
 export interface DebugEvents {
   /** Emitted after every simulation step. */
@@ -19,7 +21,7 @@ export interface DebugEvents {
   };
   /** Watch snapshot was taken. */
   watch: {
-    entries: readonly { name: string; value: string }[];
+    entries: readonly WatchSnapshot[];
   };
   /** Engine paused/unpaused. */
   'pause-change': { paused: boolean };

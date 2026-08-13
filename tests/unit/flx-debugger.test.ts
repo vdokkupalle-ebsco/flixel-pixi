@@ -105,8 +105,16 @@ describe('FlxWatch', () => {
 
     const snap = watch.snapshot();
     expect(snap).toHaveLength(2);
-    expect(snap[0]).toEqual({ name: 'player.x', value: '42.50' });
-    expect(snap[1]).toEqual({ name: 'player.y', value: '100.00' });
+    expect(snap[0]).toMatchObject({
+      editable: false,
+      name: 'player.x',
+      value: '42.50',
+    });
+    expect(snap[1]).toMatchObject({
+      editable: false,
+      name: 'player.y',
+      value: '100.00',
+    });
   });
 
   it('reflects live changes', () => {
@@ -140,6 +148,93 @@ describe('FlxWatch', () => {
     const obj = {} as Record<string, unknown>;
     watch.add(obj, 'nonexistent');
     expect(watch.snapshot()[0]?.value).toBe('undefined');
+  });
+
+  it('tracks getter-backed values without exposing mutation by default', () => {
+    const watch = new FlxWatch();
+    const state = { health: 75 };
+    const remove = watch.track({
+      format: (value) => `${value} HP`,
+      name: 'player.health',
+      read: () => state.health,
+    });
+    const snapshot = watch.snapshot()[0];
+    expect(snapshot).toMatchObject({
+      editable: false,
+      name: 'player.health',
+      value: '75 HP',
+    });
+    expect(watch.edit(snapshot?.id ?? '', '50')).toEqual({
+      error: 'Tracked value is read-only.',
+      ok: false,
+    });
+    remove();
+    remove();
+    expect(watch.snapshot()).toEqual([]);
+  });
+
+  it('tracks an explicit shallow object field list as read-only values', () => {
+    const watch = new FlxWatch();
+    const player = { health: 75, secret: 'hidden', x: 10, y: 20 };
+    const remove = watch.trackObject('player', player, ['x', 'y', 'health']);
+    expect(watch.snapshot()).toMatchObject([
+      { editable: false, name: 'player.x', value: '10.00' },
+      { editable: false, name: 'player.y', value: '20.00' },
+      { editable: false, name: 'player.health', value: '75.00' },
+    ]);
+    expect(
+      watch.snapshot().some((entry) => entry.name.includes('secret')),
+    ).toBe(false);
+    remove();
+    expect(watch.snapshot()).toEqual([]);
+  });
+
+  it('parses, validates, and applies explicitly editable values', () => {
+    const watch = new FlxWatch();
+    const state = { health: 75 };
+    watch.track({
+      editor: {
+        parse: (input) => Number(input),
+        set: (value) => {
+          state.health = value;
+        },
+        validate: (value) =>
+          Number.isFinite(value) && value >= 0 && value <= 100
+            ? null
+            : 'Health must be between 0 and 100.',
+      },
+      name: 'player.health',
+      read: () => state.health,
+    });
+    const id = watch.snapshot()[0]?.id ?? '';
+    expect(watch.edit(id, '120')).toEqual({
+      error: 'Health must be between 0 and 100.',
+      ok: false,
+    });
+    expect(state.health).toBe(75);
+    expect(watch.edit(id, '45')).toMatchObject({
+      ok: true,
+      snapshot: { editable: true, value: '45.00' },
+    });
+    expect(state.health).toBe(45);
+  });
+
+  it('checks the global mutation guard before parsing or setting', () => {
+    const watch = new FlxWatch();
+    const parse = vi.fn(Number);
+    const set = vi.fn();
+    watch.track({
+      editor: { parse, set },
+      name: 'timeScale',
+      read: () => 1,
+    });
+    watch.setMutationGuard(() => 'Mutations are locked during replay.');
+    expect(watch.edit(watch.snapshot()[0]?.id ?? '', '2')).toEqual({
+      error: 'Mutations are locked during replay.',
+      ok: false,
+    });
+    expect(parse).not.toHaveBeenCalled();
+    expect(set).not.toHaveBeenCalled();
   });
 });
 
