@@ -3,6 +3,7 @@ import { Container, NineSliceSprite, Texture } from 'pixi.js';
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxNineSliceSprite } from '../objects/flx-nine-slice-sprite';
 import { syncPixiNineSliceSprite } from '../objects/flx-nine-slice';
+import { destroyRenderView } from './destroy-render-view';
 import type { FlxRenderHandle } from './flx-render-handle';
 import {
   interpolateObjectAngle,
@@ -55,7 +56,7 @@ export class FlxNineSliceRenderHandle implements FlxRenderHandle {
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#onDestroy();
   }
 }

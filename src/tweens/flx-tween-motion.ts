@@ -1,3 +1,4 @@
+import { clamp01 } from '../math/flx-math';
 import { requireFinite } from '../math/flx-number';
 import type { PointLike } from '../math/flx-point';
 import type { FlxObject } from '../objects/flx-object';
@@ -342,7 +343,7 @@ export class FlxLinearPath extends FlxMotion {
 
   /** @internal */
   protected override applyScale(scale: number): void {
-    const targetDistance = Math.min(Math.max(scale, 0), 1) * this.distance;
+    const targetDistance = clamp01(scale) * this.distance;
     let segment = this.#cumulativeDistances.findIndex(
       (distance, index) => index > 0 && targetDistance <= distance,
     );
@@ -402,7 +403,7 @@ export class FlxQuadPath extends FlxMotion {
 
   /** @internal */
   protected override applyScale(scale: number): void {
-    const targetDistance = Math.min(Math.max(scale, 0), 1) * this.distance;
+    const targetDistance = clamp01(scale) * this.distance;
     let segment = this.#cumulativeDistances.findIndex(
       (distance, index) => index > 0 && targetDistance <= distance,
     );

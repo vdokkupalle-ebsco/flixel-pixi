@@ -1,3 +1,4 @@
+import { clamp } from '../math/flx-math';
 import { FlxText } from './flx-text';
 
 /** Browser text-entry types supported by {@link FlxInputText}. @public */
@@ -312,6 +313,6 @@ export class FlxInputText extends FlxText {
 
   #clampSelection(value: number): number {
     if (!Number.isFinite(value)) return 0;
-    return Math.min(this.text.length, Math.max(0, Math.trunc(value)));
+    return clamp(Math.trunc(value), 0, this.text.length);
   }
 }

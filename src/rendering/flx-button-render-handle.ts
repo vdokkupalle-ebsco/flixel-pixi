@@ -2,6 +2,7 @@ import { Container, Sprite, Texture } from 'pixi.js';
 
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxButton } from '../objects/flx-button';
+import { destroyRenderView } from './destroy-render-view';
 import type { FlxRenderHandle } from './flx-render-handle';
 import { FlxTextRenderHandle } from './flx-text-render-handle';
 import {
@@ -71,7 +72,7 @@ export class FlxButtonRenderHandle implements FlxRenderHandle {
     this.#destroyed = true;
     this.#labelHandle?.destroy();
     this.#labelHandle = null;
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#onDestroy();
   }
 }

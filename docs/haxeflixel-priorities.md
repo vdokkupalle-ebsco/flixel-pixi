@@ -54,9 +54,9 @@ started merely to match a Haxe class count.
 |    10 |    P1    | Audio organization and system UX                | Complete             | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Complete             | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Complete             | High-value console, interaction, and graphing workflows work without production overhead.          |
-|    13 |    P2    | Utilities and frontend normalization            | In progress          | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
+|    13 |    P2    | Utilities and frontend normalization            | Complete             | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
-|    15 |    P0    | External compatibility validation               | Required before 1.0  | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
+|    15 |    P0    | External compatibility validation               | In progress          | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
 |    16 |    P0    | Release hardening and 1.0 candidate             | Required before 1.0  | The support matrix, budgets, package artifact, provenance, and release gates pass.                 |
 
 Only one feature checkpoint should normally be active. Release hardening may
@@ -488,6 +488,15 @@ Current slice:
   delegates to the same implementation.
 - Shared internal number guards normalize finite-value and bounded-capacity
   validation without expanding the public compatibility surface.
+- Renderer handles share one internal teardown policy: recursively destroy
+  renderer-owned Pixi nodes while preserving asset-owned textures and sources.
+- Existing `FlxSignal` consumers remain limited to concrete state and animation
+  lifecycle needs; no speculative signal variants were added.
+- `FlxContext` service tokens remain the explicit dependency boundary, with
+  `FlxG` retained as the compatibility facade instead of cloning Haxe frontend
+  classes.
+- Existing emitter/group reuse remains domain-specific. A public generic pool
+  is deferred until a benchmark demonstrates a repeatable browser benefit.
 
 ## P3 — optional and platform-specific
 

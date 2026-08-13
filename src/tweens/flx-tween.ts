@@ -1,4 +1,5 @@
 import { FlxG } from '../core/flx-g';
+import { clamp01 } from '../math/flx-math';
 import type { FlxEaseFunction } from './flx-ease';
 import { FlxTweenManager } from './flx-tween-manager';
 import type {
@@ -452,9 +453,7 @@ export class FlxTween {
     const previousTick = this.#quantize(previousElapsed);
     const currentTick = this.#quantize(this.#elapsed);
     const rawProgress =
-      this.duration === 0
-        ? 1
-        : Math.min(Math.max((currentTick - delay) / this.duration, 0), 1);
+      this.duration === 0 ? 1 : clamp01((currentTick - delay) / this.duration);
     let eased = this.ease?.(rawProgress) ?? rawProgress;
     if (this.backward) eased = 1 - eased;
     this.scale = eased;

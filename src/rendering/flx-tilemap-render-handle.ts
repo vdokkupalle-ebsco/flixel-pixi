@@ -3,6 +3,7 @@ import { Container, Rectangle, Sprite } from 'pixi.js';
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxTilemap, FlxTilemapChange } from '../tilemap/flx-tilemap';
 
+import { destroyRenderView } from './destroy-render-view';
 import type { FlxRenderHandle } from './flx-render-handle';
 import {
   interpolateCameraScrollX,
@@ -136,7 +137,7 @@ export class FlxTilemapRenderHandle implements FlxRenderHandle {
     this.#unsubscribe();
     this.#dirtyChunks.clear();
     this.#chunks.clear();
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
   }
 
   #getOrCreateChunk(column: number, row: number): TileChunk {

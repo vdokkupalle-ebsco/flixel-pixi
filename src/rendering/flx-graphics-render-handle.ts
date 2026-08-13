@@ -8,6 +8,7 @@ import {
   type FlxGraphicsStroke,
   type FlxGraphicsStyle,
 } from '../objects/flx-graphics';
+import { destroyRenderView } from './destroy-render-view';
 import { FlxFilterChain } from './flx-filter-chain';
 import {
   interpolateObjectAngle,
@@ -65,7 +66,7 @@ export class FlxGraphicsRenderHandle implements FlxRenderHandle {
     this.#filterChain.destroy(this.view);
     this.graphics.clear();
     this.#releaseGradients();
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#onDestroy();
   }
 

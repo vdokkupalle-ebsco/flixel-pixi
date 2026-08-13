@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxVirtualStick } from '../objects/flx-virtual-stick';
+import { destroyRenderView } from './destroy-render-view';
 import {
   interpolateObjectAngle,
   interpolateObjectX,
@@ -57,7 +58,7 @@ export class FlxVirtualStickRenderHandle implements FlxRenderHandle {
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#onDestroy();
   }
 

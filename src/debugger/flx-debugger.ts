@@ -1,3 +1,4 @@
+import { clamp01 } from '../math/flx-math';
 import type { DebugChannel } from './debug-channel';
 import { FlxConsole, type FlxConsoleResult } from './flx-console';
 import { FlxDiagnostics, type FlxDiagnosticSnapshot } from './flx-diagnostics';
@@ -1119,7 +1120,7 @@ function graphPoints(
   return values
     .map((value, index) => {
       const x = (index / divisor) * width;
-      const y = height - Math.min(1, Math.max(0, value) / safeMaximum) * height;
+      const y = height - clamp01(value / safeMaximum) * height;
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
     .join(' ');

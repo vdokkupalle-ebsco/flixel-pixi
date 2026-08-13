@@ -2,6 +2,7 @@ import { BitmapText, Container, TextStyle } from 'pixi.js';
 
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxBitmapText } from '../objects/flx-bitmap-text';
+import { destroyRenderView } from './destroy-render-view';
 import type { FlxRenderHandle } from './flx-render-handle';
 import {
   interpolateObjectAngle,
@@ -72,7 +73,7 @@ export class FlxBitmapTextRenderHandle implements FlxRenderHandle {
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#onDestroy();
   }
 }

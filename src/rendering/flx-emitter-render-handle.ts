@@ -10,6 +10,7 @@ import {
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxEmitter } from '../objects/flx-emitter';
 import type { FlxParticle } from '../objects/flx-particle';
+import { destroyRenderView } from './destroy-render-view';
 import type { FlxRenderHandle } from './flx-render-handle';
 import {
   interpolateCameraScrollX,
@@ -100,7 +101,7 @@ export class FlxEmitterRenderHandle implements FlxRenderHandle {
     this.#destroyed = true;
     this.#particles.clear();
     this.#sprites.clear();
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#onDestroy();
   }
 

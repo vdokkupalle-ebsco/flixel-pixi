@@ -2,6 +2,7 @@ import { Container, Mesh, MeshGeometry } from 'pixi.js';
 
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxStrip } from '../objects/flx-strip';
+import { destroyRenderView } from './destroy-render-view';
 import { FlxFilterChain } from './flx-filter-chain';
 import {
   interpolateObjectAngle,
@@ -88,7 +89,7 @@ export class FlxStripRenderHandle implements FlxRenderHandle {
     if (this.#destroyed) return;
     this.#destroyed = true;
     this.#filterChain.destroy(this.view);
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#geometry.destroy();
     this.#onDestroy();
   }

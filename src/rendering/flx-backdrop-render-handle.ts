@@ -2,6 +2,7 @@ import { Container, Texture, TilingSprite } from 'pixi.js';
 
 import type { FlxCamera } from '../core/flx-camera';
 import type { FlxBackdrop } from '../objects/flx-backdrop';
+import { destroyRenderView } from './destroy-render-view';
 import type { FlxRenderHandle } from './flx-render-handle';
 import {
   interpolateObjectAngle,
@@ -74,7 +75,7 @@ export class FlxBackdropRenderHandle implements FlxRenderHandle {
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
-    this.view.destroy({ children: true });
+    destroyRenderView(this.view);
     this.#onDestroy();
   }
 }
