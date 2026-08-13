@@ -53,7 +53,7 @@ started merely to match a Haxe class count.
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Complete             | Logical coordinates remain correct through browser/window lifecycle changes.                       |
 |    10 |    P1    | Audio organization and system UX                | Complete             | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Complete             | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
-|    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
+|    12 |    P2    | Debugger and runtime inspection                 | In progress          | High-value console, interaction, and graphing workflows work without production overhead.          |
 |    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
 |    15 |    P0    | External compatibility validation               | Required before 1.0  | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
@@ -446,6 +446,13 @@ Order by diagnostic value:
 
 Debugger code must remain tree-shakable or disabled-by-default, accessible from
 the keyboard, and near-zero-cost when unopened.
+
+Current slice:
+
+- `FlxConsole` provides an allow-listed, headless command registry with quoted
+  arguments, normalized async results, bounded history, and prefix completion.
+- `FlxDebugger` exposes it through an accessible Console panel. No arbitrary
+  JavaScript evaluation or implicit game-state mutation is permitted.
 
 ### Utilities and frontend normalization
 

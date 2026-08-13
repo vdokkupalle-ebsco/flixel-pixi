@@ -19,8 +19,8 @@ test.describe('Debugger and preloader', () => {
     const debugger_ = page.locator('[data-testid="flx-debugger"]');
     await expect(debugger_).toBeAttached();
 
-    // All 5 tabs should be present
-    for (const tab of ['log', 'watch', 'perf', 'vcr', 'vis']) {
+    // All debugger tabs should be present
+    for (const tab of ['log', 'console', 'watch', 'perf', 'vcr', 'vis']) {
       await expect(
         page.locator(`[data-testid="flxdbg-tab-${tab}"]`),
       ).toBeVisible();
@@ -28,6 +28,41 @@ test.describe('Debugger and preloader', () => {
 
     // Preloader should be gone (removed from DOM after fade)
     await expect(preloader).not.toBeAttached({ timeout: 3000 });
+  });
+
+  test('Console executes allow-listed commands and recalls history', async ({
+    page,
+  }) => {
+    await page.goto('/debugger.html');
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 8000 },
+    );
+    await page.locator('[data-testid="flxdbg-tab-console"]').click();
+    const input = page.locator('[data-testid="flxdbg-console-input"]');
+    await input.fill('player.position');
+    await input.press('Enter');
+    await expect(
+      page.locator('[data-testid="flxdbg-console-output"]'),
+    ).toContainText('"x"');
+    await input.press('ArrowUp');
+    await expect(input).toHaveValue('player.position');
+
+    for (let index = 0; index < 30; index++) {
+      await input.fill('player.position');
+      await input.press('Enter');
+    }
+    const output = page.locator('[data-testid="flxdbg-console-output"]');
+    await expect
+      .poll(() =>
+        output.evaluate(
+          (element) =>
+            element.scrollHeight > element.clientHeight &&
+            element.scrollTop > 0,
+        ),
+      )
+      .toBe(true);
   });
 
   test('Log panel displays messages from FlxG.log.add()', async ({ page }) => {
@@ -137,6 +172,22 @@ test.describe('Debugger and preloader', () => {
     // Close via internal ✕ button
     await page.locator('[data-testid="flxdbg-close"]').click();
     await expect(dbg).toHaveClass(/hidden/);
+    const launcher = page.locator('[data-testid="flxdbg-launcher"]');
+    await expect(launcher).toBeVisible();
+
+    // Restore through the built-in launcher
+    await launcher.click();
+    await expect(dbg).not.toHaveClass(/hidden/);
+
+    // The default Backquote shortcut also minimizes and restores it
+    await page.keyboard.press('Backquote');
+    await expect(dbg).toHaveClass(/hidden/);
+    await page.keyboard.press('Backquote');
+    await expect(dbg).not.toHaveClass(/hidden/);
+
+    // Minimize again before exercising the game's custom control
+    await page.locator('[data-testid="flxdbg-close"]').click();
+    await expect(dbg).toHaveClass(/hidden/);
 
     // Re-open via external toggle button
     await page.locator('[data-action="toggle-debugger"]').click();
@@ -155,10 +206,10 @@ test.describe('Debugger and preloader', () => {
     await logTab.focus();
     await expect(logTab).toBeFocused();
 
-    // Arrow right should move to Watch tab
+    // Arrow right should move to Console tab
     await page.keyboard.press('ArrowRight');
-    const watchTab = page.locator('[data-testid="flxdbg-tab-watch"]');
-    await expect(watchTab).toBeFocused();
+    const consoleTab = page.locator('[data-testid="flxdbg-tab-console"]');
+    await expect(consoleTab).toBeFocused();
   });
 
   test('survives destruction cleanly', async ({ page }) => {

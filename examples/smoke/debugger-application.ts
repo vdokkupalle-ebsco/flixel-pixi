@@ -187,6 +187,39 @@ export async function bootDebuggerDemo(
 
   // ── Debugger ──────────────────────────────────────────────────────────────
   const dbg = new FlxDebugger({ container: document.body });
+  dbg.console.register({
+    description: 'List commands exposed by this demo.',
+    execute: () =>
+      dbg.console.commands.map((command) => ({
+        description: command.description ?? '',
+        name: command.name,
+        usage: command.usage ?? command.name,
+      })),
+    name: 'help',
+  });
+  dbg.console.register({
+    aliases: ['pos'],
+    description: 'Read the current player position.',
+    execute: () => {
+      const state = game.state;
+      if (!(state instanceof PlayState))
+        throw new Error('Play state is not active.');
+      return { x: Math.round(state.player.x), y: Math.round(state.player.y) };
+    },
+    name: 'player.position',
+  });
+  dbg.console.register({
+    description: 'Pause or resume the simulation through an explicit command.',
+    execute: ({ args }) => {
+      const mode = args[0];
+      if (mode !== 'on' && mode !== 'off')
+        throw new Error('Usage: pause <on|off>');
+      FlxG.paused = mode === 'on';
+      return { paused: FlxG.paused };
+    },
+    name: 'pause',
+    usage: 'pause <on|off>',
+  });
   dbg.setVCRCallbacks({
     record: () => {
       FlxG.recordReplay(false);

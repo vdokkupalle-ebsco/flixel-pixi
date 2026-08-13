@@ -307,6 +307,13 @@ export type { FlxVCR } from './replay/flx-vcr';
 // --- Debugger and preloader ---
 export { DebugChannel } from './debugger/debug-channel';
 export type { DebugEvents, DebugEventType } from './debugger/debug-channel';
+export { FlxConsole } from './debugger/flx-console';
+export type {
+  FlxConsoleCommand,
+  FlxConsoleCommandContext,
+  FlxConsoleOptions,
+  FlxConsoleResult,
+} from './debugger/flx-console';
 export { FlxLog, FLX_LOG_SERVICE } from './debugger/flx-log';
 export type { LogEntry } from './debugger/flx-log';
 export { FlxWatch, FLX_WATCH_SERVICE } from './debugger/flx-watch';

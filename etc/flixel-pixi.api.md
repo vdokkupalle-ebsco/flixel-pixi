@@ -1560,6 +1560,64 @@ export interface FlxColorTweenTarget {
 }
 
 // @public
+export class FlxConsole {
+    constructor(options?: FlxConsoleOptions);
+    // (undocumented)
+    clearHistory(): void;
+    // (undocumented)
+    get commands(): readonly FlxConsoleCommand[];
+    // (undocumented)
+    complete(input: string): readonly string[];
+    // (undocumented)
+    execute(input: string): Promise<FlxConsoleResult>;
+    // (undocumented)
+    get history(): readonly string[];
+    // (undocumented)
+    register(command: FlxConsoleCommand): () => void;
+    // (undocumented)
+    unregister(nameOrAlias: string): boolean;
+}
+
+// @public
+export interface FlxConsoleCommand {
+    // (undocumented)
+    readonly aliases?: readonly string[];
+    // (undocumented)
+    readonly description?: string;
+    // (undocumented)
+    readonly execute: (context: FlxConsoleCommandContext) => unknown | Promise<unknown>;
+    // (undocumented)
+    readonly name: string;
+    // (undocumented)
+    readonly usage?: string;
+}
+
+// @public
+export interface FlxConsoleCommandContext {
+    // (undocumented)
+    readonly args: readonly string[];
+    // (undocumented)
+    readonly command: string;
+    // (undocumented)
+    readonly input: string;
+}
+
+// @public
+export interface FlxConsoleOptions {
+    readonly maxHistory?: number;
+}
+
+// @public
+export interface FlxConsoleResult {
+    // (undocumented)
+    readonly command: string;
+    // (undocumented)
+    readonly ok: boolean;
+    // (undocumented)
+    readonly output: string;
+}
+
+// @public
 export class FlxContainer<T extends FlxBasic = FlxBasic> extends FlxGroup<T> {
     // (undocumented)
     replace(oldObject: T, newObject: T): T | null;
@@ -1658,6 +1716,8 @@ export class FlxCubicMotion extends FlxMotion {
 export class FlxDebugger {
     constructor(options?: FlxDebuggerOptions);
     // (undocumented)
+    readonly console: FlxConsole;
+    // (undocumented)
     destroy(): void;
     // (undocumented)
     hide(): void;
@@ -1673,7 +1733,11 @@ export class FlxDebugger {
 
 // @public (undocumented)
 export interface FlxDebuggerOptions {
+    console?: FlxConsole;
     container?: HTMLElement;
+    initiallyVisible?: boolean;
+    showLauncherWhenHidden?: boolean;
+    toggleKey?: string | false;
 }
 
 // @public

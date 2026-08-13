@@ -1,4 +1,5 @@
 import type { DebugChannel } from './debug-channel';
+import { FlxConsole, type FlxConsoleResult } from './flx-console';
 import type { FlxLog } from './flx-log';
 import type { FlxVCR } from '../replay/flx-vcr';
 import type { FlxWatch } from './flx-watch';
@@ -11,7 +12,7 @@ const DEBUGGER_CSS = `
   z-index: 10000;
   display: flex;
   flex-direction: column;
-  max-height: 260px;
+  height: min(260px, 50vh);
   background: rgba(10,10,20,0.93);
   backdrop-filter: blur(6px);
   border-top: 1.5px solid #334155;
@@ -22,6 +23,17 @@ const DEBUGGER_CSS = `
   user-select: none;
 }
 .flxdbg-overlay.hidden { transform: translateY(100%); }
+.flxdbg-launcher {
+  position: fixed; right: 10px; bottom: 10px; z-index: 10000;
+  padding: 5px 10px; border: 1px solid #334155; border-radius: 999px;
+  background: rgba(15,23,42,0.95); color: #38bdf8;
+  font: 600 11px 'JetBrains Mono', 'Fira Mono', monospace;
+  letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+}
+.flxdbg-launcher:hover { background: #1e293b; color: #7dd3fc; }
+.flxdbg-launcher:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.flxdbg-launcher[hidden] { display: none; }
 .flxdbg-tabs {
   display: flex;
   align-items: center;
@@ -58,7 +70,7 @@ const DEBUGGER_CSS = `
   line-height: 1;
 }
 .flxdbg-toggle:hover { color: #f87171; }
-.flxdbg-panels { flex: 1; overflow: hidden; position: relative; }
+.flxdbg-panels { flex: 1; min-height: 0; overflow: hidden; position: relative; }
 .flxdbg-panel {
   display: none;
   height: 100%;
@@ -67,10 +79,31 @@ const DEBUGGER_CSS = `
   box-sizing: border-box;
 }
 .flxdbg-panel.active { display: block; }
+#flxdbg-panel-console { overflow: hidden; }
 
 /* Log panel */
 .flxdbg-log-entry { padding: 1px 0; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
 .flxdbg-log-time { color: #475569; margin-right: 6px; }
+
+/* Console panel */
+.flxdbg-console { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 6px; }
+.flxdbg-console-output {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  user-select: text; scrollbar-gutter: stable;
+}
+.flxdbg-console-row { padding: 1px 0; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.flxdbg-console-command { color: #38bdf8; }
+.flxdbg-console-result { color: #94a3b8; }
+.flxdbg-console-error { color: #f87171; }
+.flxdbg-console-form { display: flex; align-items: center; gap: 6px; }
+.flxdbg-console-prompt { color: #4ade80; font-weight: bold; }
+.flxdbg-console-input {
+  flex: 1; min-width: 0; box-sizing: border-box;
+  border: 1px solid #334155; border-radius: 3px;
+  background: #020617; color: #e2e8f0;
+  font: inherit; padding: 4px 6px;
+}
+.flxdbg-console-input:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
 
 /* Watch panel */
 .flxdbg-watch-table { width: 100%; border-collapse: collapse; }
@@ -129,8 +162,16 @@ const DEBUGGER_CSS = `
 
 /** @public */
 export interface FlxDebuggerOptions {
+  /** Headless command registry to expose in the Console panel. */
+  console?: FlxConsole;
   /** Element to mount the overlay inside. Defaults to document.body. */
   container?: HTMLElement;
+  /** Whether the debugger starts expanded. Defaults to true. */
+  initiallyVisible?: boolean;
+  /** Show an accessible launcher while minimized. Defaults to true. */
+  showLauncherWhenHidden?: boolean;
+  /** KeyboardEvent.code used to toggle the debugger. Defaults to Backquote. */
+  toggleKey?: string | false;
 }
 
 /** Callbacks the debugger needs to invoke VCR actions on the game. @public */
@@ -146,19 +187,26 @@ export interface FlxDebuggerVCRCallbacks {
 // ─── FlxDebugger ─────────────────────────────────────────────────────────────
 
 /**
- * DOM overlay debugger with Log, Watch, Perf, VCR, and Vis panels.
+ * DOM overlay debugger with Console, Log, Watch, Perf, VCR, and Vis panels.
  * Mounts as a fixed bottom bar. Fully keyboard/screen-reader accessible.
  * @public
  */
 export class FlxDebugger {
+  readonly console: FlxConsole;
   readonly #root: HTMLDivElement;
+  readonly #launcher: HTMLButtonElement | null;
   readonly #panels = new Map<string, HTMLDivElement>();
   readonly #tabs = new Map<string, HTMLButtonElement>();
+  readonly #toggleKey: string | false;
   #activeTab = 'log';
   #visible = true;
+  #restoreFocus: HTMLElement | null = null;
 
   // Panel-specific elements
   #logList!: HTMLDivElement;
+  #consoleInput!: HTMLInputElement;
+  #consoleOutput!: HTMLDivElement;
+  #consoleHistoryIndex = 0;
   #watchBody!: HTMLTableSectionElement;
   #perfFps!: HTMLSpanElement;
   #perfUpdateMs!: HTMLSpanElement;
@@ -180,7 +228,19 @@ export class FlxDebugger {
   #styleEl: HTMLStyleElement | null = null;
 
   constructor(options: FlxDebuggerOptions = {}) {
-    const { container = document.body } = options;
+    const {
+      container = document.body,
+      initiallyVisible = true,
+      showLauncherWhenHidden = true,
+      toggleKey = 'Backquote',
+    } = options;
+    if (toggleKey !== false && toggleKey.trim().length === 0) {
+      throw new Error('toggleKey must be a KeyboardEvent.code or false.');
+    }
+    this.console = options.console ?? new FlxConsole();
+    this.#consoleHistoryIndex = this.console.history.length;
+    this.#toggleKey = toggleKey;
+    this.#visible = initiallyVisible;
 
     // Inject CSS once
     if (!document.getElementById('flxdbg-style')) {
@@ -196,6 +256,7 @@ export class FlxDebugger {
     this.#root.setAttribute('role', 'complementary');
     this.#root.setAttribute('aria-label', 'Flixel debugger');
     this.#root.setAttribute('data-testid', 'flx-debugger');
+    this.#root.classList.toggle('hidden', !initiallyVisible);
 
     // Tab bar
     const tabBar = document.createElement('div');
@@ -206,6 +267,7 @@ export class FlxDebugger {
 
     const TAB_LABELS: [string, string][] = [
       ['log', 'Log'],
+      ['console', 'Console'],
       ['watch', 'Watch'],
       ['perf', 'Perf'],
       ['vcr', 'VCR'],
@@ -250,7 +312,8 @@ export class FlxDebugger {
     toggleBtn.type = 'button';
     toggleBtn.className = 'flxdbg-toggle';
     toggleBtn.textContent = '✕';
-    toggleBtn.setAttribute('aria-label', 'Hide debugger');
+    toggleBtn.setAttribute('aria-label', 'Minimize debugger');
+    toggleBtn.title = 'Minimize debugger';
     toggleBtn.setAttribute('data-testid', 'flxdbg-close');
     toggleBtn.addEventListener('click', () => {
       this.hide();
@@ -275,6 +338,24 @@ export class FlxDebugger {
     }
 
     container.appendChild(this.#root);
+
+    if (showLauncherWhenHidden) {
+      this.#launcher = document.createElement('button');
+      this.#launcher.type = 'button';
+      this.#launcher.className = 'flxdbg-launcher';
+      this.#launcher.textContent = 'Debug';
+      this.#launcher.hidden = initiallyVisible;
+      this.#launcher.setAttribute('aria-label', 'Show debugger');
+      this.#launcher.setAttribute('data-testid', 'flxdbg-launcher');
+      this.#launcher.addEventListener('click', this.#onLauncherClick);
+      container.appendChild(this.#launcher);
+    } else {
+      this.#launcher = null;
+    }
+
+    if (this.#toggleKey !== false) {
+      window.addEventListener('keydown', this.#onWindowKeyDown, true);
+    }
   }
 
   // ─── Public API ────────────────────────────────────────────────────────────
@@ -284,13 +365,25 @@ export class FlxDebugger {
   }
 
   show(): void {
+    if (this.#destroyed || this.#visible) return;
     this.#visible = true;
     this.#root.classList.remove('hidden');
+    if (this.#launcher) this.#launcher.hidden = true;
   }
 
   hide(): void {
+    if (this.#destroyed || !this.#visible) return;
+    const activeElement = document.activeElement;
+    this.#restoreFocus =
+      activeElement instanceof HTMLElement && this.#root.contains(activeElement)
+        ? activeElement
+        : null;
     this.#visible = false;
     this.#root.classList.add('hidden');
+    if (this.#launcher) {
+      this.#launcher.hidden = false;
+      if (this.#restoreFocus !== null) this.#launcher.focus();
+    }
   }
 
   toggle(): void {
@@ -325,6 +418,11 @@ export class FlxDebugger {
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
+    if (this.#toggleKey !== false) {
+      window.removeEventListener('keydown', this.#onWindowKeyDown, true);
+    }
+    this.#launcher?.removeEventListener('click', this.#onLauncherClick);
+    this.#launcher?.remove();
     this.#root.remove();
     this.#styleEl?.remove();
   }
@@ -333,6 +431,7 @@ export class FlxDebugger {
 
   #buildPanel(id: string, el: HTMLDivElement): void {
     if (id === 'log') this.#buildLog(el);
+    else if (id === 'console') this.#buildConsole(el);
     else if (id === 'watch') this.#buildWatch(el);
     else if (id === 'perf') this.#buildPerf(el);
     else if (id === 'vcr') this.#buildVCR(el);
@@ -360,6 +459,52 @@ export class FlxDebugger {
     this.#logList.setAttribute('aria-label', 'Log messages');
     this.#logList.setAttribute('data-testid', 'flxdbg-log-list');
     el.appendChild(this.#logList);
+  }
+
+  #buildConsole(el: HTMLDivElement): void {
+    const wrap = document.createElement('div');
+    wrap.className = 'flxdbg-console';
+
+    this.#consoleOutput = document.createElement('div');
+    this.#consoleOutput.className = 'flxdbg-console-output';
+    this.#consoleOutput.setAttribute('role', 'log');
+    this.#consoleOutput.setAttribute('aria-live', 'polite');
+    this.#consoleOutput.setAttribute('aria-label', 'Console output');
+    this.#consoleOutput.setAttribute('data-testid', 'flxdbg-console-output');
+
+    const form = document.createElement('form');
+    form.className = 'flxdbg-console-form';
+    const prompt = document.createElement('span');
+    prompt.className = 'flxdbg-console-prompt';
+    prompt.textContent = '>';
+    prompt.setAttribute('aria-hidden', 'true');
+    this.#consoleInput = document.createElement('input');
+    this.#consoleInput.className = 'flxdbg-console-input';
+    this.#consoleInput.type = 'text';
+    this.#consoleInput.autocomplete = 'off';
+    this.#consoleInput.spellcheck = false;
+    this.#consoleInput.setAttribute('aria-label', 'Debugger command');
+    this.#consoleInput.setAttribute('data-testid', 'flxdbg-console-input');
+    form.append(prompt, this.#consoleInput);
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      void this.#executeConsoleInput();
+    });
+    this.#consoleInput.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        this.#navigateConsoleHistory(event.key === 'ArrowUp' ? -1 : 1);
+      } else if (event.key === 'Tab') {
+        const completions = this.console.complete(this.#consoleInput.value);
+        if (completions.length === 1) {
+          event.preventDefault();
+          this.#consoleInput.value = `${completions[0]} `;
+        }
+      }
+    });
+
+    wrap.append(this.#consoleOutput, form);
+    el.appendChild(wrap);
   }
 
   #buildWatch(el: HTMLDivElement): void {
@@ -592,6 +737,83 @@ export class FlxDebugger {
     this.#vcrStep.disabled = vcr.replay === null || vcr.recording;
   }
 
+  async #executeConsoleInput(): Promise<void> {
+    const input = this.#consoleInput.value;
+    if (input.trim().length === 0) return;
+    this.#consoleInput.value = '';
+    this.#appendConsoleRow(`> ${input}`, 'flxdbg-console-command');
+    const result = await this.console.execute(input);
+    this.#appendConsoleResult(result);
+    this.#consoleHistoryIndex = this.console.history.length;
+  }
+
+  #appendConsoleResult(result: FlxConsoleResult): void {
+    if (result.output.length === 0) return;
+    this.#appendConsoleRow(
+      result.output,
+      result.ok ? 'flxdbg-console-result' : 'flxdbg-console-error',
+    );
+  }
+
+  #appendConsoleRow(text: string, className: string): void {
+    const row = document.createElement('div');
+    row.className = `flxdbg-console-row ${className}`;
+    row.textContent = text;
+    this.#consoleOutput.appendChild(row);
+    this.#consoleOutput.scrollTop = this.#consoleOutput.scrollHeight;
+  }
+
+  #navigateConsoleHistory(direction: -1 | 1): void {
+    const history = this.console.history;
+    this.#consoleHistoryIndex = Math.max(
+      0,
+      Math.min(history.length, this.#consoleHistoryIndex + direction),
+    );
+    this.#consoleInput.value = history[this.#consoleHistoryIndex] ?? '';
+  }
+
+  readonly #onLauncherClick = (): void => {
+    this.show();
+    this.#focusDebugger();
+  };
+
+  readonly #onWindowKeyDown = (event: KeyboardEvent): void => {
+    if (
+      event.key === 'Escape' &&
+      this.#visible &&
+      document.activeElement instanceof HTMLElement &&
+      this.#root.contains(document.activeElement)
+    ) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.hide();
+      return;
+    }
+    if (
+      event.repeat ||
+      event.code !== this.#toggleKey ||
+      isEditableTarget(event.target)
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (this.#visible) this.hide();
+    else {
+      this.show();
+      this.#focusDebugger();
+    }
+  };
+
+  #focusDebugger(): void {
+    const target =
+      this.#restoreFocus?.isConnected === true
+        ? this.#restoreFocus
+        : this.#tabs.get(this.#activeTab);
+    this.#restoreFocus = null;
+    target?.focus();
+  }
+
   // ─── Tab switching ─────────────────────────────────────────────────────────
 
   #switchTab(id: string): void {
@@ -614,4 +836,14 @@ export class FlxDebugger {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
   }
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable
+  );
 }
