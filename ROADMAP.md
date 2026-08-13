@@ -11,13 +11,8 @@ the ordered feature backlog and records completed, active, planned, deferred,
 and unsupported work. This roadmap remains the release-outcome view; avoid
 duplicating the detailed parity list here.
 
-The immediate sequence is:
-
-1. finish and commit state overlays/substates;
-2. implement the animation and frame model;
-3. define transformable containers/sprite groups;
-4. expand gamepad, action, and touch input;
-5. validate priorities through a pinned external game port.
+The modern parity sequence through the pinned external game port is complete.
+The active checkpoint is release hardening and the 1.0 candidate.
 
 ## Implemented engine capabilities
 
@@ -30,24 +25,37 @@ The immediate sequence is:
 
 ## External compatibility validation
 
-- Select a suitably licensed open-source AS3 Flixel game and pin its revision.
-- Port from its source using only documented public APIs.
-- Classify every discovered gap as Exact, Adapted, Emulated, Deprecated, or
-  Unsupported.
-- Record independent clean-room feedback from a developer who did not implement
-  the port.
+- Complete: AdamAtomic's MIT-licensed Flx-Invaders is pinned and ported through
+  public APIs.
+- Complete: every discovered gap is classified and the clean-room review passed
+  after adding a documented, opt-in terminal-state validation mode.
 
 Exit condition: the external game is playable, its gap report has no unknowns,
 and documentation feedback is resolved or explicitly tracked.
 
 ## Release hardening
 
-- Extend leak probes to textures, audio nodes, listeners, render targets, and
-  registered render handles.
-- Run and record a 30-minute automated soak.
-- Verify WebGPU failure falls back to WebGL without gameplay differences.
-- Freeze named performance, memory, and bundle budgets on representative
-  hardware.
+- Restored: 429 passing unit tests now report 88.02% branch coverage without
+  lowering the configured 88% gate or excluding production modules.
+- Restored: swipe browser validation now asserts cumulative interaction
+  milestones instead of short-lived render objects; it passes 10 repeated
+  isolated runs and the 58-test Chromium suite with six concurrent workers.
+- Restored: the 30-cycle boot/destroy probe now verifies generated texture
+  sources, Web Audio contexts and handles, event listeners, camera render
+  targets and bytes, registered render handles, and DOM canvases. All owned
+  resources return to zero; the process-wide listener baseline remains flat.
+- Complete: an uninterrupted 30.2-minute Chromium soak executed 2,359 full
+  boot/render/audio/destroy cycles. Registered handles stayed at 2, retained
+  process listeners stayed at 13, and every engine-owned resource returned to
+  zero after every cycle. Re-run with `npm run test:soak:30m`.
+- Complete: deterministic Chromium, Firefox, and WebKit coverage makes WebGPU
+  capability detection succeed, forces renderer initialization to fail, and
+  verifies fresh WebGL recovery with unchanged state transition, movement, and
+  teardown behavior.
+- Complete: `performance-budgets.json` freezes raw/gzip bundle ceilings, seven
+  deterministic CPU means, median FPS floors for 2k/5k/10k sprite scenes, and
+  renderer/audio/listener/teardown resource ceilings against the documented
+  Apple M4 Pro reference profile. `npm run verify:budgets` passes.
 - Validate resize, fullscreen, focus, visibility, accessibility, and memory
   pressure across the supported browser matrix.
 

@@ -139,8 +139,12 @@ describe('WebAudioBackend', () => {
 
   it('queues AudioBuffer playback until the first gesture and stops on destroy', () => {
     const backend = new WebAudioBackend();
+    expect(backend.diagnosticContextActive).toBe(false);
+    expect(backend.diagnosticHandleCount).toBe(0);
     backend.unlockAudio();
     const handle = backend.createSound(new FakeAudioBuffer(), false);
+    expect(backend.diagnosticContextActive).toBe(true);
+    expect(backend.diagnosticHandleCount).toBe(1);
     const context = FakeAudioContext.instances[0];
     expect(context).toBeDefined();
 
@@ -154,8 +158,10 @@ describe('WebAudioBackend', () => {
     expect(context?.bufferSources[0]?.started).toBe(true);
 
     handle.destroy();
+    expect(backend.diagnosticHandleCount).toBe(0);
     expect(context?.bufferSources[0]?.stopped).toBe(true);
     backend.destroy();
+    expect(backend.diagnosticContextActive).toBe(false);
   });
 
   it('turns URL strings into media elements and cancels stopped queued play', () => {

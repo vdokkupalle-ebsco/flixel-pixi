@@ -79,6 +79,24 @@ export interface BrowserGamePreloadContext {
   readonly signal: AbortSignal;
 }
 
+/** GPU renderer backends supported by the browser game host. @public */
+export type BrowserGameRendererBackend = 'webgl' | 'webgpu';
+
+/** Renderer selection and recovery policy for browser startup. @public */
+export interface BrowserGameRendererOptions {
+  /** Preferred backend. Defaults to the production-safe `webgl`. */
+  preference?: BrowserGameRendererBackend;
+  /** Retry WebGL when preferred WebGPU initialization fails. Defaults to true. */
+  fallbackToWebGL?: boolean;
+}
+
+/** Details of an automatic renderer recovery completed during startup. @public */
+export interface BrowserGameRendererFallback {
+  readonly from: 'webgpu';
+  readonly to: 'webgl';
+  readonly reason: string;
+}
+
 /** Options for {@link createBrowserGame}. @public */
 export interface CreateBrowserGameOptions {
   host: HTMLElement;
@@ -103,6 +121,8 @@ export interface CreateBrowserGameOptions {
   fpsDisplay?: boolean | FlxFpsDisplayOptions;
   /** Optional accessible master volume/mute controls. Disabled by default. */
   audioControls?: boolean | FlxAudioControlsOptions;
+  /** GPU backend preference and WebGPU-to-WebGL recovery policy. */
+  renderer?: BrowserGameRendererOptions;
   /** Native keyboard and screen-reader controls for supported Flixel UI. Defaults to true. */
   accessibility?: boolean;
   /** CSS-space canvas scaling policy. Defaults to aspect-preserving `fit`. */
@@ -126,6 +146,10 @@ export interface CreateBrowserGameOptions {
 export interface BrowserGameApplication {
   readonly game: FlxGame;
   readonly renderer: FlxCameraRenderer;
+  /** Concrete Pixi renderer backend selected after any startup fallback. */
+  readonly rendererBackend: BrowserGameRendererBackend;
+  /** Automatic renderer recovery details, or null when no fallback occurred. */
+  readonly rendererFallback: BrowserGameRendererFallback | null;
   readonly app: Application;
   /** Asset service installed into the running game's context. */
   readonly assets: FlxAssets;
@@ -166,6 +190,12 @@ interface BootResources {
   game: FlxGame | null;
   renderer: FlxCameraRenderer | null;
   viewport: FlxBrowserViewport | null;
+}
+
+interface InitializedPixiApplication {
+  app: Application;
+  backend: BrowserGameRendererBackend;
+  fallback: BrowserGameRendererFallback | null;
 }
 
 /**
@@ -229,14 +259,18 @@ export async function createBrowserGame(
     try {
       loading.start('renderer', 'Starting renderer…', null);
       throwIfAborted(loading.signal);
-      await resources.app.init({
-        autoStart: false,
-        width,
-        height,
-        backgroundColor,
-        resolution: initialResolution,
-        autoDensity: true,
-      });
+      const initialized = await initializePixiApplication(
+        resources.app,
+        options.renderer,
+        loading,
+        {
+          backgroundColor,
+          height,
+          resolution: initialResolution,
+          width,
+        },
+      );
+      resources.app = initialized.app;
       resources.appInitialized = true;
       throwIfAborted(loading.signal);
       host.prepend(resources.app.canvas);
@@ -316,6 +350,8 @@ export async function createBrowserGame(
         accessibility,
         maxDevicePixelRatio,
         autoPause,
+        initialized.backend,
+        initialized.fallback,
         unsubscribeObserver,
       );
       unsubscribeView?.();
@@ -355,6 +391,74 @@ export async function createBrowserGame(
       }
     }
   }
+}
+
+async function initializePixiApplication(
+  initialApp: Application,
+  options: BrowserGameRendererOptions | undefined,
+  loading: FlxLoadingSession,
+  dimensions: {
+    backgroundColor: number;
+    height: number;
+    resolution: number;
+    width: number;
+  },
+): Promise<InitializedPixiApplication> {
+  const preferred = options?.preference ?? 'webgl';
+  const candidates: BrowserGameRendererBackend[] =
+    preferred === 'webgpu' && options?.fallbackToWebGL !== false
+      ? ['webgpu', 'webgl']
+      : [preferred];
+  let app = initialApp;
+  let webGPUFailure: unknown;
+
+  for (const [index, backend] of candidates.entries()) {
+    try {
+      await app.init({
+        autoDensity: true,
+        autoStart: false,
+        ...dimensions,
+        preference: [backend],
+      });
+      return {
+        app,
+        backend,
+        fallback:
+          backend === 'webgl' && webGPUFailure !== undefined
+            ? {
+                from: 'webgpu',
+                reason: errorDetail(webGPUFailure),
+                to: 'webgl',
+              }
+            : null,
+      };
+    } catch (cause) {
+      destroyFailedPixiApplication(app);
+      const next = candidates[index + 1];
+      if (backend !== 'webgpu' || next !== 'webgl') throw cause;
+      webGPUFailure = cause;
+      loading.report({
+        message: 'WebGPU unavailable. Falling back to WebGL…',
+        progress: null,
+        stage: 'renderer',
+      });
+      app = new Application();
+    }
+  }
+
+  throw new Error('No renderer backend was initialized.');
+}
+
+function destroyFailedPixiApplication(app: Application): void {
+  if ('renderer' in app && app.renderer !== undefined) {
+    app.destroy({ removeView: true, releaseGlobalResources: true });
+  } else {
+    app.stage.destroy({ children: true });
+  }
+}
+
+function errorDetail(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause);
 }
 
 async function prepareAssets(
@@ -444,6 +548,8 @@ function startApplication(
   accessibilityEnabled: boolean,
   maxDevicePixelRatio: number,
   autoPause: boolean,
+  rendererBackend: BrowserGameRendererBackend,
+  rendererFallback: BrowserGameRendererFallback | null,
   unsubscribeObserver?: () => void,
 ): BrowserGameApplication {
   const frameListeners = new Set<(frame: BrowserGameFrame) => void>();
@@ -563,6 +669,8 @@ function startApplication(
     game,
     loading,
     renderer,
+    rendererBackend,
+    rendererFallback,
     viewport,
     renderFramerate,
     updateFramerate,

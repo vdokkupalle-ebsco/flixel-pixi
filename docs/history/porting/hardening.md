@@ -35,31 +35,35 @@ serially so the 2k, 5k, 10k, and soak workloads do not contend with one another.
 (set by group add/remove/replace/clear and state create). Stable 10k scenes no longer
 pay O(n) membership diffs every frame.
 
-## Render FPS baseline (headless Chromium, serial local run)
+## Frozen render budgets (headless Chromium, serial reference run)
 
 Command: `npm run test:perf`
 
-| active | avgFps | minFps | Gate          |
-| ------ | ------ | ------ | ------------- |
-| 2000   | 86.6   | 5.7    | soft ≥ 60 avg |
-| 5000   | 58.5   | 20.3   | soft ≥ 30 avg |
-| 10000  | 32.6   | 20.0   | report-only   |
+| active | avgFps | medianFps | minFps | Gate       |
+| ------ | ------ | --------- | ------ | ---------- |
+| 2000   | 65.61  | 60.24     | 20.00  | median ≥48 |
+| 5000   | 35.60  | 40.00     | 20.00  | median ≥28 |
+| 10000  | 17.32  | 17.15     | 12.00  | median ≥14 |
 
-These are local regression baselines, not cross-device performance promises.
-Minimum FPS remains report-only because setup/GC hitches dominate the short run.
+Reference: MacBook Pro `Mac16,8`, Apple M4 Pro (12-core CPU, 16-core GPU),
+24 GB, macOS 26.5.2 arm64, Node 22.x, Playwright 1.62.1, Chromium
+151.0.7922.34. Median is gated; mean and minimum remain diagnostic because
+isolated scheduler and GC stalls vary between otherwise equivalent runs.
 
 ## Soak
 
-| Metric | Value                             |
-| ------ | --------------------------------- |
-| cycles | 30 × ~750ms                       |
-| probe  | `registeredObjectCount` mid-cycle |
-| assert | flat within ε=+2; no errors       |
+| Metric    | Frozen budget                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------ |
+| cycles    | 30 × ~750ms in the fast lane; 30 minutes on demand                                               |
+| active    | ≤2 render handles, 1 target/1,228,800 bytes, 2 texture sources, 1 audio context/handle, 1 canvas |
+| released  | all engine-owned counts exactly zero                                                             |
+| listeners | retained process baseline ≤16                                                                    |
 
 ## Verification
 
 - `npx vitest run` — pass
-- `npm run test:perf` — 4/4 pass
-- `npm run test:e2e` — 105/105 pass across Chromium, Firefox, and WebKit
-- Remaining for C13: richer leak probes, a 30-minute soak, WebGPU fallback
-  verification, release provenance, and the 1.0 publish
+- `npm run check:budgets` — 9/9 static bundle/CPU budgets pass
+- `npm run test:perf` — 4/4 browser FPS/resource budgets pass
+- `npm run test:soak:30m` — 2,359 cycles pass over 30.2 minutes
+- Remaining for C13: browser/device matrix completion, package provenance, and
+  the 1.0 publish

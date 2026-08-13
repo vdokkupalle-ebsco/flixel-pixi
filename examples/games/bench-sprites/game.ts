@@ -74,6 +74,7 @@ export class BenchSpritesState extends FlxState {
   #frameTimes: number[] = [];
   measured = false;
   avgFps = 0;
+  medianFps = 0;
   minFps = 0;
 
   override create(): void {
@@ -134,7 +135,7 @@ export class BenchSpritesState extends FlxState {
     }
 
     this.hud.text = this.measured
-      ? `BENCH — avg ${this.avgFps.toFixed(1)} fps · min ${this.minFps.toFixed(1)} · active ${n} · inactive ${INACTIVE_COUNT}`
+      ? `BENCH — avg ${this.avgFps.toFixed(1)} · median ${this.medianFps.toFixed(1)} · min ${this.minFps.toFixed(1)} fps · active ${n} · inactive ${INACTIVE_COUNT}`
       : `BENCH — measuring ${this.#sampleElapsed.toFixed(2)}s · active ${n}`;
   }
 
@@ -157,8 +158,15 @@ export class BenchSpritesState extends FlxState {
       if (this.#sampleElapsed >= 4) {
         const totalMS = this.#frameTimes.reduce((sum, ms) => sum + ms, 0);
         const maxMS = Math.max(...this.#frameTimes);
+        const sorted = [...this.#frameTimes].sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+        const medianMS =
+          sorted.length % 2 === 0
+            ? ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) * 0.5
+            : (sorted[middle] ?? 0);
         this.avgFps =
           totalMS > 0 ? (this.#frameTimes.length * 1000) / totalMS : 0;
+        this.medianFps = medianMS > 0 ? 1000 / medianMS : 0;
         this.minFps = maxMS > 0 ? 1000 / maxMS : 0;
         this.measured = true;
       }

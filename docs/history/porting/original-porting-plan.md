@@ -436,10 +436,9 @@ Checkpoint C11 — tooling gate:
 
 ### Phase 12 — Whole-game ports, API closure, and guides (4–6 weeks)
 
-Status: implementation substantially complete on 2026-08-06, but checkpoint
-C12 was reopened during the 2026-08-09 audit. The three public-API samples,
-guides, and member ledger pass; a licensed external game still needs a genuine
-source-port exercise. See
+Status: completed on 2026-08-13. The three public-API samples, guides, member
+ledger, pinned Flx-Invaders source port, cross-browser contracts, and
+independent clean-room review pass. See
 [`sample-games-api.md`](sample-games-api.md) and
 [`mode-lite-gap.md`](mode-lite-gap.md).
 

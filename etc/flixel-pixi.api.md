@@ -40,6 +40,8 @@ export interface BrowserGameApplication {
     onFrame(callback: (frame: BrowserGameFrame) => void): () => void;
     // (undocumented)
     readonly renderer: FlxCameraRenderer;
+    readonly rendererBackend: BrowserGameRendererBackend;
+    readonly rendererFallback: BrowserGameRendererFallback | null;
     readonly renderFramerate: number | undefined;
     syncRenderer(): void;
     readonly updateFramerate: number;
@@ -76,6 +78,25 @@ export interface BrowserGamePreloadContext {
 export interface BrowserGamePreloaderOptions extends FlxPreloaderOptions {
     createView?: FlxPreloaderViewFactory;
     retry?: boolean;
+}
+
+// @public
+export type BrowserGameRendererBackend = 'webgl' | 'webgpu';
+
+// @public
+export interface BrowserGameRendererFallback {
+    // (undocumented)
+    readonly from: 'webgpu';
+    // (undocumented)
+    readonly reason: string;
+    // (undocumented)
+    readonly to: 'webgl';
+}
+
+// @public
+export interface BrowserGameRendererOptions {
+    fallbackToWebGL?: boolean;
+    preference?: BrowserGameRendererBackend;
 }
 
 // @public
@@ -125,6 +146,7 @@ export interface CreateBrowserGameOptions {
     onLoadingSnapshot?: (snapshot: FlxLoadingSnapshot) => void;
     preload?: (context: BrowserGamePreloadContext) => Promise<void> | void;
     preloader?: false | BrowserGamePreloaderOptions;
+    renderer?: BrowserGameRendererOptions;
     renderFramerate?: number;
     renderInterpolation?: boolean;
     scaling?: FlxBrowserScaleMode | FlxBrowserScaleOptions;
@@ -1700,8 +1722,7 @@ export class FlxContext {
     resetState(): void;
     // (undocumented)
     score: number;
-    // (undocumented)
-    readonly scores: number[];
+    readonly scores: unknown[];
     // (undocumented)
     setPrimaryCamera(camera: FlxCamera): void;
     // (undocumented)
@@ -2320,7 +2341,7 @@ export class FlxG {
     static get score(): number;
     static set score(value: number);
     // (undocumented)
-    static get scores(): number[];
+    static get scores(): unknown[];
     // (undocumented)
     static shake(intensity?: number, duration?: number, onComplete?: FlxCameraEffectCallback | null, force?: boolean, direction?: FlxCameraShakeDirection): void;
     // (undocumented)

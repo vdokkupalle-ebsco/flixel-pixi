@@ -201,7 +201,7 @@ export class FlxG {
     return FlxG.context.levels;
   }
 
-  static get scores(): number[] {
+  static get scores(): unknown[] {
     return FlxG.context.scores;
   }
 

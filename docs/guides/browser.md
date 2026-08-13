@@ -194,4 +194,25 @@ Flash embeds are gone. Use `FlxAssets` / Pixi `Assets` with URLs or generated `m
 
 ## Rendering
 
-WebGL is the primary path; WebGPU may be available via Pixi preference. Camera FX and multi-camera layouts assume GPU render textures.
+WebGL is the production-safe default. Games can prefer WebGPU while retaining
+an automatic WebGL recovery path:
+
+```ts
+const app = await createBrowserGame({
+  host,
+  initialState: PlayState,
+  renderer: { preference: 'webgpu' },
+});
+
+console.log(app.rendererBackend); // 'webgpu' or fallback 'webgl'
+if (app.rendererFallback) {
+  console.warn(app.rendererFallback.reason);
+}
+```
+
+The fallback uses a fresh Pixi application when WebGPU initialization fails;
+game construction and the first fixed update occur only after a renderer is
+ready, so renderer recovery cannot partially advance gameplay. Set
+`fallbackToWebGL: false` only when a WebGPU-only application should surface the
+startup error instead. Camera FX and multi-camera layouts assume GPU render
+textures.

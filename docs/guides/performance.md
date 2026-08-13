@@ -21,6 +21,40 @@ Simulation runs on a fixed accumulator (`FlxGame` / ADR 0002). Display refresh r
 
 Destroy states, unload asset bundles you no longer need, and drop render handles when objects leave the world. Leaked textures and listeners show up in long sessions (Performance soak will gate this harder).
 
+## Release budgets
+
+Named 1.0-candidate limits live in
+[`performance-budgets.json`](../../performance-budgets.json). Run the complete
+reference-hardware lane with:
+
+```bash
+npm run verify:budgets
+```
+
+`check:budgets` builds the library, measures raw/gzip bundle size, runs the
+selected deterministic Vitest workloads, writes
+`reports/performance-budget-results.json`, and fails when a named ceiling is
+exceeded. `test:perf` runs the Chromium sprite and lifecycle budgets serially.
+
+The reference machine is a 24 GB MacBook Pro `Mac16,8` with a 12-core Apple M4
+Pro CPU and 16-core GPU, macOS 26.5.2 arm64, Node 22.x, Playwright 1.62.1, and
+Chromium 151.0.7922.34. These are regression budgets for that profile, not
+cross-device frame-rate promises.
+
+| Category            | Frozen gate                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| Library bundle      | ≤650,000 raw bytes; ≤150,000 gzip bytes                                                    |
+| Sprite stress       | median ≥48/28/14 FPS at 2k/5k/10k active sprites                                           |
+| Camera target       | ≤1,228,800 active bytes for the 640×480@1× soak scene                                      |
+| Lifecycle ownership | ≤2 render handles, 1 target, 2 generated texture sources, 1 audio context/handle, 1 canvas |
+| Teardown            | every engine-owned count returns to zero; retained process listeners ≤16                   |
+
+Median FPS is the hard browser statistic because it represents sustained frame
+delivery without allowing isolated OS/browser scheduling stalls to invalidate a
+run. Mean and minimum FPS remain report diagnostics. CPU means have explicit
+per-workload ceilings in the JSON file, with enough headroom to detect material
+regressions without treating benchmark noise as a release failure.
+
 ## Benchmarks
 
 - Sprite atlas stress: `examples/games/bench-sprites/` (`npm run dev:games` → Bench Sprites). Presets **2k / 5k / 10k** via UI buttons, keys `1`/`2`/`3`, or `?active=5000`. Report-only FPS via `window.__FLIXEL_PIXI_BENCH__`.

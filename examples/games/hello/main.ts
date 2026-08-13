@@ -14,6 +14,8 @@ declare global {
       moveRight?: () => void;
       playerX?: () => number;
       playerY?: () => number;
+      rendererBackend?: GameApplication['rendererBackend'];
+      rendererFallback?: GameApplication['rendererFallback'];
     };
   }
 }
@@ -23,6 +25,8 @@ const status = document.querySelector<HTMLElement>('[data-testid="status"]');
 const destroyBtn = document.querySelector<HTMLButtonElement>(
   '[data-action="destroy"]',
 );
+const preferWebGPU =
+  new URLSearchParams(window.location.search).get('renderer') === 'webgpu';
 
 window.__FLIXEL_PIXI_HELLO__ = { destroyed: false, ready: false };
 
@@ -33,6 +37,7 @@ if (!host) {
 bootGame({
   host,
   initialState: TitleState,
+  ...(preferWebGPU ? { renderer: { preference: 'webgpu' } } : {}),
   title: 'Hello Sample',
   showPreloader: true,
 })
@@ -41,6 +46,8 @@ bootGame({
       app,
       destroyed: false,
       ready: true,
+      rendererBackend: app.rendererBackend,
+      rendererFallback: app.rendererFallback,
       startPlay() {
         FlxG.switchState(new PlayState());
         app.syncRenderer();

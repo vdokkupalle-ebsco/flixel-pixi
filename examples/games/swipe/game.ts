@@ -27,13 +27,16 @@ export interface SwipeDemoSnapshot {
   activeFruit: number;
   bombsHit: number;
   juiceParticles: number;
+  juiceParticlesEmitted: number;
   lastJuiceColor: number;
   lastDirection: string;
   misses: number;
   score: number;
   slicePieces: number;
+  slicePiecesCreated: number;
   slices: number;
   trailSegments: number;
+  trailSegmentsCreated: number;
 }
 
 function makeBombPixels(): PixelBuffer {
@@ -208,6 +211,9 @@ export class SwipeDemoState extends FlxState {
   #trailKey: string | null = null;
   #trailLast: FlxPoint | null = null;
   #trailSegments: TrailSegment[] = [];
+  #juiceParticlesEmitted = 0;
+  #slicePiecesCreated = 0;
+  #trailSegmentsCreated = 0;
 
   override create(): void {
     super.create();
@@ -367,14 +373,17 @@ export class SwipeDemoState extends FlxState {
       bombsHit: this.bombsHit,
       juiceParticles: this.#particles.filter((particle) => particle.life > 0)
         .length,
+      juiceParticlesEmitted: this.#juiceParticlesEmitted,
       lastJuiceColor: this.lastJuiceColor,
       lastDirection: this.lastDirection,
       misses: this.misses,
       score: this.score,
       slicePieces: this.#slicePieces.length,
+      slicePiecesCreated: this.#slicePiecesCreated,
       slices: this.slices,
       trailSegments: this.#trailSegments.filter((segment) => segment.life > 0)
         .length,
+      trailSegmentsCreated: this.#trailSegmentsCreated,
     };
   }
 
@@ -479,6 +488,7 @@ export class SwipeDemoState extends FlxState {
     segment.sprite.scale.x = distance;
     segment.sprite.scale.y = 9;
     segment.sprite.angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+    this.#trailSegmentsCreated += 1;
     this.slice(start.x, start.y, end.x, end.y);
   }
 
@@ -563,6 +573,7 @@ export class SwipeDemoState extends FlxState {
       piece.acceleration.y = 650;
       piece.angularVelocity = direction * 260;
       this.#slicePieces.push({ life: 0.72, sprite: piece });
+      this.#slicePiecesCreated += 1;
       this.add(piece);
     }
   }
@@ -630,6 +641,7 @@ export class SwipeDemoState extends FlxState {
     particle.sprite.velocity.make(0, 0);
     particle.sprite.acceleration.make(0, 0);
     particle.sprite.visible = true;
+    this.#juiceParticlesEmitted += 1;
     return particle;
   }
 

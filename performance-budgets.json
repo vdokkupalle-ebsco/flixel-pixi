@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "referenceHardware": {
+    "cpu": "Apple M4 Pro, 12 cores",
+    "gpu": "Apple M4 Pro, 16 cores",
+    "memoryGb": 24,
+    "model": "MacBook Pro Mac16,8",
+    "operatingSystem": "macOS 26.5.2 arm64",
+    "node": "22.x",
+    "playwright": "1.62.1",
+    "chromium": "151.0.7922.34"
+  },
+  "bundle": {
+    "entry": "dist/index.js",
+    "rawBytesMax": 650000,
+    "gzipBytesMax": 150000
+  },
+  "headlessBenchmarks": {
+    "per-pixel overlap 256×256 worst-case miss": { "meanMsMax": 1.2 },
+    "broad-phase 2,000 sparse AABBs": { "meanMsMax": 1.5 },
+    "10,000 sprite render-handle synchronizations": { "meanMsMax": 5 },
+    "1,000 targeted dirty-chunk tile mutations": { "meanMsMax": 10 },
+    "10,000 queued keyboard press/release step pairs": { "meanMsMax": 12 },
+    "3,600 fixed steps through a stable 256-particle pool": {
+      "meanMsMax": 110
+    },
+    "1,000 optimized 256-particle projection synchronizations": {
+      "meanMsMax": 105
+    }
+  },
+  "browser": {
+    "spriteStressMedianFpsMin": {
+      "2000": 48,
+      "5000": 28,
+      "10000": 14
+    },
+    "resources": {
+      "activeMaximum": {
+        "audioContexts": 1,
+        "audioHandles": 1,
+        "canvases": 1,
+        "listeners": 50,
+        "renderHandles": 2,
+        "renderTargetBytes": 1228800,
+        "renderTargets": 1,
+        "textureSources": 2
+      },
+      "releasedMaximum": {
+        "audioContexts": 0,
+        "audioHandles": 0,
+        "canvases": 0,
+        "renderHandles": 0,
+        "renderTargetBytes": 0,
+        "renderTargets": 0,
+        "textureSources": 0
+      },
+      "registeredObjectsMax": 2,
+      "retainedListenersMax": 16
+    }
+  }
+}

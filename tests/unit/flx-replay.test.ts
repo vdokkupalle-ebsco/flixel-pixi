@@ -155,6 +155,10 @@ describe('FlxReplay and determinism', () => {
     game.step();
     expect(stateCreates).toBe(1);
 
+    FlxG.vcr.replay = null;
+    expect(FlxG.stopRecording()).toBe('');
+    FlxG.reloadReplay();
+
     FlxG.recordReplay(true);
     expect(FlxG.vcr.recording).toBe(true);
     expect(FlxG.vcr.replaying).toBe(false);
@@ -181,6 +185,12 @@ describe('FlxReplay and determinism', () => {
 
     expect(FlxG.vcr.replaying).toBe(false);
     expect(completeCalled).toBe(true);
+
+    FlxG.loadReplay(replay);
+    FlxG.reloadReplay(false);
+    FlxG.stopReplay();
+    FlxG.recordReplay(false);
+    expect(FlxG.vcr.recording).toBe(true);
 
     game.destroy();
   });

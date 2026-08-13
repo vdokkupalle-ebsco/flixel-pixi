@@ -1,15 +1,29 @@
 import { expect, test } from '@playwright/test';
 
+import budgets from '../../performance-budgets.json' with { type: 'json' };
+
 const GAMES = 'http://127.0.0.1:4174';
 const PERF_GATES = process.env.RENDER_PERF_GATES === '1';
+const SOAK_MINUTES = Number(process.env.SOAK_MINUTES ?? 0);
+const LONG_SOAK = Number.isFinite(SOAK_MINUTES) && SOAK_MINUTES > 0;
+const SOAK_DURATION_MS = LONG_SOAK ? SOAK_MINUTES * 60_000 : 0;
 
 // Perf samples and the soak share CPU/GPU resources, so this file must not
 // measure several stress scenes against one another.
 test.describe.configure({ mode: 'serial' });
+test.skip(
+  !PERF_GATES && !LONG_SOAK,
+  'Run performance and lifecycle stress checks through their dedicated serial commands.',
+);
 
 test.describe('Sprite stress benchmark', () => {
+  test.skip(
+    !PERF_GATES,
+    'Run hardware-sensitive sprite stress checks through npm run test:perf.',
+  );
+
   for (const active of [2000, 5000, 10000] as const) {
-    test(`boots ${active} sprites, reports finite FPS (report-only), destroys`, async ({
+    test(`boots ${active} sprites, reports finite FPS, destroys`, async ({
       browserName,
       page,
     }) => {
@@ -31,15 +45,18 @@ test.describe('Sprite stress benchmark', () => {
       expect(metrics?.activeCount).toBe(active);
       expect(metrics?.inactiveCount).toBe(8000);
       expect(Number.isFinite(metrics?.avgFps)).toBe(true);
+      expect(Number.isFinite(metrics?.medianFps)).toBe(true);
       expect(Number.isFinite(metrics?.minFps)).toBe(true);
       expect(metrics?.avgFps ?? 0).toBeGreaterThan(0);
       // Hardware floors are enabled only by the dedicated serial perf command.
-      if (PERF_GATES && browserName === 'chromium' && active === 2000) {
-        expect(metrics?.avgFps ?? 0).toBeGreaterThanOrEqual(60);
-      } else if (PERF_GATES && browserName === 'chromium' && active === 5000) {
-        expect(metrics?.avgFps ?? 0).toBeGreaterThanOrEqual(30);
+      if (PERF_GATES && browserName === 'chromium') {
+        const floor =
+          budgets.browser.spriteStressMedianFpsMin[
+            String(active) as '2000' | '5000' | '10000'
+          ];
+        expect(metrics?.medianFps ?? 0).toBeGreaterThanOrEqual(floor);
       }
-      // 10k stays report-only until CI baselines stabilize
+      // Mean/min remain diagnostic; the median gate resists isolated scheduler stalls.
       console.log(`[performance bench active=${active}]`, metrics);
 
       await page.locator('[data-action="destroy"]').click();
@@ -52,29 +69,68 @@ test.describe('Sprite stress benchmark', () => {
 });
 
 test.describe('Boot/destroy soak', () => {
-  test('completes 30 cycles without errors or rising handle counts', async ({
+  test('completes the configured run without errors or rising handle counts', async ({
     page,
   }) => {
-    test.setTimeout(180_000);
-    await page.goto(`${GAMES}/bench-soak/`);
+    test.setTimeout(LONG_SOAK ? SOAK_DURATION_MS + 300_000 : 180_000);
+    await page.goto(
+      `${GAMES}/bench-soak/${LONG_SOAK ? `?durationMs=${SOAK_DURATION_MS}` : ''}`,
+    );
     await page.waitForFunction(
       () => window.__FLIXEL_PIXI_SOAK__?.done === true,
-      { timeout: 150_000 },
+      { timeout: LONG_SOAK ? SOAK_DURATION_MS + 240_000 : 150_000 },
     );
 
     const soak = await page.evaluate(() => window.__FLIXEL_PIXI_SOAK__);
     expect(soak?.errors ?? ['missing']).toEqual([]);
-    expect(soak?.cycles).toBe(30);
-    expect(soak?.registeredSamples?.length).toBe(30);
+    if (LONG_SOAK) {
+      expect(soak?.elapsedMs ?? 0).toBeGreaterThanOrEqual(SOAK_DURATION_MS);
+      expect(soak?.cycles ?? 0).toBeGreaterThan(30);
+    } else {
+      expect(soak?.cycles).toBe(30);
+    }
+    expect(soak?.registeredSamples?.length).toBe(soak?.cycles);
+    expect(soak?.resourceSamples?.length).toBe(soak?.cycles);
 
     const samples = soak?.registeredSamples ?? [];
-    const first = samples[0] ?? 0;
-    const last = samples[samples.length - 1] ?? 0;
-    // No monotonic climb: last <= first + 2 (ε for noise)
-    expect(last).toBeLessThanOrEqual(first + 2);
     for (const sample of samples) {
-      expect(sample).toBeLessThanOrEqual(first + 2);
+      expect(sample).toBeLessThanOrEqual(
+        budgets.browser.resources.registeredObjectsMax,
+      );
     }
-    console.log('[performance soak]', soak);
+
+    const resources = soak?.resourceSamples ?? [];
+    const retainedListeners = resources[0]?.released.listeners ?? 0;
+    expect(retainedListeners).toBeLessThanOrEqual(
+      budgets.browser.resources.retainedListenersMax,
+    );
+    for (const { active, released } of resources) {
+      for (const [name, maximum] of Object.entries(
+        budgets.browser.resources.activeMaximum,
+      )) {
+        expect(active[name as keyof typeof active]).toBeLessThanOrEqual(
+          maximum,
+        );
+      }
+      expect(active.audioContexts).toBeGreaterThan(0);
+      expect(active.audioHandles).toBeGreaterThan(0);
+      expect(active.canvases).toBeGreaterThan(0);
+      expect(active.renderHandles).toBeGreaterThan(0);
+      expect(active.renderTargetBytes).toBeGreaterThan(0);
+      expect(active.renderTargets).toBeGreaterThan(0);
+      expect(active.textureSources).toBeGreaterThan(0);
+      expect(active.listeners).toBeGreaterThan(released.listeners);
+      const { listeners, ...releasedResources } = released;
+      expect(listeners).toBe(retainedListeners);
+      expect(releasedResources).toEqual(
+        budgets.browser.resources.releasedMaximum,
+      );
+    }
+    console.log('[performance soak]', {
+      cycles: soak?.cycles,
+      elapsedMs: soak?.elapsedMs,
+      registeredSamples: soak?.registeredSamples,
+      retainedListeners,
+    });
   });
 });

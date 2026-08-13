@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+// @vitest-environment happy-dom
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { resolveBrowserViewportLayout } from '../../src/browser/flx-browser-viewport';
+import {
+  FlxBrowserViewport,
+  resolveBrowserViewportLayout,
+} from '../../src/browser/flx-browser-viewport';
 
 const base = {
   alignX: 0.5,
@@ -10,6 +14,21 @@ const base = {
   logicalHeight: 480,
   logicalWidth: 640,
 } as const;
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+function sizedHost(width = 1_000, height = 600): HTMLElement {
+  const host = document.createElement('div');
+  Object.defineProperties(host, {
+    clientHeight: { configurable: true, value: height },
+    clientWidth: { configurable: true, value: width },
+  });
+  document.body.appendChild(host);
+  return host;
+}
 
 describe('browser viewport layout', () => {
   it('fits the full logical game with centered letterboxing', () => {
@@ -139,5 +158,155 @@ describe('browser viewport layout', () => {
         mode: 'fit',
       }),
     ).toThrow('host width');
+  });
+
+  it('owns responsive canvas CSS, subscriptions, policy changes, and teardown', () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    vi.stubGlobal('matchMedia', undefined);
+    const host = sizedHost();
+    const canvas = document.createElement('canvas');
+    const viewport = new FlxBrowserViewport(host, canvas, 640, 480, 'fit');
+    const snapshots: number[] = [];
+    const unsubscribe = viewport.onChange((snapshot) => {
+      snapshots.push(snapshot.scale);
+    });
+
+    expect(viewport.mode).toBe('fit');
+    expect(viewport.fullscreen).toBe(false);
+    expect(viewport.snapshot.scale).toBe(1.25);
+    expect(canvas.style.width).toBe('800px');
+    expect(canvas.style.height).toBe('600px');
+    expect(canvas.style.left).toBe('100px');
+    expect(canvas.style.imageRendering).toBe('auto');
+    expect(snapshots).toEqual([1.25]);
+
+    viewport.refresh();
+    expect(snapshots).toEqual([1.25]);
+    expect(viewport.setMode('fixed').scale).toBe(1);
+    expect(viewport.setAlignment(0, 1).left).toBe(0);
+    expect(viewport.setSafePadding(12).safePadding).toEqual({
+      bottom: 12,
+      left: 12,
+      right: 12,
+      top: 12,
+    });
+    expect(() => viewport.setAlignment(-1, 0)).toThrow('alignX');
+    expect(() => viewport.setSafePadding({ right: -1 })).toThrow(
+      'safe padding right',
+    );
+
+    unsubscribe();
+    viewport.destroy();
+    viewport.destroy();
+    expect(() => viewport.refresh()).toThrow('destroyed');
+  });
+
+  it('responds to resize, DPR, and fullscreen lifecycle events', async () => {
+    let resize: (() => void) | undefined;
+    const disconnect = vi.fn();
+    class Observer {
+      constructor(callback: () => void) {
+        resize = callback;
+      }
+      observe = vi.fn();
+      disconnect = disconnect;
+    }
+    const removeDprListener = vi.fn();
+    const addDprListener = vi.fn();
+    const matchMedia = vi.fn(() => ({
+      addEventListener: addDprListener,
+      removeEventListener: removeDprListener,
+    }));
+    vi.stubGlobal('ResizeObserver', Observer);
+    vi.stubGlobal('matchMedia', matchMedia);
+
+    const host = sizedHost(1_280, 960);
+    const canvas = document.createElement('canvas');
+    let fullscreenElement: Element | null = null;
+    Object.defineProperty(document, 'fullscreenElement', {
+      configurable: true,
+      get: () => fullscreenElement,
+    });
+    host.requestFullscreen = vi.fn(async () => {
+      fullscreenElement = host;
+    });
+    document.exitFullscreen = vi.fn(async () => {
+      fullscreenElement = null;
+    });
+
+    const viewport = new FlxBrowserViewport(host, canvas, 640, 480, {
+      mode: 'integer',
+      pixelated: false,
+      safePadding: { left: 4, top: 6 },
+      useSafeAreaInsets: false,
+    });
+    expect(canvas.style.imageRendering).toBe('auto');
+    expect(matchMedia).toHaveBeenCalled();
+    expect(addDprListener).toHaveBeenCalledWith('change', expect.any(Function));
+
+    resize?.();
+    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event('orientationchange'));
+    await viewport.requestFullscreen();
+    expect(viewport.fullscreen).toBe(true);
+    await viewport.toggleFullscreen();
+    expect(viewport.fullscreen).toBe(false);
+    await viewport.toggleFullscreen();
+    expect(viewport.fullscreen).toBe(true);
+    document.dispatchEvent(new Event('fullscreenchange'));
+    const dprHandler = addDprListener.mock.calls[0]?.[1] as
+      (() => void) | undefined;
+    dprHandler?.();
+    await viewport.exitFullscreen();
+
+    viewport.destroy();
+    expect(disconnect).toHaveBeenCalled();
+    expect(removeDprListener).toHaveBeenCalled();
+  });
+
+  it('projects effective safe-area insets and reports unsupported fullscreen', async () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    const host = sizedHost(300, 200);
+    Object.defineProperty(host, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({
+        bottom: window.innerHeight + 8,
+        height: 200,
+        left: -4,
+        right: window.innerWidth + 6,
+        top: 0,
+        width: 300,
+        x: -4,
+        y: 0,
+        toJSON: () => ({}),
+      }),
+    });
+    vi.stubGlobal(
+      'getComputedStyle',
+      vi.fn(() => ({
+        paddingBottom: '12px',
+        paddingLeft: '10px',
+        paddingRight: '14px',
+        paddingTop: 'invalid',
+      })),
+    );
+    const canvas = document.createElement('canvas');
+    const viewport = new FlxBrowserViewport(host, canvas, 320, 240, {
+      mode: 'fill',
+      pixelated: true,
+    });
+
+    expect(viewport.snapshot.safeAreaInsets).toEqual({
+      bottom: 20,
+      left: 14,
+      right: 20,
+      top: 0,
+    });
+    expect(canvas.style.imageRendering).toBe('pixelated');
+    await expect(viewport.requestFullscreen()).rejects.toThrow('not supported');
+    viewport.destroy();
+    expect(() => new FlxBrowserViewport(host, canvas, 0, 240)).toThrow(
+      'logical width',
+    );
   });
 });

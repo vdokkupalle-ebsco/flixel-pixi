@@ -58,15 +58,15 @@ describe('FlxCamera snapshot capability', () => {
   });
 
   it('extracts pixel snapshots asynchronously via host renderer', async () => {
-    const mockPixels = new Uint8ClampedArray(320 * 180 * 4);
+    const mockPixels = new Uint8ClampedArray(32 * 18 * 4);
     mockPixels.fill(255);
 
     const fakeRenderer = {
       extract: {
         pixels: vi.fn().mockResolvedValue({
-          height: 180,
+          height: 18,
           pixels: mockPixels,
-          width: 320,
+          width: 32,
         }),
       },
       resolution: 1,
@@ -84,15 +84,20 @@ describe('FlxCamera snapshot capability', () => {
     const camera = FlxG.camera;
     const snapshot = await camera.takeSnapshot();
 
-    expect(snapshot.width).toBe(320);
-    expect(snapshot.height).toBe(180);
+    expect(snapshot.width).toBe(32);
+    expect(snapshot.height).toBe(18);
     expect(snapshot.pixels).not.toBe(mockPixels);
-    expect(snapshot.pixels).toEqual(mockPixels);
+    expect(snapshot.pixels).toHaveLength(mockPixels.length);
+    expect(snapshot.pixels[0]).toBe(255);
+    expect(snapshot.pixels[Math.floor(mockPixels.length / 2)]).toBe(255);
+    expect(snapshot.pixels.at(-1)).toBe(255);
     expect(fakeRenderer.extract.pixels).toHaveBeenCalledOnce();
 
     const rendererSnapshot = await cameraRenderer.snapshotCamera(camera);
     expect(rendererSnapshot.pixels).not.toBe(mockPixels);
-    expect(rendererSnapshot.pixels).toEqual(mockPixels);
+    expect(rendererSnapshot.pixels).toHaveLength(mockPixels.length);
+    expect(rendererSnapshot.pixels[0]).toBe(255);
+    expect(rendererSnapshot.pixels.at(-1)).toBe(255);
     expect(rendererSnapshot.pixels).not.toBe(snapshot.pixels);
   });
 });

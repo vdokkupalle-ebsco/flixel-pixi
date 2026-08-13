@@ -143,6 +143,7 @@ describe('Headless core context facade and atomic state switching', () => {
     FlxG.score = 10;
     FlxG.levels.push('level');
     FlxG.scores.push(10);
+    FlxG.scores.push('status');
     FlxG.worldDivisions = 4;
     expect(FlxG.random()).toBe(0.4999837900977506);
     expect(FlxG.getRandom(['a', 'b'], 0, 1)).toBe('a');
@@ -161,7 +162,7 @@ describe('Headless core context facade and atomic state switching', () => {
       level: 2,
       levels: ['level'],
       score: 10,
-      scores: [10],
+      scores: [10, 'status'],
       timeScale: 0.5,
       worldDivisions: 4,
     });
@@ -194,6 +195,34 @@ describe('Headless core context facade and atomic state switching', () => {
     expect(() => game?.step(0)).toThrow(RangeError);
     game.destroy();
     expect(() => game?.step()).toThrow('destroyed');
+  });
+
+  it('covers lazy facades, optional ranges, and missing service diagnostics', () => {
+    const fallbackAtlas = FlxG.atlas;
+    expect(FlxG.atlas).toBe(fallbackAtlas);
+
+    const context = new FlxContext(320, 240);
+    FlxG.installContext(context);
+    expect(FlxG.atlas).toBe(fallbackAtlas);
+    expect(FlxG.atlas).toBe(fallbackAtlas);
+    expect(FlxG.actions).toBe(FlxG.actions);
+
+    expect(FlxG.getRandom(['a', 'b'], -1)).toBeNull();
+    expect(FlxG.getRandom(['a', 'b'], 2)).toBeNull();
+    expect(FlxG.getRandom(['a', 'b'], 0, -1)).toBeNull();
+    expect(FlxG.getRandom(['a', 'b'], 1, 20)).toBe('b');
+    expect(FlxG.getRandom(new Array<string>(1))).toBeNull();
+
+    const camera = FlxG.camera;
+    expect(FlxG.resetCameras(camera)).toBe(camera);
+    expect(FlxG.resetCameras()).toBe(FlxG.camera);
+
+    expect(() => FlxG.keys).toThrow('No input service');
+    expect(() => FlxG.volume).toThrow('No audio service');
+    expect(() => FlxG.save).toThrow('No storage service');
+    expect(() => FlxG.saves).toThrow('No storage service');
+    expect(() => FlxG.log).toThrow('No log service');
+    expect(() => FlxG.watch).toThrow('No watch service');
   });
 
   it('owns one replaceable runtime and clears replaceable services', () => {

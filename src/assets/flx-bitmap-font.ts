@@ -100,7 +100,9 @@ export class FlxBitmapFont {
     this.#pixiFont = pixiFont;
     this.#ownsPixiFont = ownsPixiFont;
     const cacheKey = `${pixiFont.fontFamily}-bitmap`;
-    const cached = Cache.get<BitmapFont>(cacheKey);
+    const cached = Cache.has(cacheKey)
+      ? Cache.get<BitmapFont>(cacheKey)
+      : undefined;
     if (cached !== undefined && cached !== pixiFont) {
       throw new Error(
         `Bitmap font family "${pixiFont.fontFamily}" is already registered with a different font.`,

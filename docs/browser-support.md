@@ -4,8 +4,9 @@
 
 The 1.0 target is the current and previous major release of Chrome, Edge,
 Firefox, and Safari at the time of each flixel-pixi release. WebGL is the
-required renderer baseline. WebGPU may be selected by PixiJS when available,
-but it must not change gameplay behavior and must fall back cleanly.
+required renderer baseline. WebGPU can be preferred through `createBrowserGame`;
+initialization failure retries a fresh WebGL application before game state is
+created and exposes the selected backend and fallback details.
 
 Internet Explorer and legacy browsers without modern ESM, Pointer Events, and
 Web Audio support are outside scope.
@@ -88,6 +89,10 @@ available browser execution window.
 ## Reports
 
 CI uploads coverage, API model, benchmark, bundle-size, and Playwright reports.
+Release candidates additionally run `npm run verify:budgets` on the documented
+Apple M4 Pro reference profile. The portable CI lane continues to record
+benchmark reports without pretending that one machine's FPS floor applies to
+every hosted runner.
 The input suite adds committed baselines plus real keyboard, pointer capture,
 blur-release, and touch-style cancellation assertions. These complement the
 multi-camera tilemap baselines and large-map benchmarks. Real-device/mobile

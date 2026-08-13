@@ -41,6 +41,63 @@ test.describe('Hello sample', () => {
       'destroyed',
     );
   });
+
+  test('falls back from failed WebGPU initialization without changing gameplay', async ({
+    page,
+  }) => {
+    const pageErrors: Error[] = [];
+    page.on('pageerror', (error) => pageErrors.push(error));
+    await page.addInitScript(() => {
+      let adapterRequests = 0;
+      const supportAdapter = {
+        requestDevice: async () => ({}),
+      };
+      Object.defineProperty(navigator, 'gpu', {
+        configurable: true,
+        value: {
+          requestAdapter: async () => {
+            adapterRequests += 1;
+            return adapterRequests === 1 ? supportAdapter : null;
+          },
+        },
+      });
+    });
+    await page.goto(`${GAMES}/hello/?renderer=webgpu`);
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 10_000 },
+    );
+
+    const renderer = await page.evaluate(() => ({
+      backend: window.__FLIXEL_PIXI_HELLO__?.rendererBackend,
+      fallback: window.__FLIXEL_PIXI_HELLO__?.rendererFallback,
+    }));
+    expect(renderer).toEqual({
+      backend: 'webgl',
+      fallback: expect.objectContaining({ from: 'webgpu', to: 'webgl' }),
+    });
+
+    await page.evaluate(() => window.__FLIXEL_PIXI_HELLO__?.startPlay?.());
+    await page.waitForFunction(() =>
+      Number.isFinite(window.__FLIXEL_PIXI_HELLO__?.playerX?.()),
+    );
+    const before = await page.evaluate(
+      () => window.__FLIXEL_PIXI_HELLO__?.playerX?.() ?? Number.NaN,
+    );
+    await page.evaluate(() => window.__FLIXEL_PIXI_HELLO__?.moveRight?.());
+    const after = await page.evaluate(
+      () => window.__FLIXEL_PIXI_HELLO__?.playerX?.() ?? Number.NaN,
+    );
+    expect(after).toBe(before + 10);
+    expect(pageErrors).toEqual([]);
+
+    await page.locator('[data-action="destroy"]').click();
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'destroyed',
+    );
+  });
 });
 
 test.describe('Platformer sample', () => {
@@ -143,6 +200,79 @@ test.describe('Mode Lite compatibility sample', () => {
     );
     // player + 12 bullets + hud text + ≥1 enemy
     expect(registered).toBeGreaterThan(12);
+
+    await page.locator('[data-action="destroy"]').click();
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'destroyed',
+    );
+  });
+});
+
+test.describe('Pinned Flx-Invaders source port', () => {
+  test('boots, moves, fires a pooled bullet, and destroys', async ({
+    page,
+  }) => {
+    await page.goto(`${GAMES}/flx-invaders/?review=1`);
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 10_000 },
+    );
+    const canvas = page.locator('[data-testid="canvas-host"] canvas');
+    await expect(canvas).toHaveCSS('image-rendering', 'pixelated');
+    const canvasBox = await canvas.boundingBox();
+    expect(canvasBox?.width).toBe(640);
+    expect(canvasBox?.height).toBe(480);
+    expect(
+      await page.evaluate(
+        () => window.__FLIXEL_PIXI_INVADERS__?.alienCount?.() ?? 0,
+      ),
+    ).toBe(50);
+
+    const before = await page.evaluate(
+      () => window.__FLIXEL_PIXI_INVADERS__?.playerX?.() ?? Number.NaN,
+    );
+    await page.keyboard.down('ArrowRight');
+    await page.waitForTimeout(150);
+    await page.keyboard.up('ArrowRight');
+    const after = await page.evaluate(
+      () => window.__FLIXEL_PIXI_INVADERS__?.playerX?.() ?? Number.NaN,
+    );
+    expect(after).toBeGreaterThan(before);
+
+    await page.keyboard.down('Space');
+    await page.waitForFunction(
+      () => (window.__FLIXEL_PIXI_INVADERS__?.activePlayerBullets?.() ?? 0) > 0,
+    );
+    await page.keyboard.up('Space');
+
+    await page.evaluate(() => {
+      window.__FLIXEL_PIXI_INVADERS__?.hitFirstAlien?.();
+    });
+    await page.waitForFunction(
+      () => (window.__FLIXEL_PIXI_INVADERS__?.alienCount?.() ?? 50) === 49,
+    );
+
+    await page.locator('[data-action="validate-win"]').click();
+    await page.waitForFunction(
+      () => window.__FLIXEL_PIXI_INVADERS__?.statusText?.() === 'YOU WON',
+    );
+    expect(
+      await page.evaluate(
+        () => window.__FLIXEL_PIXI_INVADERS__?.alienCount?.() ?? 0,
+      ),
+    ).toBe(50);
+
+    await page.locator('[data-action="validate-loss"]').click();
+    await page.waitForFunction(
+      () => window.__FLIXEL_PIXI_INVADERS__?.statusText?.() === 'YOU LOST',
+    );
+    expect(
+      await page.evaluate(
+        () => window.__FLIXEL_PIXI_INVADERS__?.alienCount?.() ?? 0,
+      ),
+    ).toBe(50);
 
     await page.locator('[data-action="destroy"]').click();
     await expect(page.locator('[data-testid="status"]')).toHaveAttribute(

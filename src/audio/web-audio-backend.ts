@@ -220,6 +220,16 @@ export class WebAudioBackend implements FlxAudioBackend {
     this.#visibilityPolicy = options.visibilityPolicy ?? 'suspend';
   }
 
+  /** Number of sound handles currently owned by this backend. @internal */
+  get diagnosticHandleCount(): number {
+    return this.#handles.size;
+  }
+
+  /** Whether this backend currently owns a browser audio context. @internal */
+  get diagnosticContextActive(): boolean {
+    return this.#ctx !== null;
+  }
+
   get unlocked(): boolean {
     return this.#unlocked;
   }

@@ -5,8 +5,9 @@ Flixel engine, using PixiJS v8 as its browser rendering foundation.
 
 The engine includes playable public-API samples, a complete upstream API ledger,
 and capability-focused browser demos. It is currently in pre-1.0 stabilization.
-The remaining feature-validation work is a genuine external source-port and an
-independent clean-room documentation review. See [ROADMAP.md](ROADMAP.md).
+The pinned external source-port and independent clean-room review are complete.
+Current work is release hardening toward the 1.0 candidate. See
+[ROADMAP.md](ROADMAP.md).
 
 ## Prerequisites
 
@@ -42,17 +43,20 @@ The demo index starts on Vite's displayed local URL. Capability routes include
 
 Useful commands:
 
-| Command                 | Purpose                                                            |
-| ----------------------- | ------------------------------------------------------------------ |
-| `npm run build`         | Build declarations, ESM library, smoke example, and bundle report. |
-| `npm run test`          | Run headless unit tests.                                           |
-| `npm run test:e2e`      | Run lifecycle, GPU isolation, and high-DPI camera checks.          |
-| `npm run test:perf`     | Run serial Chromium render-FPS floors and the teardown soak.       |
-| `npm run test:coverage` | Run unit tests with initial coverage gates.                        |
-| `npm run bench`         | Write fixed-loop and pixel-operation benchmark JSON.               |
-| `npm run api:check`     | Verify the committed public API report.                            |
-| `npm run api:update`    | Intentionally update the API report after review.                  |
-| `npm run format`        | Format supported project files.                                    |
+| Command                  | Purpose                                                            |
+| ------------------------ | ------------------------------------------------------------------ |
+| `npm run build`          | Build declarations, ESM library, smoke example, and bundle report. |
+| `npm run test`           | Run headless unit tests.                                           |
+| `npm run test:e2e`       | Run lifecycle, GPU isolation, and high-DPI camera checks.          |
+| `npm run test:perf`      | Run serial Chromium render-FPS floors and the teardown soak.       |
+| `npm run test:soak:30m`  | Run the release-hardening 30-minute lifecycle/resource soak.       |
+| `npm run check:budgets`  | Enforce bundle and deterministic CPU benchmark ceilings.           |
+| `npm run verify:budgets` | Enforce every reference-hardware performance/resource budget.      |
+| `npm run test:coverage`  | Run unit tests with initial coverage gates.                        |
+| `npm run bench`          | Write fixed-loop and pixel-operation benchmark JSON.               |
+| `npm run api:check`      | Verify the committed public API report.                            |
+| `npm run api:update`     | Intentionally update the API report after review.                  |
+| `npm run format`         | Format supported project files.                                    |
 
 ## Source baseline
 

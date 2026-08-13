@@ -182,4 +182,79 @@ describe('FlxActions', () => {
     expect(() => FlxG.actions.load(invalid)).toThrow('Unsupported');
     expect(FlxG.actions.save()).toEqual(saved);
   });
+
+  it('validates source variants and preserves bindings after rejected data', () => {
+    game = new FlxGame(640, 480, class extends FlxState {});
+    game.step();
+    const actions = FlxG.actions;
+
+    actions.bind('move', 'A', 'D');
+    expect(
+      actions.removeSource('missing', { device: 'keyboard', key: 'A' }),
+    ).toBe(false);
+    expect(actions.removeSource('move', { device: 'keyboard', key: 'W' })).toBe(
+      false,
+    );
+    expect(actions.removeSource('move', { device: 'keyboard', key: 'A' })).toBe(
+      true,
+    );
+    expect(actions.getSources('move')).toEqual([
+      { device: 'keyboard', key: 'D' },
+    ]);
+    expect(actions.removeSource('move', { device: 'keyboard', key: 'D' })).toBe(
+      true,
+    );
+    expect(actions.getSources('move')).toEqual([]);
+
+    actions.bind('primary', 'Z');
+    actions.addSource(
+      'secondary',
+      { device: 'keyboard', key: 'Z' },
+      { exclusive: true },
+    );
+    expect(actions.getSources('primary')).toEqual([]);
+    actions.rebind(
+      'tertiary',
+      { device: 'keyboard', key: 'Z' },
+      { exclusive: false },
+    );
+    expect(actions.getSources('secondary')).toHaveLength(1);
+
+    const before = actions.save();
+    expect(() =>
+      actions.load({
+        bindings: [null],
+        version: 1,
+      } as unknown as FlxActionBindingsData),
+    ).toThrow('Invalid FlxActions binding entry');
+    expect(actions.save()).toEqual(before);
+
+    expect(() => actions.bindSources('bad', null as never)).toThrow('object');
+    expect(() =>
+      actions.bindSources('bad', { button: -1, device: 'mouse' }),
+    ).toThrow('Mouse button');
+    expect(() =>
+      actions.bindSources('bad', { device: 'wheel', direction: 0 } as never),
+    ).toThrow('Wheel direction');
+    expect(() =>
+      actions.bindSources('bad', {
+        axis: 0,
+        deadZone: 1,
+        device: 'gamepad-axis',
+      }),
+    ).toThrow('dead zone');
+    expect(() =>
+      actions.bindSources('bad', { device: 'virtual-button', id: ' ' }),
+    ).toThrow('id cannot be empty');
+    expect(() =>
+      actions.bindSources('bad', {
+        axis: 'z',
+        device: 'virtual-stick-axis',
+        id: 'stick',
+      } as never),
+    ).toThrow('must be "x" or "y"');
+    expect(() =>
+      actions.bindSources('bad', { device: 'unknown' } as never),
+    ).toThrow('Unknown action source');
+  });
 });

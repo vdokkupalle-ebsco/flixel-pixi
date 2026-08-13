@@ -42,7 +42,8 @@ export class FlxContext {
   worldBounds: FlxRect;
   worldDivisions = 6;
   readonly levels: unknown[] = [];
-  readonly scores: number[] = [];
+  /** AS3-compatible cross-state values; individual games define their shape. */
+  readonly scores: unknown[] = [];
   level = 0;
   score = 0;
   visualDebug = false;

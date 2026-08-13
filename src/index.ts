@@ -422,6 +422,9 @@ export type {
   BrowserGameFrame,
   BrowserGamePreloadContext,
   BrowserGamePreloaderOptions,
+  BrowserGameRendererBackend,
+  BrowserGameRendererFallback,
+  BrowserGameRendererOptions,
   CreateBrowserGameOptions,
 } from './browser/create-browser-game';
 export {

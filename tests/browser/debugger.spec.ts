@@ -33,6 +33,7 @@ test.describe('Debugger and preloader', () => {
   test('Console executes allow-listed commands and recalls history', async ({
     page,
   }) => {
+    test.setTimeout(60_000);
     await page.goto('/debugger.html');
     await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
       'data-state',

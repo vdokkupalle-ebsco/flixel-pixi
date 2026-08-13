@@ -15,6 +15,7 @@ declare global {
       measured: boolean;
       destroyed: boolean;
       avgFps: number;
+      medianFps: number;
       minFps: number;
       activeCount: number;
       inactiveCount: number;
@@ -36,6 +37,7 @@ window.__FLIXEL_PIXI_BENCH__ = {
   measured: false,
   destroyed: false,
   avgFps: 0,
+  medianFps: 0,
   minFps: 0,
   activeCount,
   inactiveCount: INACTIVE_COUNT,
@@ -101,6 +103,7 @@ bootGame({
         measured,
         destroyed: false,
         avgFps: state instanceof BenchSpritesState ? state.avgFps : 0,
+        medianFps: state instanceof BenchSpritesState ? state.medianFps : 0,
         minFps: state instanceof BenchSpritesState ? state.minFps : 0,
         activeCount: count,
         inactiveCount: INACTIVE_COUNT,
@@ -128,6 +131,7 @@ bootGame({
         measured: false,
         destroyed: true,
         avgFps: 0,
+        medianFps: 0,
         minFps: 0,
         activeCount: getConfiguredActiveCount(),
         inactiveCount: INACTIVE_COUNT,

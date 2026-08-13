@@ -56,8 +56,8 @@ started merely to match a Haxe class count.
 |    12 |    P2    | Debugger and runtime inspection                 | Complete             | High-value console, interaction, and graphing workflows work without production overhead.          |
 |    13 |    P2    | Utilities and frontend normalization            | Complete             | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
-|    15 |    P0    | External compatibility validation               | In progress          | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
-|    16 |    P0    | Release hardening and 1.0 candidate             | Required before 1.0  | The support matrix, budgets, package artifact, provenance, and release gates pass.                 |
+|    15 |    P0    | External compatibility validation               | Complete             | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
+|    16 |    P0    | Release hardening and 1.0 candidate             | In progress          | The support matrix, budgets, package artifact, provenance, and release gates pass.                 |
 
 Only one feature checkpoint should normally be active. Release hardening may
 run continuously alongside feature work.

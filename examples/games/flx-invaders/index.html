@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flixel-pixi — Flx-Invaders validation</title>
+    <link rel="stylesheet" href="../_kit/shell.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div>
+          <h1>Flx-Invaders source port</h1>
+          <p data-testid="status" class="status" data-state="loading">
+            Loading pinned MIT source port…
+          </p>
+        </div>
+        <div class="actions">
+          <a href="../"><button type="button">All demos</button></a>
+          <button type="button" data-action="validate-win" hidden>
+            Validate Win
+          </button>
+          <button type="button" data-action="validate-loss" hidden>
+            Validate Loss
+          </button>
+          <button type="button" data-action="destroy" disabled>Destroy</button>
+        </div>
+      </header>
+      <div data-testid="canvas-host" class="canvas-host"></div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

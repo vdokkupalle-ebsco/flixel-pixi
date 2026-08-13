@@ -38,7 +38,8 @@ test('slices a deterministic fruit with a touch swipe and destroys cleanly', asy
         element.dispatchEvent(
           new PointerEvent(event.type, {
             bubbles: true,
-            button: event.type === 'pointerup' ? -1 : 0,
+            button: event.type === 'pointerdown' ? 0 : -1,
+            buttons: event.type === 'pointerup' ? 0 : 1,
             clientX: event.x,
             clientY: event.y,
             isPrimary: true,
@@ -58,7 +59,9 @@ test('slices a deterministic fruit with a touch swipe and destroys cleanly', asy
   );
   await dispatchTouch('pointermove', endX);
   await page.waitForFunction(
-    () => (window.__FLIXEL_PIXI_SWIPE__?.snapshot?.()?.trailSegments ?? 0) >= 2,
+    () =>
+      (window.__FLIXEL_PIXI_SWIPE__?.snapshot?.()?.trailSegmentsCreated ?? 0) >=
+      2,
   );
   const duringSwipe = await page.evaluate(() =>
     window.__FLIXEL_PIXI_SWIPE__?.snapshot?.(),
@@ -67,10 +70,11 @@ test('slices a deterministic fruit with a touch swipe and destroys cleanly', asy
     expect.objectContaining({
       lastJuiceColor: 0xff4d6dff,
       score: 10,
-      slicePieces: 2,
       slices: 1,
     }),
   );
+  expect(duringSwipe?.slicePiecesCreated ?? 0).toBeGreaterThanOrEqual(2);
+  expect(duringSwipe?.juiceParticlesEmitted ?? 0).toBeGreaterThanOrEqual(8);
   await dispatchTouch('pointerup', endX);
 
   await page.waitForFunction(
@@ -99,11 +103,12 @@ test('slices a deterministic fruit with a touch swipe and destroys cleanly', asy
     expect.objectContaining({
       activeBombs: 0,
       bombsHit: 1,
-      juiceParticles: expect.any(Number),
       score: 0,
     }),
   );
-  expect(explosion?.juiceParticles ?? 0).toBeGreaterThanOrEqual(20);
+  expect(explosion?.juiceParticlesEmitted ?? 0).toBeGreaterThanOrEqual(
+    (duringSwipe?.juiceParticlesEmitted ?? 0) + 20,
+  );
   await dispatchTouch('pointerup', endX);
   expect(pageErrors).toEqual([]);
 
