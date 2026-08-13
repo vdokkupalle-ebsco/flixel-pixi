@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-extraneous-class -- AS3 utility-class compatibility. */
 import { FlxG } from '../core/flx-g';
+import { clamp } from './flx-math';
 import { FlxPoint, type PointLike } from './flx-point';
 import { nextFlixelSeed } from './flx-random';
 
@@ -33,8 +34,7 @@ export class FlxU {
   }
 
   static bound(value: number, minimum: number, maximum: number): number {
-    const lowerBound = value < minimum ? minimum : value;
-    return lowerBound > maximum ? maximum : lowerBound;
+    return clamp(value, minimum, maximum);
   }
 
   static srand(seed: number): number {

@@ -1,3 +1,4 @@
+import { clamp } from '../math/flx-math';
 import { FlxPoint, type PointLike } from '../math/flx-point';
 import { FlxRect } from '../math/flx-rect';
 import type { FlxObject } from '../objects/flx-object';
@@ -25,10 +26,6 @@ function requireDimension(value: number, name: string): number {
   requireFinite(value, name);
   if (value <= 0) throw new RangeError(`${name} must be greater than zero.`);
   return value;
-}
-
-function clamp(value: number, minimum: number, maximum: number): number {
-  return Math.max(minimum, Math.min(maximum, value));
 }
 
 /**

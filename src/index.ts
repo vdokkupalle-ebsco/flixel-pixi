@@ -77,6 +77,7 @@ export { makeGraphicPixels } from './compat/pixel-buffer';
 export type { PixelBuffer } from './compat/pixel-buffer';
 export { FlxPoint } from './math/flx-point';
 export type { PointLike } from './math/flx-point';
+export { clamp, clamp01 } from './math/flx-math';
 export { FlxRandom, nextFlixelSeed } from './math/flx-random';
 export { FlxRect } from './math/flx-rect';
 export type { RectangleLike } from './math/flx-rect';

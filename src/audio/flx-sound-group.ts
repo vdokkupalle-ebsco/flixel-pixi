@@ -1,3 +1,4 @@
+import { clamp01 } from '../math/flx-math';
 import type { FlxSound } from './flx-sound';
 
 /** A hierarchical volume and mute bus for {@link FlxSound} instances. @public */
@@ -26,7 +27,7 @@ export class FlxSoundGroup {
   }
 
   set volume(value: number) {
-    this.#volume = Math.max(0, Math.min(1, value));
+    this.#volume = clamp01(value);
     this.#syncTree();
   }
 

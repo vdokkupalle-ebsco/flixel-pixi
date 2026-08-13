@@ -7,6 +7,8 @@ import {
   FlxRandom,
   FlxRect,
   FlxU,
+  clamp,
+  clamp01,
   nextFlixelSeed,
 } from '../../src';
 
@@ -70,6 +72,12 @@ describe('Headless core math and deterministic utilities', () => {
   });
 
   it('preserves numeric and formatting helpers', () => {
+    expect(clamp(-1, 0, 10)).toBe(0);
+    expect(clamp(11, 0, 10)).toBe(10);
+    expect(clamp(5, 0, 10)).toBe(5);
+    expect(clamp01(-0.5)).toBe(0);
+    expect(clamp01(0.25)).toBe(0.25);
+    expect(clamp01(2)).toBe(1);
     expect(FlxU.abs(3)).toBe(3);
     expect(FlxU.abs(-3)).toBe(3);
     expect(FlxU.floor(1.9)).toBe(1);

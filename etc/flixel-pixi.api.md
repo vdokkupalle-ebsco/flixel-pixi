@@ -79,6 +79,12 @@ export interface BrowserGamePreloaderOptions extends FlxPreloaderOptions {
 }
 
 // @public
+export function clamp(value: number, minimum: number, maximum: number): number;
+
+// @public
+export function clamp01(value: number): number;
+
+// @public
 export interface CodePair {
     // (undocumented)
     code: number;

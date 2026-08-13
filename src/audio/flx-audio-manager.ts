@@ -1,5 +1,6 @@
 import type { FlxContext } from '../core/flx-context';
 import { FlxGroup } from '../core/flx-group';
+import { clamp01 } from '../math/flx-math';
 import { FLX_AUDIO_SERVICE, type FlxAudioBackend } from './flx-audio-backend';
 import { FlxSound } from './flx-sound';
 import { FlxSoundGroup } from './flx-sound-group';
@@ -89,7 +90,7 @@ export class FlxAudioManager implements FlxAudioService {
   }
 
   set volume(value: number) {
-    const next = Math.max(0, Math.min(1, value));
+    const next = clamp01(value);
     if (next === this.#volume) return;
     this.#volume = next;
     this.#propagateGlobals();

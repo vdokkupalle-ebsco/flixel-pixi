@@ -1,3 +1,5 @@
+import { clamp } from '../math/flx-math';
+
 /** Browser presentation modes that preserve a fixed logical game size. @public */
 export type FlxBrowserScaleMode = 'fill' | 'fit' | 'fixed' | 'integer';
 
@@ -548,10 +550,6 @@ function createSafeAreaProbe(parent: HTMLElement): HTMLDivElement {
 function cssPixels(value: string): number {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-}
-
-function clamp(value: number, minimum: number, maximum: number): number {
-  return Math.min(maximum, Math.max(minimum, value));
 }
 
 function snapshotsEqual(

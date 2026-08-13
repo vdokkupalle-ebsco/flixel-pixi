@@ -54,7 +54,7 @@ started merely to match a Haxe class count.
 |    10 |    P1    | Audio organization and system UX                | Complete             | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Complete             | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Complete             | High-value console, interaction, and graphing workflows work without production overhead.          |
-|    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
+|    13 |    P2    | Utilities and frontend normalization            | In progress          | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
 |    15 |    P0    | External compatibility validation               | Required before 1.0  | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
 |    16 |    P0    | Release hardening and 1.0 candidate             | Required before 1.0  | The support matrix, budgets, package artifact, provenance, and release gates pass.                 |
@@ -479,6 +479,12 @@ Guidance:
   every Haxe frontend class;
 - benchmark pools before exposing them—modern garbage collectors change the
   trade-off.
+
+Current slice:
+
+- Standalone `clamp()` and `clamp01()` helpers normalize repeated range logic
+  across camera, viewport, and audio code. `FlxU.bound()` remains available as
+  the AS3 compatibility facade and delegates to the same implementation.
 
 ## P3 — optional and platform-specific
 

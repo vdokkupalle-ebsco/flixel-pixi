@@ -1,5 +1,6 @@
 import { FlxBasic } from '../core/flx-basic';
 import { FlxG } from '../core/flx-g';
+import { clamp, clamp01 } from '../math/flx-math';
 import type { FlxCameraLike, FlxObject } from '../objects/flx-object';
 import type { FlxSoundHandle } from './flx-audio-backend';
 import type { FlxSoundGroup } from './flx-sound-group';
@@ -115,7 +116,7 @@ export class FlxSound extends FlxBasic {
   }
 
   set volume(value: number) {
-    this.#volume = Math.max(0, Math.min(1, value));
+    this.#volume = clamp01(value);
     this.#syncVolume();
   }
 
@@ -371,7 +372,7 @@ export class FlxSound extends FlxBasic {
       this.#handle?.setVolume(effectiveVolume);
 
       if (this.#proximityPan && this.#handle) {
-        const pan = Math.max(-1, Math.min(1, dx / this.#proximityRadius));
+        const pan = clamp(dx / this.#proximityRadius, -1, 1);
         this.#handle.setPan(pan);
       }
     } else {
