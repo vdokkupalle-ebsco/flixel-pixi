@@ -53,7 +53,7 @@ started merely to match a Haxe class count.
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Complete             | Logical coordinates remain correct through browser/window lifecycle changes.                       |
 |    10 |    P1    | Audio organization and system UX                | Complete             | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
 |    11 |    P2    | Advanced rendering extensions                   | Complete             | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
-|    12 |    P2    | Debugger and runtime inspection                 | In progress          | High-value console, interaction, and graphing workflows work without production overhead.          |
+|    12 |    P2    | Debugger and runtime inspection                 | Complete             | High-value console, interaction, and graphing workflows work without production overhead.          |
 |    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
 |    15 |    P0    | External compatibility validation               | Required before 1.0  | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
@@ -459,6 +459,10 @@ Current slice:
 - `FlxObjectInspector` provides modifier-gated pointer selection using CPU
   bounds, topmost camera/object order, and camera-aware inverse transforms. The
   optional renderer outline and selection watches have explicit cleanup.
+- `FlxDiagnostics` retains bounded frame/update/memory samples, feeds SVG Perf
+  histories, and produces versioned JSON exports with logs, watches, aggregate
+  metrics, and environment metadata. Heap telemetry degrades explicitly when a
+  browser does not expose it.
 
 ### Utilities and frontend normalization
 

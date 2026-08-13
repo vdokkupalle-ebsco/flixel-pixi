@@ -1729,9 +1729,15 @@ export class FlxCubicMotion extends FlxMotion {
 export class FlxDebugger {
     constructor(options?: FlxDebuggerOptions);
     // (undocumented)
+    captureDiagnostics(): FlxDebuggerDiagnosticSnapshot;
+    // (undocumented)
     readonly console: FlxConsole;
     // (undocumented)
     destroy(): void;
+    // (undocumented)
+    readonly diagnostics: FlxDiagnostics;
+    // (undocumented)
+    exportDiagnostics(pretty?: boolean): string;
     // (undocumented)
     hide(): void;
     setVCRCallbacks(callbacks: FlxDebuggerVCRCallbacks): void;
@@ -1744,10 +1750,31 @@ export class FlxDebugger {
     get visible(): boolean;
 }
 
+// @public
+export interface FlxDebuggerDiagnosticSnapshot {
+    // (undocumented)
+    readonly capturedAt: string;
+    // (undocumented)
+    readonly environment: {
+        readonly userAgent: string | null;
+        readonly viewportHeight: number | null;
+        readonly viewportWidth: number | null;
+    };
+    // (undocumented)
+    readonly logs: readonly LogEntry[];
+    // (undocumented)
+    readonly performance: FlxDiagnosticSnapshot;
+    // (undocumented)
+    readonly schemaVersion: 1;
+    // (undocumented)
+    readonly watches: readonly WatchSnapshot[];
+}
+
 // @public (undocumented)
 export interface FlxDebuggerOptions {
     console?: FlxConsole;
     container?: HTMLElement;
+    diagnostics?: FlxDiagnostics;
     initiallyVisible?: boolean;
     showLauncherWhenHidden?: boolean;
     toggleKey?: string | false;
@@ -1767,6 +1794,66 @@ export interface FlxDebuggerVCRCallbacks {
     stepFrame(): void;
     // (undocumented)
     stop(): void;
+}
+
+// @public
+export class FlxDiagnostics {
+    constructor(options?: FlxDiagnosticsOptions);
+    // (undocumented)
+    capture(now?: Date): FlxDiagnosticSnapshot;
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    record(frame: number, updateMs: number, fps: number, timestamp: number): void;
+    // (undocumented)
+    get samples(): readonly FlxDiagnosticSample[];
+}
+
+// @public
+export interface FlxDiagnosticSample {
+    // (undocumented)
+    readonly fps: number;
+    // (undocumented)
+    readonly frame: number;
+    // (undocumented)
+    readonly memoryBytes: number | null;
+    // (undocumented)
+    readonly timestamp: number;
+    // (undocumented)
+    readonly updateMs: number;
+}
+
+// @public
+export interface FlxDiagnosticSnapshot {
+    // (undocumented)
+    readonly capturedAt: string;
+    // (undocumented)
+    readonly samples: readonly FlxDiagnosticSample[];
+    // (undocumented)
+    readonly schemaVersion: 1;
+    // (undocumented)
+    readonly summary: FlxDiagnosticSummary;
+}
+
+// @public
+export interface FlxDiagnosticsOptions {
+    readonly maxSamples?: number;
+    readonly memorySampleInterval?: number;
+    readonly readMemoryBytes?: () => number | null;
+}
+
+// @public
+export interface FlxDiagnosticSummary {
+    // (undocumented)
+    readonly averageFps: number;
+    // (undocumented)
+    readonly maxUpdateMs: number;
+    // (undocumented)
+    readonly p95UpdateMs: number;
+    // (undocumented)
+    readonly peakMemoryBytes: number | null;
+    // (undocumented)
+    readonly sampleCount: number;
 }
 
 // @public

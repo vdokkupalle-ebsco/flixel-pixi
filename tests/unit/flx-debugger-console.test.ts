@@ -158,6 +158,7 @@ describe('FlxDebugger console panel', () => {
       .querySelector<HTMLButtonElement>('[data-testid="flxdbg-tab-watch"]')
       ?.click();
     channel.emit('step-complete', { frame: 1, updateMs: 1 });
+    log.add('diagnostic message');
 
     const input =
       document.querySelector<HTMLInputElement>('[data-watch-input]');
@@ -185,6 +186,39 @@ describe('FlxDebugger console panel', () => {
     expect(state.health).toBe(45);
     expect(input.getAttribute('aria-invalid')).toBe('true');
     expect(status.textContent).toBe('Replay is locked.');
+    const exported = debugger_.captureDiagnostics();
+    expect(exported.schemaVersion).toBe(1);
+    expect(exported.logs.at(-1)?.message).toBe('diagnostic message');
+    expect(exported.performance.samples).toHaveLength(2);
+    expect(
+      exported.watches.some((entry) => entry.name === 'player.health'),
+    ).toBe(true);
+    expect(JSON.parse(debugger_.exportDiagnostics(false))).toMatchObject({
+      schemaVersion: 1,
+    });
+    debugger_.destroy();
+    channel.destroy();
+  });
+
+  it('keeps update-history coordinates stable when a slow frame arrives', () => {
+    const channel = new DebugChannel();
+    const debugger_ = new FlxDebugger();
+    debugger_.subscribeToChannel(channel, new FlxLog(), new FlxWatch());
+    document
+      .querySelector<HTMLButtonElement>('[data-testid="flxdbg-tab-perf"]')
+      ?.click();
+    channel.emit('step-complete', { frame: 1, updateMs: 4 });
+    channel.emit('step-complete', { frame: 2, updateMs: 4 });
+    const line = document.querySelector<SVGPolylineElement>(
+      '.flxdbg-graph polyline',
+    );
+    if (line === null) throw new Error('Expected an update-history graph.');
+    const firstBeforeSpike = line.getAttribute('points')?.split(' ')[0];
+
+    channel.emit('step-complete', { frame: 3, updateMs: 40 });
+
+    expect(line.getAttribute('points')?.split(' ')[0]).toBe(firstBeforeSpike);
+    expect(line.getAttribute('points')?.split(' ').at(-1)).toBe('180.00,0.00');
     debugger_.destroy();
     channel.destroy();
   });

@@ -138,6 +138,13 @@ test.describe('Debugger and preloader', () => {
     const fpsEl = page.locator('[data-testid="flxdbg-perf-fps"]');
     const fpsText = await fpsEl.textContent();
     expect(fpsText).toMatch(/\d+ FPS/);
+    await expect(page.locator('.flxdbg-graph').first()).toBeVisible();
+    await expect(
+      page.locator('.flxdbg-graph polyline').first(),
+    ).toHaveAttribute('points', /\d/);
+    await expect(
+      page.locator('[data-testid="flxdbg-export-diagnostics"]'),
+    ).toBeVisible();
   });
 
   test('VCR panel record/stop/rewind/step/play workflow', async ({ page }) => {

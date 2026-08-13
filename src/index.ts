@@ -317,6 +317,13 @@ export type {
   FlxConsoleOptions,
   FlxConsoleResult,
 } from './debugger/flx-console';
+export { FlxDiagnostics } from './debugger/flx-diagnostics';
+export type {
+  FlxDiagnosticSample,
+  FlxDiagnosticSnapshot,
+  FlxDiagnosticSummary,
+  FlxDiagnosticsOptions,
+} from './debugger/flx-diagnostics';
 export { FlxObjectInspector } from './debugger/flx-object-inspector';
 export type {
   FlxObjectInspectorModifier,
@@ -351,6 +358,7 @@ export type {
 } from './debugger/flx-fps-display';
 export { FlxDebugger } from './debugger/flx-debugger';
 export type {
+  FlxDebuggerDiagnosticSnapshot,
   FlxDebuggerOptions,
   FlxDebuggerVCRCallbacks,
 } from './debugger/flx-debugger';

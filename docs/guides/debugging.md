@@ -106,6 +106,41 @@ The modifier is configurable (`alt`, `control`, `meta`, `shift`, or `false`). A
 matching debug click is intercepted before game input; non-matching clicks are
 never cancelled.
 
+### Runtime diagnostics and exports
+
+The Perf panel renders bounded SVG histories for update time and JavaScript heap
+usage. `FlxDiagnostics` retains 180 samples by default and only probes heap
+memory every 30 frames. Browsers without `performance.memory` show **Memory
+unavailable** while frame-time collection and exports continue normally.
+
+The update history uses a stable 16.67 ms vertical scale matching the 60 Hz
+frame budget. Slow updates appear as isolated, top-clamped spikes without
+rescaling earlier samples. The heap graph remains adaptive.
+
+```ts
+const snapshot = debugger_.captureDiagnostics();
+const json = debugger_.exportDiagnostics();
+```
+
+Exports use schema version 1 and contain the capture time, bounded raw samples,
+aggregate FPS/update/memory metrics, current log entries, current Watch values,
+and basic browser viewport metadata. The Perf panel's **Export diagnostics
+JSON** button downloads the same payload. No camera pixel readback occurs during
+collection or export.
+
+Customize retention or supply a portable memory provider when constructing the
+debugger:
+
+```ts
+new FlxDebugger({
+  diagnostics: new FlxDiagnostics({
+    maxSamples: 300,
+    memorySampleInterval: 60,
+    readMemoryBytes: () => profiler.currentHeapBytes,
+  }),
+});
+```
+
 Keyboard: arrow keys move between tabs. In the Console input, Up/Down recalls
 history and Tab completes an unambiguous command. Controls expose `aria-*`
 labels for assistive tech.

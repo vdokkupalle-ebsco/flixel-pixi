@@ -1,6 +1,8 @@
 import type { DebugChannel } from './debug-channel';
 import { FlxConsole, type FlxConsoleResult } from './flx-console';
+import { FlxDiagnostics, type FlxDiagnosticSnapshot } from './flx-diagnostics';
 import type { FlxLog } from './flx-log';
+import type { LogEntry } from './flx-log';
 import type { FlxVCR } from '../replay/flx-vcr';
 import type { FlxWatch } from './flx-watch';
 import type { WatchSnapshot } from './flx-watch';
@@ -133,6 +135,12 @@ const DEBUGGER_CSS = `
 .flxdbg-perf-value { color: #facc15; font-weight: bold; }
 .flxdbg-perf-bar-wrap { flex: 1; height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; max-width: 200px; }
 .flxdbg-perf-bar { height: 100%; background: #38bdf8; border-radius: 4px; transition: width 0.1s; }
+.flxdbg-graphs { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 10px; margin-top: 6px; }
+.flxdbg-graph { border: 1px solid #1e293b; border-radius: 4px; padding: 4px; }
+.flxdbg-graph-label { display: block; color: #94a3b8; margin-bottom: 2px; }
+.flxdbg-graph svg { display: block; width: 100%; height: 42px; overflow: visible; }
+.flxdbg-export { margin-top: 6px; border: 1px solid #334155; border-radius: 3px; background: #1e293b; color: #cbd5e1; cursor: pointer; font: inherit; padding: 3px 8px; }
+.flxdbg-export:hover { color: #38bdf8; }
 
 /* VCR panel */
 .flxdbg-vcr { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
@@ -180,6 +188,8 @@ const DEBUGGER_CSS = `
 export interface FlxDebuggerOptions {
   /** Headless command registry to expose in the Console panel. */
   console?: FlxConsole;
+  /** Bounded metrics collector used by the Perf panel and exports. */
+  diagnostics?: FlxDiagnostics;
   /** Element to mount the overlay inside. Defaults to document.body. */
   container?: HTMLElement;
   /** Whether the debugger starts expanded. Defaults to true. */
@@ -188,6 +198,20 @@ export interface FlxDebuggerOptions {
   showLauncherWhenHidden?: boolean;
   /** KeyboardEvent.code used to toggle the debugger. Defaults to Backquote. */
   toggleKey?: string | false;
+}
+
+/** Versioned JSON-safe debugger export. @public */
+export interface FlxDebuggerDiagnosticSnapshot {
+  readonly capturedAt: string;
+  readonly environment: {
+    readonly userAgent: string | null;
+    readonly viewportHeight: number | null;
+    readonly viewportWidth: number | null;
+  };
+  readonly logs: readonly LogEntry[];
+  readonly performance: FlxDiagnosticSnapshot;
+  readonly schemaVersion: 1;
+  readonly watches: readonly WatchSnapshot[];
 }
 
 /** Callbacks the debugger needs to invoke VCR actions on the game. @public */
@@ -209,6 +233,7 @@ export interface FlxDebuggerVCRCallbacks {
  */
 export class FlxDebugger {
   readonly console: FlxConsole;
+  readonly diagnostics: FlxDiagnostics;
   readonly #root: HTMLDivElement;
   readonly #launcher: HTMLButtonElement | null;
   readonly #panels = new Map<string, HTMLDivElement>();
@@ -237,6 +262,9 @@ export class FlxDebugger {
   #perfFps!: HTMLSpanElement;
   #perfUpdateMs!: HTMLSpanElement;
   #perfBar!: HTMLDivElement;
+  #perfUpdateLine!: SVGPolylineElement;
+  #perfMemoryLine!: SVGPolylineElement;
+  #perfMemoryLabel!: HTMLSpanElement;
   #vcrStatus!: HTMLSpanElement;
   #vcrRecord!: HTMLButtonElement;
   #vcrStop!: HTMLButtonElement;
@@ -244,6 +272,8 @@ export class FlxDebugger {
   #vcrRewind!: HTMLButtonElement;
   #vcrStep!: HTMLButtonElement;
   #vcr: FlxDebuggerVCRCallbacks | null = null;
+  #log: FlxLog | null = null;
+  #watch: FlxWatch | null = null;
 
   // Perf state
   #frameCount = 0;
@@ -264,6 +294,7 @@ export class FlxDebugger {
       throw new Error('toggleKey must be a KeyboardEvent.code or false.');
     }
     this.console = options.console ?? new FlxConsole();
+    this.diagnostics = options.diagnostics ?? new FlxDiagnostics();
     this.#consoleHistoryIndex = this.console.history.length;
     this.#toggleKey = toggleKey;
     this.#visible = initiallyVisible;
@@ -430,15 +461,39 @@ export class FlxDebugger {
     log: FlxLog,
     watch: FlxWatch,
   ): void {
+    this.#log = log;
+    this.#watch = watch;
     log.setOnChange(() => {
       this.#refreshLog(log);
     });
     channel.on('step-complete', (p) => {
-      this.#onStepComplete(p.updateMs, watch);
+      this.#onStepComplete(p.frame, p.updateMs, watch);
     });
     channel.on('pause-change', (p) => {
       this.#onPauseChange(p.paused);
     });
+  }
+
+  captureDiagnostics(): FlxDebuggerDiagnosticSnapshot {
+    const performanceSnapshot = this.diagnostics.capture();
+    return {
+      capturedAt: performanceSnapshot.capturedAt,
+      environment: {
+        userAgent:
+          typeof navigator === 'undefined' ? null : navigator.userAgent,
+        viewportHeight:
+          typeof window === 'undefined' ? null : window.innerHeight,
+        viewportWidth: typeof window === 'undefined' ? null : window.innerWidth,
+      },
+      logs: this.#log?.entries.map((entry) => ({ ...entry })) ?? [],
+      performance: performanceSnapshot,
+      schemaVersion: 1,
+      watches: this.#watch?.snapshot() ?? [],
+    };
+  }
+
+  exportDiagnostics(pretty = true): string {
+    return JSON.stringify(this.captureDiagnostics(), null, pretty ? 2 : 0);
   }
 
   destroy(): void {
@@ -578,6 +633,26 @@ export class FlxDebugger {
       'Update ms',
       'flxdbg-perf-updatems',
     );
+    const graphs = document.createElement('div');
+    graphs.className = 'flxdbg-graphs';
+    [this.#perfUpdateLine] = this.#buildGraph(
+      graphs,
+      'Update history',
+      '#38bdf8',
+    );
+    [this.#perfMemoryLine, this.#perfMemoryLabel] = this.#buildGraph(
+      graphs,
+      'Memory unavailable',
+      '#a78bfa',
+    );
+    el.appendChild(graphs);
+    const exportButton = document.createElement('button');
+    exportButton.type = 'button';
+    exportButton.className = 'flxdbg-export';
+    exportButton.textContent = 'Export diagnostics JSON';
+    exportButton.setAttribute('data-testid', 'flxdbg-export-diagnostics');
+    exportButton.addEventListener('click', () => this.#downloadDiagnostics());
+    el.appendChild(exportButton);
   }
 
   #buildVCR(el: HTMLDivElement): void {
@@ -677,7 +752,7 @@ export class FlxDebugger {
 
   // ─── Internal update handlers ──────────────────────────────────────────────
 
-  #onStepComplete(updateMs: number, watch: FlxWatch): void {
+  #onStepComplete(frame: number, updateMs: number, watch: FlxWatch): void {
     // Perf
     this.#frameCount++;
     const now = performance.now();
@@ -689,6 +764,8 @@ export class FlxDebugger {
       this.#lastFpsTime = now;
       if (this.#activeTab === 'perf') this.#refreshPerf(updateMs);
     }
+    this.diagnostics.record(frame, updateMs, this.#currentFps, now);
+    if (this.#activeTab === 'perf') this.#refreshDiagnosticGraphs();
 
     // Watch
     if (this.#activeTab === 'watch') {
@@ -830,6 +907,73 @@ export class FlxDebugger {
       updateMs > 12 ? '#f87171' : updateMs > 8 ? '#facc15' : '#38bdf8';
   }
 
+  #buildGraph(
+    parent: HTMLElement,
+    labelText: string,
+    color: string,
+  ): [SVGPolylineElement, HTMLSpanElement] {
+    const wrap = document.createElement('div');
+    wrap.className = 'flxdbg-graph';
+    const label = document.createElement('span');
+    label.className = 'flxdbg-graph-label';
+    label.textContent = labelText;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 180 42');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', labelText);
+    const line = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'polyline',
+    );
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('vector-effect', 'non-scaling-stroke');
+    svg.appendChild(line);
+    wrap.append(label, svg);
+    parent.appendChild(wrap);
+    return [line, label];
+  }
+
+  #refreshDiagnosticGraphs(): void {
+    const samples = this.diagnostics.samples;
+    this.#perfUpdateLine.setAttribute(
+      'points',
+      graphPoints(
+        samples.map((sample) => sample.updateMs),
+        180,
+        42,
+        16.67,
+      ),
+    );
+    const memory = samples.map((sample) => sample.memoryBytes);
+    const memoryValues = memory.filter(
+      (value): value is number => value !== null,
+    );
+    this.#perfMemoryLine.setAttribute(
+      'points',
+      graphPoints(memoryValues, 180, 42),
+    );
+    this.#perfMemoryLabel.textContent =
+      memoryValues.length === 0
+        ? 'Memory unavailable'
+        : `Heap ${(memoryValues.at(-1) ?? 0) / 1_048_576 < 0.1 ? '<0.1' : ((memoryValues.at(-1) ?? 0) / 1_048_576).toFixed(1)} MiB`;
+  }
+
+  #downloadDiagnostics(): void {
+    const blob = new Blob([this.exportDiagnostics()], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `flixel-pixi-diagnostics-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
   #refreshVCRStatus(): void {
     const vcr = this.#vcr?.getVCR();
     if (!vcr) return;
@@ -961,4 +1105,22 @@ function isEditableTarget(target: EventTarget | null): boolean {
     target instanceof HTMLSelectElement ||
     target.isContentEditable
   );
+}
+
+function graphPoints(
+  values: readonly number[],
+  width: number,
+  height: number,
+  maximum = Math.max(...values, Number.EPSILON),
+): string {
+  if (values.length === 0) return '';
+  const safeMaximum = Math.max(maximum, Number.EPSILON);
+  const divisor = Math.max(1, values.length - 1);
+  return values
+    .map((value, index) => {
+      const x = (index / divisor) * width;
+      const y = height - Math.min(1, Math.max(0, value) / safeMaximum) * height;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
 }
