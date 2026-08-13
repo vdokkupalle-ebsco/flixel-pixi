@@ -1,4 +1,5 @@
 import { clamp } from '../math/flx-math';
+import { requireFinite } from '../math/flx-number';
 import { FlxPoint, type PointLike } from '../math/flx-point';
 import { FlxRect } from '../math/flx-rect';
 import type { FlxObject } from '../objects/flx-object';
@@ -16,11 +17,6 @@ export type FlxCameraFollowStyle = 0 | 1 | 2 | 3;
 export type FlxCameraShakeDirection = 0 | 1 | 2;
 
 const DEFAULT_SCROLL_FACTOR = { x: 1, y: 1 } as const;
-
-function requireFinite(value: number, name: string): number {
-  if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite.`);
-  return value;
-}
 
 function requireDimension(value: number, name: string): number {
   requireFinite(value, name);

@@ -1,3 +1,4 @@
+import { clamp, clamp01 } from '../math/flx-math';
 import type { FlxAudioBackend, FlxSoundHandle } from './flx-audio-backend';
 
 interface PendingSoundRequest {
@@ -170,12 +171,12 @@ class WebSoundHandle implements FlxSoundHandle {
 
   setVolume(volume: number): void {
     if (this.#destroyed) return;
-    this.#gainNode.gain.value = Math.max(0, Math.min(1, volume));
+    this.#gainNode.gain.value = clamp01(volume);
   }
 
   setPan(pan: number): void {
     if (this.#destroyed) return;
-    this.#panNode.pan.value = Math.max(-1, Math.min(1, pan));
+    this.#panNode.pan.value = clamp(pan, -1, 1);
   }
 
   destroy(): void {
@@ -280,7 +281,7 @@ export class WebAudioBackend implements FlxAudioBackend {
   }
 
   setGlobalVolume(volume: number): void {
-    this.#globalVolume = Math.max(0, Math.min(1, volume));
+    this.#globalVolume = clamp01(volume);
     if (this.#masterGain) {
       this.#masterGain.gain.value = this.#globalMuted ? 0 : this.#globalVolume;
     }

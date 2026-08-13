@@ -1,3 +1,5 @@
+import { requireNonNegativeInteger } from '../math/flx-number';
+
 /** Context passed to a registered debugger console command. @public */
 export interface FlxConsoleCommandContext {
   readonly args: readonly string[];
@@ -42,11 +44,10 @@ export class FlxConsole {
   readonly #maxHistory: number;
 
   constructor(options: FlxConsoleOptions = {}) {
-    const maxHistory = options.maxHistory ?? 100;
-    if (!Number.isInteger(maxHistory) || maxHistory < 0) {
-      throw new RangeError('maxHistory must be a non-negative integer.');
-    }
-    this.#maxHistory = maxHistory;
+    this.#maxHistory = requireNonNegativeInteger(
+      options.maxHistory ?? 100,
+      'maxHistory',
+    );
   }
 
   get history(): readonly string[] {

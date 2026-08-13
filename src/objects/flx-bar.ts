@@ -1,3 +1,5 @@
+import { clamp } from '../math/flx-math';
+import { requireFinite } from '../math/flx-number';
 import { FlxPoint } from '../math/flx-point';
 import { FlxBarRenderHandle } from '../rendering/flx-bar-render-handle';
 import { FlxObject } from './flx-object';
@@ -17,11 +19,6 @@ export interface FlxBarParentLike {
   readonly scrollFactor?: FlxPoint;
   x: number;
   y: number;
-}
-
-function requireFinite(value: number, name: string): number {
-  if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite.`);
-  return value;
 }
 
 function requireDimension(value: number, name: string): number {
@@ -148,7 +145,7 @@ export class FlxBar extends FlxSprite {
 
   set value(value: number) {
     requireFinite(value, 'Bar value');
-    const next = Math.max(this.#minimum, Math.min(this.#maximum, value));
+    const next = clamp(value, this.#minimum, this.#maximum);
     if (next === this.#value) return;
     this.#value = next;
     this.#handleLimits();
@@ -192,7 +189,7 @@ export class FlxBar extends FlxSprite {
     }
     this.#minimum = minimum;
     this.#maximum = maximum;
-    this.#value = Math.max(minimum, Math.min(maximum, this.#value));
+    this.#value = clamp(this.#value, minimum, maximum);
     this.#wasEmpty = this.#value <= minimum;
     this.#wasFull = this.#value >= maximum;
     this.#changed();

@@ -2,6 +2,7 @@ import {
   FlxLoadingError,
   type FlxLoadingSnapshot,
 } from '../loading/flx-loading';
+import { clamp } from '../math/flx-math';
 
 /** Theme tokens used by the default DOM preloader. @public */
 export interface FlxPreloaderTheme {
@@ -298,7 +299,7 @@ export class FlxPreloader implements FlxPreloaderView {
   setProgress(percent: number, statusText?: string): void {
     this.update({
       message: statusText ?? this.#statusEl.textContent ?? 'Loading…',
-      progress: Math.max(0, Math.min(100, percent)) / 100,
+      progress: clamp(percent, 0, 100) / 100,
       stage: 'custom',
       state: 'loading',
     });

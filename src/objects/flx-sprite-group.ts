@@ -3,6 +3,7 @@ import type { FlxBasic } from '../core/flx-basic';
 import { FlxContainer } from '../core/flx-container';
 import { FlxGroup, type FlxBasicConstructor } from '../core/flx-group';
 import { FlxCallbackPoint } from '../math/flx-callback-point';
+import { clamp01 } from '../math/flx-math';
 import { FlxPoint } from '../math/flx-point';
 import type { FlxRenderHandle } from '../rendering/flx-render-handle';
 import { FlxSpriteGroupRenderHandle } from '../rendering/flx-sprite-group-render-handle';
@@ -78,7 +79,7 @@ export class FlxSpriteGroup<T extends FlxSprite = FlxSprite> extends FlxSprite {
   }
 
   override set alpha(value: number) {
-    const bounded = Math.min(1, Math.max(0, value));
+    const bounded = clamp01(value);
     const previous = super.alpha;
     if (this.group !== undefined && this.exists && previous !== bounded) {
       if (this.directAlpha || previous === 0) {

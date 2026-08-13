@@ -1,3 +1,5 @@
+import { requireNonNegativeInteger } from '../math/flx-number';
+
 /** One bounded runtime diagnostic sample. @public */
 export interface FlxDiagnosticSample {
   readonly fps: number;
@@ -135,13 +137,6 @@ function percentile(
   if (sortedValues.length === 0) return 0;
   const index = Math.ceil(sortedValues.length * percentileValue) - 1;
   return sortedValues[Math.max(0, index)] ?? 0;
-}
-
-function requireNonNegativeInteger(value: number, name: string): number {
-  if (!Number.isInteger(value) || value < 0) {
-    throw new RangeError(`${name} must be a non-negative integer.`);
-  }
-  return value;
 }
 
 function readBrowserMemoryBytes(): number | null {

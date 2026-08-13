@@ -1,11 +1,7 @@
+import { requireFinite } from '../math/flx-number';
 import type { PointLike } from '../math/flx-point';
 import type { FlxObject } from '../objects/flx-object';
 import { FlxTween } from './flx-tween';
-
-function requireFinite(value: number, name: string): number {
-  if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite.`);
-  return value;
-}
 
 function requireDuration(value: number): number {
   requireFinite(value, 'Motion duration');

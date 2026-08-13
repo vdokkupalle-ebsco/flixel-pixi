@@ -1,5 +1,6 @@
 import type { FlxBasic } from '../core/flx-basic';
 import { FlxG } from '../core/flx-g';
+import { requireFinite } from '../math/flx-number';
 import type { FlxObject } from '../objects/flx-object';
 import type { FlxSprite } from '../objects/flx-sprite';
 import { FlxTween, type FlxTweenOptions } from './flx-tween';
@@ -29,11 +30,6 @@ export interface FlxFlickerTweenOptions extends FlxTweenOptions {
   endVisibility?: boolean;
   ratio?: number;
   tweenFunction?: (tween: FlxFlickerTween) => boolean;
-}
-
-function requireFinite(value: number, name: string): number {
-  if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite.`);
-  return value;
 }
 
 function requireDuration(value: number): number {

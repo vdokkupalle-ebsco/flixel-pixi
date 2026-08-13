@@ -483,8 +483,11 @@ Guidance:
 Current slice:
 
 - Standalone `clamp()` and `clamp01()` helpers normalize repeated range logic
-  across camera, viewport, and audio code. `FlxU.bound()` remains available as
-  the AS3 compatibility facade and delegates to the same implementation.
+  across camera, viewport, input, sprite, bar, audio, and loading code.
+  `FlxU.bound()` remains available as the AS3 compatibility facade and
+  delegates to the same implementation.
+- Shared internal number guards normalize finite-value and bounded-capacity
+  validation without expanding the public compatibility surface.
 
 ## P3 — optional and platform-specific
 

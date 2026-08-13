@@ -12,6 +12,7 @@ import { FlxAnimationController } from '../animation/flx-animation-controller';
 import { FlxFramesCollection } from '../animation/flx-frames-collection';
 import { makeGraphicPixels, type PixelBuffer } from '../compat/pixel-buffer';
 import { FlxG } from '../core/flx-g';
+import { clamp, clamp01 } from '../math/flx-math';
 import { FlxPoint } from '../math/flx-point';
 import type { RectangleLike } from '../math/flx-rect';
 import { FlxSpriteRenderHandle } from '../rendering/flx-sprite-render-handle';
@@ -431,7 +432,7 @@ export class FlxSprite extends FlxObject {
     const startFrame =
       frame < 0
         ? Math.floor(FlxG.random() * animation.frames.length)
-        : Math.min(Math.max(frame, 0), maxFrame);
+        : clamp(frame, 0, maxFrame);
     this.#playbackReversed = reversed;
     this.#currentAnimationFrame = reversed ? maxFrame - startFrame : startFrame;
     this.#currentFrameIndex =
@@ -626,7 +627,7 @@ export class FlxSprite extends FlxObject {
   }
 
   set alpha(value: number) {
-    this.#alpha = Math.min(1, Math.max(0, value));
+    this.#alpha = clamp01(value);
   }
 
   get color(): number {

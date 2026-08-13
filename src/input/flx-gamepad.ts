@@ -1,3 +1,5 @@
+import { clamp, clamp01 } from '../math/flx-math';
+
 /** Standard Web Gamepad button indices. @public */
 export enum FlxGamepadButton {
   A = 0,
@@ -105,17 +107,17 @@ export class FlxGamepad {
 
   getAxis(axis: number, deadZone = this.deadZone): number {
     const value = this.#axes[axis] ?? 0;
-    const boundedDeadZone = Math.min(0.99, Math.max(0, deadZone));
+    const boundedDeadZone = clamp(deadZone, 0, 0.99);
     const magnitude = Math.abs(value);
     if (magnitude <= boundedDeadZone) return 0;
     return (
       Math.sign(value) *
-      Math.min(1, (magnitude - boundedDeadZone) / (1 - boundedDeadZone))
+      clamp01((magnitude - boundedDeadZone) / (1 - boundedDeadZone))
     );
   }
 
   axisPressed(axis: number, direction: -1 | 1, threshold = 0.5): boolean {
-    const boundedThreshold = Math.min(1, Math.max(0, threshold));
+    const boundedThreshold = clamp01(threshold);
     return this.getAxis(axis) * direction >= boundedThreshold;
   }
 
@@ -129,9 +131,7 @@ export class FlxGamepad {
     for (let index = 0; index < buttonCount; index += 1) {
       const state = this.#buttons[index] ?? { current: 0, value: 0 };
       const sourceButton = source?.buttons[index];
-      const value = connected
-        ? Math.min(1, Math.max(0, sourceButton?.value ?? 0))
-        : 0;
+      const value = connected ? clamp01(sourceButton?.value ?? 0) : 0;
       const down =
         connected && (sourceButton?.pressed === true || value >= 0.5);
       const wasDown = state.current > 0;
@@ -141,7 +141,7 @@ export class FlxGamepad {
     }
     this.#axes = connected
       ? source.axes.map((value) =>
-          Math.min(1, Math.max(-1, Number.isFinite(value) ? value : 0)),
+          clamp(Number.isFinite(value) ? value : 0, -1, 1),
         )
       : this.#axes.map(() => 0);
     this.connected = connected;
@@ -184,15 +184,12 @@ export class FlxGamepad {
       const button = record.buttons[index];
       const state = this.#buttons[index] ?? { current: 0, value: 0 };
       state.current =
-        button === undefined
-          ? 0
-          : Math.max(-1, Math.min(2, Math.trunc(button.state)));
-      state.value =
-        button === undefined ? 0 : Math.max(0, Math.min(1, button.value));
+        button === undefined ? 0 : clamp(Math.trunc(button.state), -1, 2);
+      state.value = button === undefined ? 0 : clamp01(button.value);
       this.#buttons[index] = state;
     }
     this.#axes = record.axes.map((value) =>
-      Math.max(-1, Math.min(1, Number.isFinite(value) ? value : 0)),
+      clamp(Number.isFinite(value) ? value : 0, -1, 1),
     );
     this.connected = true;
   }
