@@ -52,7 +52,7 @@ started merely to match a Haxe class count.
 |     8 |    P1    | Atlas and content-pipeline expansion            | Complete             | Standard atlas/font formats load through typed, cached, unloadable asset APIs.                     |
 |     9 |    P1    | Scaling, resize, fullscreen, and focus policy   | Complete             | Logical coordinates remain correct through browser/window lifecycle changes.                       |
 |    10 |    P1    | Audio organization and system UX                | Complete             | Sound groups, routing, focus policy, and optional system controls are coherent and testable.       |
-|    11 |    P2    | Advanced rendering extensions                   | In progress          | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
+|    11 |    P2    | Advanced rendering extensions                   | Complete             | Approved filters/shaders/meshes have explicit Pixi ownership and cleanup contracts.                |
 |    12 |    P2    | Debugger and runtime inspection                 | Planned              | High-value console, interaction, and graphing workflows work without production overhead.          |
 |    13 |    P2    | Utilities and frontend normalization            | Planned              | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
@@ -421,9 +421,7 @@ Current slice:
 - The vector quest scene applies the helpers to game scenery, a route, pickup,
   and HUD, with a day/night rebuild contract. Its cross-browser test is
   committed but awaiting the next available browser execution window.
-- The filters, shaders, meshes, gradients, and reusable drawing-helper slices
-  are complete. Explicit snapshot/readback policy is the remaining independent
-  advanced-rendering decision. See [`guides/graphics.md`](guides/graphics.md),
+- The filters, shaders, meshes, gradients, reusable drawing helpers, and explicit snapshot/readback policy slices are complete. See [`guides/graphics.md`](guides/graphics.md),
   [`guides/meshes.md`](guides/meshes.md),
   [`guides/filters.md`](guides/filters.md),
   [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md),
@@ -431,7 +429,8 @@ Current slice:
   [`adr/0020-non-owning-displacement-maps.md`](adr/0020-non-owning-displacement-maps.md),
   [`adr/0021-local-explicit-filter-areas.md`](adr/0021-local-explicit-filter-areas.md),
   [`adr/0022-revisioned-camera-local-strip-geometry.md`](adr/0022-revisioned-camera-local-strip-geometry.md),
-  and [`adr/0023-stable-camera-local-vector-graphics.md`](adr/0023-stable-camera-local-vector-graphics.md).
+  [`adr/0023-stable-camera-local-vector-graphics.md`](adr/0023-stable-camera-local-vector-graphics.md),
+  and [`adr/0024-explicit-asynchronous-renderer-readback.md`](adr/0024-explicit-asynchronous-renderer-readback.md).
 
 ### Debugger and runtime inspection
 

@@ -204,6 +204,32 @@ export class FlxCameraRenderer implements FlxCameraHost {
     return this.#views.get(camera) ?? null;
   }
 
+  /** Asynchronously extracts rendered RGBA pixel data for a camera. @public */
+  async snapshotCamera(
+    camera: FlxCamera,
+  ): Promise<{ height: number; pixels: Uint8ClampedArray; width: number }> {
+    this.#assertUsable();
+    if (camera.destroyed)
+      throw new Error('Cannot snapshot a destroyed camera.');
+    const view = this.#views.get(camera);
+    if (view === undefined) {
+      throw new Error('Camera is not registered with this renderer.');
+    }
+    const extracted = await this.#renderer.extract.pixels(view.target);
+    const extractedPixels =
+      extracted instanceof Uint8ClampedArray ? extracted : extracted.pixels;
+    const pixels = new Uint8ClampedArray(extractedPixels);
+    const width =
+      'width' in extracted && typeof extracted.width === 'number'
+        ? extracted.width
+        : camera.width;
+    const height =
+      'height' in extracted && typeof extracted.height === 'number'
+        ? extracted.height
+        : camera.height;
+    return { height, pixels, width };
+  }
+
   resize(resolution = this.#renderer.resolution): void {
     this.#assertUsable();
     if (!Number.isFinite(resolution) || resolution <= 0) {

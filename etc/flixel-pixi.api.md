@@ -1412,6 +1412,11 @@ export class FlxCamera extends FlxBasic {
     static readonly STYLE_TOPDOWN = 2;
     // (undocumented)
     static readonly STYLE_TOPDOWN_TIGHT = 3;
+    takeSnapshot(): Promise<{
+        height: number;
+        pixels: Uint8ClampedArray;
+        width: number;
+    }>;
     // (undocumented)
     target: FlxObject | null;
     // (undocumented)
@@ -1442,6 +1447,12 @@ export interface FlxCameraHost {
     addCamera(camera: FlxCamera): void;
     // (undocumented)
     removeCamera(camera: FlxCamera): void;
+    // (undocumented)
+    snapshotCamera?(camera: FlxCamera): Promise<{
+        height: number;
+        pixels: Uint8ClampedArray;
+        width: number;
+    }>;
 }
 
 // @public
@@ -1486,6 +1497,11 @@ export class FlxCameraRenderer implements FlxCameraHost {
     get renderTargetBytes(): number;
     // (undocumented)
     resize(resolution?: number): void;
+    snapshotCamera(camera: FlxCamera): Promise<{
+        height: number;
+        pixels: Uint8ClampedArray;
+        width: number;
+    }>;
 }
 
 // @public

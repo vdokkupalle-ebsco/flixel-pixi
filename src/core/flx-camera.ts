@@ -2,6 +2,7 @@ import { FlxPoint, type PointLike } from '../math/flx-point';
 import { FlxRect } from '../math/flx-rect';
 import type { FlxObject } from '../objects/flx-object';
 import { FlxBasic } from './flx-basic';
+import { FLX_CAMERA_HOST_SERVICE, type FlxCameraHost } from './flx-context';
 import { FlxG } from './flx-g';
 
 /** Callback invoked after a deterministic camera effect completes. @public */
@@ -368,6 +369,27 @@ export class FlxCamera extends FlxBasic {
     return (
       localX >= 0 && localX < this.width && localY >= 0 && localY < this.height
     );
+  }
+
+  /**
+   * Asynchronously extracts rendered RGBA pixel data for this camera from the active host renderer.
+   * @public
+   */
+  async takeSnapshot(): Promise<{
+    height: number;
+    pixels: Uint8ClampedArray;
+    width: number;
+  }> {
+    if (this.#destroyed) throw new Error('Cannot snapshot a destroyed camera.');
+    const host = FlxG.context?.getService<FlxCameraHost>(
+      FLX_CAMERA_HOST_SERVICE,
+    );
+    if (!host || typeof host.snapshotCamera !== 'function') {
+      throw new Error(
+        'No camera host with snapshot capability is installed in the current context.',
+      );
+    }
+    return host.snapshotCamera(this);
   }
 
   override destroy(): void {

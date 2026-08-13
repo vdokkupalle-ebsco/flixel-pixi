@@ -8,6 +8,9 @@ import type { FlxState } from './flx-state';
 export interface FlxCameraHost {
   addCamera(camera: FlxCamera): void;
   removeCamera(camera: FlxCamera): void;
+  snapshotCamera?(
+    camera: FlxCamera,
+  ): Promise<{ height: number; pixels: Uint8ClampedArray; width: number }>;
 }
 
 /** Service token for the active camera renderer adapter. @public */
