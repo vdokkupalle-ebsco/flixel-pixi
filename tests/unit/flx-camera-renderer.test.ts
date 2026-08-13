@@ -8,7 +8,9 @@ import {
   FlxContext,
   FlxG,
   FlxObject,
+  FlxObjectInspector,
   FlxSprite,
+  FlxWatch,
 } from '../../src';
 
 interface RenderCall {
@@ -45,6 +47,53 @@ afterEach(() => {
 });
 
 describe('Pixi camera render passes', () => {
+  it('picks the topmost authoritative object and tracks its selection', () => {
+    const outputStage = new Container();
+    const fake = fakeRenderer(1);
+    const cameraRenderer = new FlxCameraRenderer(
+      fake.renderer,
+      outputStage,
+      context,
+    );
+    const camera = context.camera;
+    camera.scroll.make(10, 5);
+    camera.zoom = 1.5;
+    camera.angle = 12;
+    camera.setScale(1.2, 0.8);
+    const lower = new FlxSprite(30, 20).makeGraphic(20, 20, 0xffffffff);
+    const upper = new FlxSprite(35, 25).makeGraphic(20, 20, 0xffffffff);
+    cameraRenderer.add(lower);
+    cameraRenderer.add(upper);
+    const watch = new FlxWatch();
+    const inspector = new FlxObjectInspector(cameraRenderer, {
+      logicalHeight: 60,
+      logicalWidth: 100,
+      watch,
+    });
+    const point = camera.worldToScreen({ x: 40, y: 30 });
+
+    const selection = inspector.selectAt(point);
+    expect(selection?.object).toBe(upper);
+    expect(cameraRenderer.selectedObject).toBe(upper);
+    expect(watch.snapshot().map((entry) => entry.name)).toEqual([
+      'selection.x',
+      'selection.y',
+      'selection.width',
+      'selection.height',
+    ]);
+
+    upper.visible = false;
+    expect(inspector.selectAt(point)?.object).toBe(lower);
+    inspector.clear();
+    expect(cameraRenderer.selectedObject).toBeNull();
+    expect(watch.snapshot()).toEqual([]);
+    inspector.destroy();
+    cameraRenderer.destroy();
+    lower.destroy();
+    upper.destroy();
+    outputStage.destroy({ children: true });
+  });
+
   it('interpolates render transforms without mutating authoritative state', () => {
     const outputStage = new Container();
     const fake = fakeRenderer(1);

@@ -5,6 +5,7 @@ import {
   FlxG,
   FlxGame,
   FlxGraphic,
+  FlxObjectInspector,
   FlxPreloader,
   FlxSprite,
   FlxState,
@@ -45,7 +46,7 @@ class PlayState extends FlxState {
       20,
       38,
       600,
-      'Open the debugger panel below. Watch player.x and player.y live.',
+      'Open Watch to inspect values. Alt+click the player to select it.',
     );
     hint.setFormat(undefined, 11, 0xff94a3b8, 'left');
     this.add(hint);
@@ -250,6 +251,21 @@ export async function bootDebuggerDemo(
   });
   dbg.subscribeToChannel(game.debugChannel, game.log, game.watch);
 
+  const inspector = new FlxObjectInspector(activeRenderer, {
+    logicalHeight: 480,
+    logicalWidth: 640,
+    onSelectionChange: (selection) => {
+      FlxG.log.add(
+        selection
+          ? `Selected ${selection.object.constructor.name} @ (${selection.worldX.toFixed(1)}, ${selection.worldY.toFixed(1)})`
+          : 'Selection cleared',
+        0xfffacc15,
+      );
+    },
+    watch: game.watch,
+  });
+  inspector.attach(app.canvas);
+
   // Wire visual-debug toggle → renderer.debugBounds draws coloured outlines
   document.body.addEventListener('flxdbg:vis-debug', (e) => {
     const on = (e as CustomEvent<{ on: boolean }>).detail.on;
@@ -275,6 +291,7 @@ export async function bootDebuggerDemo(
     debugger: dbg,
     destroy() {
       app.ticker.stop();
+      inspector.destroy();
       dbg.destroy();
       activeRenderer?.destroy();
       activeRenderer = null;

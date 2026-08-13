@@ -7,6 +7,7 @@ import {
 } from 'pixi.js';
 
 import type { FlxCamera } from '../core/flx-camera';
+import type { PointLike } from '../math/flx-point';
 import {
   FLX_CAMERA_HOST_SERVICE,
   type FlxCameraHost,
@@ -32,6 +33,14 @@ export interface FlxCameraView {
   readonly container: Container;
   readonly output: Sprite;
   readonly target: RenderTexture;
+}
+
+/** CPU-authoritative result of debugger object picking. @public */
+export interface FlxCameraObjectPick {
+  readonly camera: FlxCamera;
+  readonly object: FlxObject;
+  readonly worldX: number;
+  readonly worldY: number;
 }
 
 interface RenderEntry {
@@ -74,6 +83,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
     RenderEntry
   >();
   #destroyed = false;
+  #selectedObject: FlxObject | null = null;
 
   constructor(renderer: Renderer, outputStage: Container, context: FlxContext) {
     this.#renderer = renderer;
@@ -114,6 +124,53 @@ export class FlxCameraRenderer implements FlxCameraHost {
     FlxSprite | FlxTilemap | FlxEmitter
   > {
     return this.#entries.keys();
+  }
+
+  get selectedObject(): FlxObject | null {
+    return this.#selectedObject;
+  }
+
+  set selectedObject(value: FlxObject | null) {
+    this.#selectedObject = value;
+  }
+
+  /** Picks the topmost registered object at a logical screen coordinate. */
+  pickObject(point: Readonly<PointLike>): FlxCameraObjectPick | null {
+    this.#assertUsable();
+    const cameras = [...this.#context.cameras].reverse();
+    const objects = [...this.#entries.keys()].reverse();
+    for (const camera of cameras) {
+      if (
+        !camera.exists ||
+        !camera.visible ||
+        !camera.containsScreenPoint(point)
+      ) {
+        continue;
+      }
+      const world = camera.screenToWorld(point);
+      for (const object of objects) {
+        if (object instanceof FlxEmitter) continue;
+        const routedCameras = object.cameras ?? this.#context.cameras;
+        if (
+          !routedCameras.includes(camera) ||
+          !object.exists ||
+          !object.visible
+        ) {
+          continue;
+        }
+        const worldX = world.x + camera.scroll.x * (object.scrollFactor.x - 1);
+        const worldY = world.y + camera.scroll.y * (object.scrollFactor.y - 1);
+        if (
+          worldX >= object.x &&
+          worldX < object.x + object.width &&
+          worldY >= object.y &&
+          worldY < object.y + object.height
+        ) {
+          return { camera, object, worldX, worldY };
+        }
+      }
+    }
+    return null;
   }
 
   /** Logical cameras in render order. @internal */
@@ -186,6 +243,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
     const entry = this.#entries.get(object);
     if (entry === undefined) return false;
     this.#entries.delete(object);
+    if (this.#selectedObject === object) this.#selectedObject = null;
     entry.handle.view.removeFromParent();
     if (destroyHandle) entry.handle.destroy();
     return true;
@@ -198,6 +256,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
       entry.handle.destroy();
     }
     this.#entries.clear();
+    this.#selectedObject = null;
   }
 
   getCameraView(camera: FlxCamera): FlxCameraView | null {
@@ -273,6 +332,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
     }
     for (const entry of this.#entries.values()) entry.handle.destroy();
     this.#entries.clear();
+    this.#selectedObject = null;
     for (const camera of [...this.#views.keys()]) this.removeCamera(camera);
     this.#cameraPass.destroy({ children: true });
   }
@@ -366,6 +426,8 @@ export class FlxCameraRenderer implements FlxCameraHost {
           )
           .stroke({ alpha: 0.65, color, pixelLine: true, width: 1 });
       }
+      if (object === this.#selectedObject)
+        this.#drawSelectedObject(object, camera);
     }
 
     const pathDisplay = this.#context.getPlugin(DebugPathDisplay);
@@ -415,6 +477,17 @@ export class FlxCameraRenderer implements FlxCameraHost {
     graphics
       .rect(0, 0, camera.width, camera.height)
       .fill({ alpha: parts.alpha * progress, color: parts.color });
+  }
+
+  #drawSelectedObject(object: FlxObject, camera: FlxCamera): void {
+    this.#debug
+      .rect(
+        object.x - Math.trunc(camera.scroll.x * object.scrollFactor.x),
+        object.y - Math.trunc(camera.scroll.y * object.scrollFactor.y),
+        object.width,
+        object.height,
+      )
+      .stroke({ alpha: 1, color: 0xfacc15, pixelLine: true, width: 2 });
   }
 
   #syncOutputOrder(): void {

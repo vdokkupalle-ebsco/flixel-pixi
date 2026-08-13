@@ -1463,6 +1463,18 @@ export interface FlxCameraLike {
 }
 
 // @public
+export interface FlxCameraObjectPick {
+    // (undocumented)
+    readonly camera: FlxCamera;
+    // (undocumented)
+    readonly object: FlxObject;
+    // (undocumented)
+    readonly worldX: number;
+    // (undocumented)
+    readonly worldY: number;
+}
+
+// @public
 export class FlxCameraRenderer implements FlxCameraHost {
     constructor(renderer: Renderer, outputStage: Container, context: FlxContext);
     // (undocumented)
@@ -1481,6 +1493,7 @@ export class FlxCameraRenderer implements FlxCameraHost {
     get destroyed(): boolean;
     // (undocumented)
     getCameraView(camera: FlxCamera): FlxCameraView | null;
+    pickObject(point: Readonly<PointLike>): FlxCameraObjectPick | null;
     // (undocumented)
     get registeredObjectCount(): number;
     // (undocumented)
@@ -1494,6 +1507,9 @@ export class FlxCameraRenderer implements FlxCameraHost {
     get renderTargetBytes(): number;
     // (undocumented)
     resize(resolution?: number): void;
+    // (undocumented)
+    get selectedObject(): FlxObject | null;
+    set selectedObject(value: FlxObject | null);
     snapshotCamera(camera: FlxCamera): Promise<{
         height: number;
         pixels: Uint8ClampedArray;
@@ -3111,6 +3127,40 @@ export class FlxObject extends FlxBasic {
     x: number;
     // (undocumented)
     y: number;
+}
+
+// @public
+export class FlxObjectInspector {
+    constructor(renderer: FlxCameraRenderer, options: FlxObjectInspectorOptions);
+    attach(target: HTMLElement): () => void;
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    detach(target: HTMLElement): void;
+    // (undocumented)
+    enabled: boolean;
+    selectAt(point: Readonly<PointLike>): FlxCameraObjectPick | null;
+    // (undocumented)
+    get selectedObject(): FlxObject | null;
+    // (undocumented)
+    get selection(): FlxCameraObjectPick | null;
+}
+
+// @public
+export type FlxObjectInspectorModifier = 'alt' | 'control' | 'meta' | 'shift' | false;
+
+// @public
+export interface FlxObjectInspectorOptions {
+    // (undocumented)
+    readonly logicalHeight: number;
+    // (undocumented)
+    readonly logicalWidth: number;
+    readonly modifier?: FlxObjectInspectorModifier;
+    // (undocumented)
+    readonly onSelectionChange?: (selection: FlxCameraObjectPick | null) => void;
+    readonly watch?: FlxWatch;
 }
 
 // @public

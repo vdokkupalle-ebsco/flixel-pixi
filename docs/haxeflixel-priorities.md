@@ -456,6 +456,9 @@ Current slice:
 - Getter-backed `FlxWatch.track()` values are read-only by default. Editing
   requires explicit parse/validate/set callbacks and passes through a global
   mutation guard; keyed Watch rows preserve focused drafts across frames.
+- `FlxObjectInspector` provides modifier-gated pointer selection using CPU
+  bounds, topmost camera/object order, and camera-aware inverse transforms. The
+  optional renderer outline and selection watches have explicit cleanup.
 
 ### Utilities and frontend normalization
 

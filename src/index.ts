@@ -204,7 +204,10 @@ export type {
 export { FlxTilemapBuffer } from './tilemap/flx-tilemap-buffer';
 export type { FlxRenderHandle } from './rendering/flx-render-handle';
 export { FlxCameraRenderer } from './rendering/flx-camera-renderer';
-export type { FlxCameraView } from './rendering/flx-camera-renderer';
+export type {
+  FlxCameraObjectPick,
+  FlxCameraView,
+} from './rendering/flx-camera-renderer';
 export { FlxSpriteRenderHandle } from './rendering/flx-sprite-render-handle';
 export { FlxGraphicsRenderHandle } from './rendering/flx-graphics-render-handle';
 export { FlxStripRenderHandle } from './rendering/flx-strip-render-handle';
@@ -314,6 +317,11 @@ export type {
   FlxConsoleOptions,
   FlxConsoleResult,
 } from './debugger/flx-console';
+export { FlxObjectInspector } from './debugger/flx-object-inspector';
+export type {
+  FlxObjectInspectorModifier,
+  FlxObjectInspectorOptions,
+} from './debugger/flx-object-inspector';
 export { FlxLog, FLX_LOG_SERVICE } from './debugger/flx-log';
 export type { LogEntry } from './debugger/flx-log';
 export { FlxWatch, FLX_WATCH_SERVICE } from './debugger/flx-watch';

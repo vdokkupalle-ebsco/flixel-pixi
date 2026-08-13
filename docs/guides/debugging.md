@@ -79,6 +79,33 @@ focused drafts survive live updates. Enter or **Apply** submits an edit; Escape
 restores the current value. Parser, validation, guard, getter, and setter errors
 are reported inline without escaping into the game loop.
 
+### Pointer object inspection
+
+`FlxObjectInspector` attaches optional Alt+click selection to a canvas while
+normal pointer input passes through unchanged:
+
+```ts
+const inspector = new FlxObjectInspector(renderer, {
+  logicalWidth: 640,
+  logicalHeight: 480,
+  watch: game.watch,
+});
+
+inspector.attach(app.canvas);
+```
+
+Picking walks cameras and registered objects in reverse render order, uses the
+camera's inverse zoom/rotation/scale transform, and tests authoritative CPU
+bounds rather than Pixi hit areas. The selected object receives a yellow camera-
+local outline and read-only `selection.x/y/width/height` Watch entries. Emitters
+are intentionally excluded because their aggregate bounds are not authoritative
+game-object collision bounds. `destroy()` detaches pointer listeners, clears the
+outline, and removes selection watches.
+
+The modifier is configurable (`alt`, `control`, `meta`, `shift`, or `false`). A
+matching debug click is intercepted before game input; non-matching clicks are
+never cancelled.
+
 Keyboard: arrow keys move between tabs. In the Console input, Up/Down recalls
 history and Tab completes an unambiguous command. Controls expose `aria-*`
 labels for assistive tech.
