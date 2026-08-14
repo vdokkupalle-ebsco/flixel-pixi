@@ -1,98 +1,97 @@
 # flixel-pixi
 
-`flixel-pixi` is a TypeScript port of Adam Saltsman's original ActionScript 3
-Flixel engine, using PixiJS v8 as its browser rendering foundation.
+`flixel-pixi` is a browser-native TypeScript game engine that ports the original
+ActionScript 3 Flixel API onto PixiJS v8. It combines a deterministic fixed-step
+game loop with modern rendering, input, audio, assets, accessibility, and
+responsive browser integration.
 
-The engine includes playable public-API samples, a complete upstream API ledger,
-and capability-focused browser demos. It is currently in pre-1.0 stabilization.
-The pinned external source-port and independent clean-room review are complete.
-Current work is release hardening toward the `0.1.0-rc.1` package candidate. See
-[ROADMAP.md](ROADMAP.md).
+The project is currently on the `0.1.0-rc.*` prerelease line. APIs may change
+between release candidates when real-game validation exposes a concrete issue.
 
-## Prerequisites
+## Install
 
-- Node.js 22.12 or newer.
-- npm 10 or newer.
-
-## Verify a fresh clone
-
-The complete verification flow is one shell command:
+The first npm prerelease is being prepared. After it is announced, install the
+engine and its PixiJS peer from the `next` channel:
 
 ```bash
-npm ci && npx playwright install chromium firefox webkit && npm run verify
+npm install flixel-pixi@next pixi.js@^8.19.0
 ```
 
-On Linux CI, use `npx playwright install --with-deps chromium firefox webkit` so
-browser system dependencies are installed too.
+Supported production browsers follow the Vite 8 Baseline Widely Available
+target: Chrome 111+, Edge 111+, Firefox 114+, Safari 16.4+, and iOS Safari
+16.4+. WebGL is required; WebGPU is optional and falls back to WebGL. Internet
+Explorer and legacy embedded WebViews are not supported. The documented
+development workflow requires Node.js 22.12 or newer.
 
-`npm run verify` checks formatting, linting, types, unit coverage, production
-builds, the public API report, the packed npm artifact in a clean consumer,
-benchmark/bundle reports, and the Playwright browser suites.
+## Quick start
 
-## Development
+Add a host element to the page:
 
-```bash
-npm install
-npm run dev
+```html
+<div id="game"></div>
 ```
 
-The demo index starts on Vite's displayed local URL. Capability routes include
-`/rendering.html`, `/sprites-text.html`, `/cameras.html`, `/tilemaps.html`,
-`/input.html`, `/effects.html`, `/platform-services.html`, `/replay.html`, and
-`/debugger.html`. The root route remains the minimal Pixi lifecycle smoke test.
+Create a state and boot the browser application:
 
-Useful commands:
+```ts
+import { createBrowserGame, FlxSprite, FlxState } from 'flixel-pixi';
 
-| Command                  | Purpose                                                            |
-| ------------------------ | ------------------------------------------------------------------ |
-| `npm run build`          | Build declarations, ESM library, smoke example, and bundle report. |
-| `npm run test`           | Run headless unit tests.                                           |
-| `npm run test:e2e`       | Run lifecycle, GPU isolation, and high-DPI camera checks.          |
-| `npm run test:matrix`    | Run the blocking desktop/mobile browser-device matrix.             |
-| `npm run test:perf`      | Run serial Chromium render-FPS floors and the teardown soak.       |
-| `npm run test:soak:30m`  | Run the release-hardening 30-minute lifecycle/resource soak.       |
-| `npm run check:budgets`  | Enforce bundle and deterministic CPU benchmark ceilings.           |
-| `npm run check:package`  | Pack, install, build, and browser-test the npm artifact.           |
-| `npm run verify:budgets` | Enforce every reference-hardware performance/resource budget.      |
-| `npm run test:coverage`  | Run unit tests with initial coverage gates.                        |
-| `npm run bench`          | Write fixed-loop and pixel-operation benchmark JSON.               |
-| `npm run api:check`      | Verify the committed public API report.                            |
-| `npm run api:update`     | Intentionally update the API report after review.                  |
-| `npm run format`         | Format supported project files.                                    |
+class PlayState extends FlxState {
+  override create(): void {
+    const player = new FlxSprite(304, 224);
+    player.makeGraphic(32, 32, 0x22c55e);
+    this.add(player);
+  }
+}
 
-## Source baseline
+const host = document.querySelector<HTMLElement>('#game');
+if (!host) throw new Error('Missing #game host.');
 
-Compatibility is pinned to Flixel commit
-`8989e5044be072c4abbbaa1317c9854786f6447f`. The baseline contains 43 AS3 classes,
-766 public members, and 14,928 source lines under `org/flixel`.
+const application = await createBrowserGame({
+  host,
+  initialState: PlayState,
+  width: 640,
+  height: 480,
+});
 
-- [Compatibility ledger](docs/compatibility.md)
-- [HaxeFlixel parity priorities](docs/haxeflixel-priorities.md)
-- [Architecture decisions](docs/adr/README.md)
-- [Lifecycle guide](docs/guides/lifecycle.md)
-- [Loading and preloader guide](docs/guides/loading.md)
-- [Making games (pools, actions, sync)](docs/guides/making-games.md)
-- [Animation and frame collections](docs/guides/animation.md)
-- [Containers and sprite groups](docs/guides/containers.md)
-- [UI, accessible controls, bitmap fonts, and native text input](docs/guides/ui.md)
-- [Gamepads](docs/guides/gamepads.md)
-- [Tweens and easing](docs/guides/tweens.md)
-- [Performance guide](docs/guides/performance.md)
-- [Browser guide](docs/guides/browser.md)
-- [Debugging guide](docs/guides/debugging.md)
-- [Extension points](docs/guides/extensions.md)
-- [Game-maker developer-experience evidence](docs/dx-evidence.md)
-- [Historical port evidence](docs/history/porting/README.md)
-- [Current roadmap](ROADMAP.md)
-- [Browser support policy](docs/browser-support.md)
-- [Browser and device release matrix](docs/browser-device-matrix.md)
-- [Package and release procedure](docs/package-release.md)
+window.addEventListener('pagehide', () => application.destroy(), {
+  once: true,
+});
+```
+
+`createBrowserGame` owns Pixi initialization, fixed simulation updates,
+rendering, browser input, loading, viewport scaling, and teardown. In a real
+application, retain the returned object and call `destroy()` only when the game
+is unmounted.
+
+## Highlights
+
+- Deterministic states, groups, motion, collision, timers, tweens, paths, and
+  replay.
+- PixiJS sprites, animation, text, tilemaps, cameras, filters, meshes, particles,
+  and responsive viewports.
+- Keyboard, pointer, touch, swipe, gamepad, virtual controls, remappable actions,
+  and accessible native UI overlays.
+- Asset bundles, customizable preloaders, Web Audio, spatial sound, storage,
+  debugger tools, performance budgets, and explicit resource teardown.
+- Playable examples, including platform, swipe, UI, rendering, and the pinned
+  Flx-Invaders compatibility port.
+
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [Lifecycle and browser boot](docs/guides/lifecycle.md)
+- [Making games](docs/guides/making-games.md)
+- [Browser support](docs/browser-support.md)
+- [Compatibility with the AS3 baseline](docs/compatibility.md)
 - [Versioning and API stability](docs/versioning.md)
-- [Upgrade guide](docs/upgrading.md)
+- [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
-- [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+Import public APIs only from `flixel-pixi`; internal `src/**` paths and deep
+`dist/**` imports are unsupported.
 
 ## License
 
-The port is MIT licensed. The original Flixel copyright and license are
+`flixel-pixi` is MIT licensed. The original Flixel copyright and license are
 preserved in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
