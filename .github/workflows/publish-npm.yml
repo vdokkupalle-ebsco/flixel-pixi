@@ -72,7 +72,5 @@ jobs:
       - name: Preview npm publication
         run: npm publish --dry-run --access public --tag next
 
-      - name: Publish prerelease with provenance
-        run: npm publish --access public --tag next --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish prerelease with npm trusted publishing
+        run: npm publish --access public --tag next
