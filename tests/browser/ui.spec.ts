@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const UI_DEMO = 'http://127.0.0.1:4174/ui/';
 
-test('operates rendered UI through native keyboard accessibility controls', async ({
+test('operates rendered UI through native keyboard accessibility controls @cross-browser', async ({
   page,
 }) => {
   await page.goto(UI_DEMO);

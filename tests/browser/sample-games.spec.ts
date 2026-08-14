@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const GAMES = 'http://127.0.0.1:4174';
 
 test.describe('Hello sample', () => {
-  test('boots, enters play, moves on arrow keys, destroys cleanly', async ({
+  test('boots, enters play, moves on arrow keys, destroys cleanly @cross-browser', async ({
     page,
   }) => {
     await page.goto(`${GAMES}/hello/`);
@@ -241,11 +241,15 @@ test.describe('Pinned Flx-Invaders source port', () => {
     );
     expect(after).toBeGreaterThan(before);
 
-    await page.keyboard.down('Space');
-    await page.waitForFunction(
-      () => (window.__FLIXEL_PIXI_INVADERS__?.activePlayerBullets?.() ?? 0) > 0,
+    const shotsBefore = await page.evaluate(
+      () => window.__FLIXEL_PIXI_INVADERS__?.playerShotsFired?.() ?? 0,
     );
-    await page.keyboard.up('Space');
+    await page.keyboard.press('Space');
+    await page.waitForFunction(
+      (previous) =>
+        (window.__FLIXEL_PIXI_INVADERS__?.playerShotsFired?.() ?? 0) > previous,
+      shotsBefore,
+    );
 
     await page.evaluate(() => {
       window.__FLIXEL_PIXI_INVADERS__?.hitFirstAlien?.();

@@ -23,6 +23,8 @@ function requireGraphic(id: string): FlxGraphic {
 }
 
 class PlayerShip extends FlxSprite {
+  shotsFired = 0;
+
   constructor(readonly bullets: FlxGroup<FlxSprite>) {
     super(FlxG.width / 2 - 6, FlxG.height - 12, requireGraphic(SHIP_ASSET));
   }
@@ -45,6 +47,7 @@ class PlayerShip extends FlxSprite {
     if (bullet === null) return;
     bullet.reset(this.x + this.width / 2 - bullet.width / 2, this.y);
     bullet.velocity.y = -140;
+    this.shotsFired++;
   }
 }
 

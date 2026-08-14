@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('initializes, renders, resizes, and destroys the Pixi application', async ({
+test('initializes, renders, resizes, and destroys the Pixi application @cross-browser @renderer-preflight', async ({
   page,
 }) => {
   await page.goto('/');

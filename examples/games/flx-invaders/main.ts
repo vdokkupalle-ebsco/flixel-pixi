@@ -4,12 +4,12 @@ import { ALIEN_ASSET, FlxInvadersState, SHIP_ASSET } from './game';
 declare global {
   interface Window {
     __FLIXEL_PIXI_INVADERS__?: {
-      activePlayerBullets?: () => number;
       alienCount?: () => number;
       destroy?: () => void;
       destroyed: boolean;
       hitFirstAlien?: () => void;
       lose?: () => void;
+      playerShotsFired?: () => number;
       playerX?: () => number;
       ready: boolean;
       statusText?: () => string;
@@ -73,9 +73,6 @@ createBrowserGame({
     const state = (): FlxInvadersState | null =>
       app.game.state instanceof FlxInvadersState ? app.game.state : null;
     window.__FLIXEL_PIXI_INVADERS__ = {
-      activePlayerBullets: () =>
-        state()?.playerBullets.members.filter((bullet) => bullet?.exists)
-          .length ?? 0,
       alienCount: () => state()?.aliens.countLiving() ?? 0,
       destroy: () => app.destroy(),
       destroyed: false,
@@ -93,6 +90,7 @@ createBrowserGame({
         }
       },
       lose: () => state()?.player.kill(),
+      playerShotsFired: () => state()?.player.shotsFired ?? 0,
       playerX: () => state()?.player.x ?? Number.NaN,
       ready: true,
       statusText: () => state()?.status.text ?? '',

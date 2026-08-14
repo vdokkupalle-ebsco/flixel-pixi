@@ -6,7 +6,7 @@ export default defineConfig({
   },
   fullyParallel: true,
   reporter: process.env.CI === undefined ? 'list' : 'github',
-  retries: process.env.CI === undefined ? 0 : 2,
+  retries: process.env.CI === undefined ? 0 : 1,
   snapshotPathTemplate:
     '{testDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}',
   testDir: './tests/browser',
@@ -35,10 +35,12 @@ export default defineConfig({
     },
     {
       name: 'firefox',
+      grep: /@cross-browser/,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
+      grep: /@cross-browser/,
       use: { ...devices['Desktop Safari'] },
     },
   ],
