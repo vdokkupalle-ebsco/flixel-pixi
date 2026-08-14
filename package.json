@@ -4,7 +4,7 @@
   "description": "A TypeScript port of the original AS3 Flixel engine using PixiJS v8.",
   "type": "module",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vdokkupalle-ebsco/flixel-pixi.git"

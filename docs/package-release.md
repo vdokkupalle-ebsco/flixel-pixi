@@ -40,21 +40,24 @@ token to `.npmrc`.
 
 ## Publication guard
 
-The repository intentionally uses the prerelease version `0.1.0-rc.1` with
-`private: true` during hardening. `npm pack` still permits artifact verification,
-while `npm publish` is blocked. The npm `next` tag is configured so an approved
-prerelease cannot accidentally replace `latest`.
+The repository uses the prerelease version `0.1.0-rc.1` and is publishable only
+after the release-preparation change is approved. The npm `next` tag is
+configured so the release candidate cannot accidentally replace `latest`.
 
 Only after explicit release approval:
 
 1. confirm the release-candidate version and release notes;
 2. complete the manual physical-browser/device matrix;
-3. remove the private guard in the release commit;
+3. confirm that the private guard was removed in the release commit;
 4. run `npm ci`, `npm run verify`, and `npm run verify:budgets` from that commit;
-5. publish from the approved GitHub workflow with npm trusted publishing or an
-   equivalent OIDC setup so `publishConfig.provenance` produces signed
-   provenance;
-6. install and validate the registry tarball, then either promote it or record
+5. for the first publication only, check out the immutable release tag and run
+   `npm publish --access public --tag next --provenance=false` with an npm login
+   protected by 2FA;
+6. configure npm trusted publishing for `publish-npm.yml` and the `npm-release`
+   GitHub environment, then remove the workflow's `NPM_TOKEN` fallback;
+7. publish later releases from the approved GitHub workflow so npm generates
+   signed provenance through OIDC automatically;
+8. install and validate the registry tarball, then either promote it or record
    and fix the release-candidate defect.
 
 Publishing is never part of `npm run verify` or `npm run check:package`.
