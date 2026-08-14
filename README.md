@@ -6,7 +6,7 @@ Flixel engine, using PixiJS v8 as its browser rendering foundation.
 The engine includes playable public-API samples, a complete upstream API ledger,
 and capability-focused browser demos. It is currently in pre-1.0 stabilization.
 The pinned external source-port and independent clean-room review are complete.
-Current work is release hardening toward the 1.0 candidate. See
+Current work is release hardening toward the `0.1.0-rc.1` package candidate. See
 [ROADMAP.md](ROADMAP.md).
 
 ## Prerequisites
@@ -87,6 +87,9 @@ Compatibility is pinned to Flixel commit
 - [Browser support policy](docs/browser-support.md)
 - [Browser and device release matrix](docs/browser-device-matrix.md)
 - [Package and release procedure](docs/package-release.md)
+- [Versioning and API stability](docs/versioning.md)
+- [Upgrade guide](docs/upgrading.md)
+- [Changelog](CHANGELOG.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## License

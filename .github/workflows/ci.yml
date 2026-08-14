@@ -36,6 +36,7 @@ jobs:
         with:
           if-no-files-found: ignore
           name: release-hardening-reports
+          retention-days: 7
           path: |
             coverage/
             playwright-report/

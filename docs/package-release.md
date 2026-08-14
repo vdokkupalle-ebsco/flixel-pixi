@@ -32,23 +32,29 @@ The temporary consumer links the repository's already-installed PixiJS peer so
 the test is deterministic and does not depend on registry access. It does not
 publish or modify the user's npm cache.
 
+The committed project-level [`.npmrc`](../.npmrc) pins package operations to
+`https://registry.npmjs.org/`. This prevents a user- or organization-level npm
+configuration from accidentally packing, resolving, or publishing through a
+different registry. Authentication remains outside the repository; never add a
+token to `.npmrc`.
+
 ## Publication guard
 
-The repository intentionally remains at version `0.0.0` with `private: true`
-during hardening. `npm pack` still permits artifact verification, while
-`npm publish` is blocked.
+The repository intentionally uses the prerelease version `0.1.0-rc.1` with
+`private: true` during hardening. `npm pack` still permits artifact verification,
+while `npm publish` is blocked. The npm `next` tag is configured so an approved
+prerelease cannot accidentally replace `latest`.
 
 Only after explicit release approval:
 
-1. choose and record the release-candidate version;
-2. freeze the API report and complete the changelog and upgrade policy;
-3. complete the manual physical-browser/device matrix;
-4. remove the private guard in the release commit;
-5. run `npm ci`, `npm run verify`, and `npm run verify:budgets` from that commit;
-6. publish from the approved GitHub workflow with npm trusted publishing or an
+1. confirm the release-candidate version and release notes;
+2. complete the manual physical-browser/device matrix;
+3. remove the private guard in the release commit;
+4. run `npm ci`, `npm run verify`, and `npm run verify:budgets` from that commit;
+5. publish from the approved GitHub workflow with npm trusted publishing or an
    equivalent OIDC setup so `publishConfig.provenance` produces signed
    provenance;
-7. install and validate the registry tarball, then either promote it or record
+6. install and validate the registry tarball, then either promote it or record
    and fix the release-candidate defect.
 
 Publishing is never part of `npm run verify` or `npm run check:package`.

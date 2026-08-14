@@ -57,7 +57,7 @@ started merely to match a Haxe class count.
 |    13 |    P2    | Utilities and frontend normalization            | Complete             | Shared helpers reduce engine duplication without recreating target-specific Haxe abstractions.     |
 |    14 |    P3    | Optional platform capabilities                  | Demand-driven        | Each capability has a real browser use case, web API mapping, permission policy, and fallback.     |
 |    15 |    P0    | External compatibility validation               | Complete             | A pinned external game is playable using documented public APIs and has no unclassified gaps.      |
-|    16 |    P0    | Release hardening and 1.0 candidate             | In progress          | Automated matrix, budgets, and package artifact pass; manual RC approval and publication remain.   |
+|    16 |    P0    | Release hardening and 0.1 candidate             | In progress          | API/package gates pass; physical-device approval and prerelease publication remain.                |
 
 Only one feature checkpoint should normally be active. Release hardening may
 run continuously alongside feature work.

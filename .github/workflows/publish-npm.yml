@@ -1,0 +1,78 @@
+name: Publish npm prerelease
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact package version to publish
+        required: true
+        type: string
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Verify and publish immutable tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-release
+
+    steps:
+      - name: Require an immutable version tag
+        env:
+          EXPECTED_REF: refs/tags/v${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_REF" != "$EXPECTED_REF" ]; then
+            echo "Run this workflow from $EXPECTED_REF, not $GITHUB_REF." >&2
+            exit 1
+          fi
+
+      - name: Check out release tag
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js and npmjs.org
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Verify release metadata
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+        run: |
+          ACTUAL_VERSION="$(node --input-type=module -e 'import packageJson from "./package.json" with { type: "json" }; process.stdout.write(packageJson.version)')"
+          if [ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "package.json is $ACTUAL_VERSION; expected $EXPECTED_VERSION." >&2
+            exit 1
+          fi
+          if [ "$(node --input-type=module -e 'import packageJson from "./package.json" with { type: "json" }; process.stdout.write(String(packageJson.private))')" = "true" ]; then
+            echo "package.json is still private; publication is intentionally blocked." >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install browser engines
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Verify release gates
+        run: npm run verify
+
+      - name: Verify performance and resource budgets
+        run: npm run verify:budgets
+
+      - name: Preview npm publication
+        run: npm publish --dry-run --access public --tag next
+
+      - name: Publish prerelease with provenance
+        run: npm publish --access public --tag next --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

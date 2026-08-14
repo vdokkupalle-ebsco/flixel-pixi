@@ -259,6 +259,10 @@ try {
   );
   assert(packageJson.type === 'module', 'Packed package is not ESM.');
   assert(
+    /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(packageJson.version),
+    `Package version is invalid: ${packageJson.version}.`,
+  );
+  assert(
     packageJson.exports?.['.']?.import === './dist/index.js',
     'Root ESM export is wrong.',
   );
@@ -275,6 +279,17 @@ try {
   assert(
     packageJson.publishConfig?.provenance === true,
     'npm provenance is not enabled.',
+  );
+  if (packageJson.version.includes('-')) {
+    assert(
+      packageJson.publishConfig?.tag === 'next',
+      'Prerelease packages must use the npm next tag.',
+    );
+  }
+  const changelog = await readFile(join(installedRoot, 'CHANGELOG.md'), 'utf8');
+  assert(
+    changelog.includes(`## ${packageJson.version}`),
+    `CHANGELOG.md has no entry for ${packageJson.version}.`,
   );
 
   const sourceMap = JSON.parse(

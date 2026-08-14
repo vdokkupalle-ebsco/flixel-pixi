@@ -12,7 +12,9 @@ and unsupported work. This roadmap remains the release-outcome view; avoid
 duplicating the detailed parity list here.
 
 The modern parity sequence through the pinned external game port is complete.
-The active checkpoint is release hardening and the 1.0 candidate.
+The active checkpoint is release hardening and the `0.1.0-rc.1` candidate. A
+1.0 release is intentionally deferred until multiple public release cycles and
+real games validate the API.
 
 ## Implemented engine capabilities
 
@@ -61,7 +63,7 @@ and documentation feedback is resolved or explicitly tracked.
   semantic HUD controls, repeated teardown pressure, and Chromium memory-pressure
   notifications. Physical Edge, Android, and iOS/Safari approval remains in the
   final release-candidate pass.
-- Complete: the npm artifact is restricted to eight release files and a 750 KB
+- Complete: the npm artifact is restricted to nine release files and a 750 KB
   compressed ceiling. `npm run check:package` packs with an isolated cache,
   installs into a clean project, and verifies ESM/types/source maps/licenses,
   export boundaries, Vite bundling, Pixi peer use, provenance configuration, and
@@ -70,17 +72,19 @@ and documentation feedback is resolved or explicitly tracked.
 Exit condition: no critical or high-severity correctness bugs remain and the
 published browser/device budgets pass.
 
-## 1.0 release candidate
+## 0.1 release candidate
 
-- Freeze the public API and regenerate the API report.
+- Complete: freeze the public API baseline and define prerelease/stable
+  compatibility rules.
 - Complete: test the packed npm artifact from a clean consumer project.
 - Complete: verify declarations, source maps, exports, licenses, provenance
   configuration, and a representative browser boot/destroy example.
-- Publish a release candidate, complete the final support matrix, and write the
-  changelog and upgrade policy.
+- Complete: establish the changelog and upgrade policy for `0.1.0-rc.1`.
+- Publish the release candidate and complete the final physical-device support
+  matrix.
 
 Exit condition: the release candidate installs and runs from the package alone,
-all verification lanes pass, and the 1.0 release is approved.
+all verification lanes pass, and the first external prerelease is approved.
 
 ## Historical record
 

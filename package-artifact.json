@@ -1,6 +1,7 @@
 {
   "version": 1,
   "files": [
+    "CHANGELOG.md",
     "LICENSE",
     "README.md",
     "THIRD_PARTY_NOTICES.md",
