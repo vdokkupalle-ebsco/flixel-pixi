@@ -41,6 +41,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:matrix": "playwright test --config=playwright.matrix.config.ts",
     "test:perf": "RENDER_PERF_GATES=1 playwright test tests/browser/performance-soak.spec.ts --project=chromium --workers=1",
     "test:soak:30m": "SOAK_MINUTES=30 playwright test tests/browser/performance-soak.spec.ts --project=chromium --workers=1 --grep 'Boot/destroy soak'",
     "bench": "vitest bench --run --outputJson=reports/benchmarks.json",
@@ -49,7 +50,7 @@
     "api:update": "npm run build:types && api-extractor run --local --verbose",
     "api:check": "npm run build:types && api-extractor run --verbose",
     "report:bundle": "node scripts/report-bundle-size.mjs",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && npm run bench && npm run check:games-imports && npm run test:e2e"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && npm run bench && npm run check:games-imports && npm run test:e2e && npm run test:matrix"
   },
   "peerDependencies": {
     "pixi.js": "^8.19.0"

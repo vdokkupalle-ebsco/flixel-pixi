@@ -27,7 +27,7 @@ jobs:
       - name: Install browser engines
         run: npx playwright install --with-deps chromium firefox webkit
 
-      - name: Verify through Phase 4 sprite compatibility
+      - name: Verify release hardening and browser matrix
         run: npm run verify
 
       - name: Upload verification reports
@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: ignore
-          name: phase-4-reports
+          name: release-hardening-reports
           path: |
             coverage/
             playwright-report/

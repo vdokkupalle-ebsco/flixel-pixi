@@ -29,6 +29,12 @@
     }
   },
   "browser": {
+    "deviceMatrix": {
+      "maxDevicePixelRatio": 2,
+      "pressureCycles": 5,
+      "readyTimeoutMs": 15000,
+      "resumeSimulationStepsMax": 12
+    },
     "spriteStressMedianFpsMin": {
       "2000": 48,
       "5000": 28,

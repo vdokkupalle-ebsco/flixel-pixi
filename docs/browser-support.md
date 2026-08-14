@@ -37,6 +37,12 @@ covered by the Chromium engine lane until the release-candidate matrix adds a
 native Edge job. Real-device/mobile Safari and WebGPU lanes become blocking
 before the 1.0 release gate.
 
+The focused release matrix runs separately through `npm run test:matrix`. It
+covers Desktop Chrome, Desktop Firefox, Desktop Safari, Pixel 7/Chromium, and
+iPhone 15/WebKit profiles without making every showcase run under every mobile
+emulation. Its budgets and manual physical-device limitations are published in
+[browser-device-matrix.md](browser-device-matrix.md).
+
 The container showcase is covered in Chromium, Firefox, and WebKit. Its browser
 contract verifies nested composite rendering, fixed-step local/world coordinate
 stability, member-AABB collision, and recursive adapter teardown. Collision and
@@ -93,6 +99,8 @@ Release candidates additionally run `npm run verify:budgets` on the documented
 Apple M4 Pro reference profile. The portable CI lane continues to record
 benchmark reports without pretending that one machine's FPS floor applies to
 every hosted runner.
+The same candidates run `npm run test:matrix`; native Edge, physical Android,
+and physical iOS/Safari results remain explicit manual approval evidence.
 The input suite adds committed baselines plus real keyboard, pointer capture,
 blur-release, and touch-style cancellation assertions. These complement the
 multi-camera tilemap baselines and large-map benchmarks. Real-device/mobile

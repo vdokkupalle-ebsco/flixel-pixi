@@ -56,8 +56,11 @@ and documentation feedback is resolved or explicitly tracked.
   deterministic CPU means, median FPS floors for 2k/5k/10k sprite scenes, and
   renderer/audio/listener/teardown resource ceilings against the documented
   Apple M4 Pro reference profile. `npm run verify:budgets` passes.
-- Validate resize, fullscreen, focus, visibility, accessibility, and memory
-  pressure across the supported browser matrix.
+- Complete (automated): the focused five-profile browser/device matrix validates
+  resize/orientation, DPR bounds, fullscreen state, focus/visibility timing,
+  semantic HUD controls, repeated teardown pressure, and Chromium memory-pressure
+  notifications. Physical Edge, Android, and iOS/Safari approval remains in the
+  final release-candidate pass.
 
 Exit condition: no critical or high-severity correctness bugs remain and the
 published browser/device budgets pass.

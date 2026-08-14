@@ -65,5 +65,8 @@ isolated scheduler and GC stalls vary between otherwise equivalent runs.
 - `npm run check:budgets` — 9/9 static bundle/CPU budgets pass
 - `npm run test:perf` — 4/4 browser FPS/resource budgets pass
 - `npm run test:soak:30m` — 2,359 cycles pass over 30.2 minutes
-- Remaining for C13: browser/device matrix completion, package provenance, and
+- `npm run test:matrix` — five desktop/mobile profiles cover layout, lifecycle,
+  accessibility, pressure, and teardown contracts (22 pass; 3 unsupported
+  non-Chromium memory-pressure simulations skip explicitly)
+- Remaining for C13: physical-device release approval, package provenance, and
   the 1.0 publish

@@ -126,4 +126,6 @@ Apple M4 Pro reference profile passes nine static bundle/CPU limits, median
 sprite-stress floors of 48/28/14 FPS at 2k/5k/10k active sprites, and the named
 renderer/audio/listener/teardown resource ceilings. The next open gate is the
 supported-browser/device matrix for resize, fullscreen, focus, visibility,
-accessibility, and memory pressure.
+accessibility, and memory pressure. The automated five-profile matrix is now
+complete; native Edge and physical Android/iOS evidence is reserved for the
+final release-candidate approval.

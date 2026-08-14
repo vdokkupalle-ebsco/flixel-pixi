@@ -48,6 +48,7 @@ Useful commands:
 | `npm run build`          | Build declarations, ESM library, smoke example, and bundle report. |
 | `npm run test`           | Run headless unit tests.                                           |
 | `npm run test:e2e`       | Run lifecycle, GPU isolation, and high-DPI camera checks.          |
+| `npm run test:matrix`    | Run the blocking desktop/mobile browser-device matrix.             |
 | `npm run test:perf`      | Run serial Chromium render-FPS floors and the teardown soak.       |
 | `npm run test:soak:30m`  | Run the release-hardening 30-minute lifecycle/resource soak.       |
 | `npm run check:budgets`  | Enforce bundle and deterministic CPU benchmark ceilings.           |
@@ -83,6 +84,7 @@ Compatibility is pinned to Flixel commit
 - [Historical port evidence](docs/history/porting/README.md)
 - [Current roadmap](ROADMAP.md)
 - [Browser support policy](docs/browser-support.md)
+- [Browser and device release matrix](docs/browser-device-matrix.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## License
