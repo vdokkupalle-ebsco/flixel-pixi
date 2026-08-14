@@ -5,9 +5,10 @@
 
 ## Current release line
 
-`0.1.0-rc.1` is the first planned package release candidate. Release candidates
+`0.1.0-rc.1` is the first published package release candidate. Release candidates
 use the npm `next` tag and may contain documented breaking changes while real
-games validate the API. They must never replace the npm `latest` tag.
+games validate the API. After a stable release exists, prereleases must not move
+the npm `latest` tag.
 
 The repository remains `private: true` until publication is explicitly
 approved. The version number describes the artifact under test; it does not mean
