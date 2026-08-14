@@ -5,11 +5,26 @@
   "type": "module",
   "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vdokkupalle-ebsco/flixel-pixi.git"
+  },
+  "homepage": "https://github.com/vdokkupalle-ebsco/flixel-pixi#readme",
+  "bugs": {
+    "url": "https://github.com/vdokkupalle-ebsco/flixel-pixi/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "engines": {
     "node": ">=22.12.0"
   },
   "files": [
-    "dist",
+    "dist/index.js",
+    "dist/index.js.map",
+    "dist/index.d.ts",
+    "dist/tsdoc-metadata.json",
     "LICENSE",
     "README.md",
     "THIRD_PARTY_NOTICES.md"
@@ -46,11 +61,12 @@
     "test:soak:30m": "SOAK_MINUTES=30 playwright test tests/browser/performance-soak.spec.ts --project=chromium --workers=1 --grep 'Boot/destroy soak'",
     "bench": "vitest bench --run --outputJson=reports/benchmarks.json",
     "check:budgets": "npm run build:lib && npm run report:bundle && npm run bench && node scripts/check-performance-budgets.mjs",
+    "check:package": "npm run build:lib && npm run api:check && node scripts/check-package-artifact.mjs",
     "verify:budgets": "npm run check:budgets && npm run test:perf",
     "api:update": "npm run build:types && api-extractor run --local --verbose",
     "api:check": "npm run build:types && api-extractor run --verbose",
     "report:bundle": "node scripts/report-bundle-size.mjs",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && npm run bench && npm run check:games-imports && npm run test:e2e && npm run test:matrix"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && node scripts/check-package-artifact.mjs && npm run bench && npm run check:games-imports && npm run test:e2e && npm run test:matrix"
   },
   "peerDependencies": {
     "pixi.js": "^8.19.0"

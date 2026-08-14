@@ -26,8 +26,8 @@ On Linux CI, use `npx playwright install --with-deps chromium firefox webkit` so
 browser system dependencies are installed too.
 
 `npm run verify` checks formatting, linting, types, unit coverage, production
-builds, the public API report, benchmark/bundle reports, and the Playwright
-browser smoke test.
+builds, the public API report, the packed npm artifact in a clean consumer,
+benchmark/bundle reports, and the Playwright browser suites.
 
 ## Development
 
@@ -52,6 +52,7 @@ Useful commands:
 | `npm run test:perf`      | Run serial Chromium render-FPS floors and the teardown soak.       |
 | `npm run test:soak:30m`  | Run the release-hardening 30-minute lifecycle/resource soak.       |
 | `npm run check:budgets`  | Enforce bundle and deterministic CPU benchmark ceilings.           |
+| `npm run check:package`  | Pack, install, build, and browser-test the npm artifact.           |
 | `npm run verify:budgets` | Enforce every reference-hardware performance/resource budget.      |
 | `npm run test:coverage`  | Run unit tests with initial coverage gates.                        |
 | `npm run bench`          | Write fixed-loop and pixel-operation benchmark JSON.               |
@@ -85,6 +86,7 @@ Compatibility is pinned to Flixel commit
 - [Current roadmap](ROADMAP.md)
 - [Browser support policy](docs/browser-support.md)
 - [Browser and device release matrix](docs/browser-device-matrix.md)
+- [Package and release procedure](docs/package-release.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
 ## License

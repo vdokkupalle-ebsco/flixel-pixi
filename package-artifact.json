@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "files": [
+    "LICENSE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "dist/index.d.ts",
+    "dist/index.js",
+    "dist/index.js.map",
+    "dist/tsdoc-metadata.json",
+    "package.json"
+  ],
+  "packedBytesMax": 750000,
+  "unpackedBytesMax": 2200000
+}

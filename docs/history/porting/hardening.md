@@ -68,5 +68,8 @@ isolated scheduler and GC stalls vary between otherwise equivalent runs.
 - `npm run test:matrix` — five desktop/mobile profiles cover layout, lifecycle,
   accessibility, pressure, and teardown contracts (22 pass; 3 unsupported
   non-Chromium memory-pressure simulations skip explicitly)
-- Remaining for C13: physical-device release approval, package provenance, and
-  the 1.0 publish
+- `npm run check:package` — an eight-file, 464 KB tarball passes clean-consumer
+  ESM, declarations, source-map, license, provenance-config, Vite, and browser
+  lifecycle checks
+- Remaining for C13: physical-device release approval, changelog/upgrade policy,
+  signed release-candidate publication, and registry-tarball validation

@@ -61,6 +61,11 @@ and documentation feedback is resolved or explicitly tracked.
   semantic HUD controls, repeated teardown pressure, and Chromium memory-pressure
   notifications. Physical Edge, Android, and iOS/Safari approval remains in the
   final release-candidate pass.
+- Complete: the npm artifact is restricted to eight release files and a 750 KB
+  compressed ceiling. `npm run check:package` packs with an isolated cache,
+  installs into a clean project, and verifies ESM/types/source maps/licenses,
+  export boundaries, Vite bundling, Pixi peer use, provenance configuration, and
+  browser boot/destroy. The current artifact is 464 KB compressed.
 
 Exit condition: no critical or high-severity correctness bugs remain and the
 published browser/device budgets pass.
@@ -68,8 +73,9 @@ published browser/device budgets pass.
 ## 1.0 release candidate
 
 - Freeze the public API and regenerate the API report.
-- Test the packed npm artifact from a clean consumer project.
-- Verify declarations, source maps, exports, licenses, provenance, and examples.
+- Complete: test the packed npm artifact from a clean consumer project.
+- Complete: verify declarations, source maps, exports, licenses, provenance
+  configuration, and a representative browser boot/destroy example.
 - Publish a release candidate, complete the final support matrix, and write the
   changelog and upgrade policy.
 
