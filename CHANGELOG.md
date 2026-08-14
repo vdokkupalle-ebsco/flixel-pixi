@@ -9,11 +9,21 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
-## 0.1.0-rc.1 — planned
+## 0.1.0-rc.2 — 2026-08-14
 
-The first package release candidate. It intentionally uses the npm `next` tag
-and remains blocked from publication until the final approval steps are
-complete.
+The first release candidate published through npm Trusted Publishing. The
+runtime API and package contents are unchanged from `0.1.0-rc.1` apart from
+release metadata.
+
+### Changed
+
+- Replaced the long-lived npm token fallback with GitHub Actions OIDC.
+- Updated the release procedure after the initial npm publication.
+
+## 0.1.0-rc.1 — 2026-08-14
+
+The first package release candidate. It was published with the npm `next` tag
+through a one-time, 2FA-protected bootstrap release.
 
 ### Added
 

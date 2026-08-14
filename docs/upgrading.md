@@ -2,7 +2,7 @@
 
 This guide records consumer actions required when moving between package
 versions. The current entry starts from repository snapshots because
-`0.1.0-rc.1` is the first planned external package.
+`0.1.0-rc.1` is the first published external package.
 
 ## Repository snapshot to 0.1.0-rc.1
 
