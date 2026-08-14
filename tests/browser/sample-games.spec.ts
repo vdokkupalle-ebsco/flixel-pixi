@@ -241,11 +241,15 @@ test.describe('Pinned Flx-Invaders source port', () => {
     );
     expect(after).toBeGreaterThan(before);
 
-    await page.keyboard.down('Space');
-    await page.waitForFunction(
-      () => (window.__FLIXEL_PIXI_INVADERS__?.activePlayerBullets?.() ?? 0) > 0,
+    const shotsBefore = await page.evaluate(
+      () => window.__FLIXEL_PIXI_INVADERS__?.playerShotsFired?.() ?? 0,
     );
-    await page.keyboard.up('Space');
+    await page.keyboard.press('Space');
+    await page.waitForFunction(
+      (previous) =>
+        (window.__FLIXEL_PIXI_INVADERS__?.playerShotsFired?.() ?? 0) > previous,
+      shotsBefore,
+    );
 
     await page.evaluate(() => {
       window.__FLIXEL_PIXI_INVADERS__?.hitFirstAlien?.();
