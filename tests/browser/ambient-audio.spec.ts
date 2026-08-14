@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const AMBIENT_AUDIO_DEMO = 'http://127.0.0.1:4174/ambient-audio/';
 
-test('demonstrates viewport-gated spatial attenuation and panning', async ({
+test('demonstrates viewport-gated spatial attenuation and panning @cross-browser', async ({
   page,
 }) => {
   await page.goto(AMBIENT_AUDIO_DEMO);

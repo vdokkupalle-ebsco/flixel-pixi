@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const GAMES = 'http://127.0.0.1:4174';
 
 test.describe('Hello sample', () => {
-  test('boots, enters play, moves on arrow keys, destroys cleanly', async ({
+  test('boots, enters play, moves on arrow keys, destroys cleanly @cross-browser', async ({
     page,
   }) => {
     await page.goto(`${GAMES}/hello/`);

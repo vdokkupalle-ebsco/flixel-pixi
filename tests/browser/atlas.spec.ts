@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const GAMES = 'http://127.0.0.1:4174';
 
 test.describe('TexturePacker atlas sample', () => {
-  test('loads from a bundle, restores transformed frames, and destroys cleanly', async ({
+  test('loads from a bundle, restores transformed frames, and destroys cleanly @cross-browser', async ({
     page,
   }) => {
     await page.goto(`${GAMES}/atlas/`);

@@ -42,7 +42,7 @@ test('renders the deterministic input lab and verifies input contracts', async (
   await expect(canvas).toHaveCount(0);
 });
 
-test('publishes keys, blur releases, pointer capture, and cancellation on steps', async ({
+test('publishes keys, blur releases, pointer capture, and cancellation on steps @cross-browser', async ({
   page,
 }) => {
   await page.goto('/input.html');

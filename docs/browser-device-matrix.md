@@ -1,7 +1,7 @@
 # Browser and device release matrix
 
-This matrix is the blocking automated browser gate for the 1.0 release line.
-Run it with:
+This focused mobile matrix complements the desktop coverage in
+`npm run test:e2e`. Run it with:
 
 ```sh
 npm run test:matrix
@@ -9,13 +9,10 @@ npm run test:matrix
 
 ## Automated profiles
 
-| Profile         | Playwright engine/device  |                DPR | Input model             |
-| --------------- | ------------------------- | -----------------: | ----------------------- |
-| Desktop Chrome  | Chromium / Desktop Chrome |                  1 | mouse + keyboard        |
-| Desktop Firefox | Firefox / Desktop Firefox |                  1 | mouse + keyboard        |
-| Desktop Safari  | WebKit / Desktop Safari   |                  2 | mouse + keyboard        |
-| Android Chrome  | Chromium / Pixel 7        | 2.625, capped to 2 | touch + mobile viewport |
-| iOS Safari      | WebKit / iPhone 15        |     3, capped to 2 | touch + mobile viewport |
+| Profile        | Playwright engine/device |                DPR | Input model             |
+| -------------- | ------------------------ | -----------------: | ----------------------- |
+| Android Chrome | Chromium / Pixel 7       | 2.625, capped to 2 | touch + mobile viewport |
+| iOS Safari     | WebKit / iPhone 15       |     3, capped to 2 | touch + mobile viewport |
 
 Each profile must pass these contracts:
 
@@ -30,7 +27,7 @@ Each profile must pass these contracts:
   12-step observation budget without hidden-time catch-up;
 - five repeated orientation/resize/destroy cycles remove every canvas and native
   accessibility control;
-- Chromium desktop and Android profiles survive a critical DevTools Protocol
+- The Android Chromium profile survives a critical DevTools Protocol
   memory-pressure notification and continue rendering before clean teardown.
 
 The numeric limits live in [`performance-budgets.json`](../performance-budgets.json)
@@ -38,15 +35,16 @@ so test expectations and the published budget cannot drift.
 
 ## What emulation proves
 
-The desktop engines execute real Chromium, Firefox, and WebKit builds. Pixel 7
-and iPhone 15 projects apply Playwright's mobile user agent, viewport, DPR,
-touch, and browser-context settings to Chromium and WebKit respectively.
+Pixel 7 and iPhone 15 projects apply Playwright's mobile user agent, viewport,
+DPR, touch, and browser-context settings to Chromium and WebKit respectively.
+Desktop Chromium runs the complete browser suite; Firefox and WebKit run the
+tagged compatibility contracts through `npm run test:e2e`.
 
 Headless browsers do not provide a portable real fullscreen session, so the
 automated fullscreen check uses standards-shaped `requestFullscreen`,
 `exitFullscreen`, `fullscreenElement`, and `fullscreenchange` behavior. Firefox
-and WebKit also expose no Playwright memory-pressure control; their automated
-pressure evidence is repeated high-DPR viewport churn and complete teardown.
+WebKit exposes no Playwright memory-pressure control; its automated pressure
+evidence is repeated high-DPR viewport churn and complete teardown.
 
 ## Manual release-candidate pass
 

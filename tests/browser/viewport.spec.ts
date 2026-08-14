@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const VIEWPORT_DEMO = 'http://127.0.0.1:4174/viewport/';
 
-test('publishes visible and safe logical bounds across viewport changes', async ({
+test('publishes visible and safe logical bounds across viewport changes @cross-browser', async ({
   page,
 }) => {
   await page.goto(VIEWPORT_DEMO);
@@ -165,7 +165,7 @@ test('publishes visible and safe logical bounds across viewport changes', async 
   }
 });
 
-test('updates Pixi and camera backing resolution when browser DPR changes', async ({
+test('updates Pixi and camera backing resolution when browser DPR changes @cross-browser', async ({
   page,
 }) => {
   await page.goto(VIEWPORT_DEMO);
