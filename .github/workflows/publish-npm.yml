@@ -17,8 +17,65 @@ permissions:
   id-token: write
 
 jobs:
+  verify-mobile:
+    name: Verify mobile browser pressure
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Require an immutable version tag
+        env:
+          EXPECTED_REF: refs/tags/v${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_REF" != "$EXPECTED_REF" ]; then
+            echo "Run this workflow from $EXPECTED_REF, not $GITHUB_REF." >&2
+            exit 1
+          fi
+
+      - name: Check out release tag
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          cache: npm
+          node-version: 24
+
+      - name: Verify release metadata
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+        run: |
+          ACTUAL_VERSION="$(node --input-type=module -e 'import packageJson from "./package.json" with { type: "json" }; process.stdout.write(packageJson.version)')"
+          if [ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "package.json is $ACTUAL_VERSION; expected $EXPECTED_VERSION." >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install mobile browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run mobile browser matrix
+        run: npm run test:matrix
+
+      - name: Upload mobile verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: npm-release-mobile-reports
+          retention-days: 7
+          path: |
+            playwright-report/
+            test-results/
+
   publish:
     name: Verify and publish immutable tag
+    needs: verify-mobile
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: npm-release
@@ -82,9 +139,6 @@ jobs:
 
       - name: Run WebKit compatibility contracts
         run: npm run test:e2e -- --project=webkit
-
-      - name: Run mobile browser matrix
-        run: npm run test:matrix
 
       - name: Verify performance and resource budgets
         run: npm run verify:budgets
