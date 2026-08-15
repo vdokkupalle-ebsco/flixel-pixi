@@ -10,8 +10,7 @@ between release candidates when real-game validation exposes a concrete issue.
 
 ## Install
 
-The first npm prerelease is being prepared. After it is announced, install the
-engine and its PixiJS peer from the `next` channel:
+Install the published prerelease and its PixiJS peer from the `next` channel:
 
 ```bash
 npm install flixel-pixi@next pixi.js@^8.19.0

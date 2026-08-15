@@ -9,15 +9,32 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
-## 0.1.0-rc.2 — 2026-08-14
+## 0.1.0-rc.3 — 2026-08-15
 
-The first release candidate published through npm Trusted Publishing. The
+This release candidate aligns pull-request and npm-release verification on
+Node.js 24 while retaining a lightweight Node.js 22 compatibility check. The
 runtime API and package contents are unchanged from `0.1.0-rc.1` apart from
 release metadata.
 
 ### Changed
 
-- Replaced the long-lived npm token fallback with GitHub Actions OIDC.
+- Made Node.js 24 the canonical pull-request coverage environment so it matches
+  the trusted-publishing workflow.
+- Added a parallel Node.js 22 type-check and unit-test compatibility job capped
+  at two workers.
+- Increased Node.js 24 branch coverage from 87.40% to 89.03% with targeted tests
+  for input, assets, audio controls, debugger utilities, replay, and signals.
+
+## 0.1.0-rc.2 — 2026-08-14
+
+This version was tagged but not published. Its trusted-publishing workflow
+stopped at the Node.js 24 coverage gate, so npm's `next` tag remained on
+`0.1.0-rc.1`.
+
+### Changed
+
+- Prepared GitHub Actions OIDC trusted publishing without a long-lived npm
+  token.
 - Updated the release procedure after the initial npm publication.
 
 ## 0.1.0-rc.1 — 2026-08-14
