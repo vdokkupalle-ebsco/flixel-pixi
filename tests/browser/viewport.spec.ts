@@ -9,7 +9,7 @@ test('publishes visible and safe logical bounds across viewport changes @cross-b
   await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
     'data-state',
     'ready',
-    { timeout: 10_000 },
+    { timeout: 20_000 },
   );
   await expect
     .poll(() =>
@@ -172,7 +172,7 @@ test('updates Pixi and camera backing resolution when browser DPR changes @cross
   await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
     'data-state',
     'ready',
-    { timeout: 10_000 },
+    { timeout: 20_000 },
   );
 
   const setDpr = async (value: number): Promise<void> => {

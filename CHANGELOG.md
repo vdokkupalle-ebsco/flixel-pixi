@@ -9,12 +9,28 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
+## 0.1.0-rc.4 — 2026-08-15
+
+This release candidate stabilizes the browser release matrix after the rc.3
+workflow stopped before npm publication. The runtime API and package contents
+are unchanged from `0.1.0-rc.1` apart from release metadata.
+
+### Changed
+
+- Limited Playwright CI execution to one worker so Chromium, Firefox, and
+  WebKit do not contend for the release runner's renderer and asset resources.
+- Made the animation restart assertion tolerant of legitimate fixed-step
+  progress between the click and browser snapshot.
+- Reduced the debugger console scroll exercise from 30 commands to 15 while
+  retaining the overflow and automatic-scroll contract.
+- Extended affected cross-browser demo readiness waits for slower CI renderer
+  and asset initialization.
+
 ## 0.1.0-rc.3 — 2026-08-15
 
-This release candidate aligns pull-request and npm-release verification on
-Node.js 24 while retaining a lightweight Node.js 22 compatibility check. The
-runtime API and package contents are unchanged from `0.1.0-rc.1` apart from
-release metadata.
+This version was tagged but not published. It aligned pull-request and
+npm-release verification on Node.js 24, but its browser release matrix failed
+before trusted publishing ran. npm's `next` tag remained on `0.1.0-rc.1`.
 
 ### Changed
 

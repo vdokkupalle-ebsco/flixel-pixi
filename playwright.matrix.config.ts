@@ -5,6 +5,7 @@ export default defineConfig({
     timeout: 5_000,
   },
   fullyParallel: true,
+  ...(process.env.CI === undefined ? {} : { workers: 1 }),
   reporter: process.env.CI === undefined ? 'list' : 'github',
   retries: process.env.CI === undefined ? 0 : 1,
   snapshotPathTemplate:

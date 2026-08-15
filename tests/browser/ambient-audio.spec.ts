@@ -9,7 +9,7 @@ test('demonstrates viewport-gated spatial attenuation and panning @cross-browser
   await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
     'data-state',
     'ready',
-    { timeout: 10_000 },
+    { timeout: 20_000 },
   );
   await page.locator('canvas').click();
 
@@ -30,6 +30,9 @@ test('demonstrates viewport-gated spatial attenuation and panning @cross-browser
       { name: 'Alarm Beacon', visible: false },
     ],
   });
+  await expect
+    .poll(async () => (await snapshot())?.sources[0]?.gain ?? 0)
+    .toBeGreaterThan(0);
   const nearStream = await snapshot();
   expect(nearStream?.sources[0]?.gain ?? 0).toBeGreaterThan(0);
   expect(nearStream?.sources[0]?.pan ?? 0).toBeGreaterThan(0);
@@ -52,6 +55,9 @@ test('demonstrates viewport-gated spatial attenuation and panning @cross-browser
       streamGain: 0,
       streamVisible: false,
     });
+  await expect
+    .poll(async () => (await snapshot())?.sources[1]?.gain ?? 0)
+    .toBeGreaterThan(0);
   const pastGenerator = await snapshot();
   expect(pastGenerator?.sources[1]?.gain ?? 0).toBeGreaterThan(0);
   expect(pastGenerator?.sources[1]?.pan ?? 0).toBeLessThan(0);
