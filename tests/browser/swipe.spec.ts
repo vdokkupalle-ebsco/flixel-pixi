@@ -101,9 +101,9 @@ test('slices a deterministic fruit with a touch swipe and destroys cleanly', asy
   );
   expect(explosion).toEqual(
     expect.objectContaining({
-      activeBombs: 0,
       bombsHit: 1,
       score: 0,
+      testBombActive: false,
     }),
   );
   expect(explosion?.juiceParticlesEmitted ?? 0).toBeGreaterThanOrEqual(

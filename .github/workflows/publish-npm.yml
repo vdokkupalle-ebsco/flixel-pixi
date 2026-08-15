@@ -63,8 +63,28 @@ jobs:
       - name: Install browser engines
         run: npx playwright install --with-deps chromium firefox webkit
 
-      - name: Verify release gates
-        run: npm run verify
+      - name: Verify code, package, and deterministic budgets
+        run: npm run verify:quality
+
+      - name: Run complete Chromium browser suite
+        run: npm run test:e2e -- --project=chromium
+
+      - name: Verify Firefox can initialize the Pixi renderer
+        run: >-
+          xvfb-run --auto-servernum
+          npx playwright test tests/browser/smoke.spec.ts
+          --project=firefox --headed --workers=1 --retries=0
+
+      - name: Run Firefox compatibility contracts
+        run: >-
+          xvfb-run --auto-servernum
+          npm run test:e2e -- --project=firefox --headed
+
+      - name: Run WebKit compatibility contracts
+        run: npm run test:e2e -- --project=webkit
+
+      - name: Run mobile browser matrix
+        run: npm run test:matrix
 
       - name: Verify performance and resource budgets
         run: npm run verify:budgets
@@ -74,3 +94,17 @@ jobs:
 
       - name: Publish prerelease with npm trusted publishing
         run: npm publish --access public --tag next
+
+      - name: Upload verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: npm-release-verification-reports
+          retention-days: 7
+          path: |
+            coverage/
+            playwright-report/
+            reports/
+            temp/*.api.json
+            test-results/

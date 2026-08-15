@@ -35,6 +35,7 @@ export interface SwipeDemoSnapshot {
   slicePieces: number;
   slicePiecesCreated: number;
   slices: number;
+  testBombActive: boolean;
   trailSegments: number;
   trailSegmentsCreated: number;
 }
@@ -205,6 +206,7 @@ export class SwipeDemoState extends FlxState {
   #particles: JuiceParticle[] = [];
   #slicePieces: SlicePiece[] = [];
   #spawnElapsed = 0;
+  #testBomb: Bomb | null = null;
   #launchIndex = 0;
   #mouseStart: FlxPoint | null = null;
   #hud!: FlxText;
@@ -317,6 +319,7 @@ export class SwipeDemoState extends FlxState {
 
   spawnTestBomb(x = 296, y = 196): { x: number; y: number } {
     const bomb = this.#spawnBomb(x, y, 0, 0);
+    this.#testBomb = bomb;
     bomb.acceleration.y = 0;
     bomb.angularVelocity = 0;
     return { x: bomb.x + bomb.width / 2, y: bomb.y + bomb.height / 2 };
@@ -381,6 +384,7 @@ export class SwipeDemoState extends FlxState {
       slicePieces: this.#slicePieces.length,
       slicePiecesCreated: this.#slicePiecesCreated,
       slices: this.slices,
+      testBombActive: this.#testBomb !== null,
       trailSegments: this.#trailSegments.filter((segment) => segment.life > 0)
         .length,
       trailSegmentsCreated: this.#trailSegmentsCreated,
@@ -544,6 +548,7 @@ export class SwipeDemoState extends FlxState {
   #removeBomb(bomb: Bomb): void {
     this.remove(bomb, true);
     this.#bombs.splice(this.#bombs.indexOf(bomb), 1);
+    if (this.#testBomb === bomb) this.#testBomb = null;
     bomb.destroy();
   }
 
