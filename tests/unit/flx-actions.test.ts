@@ -257,4 +257,224 @@ describe('FlxActions', () => {
       actions.bindSources('bad', { device: 'unknown' } as never),
     ).toThrow('Unknown action source');
   });
+
+  it('evaluates keyboard and virtual scalar sources deterministically', () => {
+    const target = new EventTarget();
+    game = new FlxGame(640, 480, class extends FlxState {}, 1, 60, 60, false, {
+      keyboardTarget: target as Window,
+    });
+    game.step();
+    const actions = FlxG.actions;
+    const left = { justPressed: true, justReleased: false, pressed: true };
+    const right = { justPressed: false, justReleased: false, pressed: false };
+    const stick = { xAxis: 0.25, yAxis: -0.75 };
+    FlxG.virtualInputs.registerButton('left', left);
+    FlxG.virtualInputs.registerButton('right', right);
+    FlxG.virtualInputs.registerStick('stick', stick);
+
+    actions.bindSources('virtual-fire', {
+      device: 'virtual-button',
+      id: 'left',
+    });
+    expect(actions.pressed('virtual-fire')).toBe(true);
+    expect(actions.justPressed('virtual-fire')).toBe(true);
+    expect(actions.justReleased('virtual-fire')).toBe(false);
+
+    actions.bindSources('keyboard-x', {
+      device: 'keyboard-axis',
+      negative: 'A',
+      positive: 'D',
+      scale: 0.5,
+    });
+    expect(actions.value('keyboard-x')).toBe(0);
+    target.dispatchEvent(eventWith('keydown', { code: 'KeyD', repeat: false }));
+    game.input.updateInput();
+    expect(actions.value('keyboard-x')).toBe(0.5);
+    target.dispatchEvent(eventWith('keydown', { code: 'KeyA', repeat: false }));
+    game.input.updateInput();
+    expect(actions.value('keyboard-x')).toBe(0);
+
+    actions.bindSources('virtual-x', {
+      device: 'virtual-button-axis',
+      negative: 'left',
+      positive: 'right',
+      scale: 0.75,
+    });
+    expect(actions.value('virtual-x')).toBe(-0.75);
+    right.pressed = true;
+    expect(actions.value('virtual-x')).toBe(0);
+
+    actions.bindSources(
+      'stick-y',
+      { axis: 'x', device: 'virtual-stick-axis', id: 'missing' },
+      { axis: 'y', device: 'virtual-stick-axis', id: 'stick', scale: 0.5 },
+    );
+    expect(actions.value('stick-y')).toBe(-0.375);
+    actions.bindSources('digital-only', { device: 'keyboard', key: 'A' });
+    expect(actions.value('digital-only')).toBe(0);
+
+    actions.bindSources('wheel-only', { device: 'wheel', direction: 1 });
+    expect(actions.justReleased('wheel-only')).toBe(false);
+  });
+
+  it('normalizes, deduplicates, clones, and validates every source shape', () => {
+    game = new FlxGame(640, 480, class extends FlxState {});
+    game.step();
+    const actions = FlxG.actions;
+    actions.bindSources(
+      ' jump ',
+      { device: 'keyboard', key: ' z ' },
+      { device: 'keyboard', key: 'Z' },
+    );
+    const sources = actions.getSources('jump');
+    expect(sources).toEqual([{ device: 'keyboard', key: 'Z' }]);
+    (sources[0] as { key: string }).key = 'X';
+    expect(actions.getSources('jump')).toEqual([
+      { device: 'keyboard', key: 'Z' },
+    ]);
+
+    expect(() => actions.bind('', 'A')).toThrow('Action name');
+    expect(() => actions.load({ bindings: null, version: 1 } as never)).toThrow(
+      'Unsupported',
+    );
+    expect(() =>
+      actions.bindSources('bad', {
+        button: 0,
+        device: 'gamepad-button',
+        gamepad: -1,
+      }),
+    ).toThrow('Gamepad UID');
+    expect(() =>
+      actions.bindSources('bad', {
+        button: -1,
+        device: 'gamepad-button',
+      }),
+    ).toThrow('Gamepad button');
+    expect(() =>
+      actions.bindSources('bad', {
+        device: 'keyboard-axis',
+        negative: '',
+        positive: 'D',
+      }),
+    ).toThrow('Keyboard key');
+    expect(() =>
+      actions.bindSources('bad', {
+        device: 'keyboard-axis',
+        negative: 'A',
+        positive: 'D',
+        scale: Number.NaN,
+      }),
+    ).toThrow('must be finite');
+    expect(() =>
+      actions.bindSources('bad', {
+        axis: -1,
+        device: 'gamepad-axis',
+      }),
+    ).toThrow('Gamepad axis');
+    expect(() =>
+      actions.bindSources('bad', {
+        axis: 0,
+        deadZone: Number.NaN,
+        device: 'gamepad-axis',
+      }),
+    ).toThrow('dead zone');
+    expect(() =>
+      actions.bindSources('bad', {
+        device: 'gamepad-button-axis',
+        negative: -1,
+        positive: 1,
+      }),
+    ).toThrow('Negative gamepad button');
+    expect(() =>
+      actions.bindSources('bad', {
+        device: 'gamepad-button-axis',
+        negative: 0,
+        positive: -1,
+      }),
+    ).toThrow('Positive gamepad button');
+    expect(() =>
+      actions.bindSources('bad', {
+        device: 'virtual-button-axis',
+        negative: '',
+        positive: 'right',
+      }),
+    ).toThrow('id cannot be empty');
+    expect(() =>
+      actions.bindSources('bad', {
+        axis: 'x',
+        device: 'virtual-stick-axis',
+        id: 'stick',
+        scale: Number.POSITIVE_INFINITY,
+      }),
+    ).toThrow('must be finite');
+  });
+
+  it('targets all, one, or missing gamepads for digital and analog actions', () => {
+    const gamepads: readonly FlxGamepadLike[] = [
+      {
+        axes: [-0.575],
+        buttons: [
+          { pressed: false, value: 0 },
+          { pressed: true, value: 1 },
+        ],
+        connected: true,
+        id: 'Left Pad',
+        index: 0,
+        mapping: 'standard',
+      },
+      {
+        axes: [0.83],
+        buttons: [
+          { pressed: true, value: 1 },
+          { pressed: false, value: 0 },
+        ],
+        connected: true,
+        id: 'Right Pad',
+        index: 1,
+        mapping: 'standard',
+      },
+    ];
+    game = new FlxGame(640, 480, class extends FlxState {}, 1, 60, 60, false, {
+      gamepadProvider: () => gamepads,
+    });
+    game.step();
+    const actions = FlxG.actions;
+
+    actions.bindSources('any-fire', {
+      button: 0,
+      device: 'gamepad-button',
+      gamepad: 'all',
+    });
+    expect(actions.pressed('any-fire')).toBe(true);
+    actions.bindSources('missing-fire', {
+      button: 0,
+      device: 'gamepad-button',
+      gamepad: 999,
+    });
+    expect(actions.pressed('missing-fire')).toBe(false);
+
+    actions.bindSources('strongest-axis', {
+      axis: 0,
+      deadZone: 0.15,
+      device: 'gamepad-axis',
+      gamepad: 'all',
+      scale: 0.5,
+    });
+    expect(actions.value('strongest-axis')).toBeCloseTo(0.4);
+    actions.bindSources('missing-axis', {
+      axis: 0,
+      device: 'gamepad-axis',
+      gamepad: 999,
+    });
+    expect(actions.value('missing-axis')).toBe(0);
+
+    actions.bindSources('button-axis', {
+      device: 'gamepad-button-axis',
+      gamepad: 'all',
+      negative: 0,
+      positive: 1,
+      scale: 0.25,
+    });
+    expect(actions.value('button-axis')).toBe(0.25);
+  });
 });

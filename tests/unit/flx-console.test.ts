@@ -87,4 +87,107 @@ describe('FlxConsole', () => {
     });
     expect(execute).not.toHaveBeenCalled();
   });
+
+  it('supports unregistering by alias and safe registration cleanup', () => {
+    const console = new FlxConsole();
+    const unregister = console.register({
+      aliases: ['run'],
+      execute: () => undefined,
+      name: 'start',
+    });
+
+    expect(console.commands).toHaveLength(1);
+    expect(console.unregister('RUN')).toBe(true);
+    expect(console.unregister('start')).toBe(false);
+    unregister();
+    expect(console.commands).toEqual([]);
+
+    const cleanup = console.register({
+      execute: () => undefined,
+      name: 'stop',
+    });
+    cleanup();
+    cleanup();
+    expect(console.commands).toEqual([]);
+  });
+
+  it('rejects duplicate aliases and collisions with existing aliases', () => {
+    const console = new FlxConsole();
+    expect(() =>
+      console.register({
+        aliases: ['go', 'GO'],
+        execute: () => undefined,
+        name: 'start',
+      }),
+    ).toThrow('duplicate name or alias');
+
+    console.register({
+      aliases: ['go'],
+      execute: () => undefined,
+      name: 'start',
+    });
+    expect(() =>
+      console.register({ execute: () => undefined, name: 'go' }),
+    ).toThrow('already registered');
+  });
+
+  it('handles empty input, disabled history, and invalid history limits', async () => {
+    const console = new FlxConsole({ maxHistory: 0 });
+    await expect(console.execute('   ')).resolves.toEqual({
+      command: '',
+      ok: false,
+      output: 'Enter a command.',
+    });
+    await console.execute('missing');
+    expect(console.history).toEqual([]);
+    expect(() => new FlxConsole({ maxHistory: -1 })).toThrow('maxHistory');
+  });
+
+  it('tokenizes quotes, empty arguments, and escaped characters', async () => {
+    const console = new FlxConsole();
+    const execute = vi.fn(({ args }) => args);
+    console.register({ execute, name: 'echo' });
+
+    await expect(
+      console.execute(`echo '' 'two words' escaped\\ value`),
+    ).resolves.toMatchObject({
+      ok: true,
+      output: '["","two words","escaped value"]',
+    });
+    await expect(console.execute('echo trailing\\')).resolves.toMatchObject({
+      ok: false,
+      output: 'Command cannot end with an escape character.',
+    });
+  });
+
+  it('formats all supported result values and non-Error failures', async () => {
+    const console = new FlxConsole();
+    console.register({ execute: () => undefined, name: 'empty' });
+    console.register({ execute: () => 'ready', name: 'text' });
+    console.register({ execute: () => 42, name: 'number' });
+    console.register({ execute: () => Symbol('result'), name: 'symbol' });
+    console.register({
+      execute: () => {
+        throw 'rejected';
+      },
+      name: 'reject',
+    });
+
+    await expect(console.execute('empty')).resolves.toMatchObject({
+      output: '',
+    });
+    await expect(console.execute('text')).resolves.toMatchObject({
+      output: 'ready',
+    });
+    await expect(console.execute('number')).resolves.toMatchObject({
+      output: '42',
+    });
+    await expect(console.execute('symbol')).resolves.toMatchObject({
+      output: 'Symbol(result)',
+    });
+    await expect(console.execute('reject')).resolves.toMatchObject({
+      ok: false,
+      output: 'rejected',
+    });
+  });
 });

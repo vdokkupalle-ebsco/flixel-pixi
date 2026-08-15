@@ -31,7 +31,22 @@ function makeAtlas(rects: FlxAtlasFrameRect[], key = 'test'): FlxAtlas {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
+
+function stubLoadedImage(texture = makeTexture(16, 8)): Texture {
+  class FakeImage {
+    crossOrigin = '';
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    set src(_url: string) {
+      queueMicrotask(() => this.onload?.());
+    }
+  }
+  vi.stubGlobal('Image', FakeImage);
+  vi.spyOn(Texture, 'from').mockReturnValue(texture);
+  return texture;
+}
 
 describe('bakeAtlasFrameStrip', () => {
   it('validates the frame list and output dimensions', () => {
@@ -519,6 +534,75 @@ describe('FlxAtlasRegistry', () => {
     globalThis.Image = originalImage;
   });
 
+  it('loads inline JSON and XML metadata without fetching', async () => {
+    stubLoadedImage();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const json = JSON.stringify({
+      frames: {
+        'hero.png': {
+          frame: { h: 8, w: 8, x: 0, y: 0 },
+          rotated: false,
+          trimmed: false,
+        },
+      },
+    });
+    const xml =
+      '<TextureAtlas><SubTexture name="enemy.png" x="0" y="0" width="8" height="8"/></TextureAtlas>';
+
+    await expect(
+      registry.load('json', 'atlas.png', `  ${json}`),
+    ).resolves.toMatchObject({ frameCount: 1, key: 'json' });
+    await expect(
+      registry.load('xml', 'atlas.png', `  ${xml}`),
+    ).resolves.toMatchObject({ frameCount: 1, key: 'xml' });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('loads remote metadata and reports HTTP and network failures', async () => {
+    stubLoadedImage();
+    const json = JSON.stringify({
+      frames: {
+        'hero.png': {
+          frame: { h: 8, w: 8, x: 0, y: 0 },
+          rotated: false,
+          trimmed: false,
+        },
+      },
+    });
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () => json,
+      } as Response)
+      .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
+      .mockRejectedValueOnce('offline');
+
+    await expect(
+      registry.load('remote', 'atlas.png', 'atlas.json'),
+    ).resolves.toMatchObject({ frameCount: 1 });
+    await expect(
+      registry.load('missing', 'atlas.png', 'missing.json'),
+    ).rejects.toThrow('HTTP 404');
+    await expect(
+      registry.load('offline', 'atlas.png', 'offline.json'),
+    ).rejects.toThrow('offline');
+  });
+
+  it('reports image loading failures', async () => {
+    class FailedImage {
+      crossOrigin = '';
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_url: string) {
+        queueMicrotask(() => this.onerror?.());
+      }
+    }
+    vi.stubGlobal('Image', FailedImage);
+    await expect(
+      registry.load('broken', 'broken.png', { frameHeight: 8, frameWidth: 8 }),
+    ).rejects.toThrow('failed to load image');
+  });
+
   it('registers TexturePacker JSON from loaded asset aliases', () => {
     const texture = makeTexture(16, 8);
     const metadata = {
@@ -616,6 +700,38 @@ describe('FlxAtlasRegistry', () => {
         meta: 'meta',
       }),
     ).toThrow(/parser: 'text'/i);
+  });
+
+  it('validates keys and metadata shapes from loaded assets', () => {
+    const texture = makeTexture(8, 8);
+    const assets = { get: vi.fn(() => texture) } as unknown as FlxAssets;
+    expect(() =>
+      registry.registerFromAssets('', assets, {
+        image: 'image',
+        meta: { frameHeight: 8, frameWidth: 8 },
+      }),
+    ).toThrow('key cannot be empty');
+    expect(() =>
+      registry.registerFromAssets('null', assets, {
+        image: 'image',
+        meta: null as never,
+      }),
+    ).toThrow('metadata must be');
+    expect(() =>
+      registry.registerFromAssets('number', assets, {
+        image: 'image',
+        meta: 42 as never,
+      }),
+    ).toThrow('metadata must be');
+
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    expect(() =>
+      registry.registerFromAssets('circular', assets, {
+        image: 'image',
+        meta: circular as never,
+      }),
+    ).toThrow("parser: 'text'");
   });
 });
 
