@@ -5,14 +5,14 @@
 
 ## Current release line
 
-`0.1.0-rc.1` is the first published package release candidate. Release candidates
-use the npm `next` tag and may contain documented breaking changes while real
-games validate the API. After a stable release exists, prereleases must not move
-the npm `latest` tag.
+`0.1.0-rc.1` is the first published package release candidate. Release
+candidates use the npm `next` tag and may contain documented breaking changes
+while real games validate the API. After a stable release exists, prereleases
+must not move the npm `latest` tag.
 
-The repository remains `private: true` until publication is explicitly
-approved. The version number describes the artifact under test; it does not mean
-that artifact has been published.
+The repository and package are public. A version in the repository or on a Git
+tag is not considered published until the npm registry contains that immutable
+version and its trusted-publishing provenance.
 
 ## Compatibility promise
 
