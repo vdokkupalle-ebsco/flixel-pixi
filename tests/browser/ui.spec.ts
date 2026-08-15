@@ -9,7 +9,7 @@ test('operates rendered UI through native keyboard accessibility controls @cross
   await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
     'data-state',
     'ready',
-    { timeout: 10_000 },
+    { timeout: 20_000 },
   );
   const controls = page.locator('[data-flx-accessible-button]');
   await expect

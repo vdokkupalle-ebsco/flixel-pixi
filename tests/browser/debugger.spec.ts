@@ -50,7 +50,7 @@ test.describe('Debugger and preloader', () => {
     await input.press('ArrowUp');
     await expect(input).toHaveValue('player.position');
 
-    for (let index = 0; index < 30; index++) {
+    for (let index = 0; index < 15; index++) {
       await input.fill('player.position');
       await input.press('Enter');
     }

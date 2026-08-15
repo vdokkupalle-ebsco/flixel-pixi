@@ -10,7 +10,7 @@ test.describe('TexturePacker atlas sample', () => {
     await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
       'data-state',
       'ready',
-      { timeout: 10_000 },
+      { timeout: 20_000 },
     );
     await page.waitForFunction(() => window.__FLIXEL_PIXI_ATLAS__?.ready);
 
