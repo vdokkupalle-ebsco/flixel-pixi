@@ -7,7 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  verify-desktop:
+    name: Verify desktop browsers and package
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -47,19 +48,51 @@ jobs:
       - name: Run WebKit compatibility contracts
         run: npm run test:e2e -- --project=webkit
 
-      - name: Run mobile browser matrix
-        run: npm run test:matrix
-
       - name: Upload verification reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: ignore
-          name: release-hardening-reports
+          name: release-hardening-desktop-reports
           retention-days: 7
           path: |
             coverage/
             playwright-report/
             reports/
             temp/*.api.json
+            test-results/
+
+  verify-mobile:
+    name: Verify mobile browser pressure
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          cache: npm
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install mobile browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run mobile browser matrix
+        run: npm run test:matrix
+
+      - name: Upload mobile verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: release-hardening-mobile-reports
+          retention-days: 7
+          path: |
+            playwright-report/
             test-results/

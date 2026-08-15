@@ -9,11 +9,30 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
+## 0.1.0-rc.5 — 2026-08-15
+
+This release candidate aligns trusted publishing with the browser orchestration
+already proven by the dedicated release-verification workflow. The runtime API
+and package contents are unchanged from `0.1.0-rc.1` apart from release
+metadata.
+
+### Changed
+
+- Split npm publication verification into isolated Chromium, headed Firefox,
+  WebKit, and mobile commands so renderer resources are released between
+  browser projects.
+- Kept Firefox compatibility validation on the headed Xvfb path that passes on
+  GitHub's Linux runner.
+- Made the swipe demo test track its deterministic test bomb independently of
+  bombs spawned by normal gameplay.
+- Retained browser traces and verification reports when trusted publishing
+  stops before npm publication.
+
 ## 0.1.0-rc.4 — 2026-08-15
 
-This release candidate stabilizes the browser release matrix after the rc.3
-workflow stopped before npm publication. The runtime API and package contents
-are unchanged from `0.1.0-rc.1` apart from release metadata.
+This version was tagged but not published. Its browser release matrix failed
+before package preview and trusted publishing, so npm's `next` tag remained on
+`0.1.0-rc.1`.
 
 ### Changed
 
