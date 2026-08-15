@@ -459,6 +459,95 @@ describe('Pointer input and camera coordinates', () => {
     expect(input.keys.any()).toBe(false);
     input.destroy();
     expect(() => input?.updateInput()).toThrow('destroyed');
+    expect(() => input?.updateVirtualInput()).toThrow('destroyed');
+    expect(() => input?.resetInput()).toThrow('destroyed');
+  });
+
+  it('handles secondary touch cancellation and pointer-capture races', () => {
+    context = new FlxContext(400, 200);
+    const pointerTarget = new FakePointerTarget();
+    const setCapture = vi
+      .spyOn(pointerTarget, 'setPointerCapture')
+      .mockImplementationOnce(() => {
+        throw new Error('pointer ended');
+      });
+    input = new FlxInputManager(context, {
+      pointerTarget: pointerTarget as unknown as HTMLElement,
+    });
+
+    pointerTarget.dispatchEvent(
+      eventWith<PointerEvent>('pointerdown', {
+        button: 0,
+        clientX: 60,
+        clientY: 70,
+        isPrimary: false,
+        pointerId: 21,
+        pointerType: 'touch',
+        pressure: 0.5,
+      }),
+    );
+    pointerTarget.dispatchEvent(
+      eventWith<PointerEvent>('pointermove', {
+        clientX: 80,
+        clientY: 70,
+        isPrimary: false,
+        pointerId: 21,
+        pointerType: 'touch',
+        pressure: 0.5,
+      }),
+    );
+    input.updateInput();
+    expect(setCapture).toHaveBeenCalledWith(21);
+    expect(input.touches.get(21)?.justPressed).toBe(true);
+    expect(input.mouse.justPressed()).toBe(false);
+
+    pointerTarget.dispatchEvent(
+      eventWith<PointerEvent>('pointercancel', {
+        button: -1,
+        clientX: 80,
+        clientY: 70,
+        isPrimary: false,
+        pointerId: 21,
+        pointerType: 'touch',
+        pressure: 0,
+      }),
+    );
+    input.updateInput();
+    expect(input.touches.get(21)?.justCancelled).toBe(true);
+    expect(input.mouse.justCancelled()).toBe(false);
+
+    pointerTarget.dispatchEvent(
+      eventWith<PointerEvent>('pointerup', {
+        button: -1,
+        clientX: 80,
+        clientY: 70,
+        isPrimary: false,
+        pointerId: 404,
+        pointerType: 'touch',
+        pressure: 0,
+      }),
+    );
+    pointerTarget.dispatchEvent(
+      eventWith<PointerEvent>('lostpointercapture', {
+        pointerId: 404,
+      }),
+    );
+
+    vi.spyOn(pointerTarget, 'hasPointerCapture').mockImplementationOnce(() => {
+      throw new Error('capture already gone');
+    });
+    pointerTarget.dispatchEvent(
+      eventWith<PointerEvent>('pointercancel', {
+        button: -1,
+        clientX: 80,
+        clientY: 70,
+        isPrimary: true,
+        pointerId: 404,
+        pointerType: 'mouse',
+      }),
+    );
+    input.updateInput();
+    expect(input.mouse.pressed(0)).toBe(false);
   });
 });
 

@@ -143,6 +143,57 @@ describe('FlxReplay and determinism', () => {
     expect(exported).toContain('0 [] 50 60 1 0');
   });
 
+  it('loads sparse legacy text and ignores comments and malformed frames', () => {
+    const replay = new FlxReplay();
+    replay.load(`
+# old replay
+seed:not-a-number
+invalid []
+0 []
+1 [] 25
+`);
+
+    expect(replay.seed).toBe(0);
+    expect(replay.frameCount).toBe(2);
+    expect(replay.frames[0]?.mouse).toBeNull();
+    expect(replay.frames[1]?.mouse).toMatchObject({
+      button: 0,
+      wheel: 0,
+      x: 25,
+      y: 0,
+    });
+  });
+
+  it('accepts sparse replay objects and handles empty or missing frames', () => {
+    const replay = new FlxReplay();
+    replay.load({
+      engineVersion: 'test',
+      frameCount: 1,
+      frames: null,
+      seed: undefined,
+      version: '1.2',
+    } as never);
+    expect(replay.seed).toBe(0);
+    expect(replay.frames).toEqual([]);
+    expect(replay.finished).toBe(true);
+
+    replay.frameCount = 1;
+    expect(replay.playNextFrame()).toBeNull();
+    expect(replay.finished).toBe(true);
+  });
+
+  it('exports empty legacy frames and destroys recorded frame state', () => {
+    const replay = new FlxReplay();
+    replay.recordFrame(3);
+    replay.frames.push(null as never);
+    expect(convertFlxReplayToAS3Text(replay)).toContain('3 [] 0 0 0 0');
+    replay.frames.pop();
+    const frame = replay.frames[0];
+    replay.destroy();
+    expect(frame?.keys).toEqual([]);
+    expect(replay.frames).toEqual([]);
+  });
+
   it('integrates VCR controls and FlxG facade statics', () => {
     let stateCreates = 0;
     class MockState extends FlxState {
