@@ -9,3 +9,9 @@ reports/
 temp/
 test-results/
 skills-lock.json
+docs/api/
+docs/versions/
+docs/public/games/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/.vitepress/api-sidebar.json

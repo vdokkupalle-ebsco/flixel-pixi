@@ -67,6 +67,12 @@
     "verify:budgets": "npm run check:budgets && npm run test:perf",
     "api:update": "npm run build:types && api-extractor run --local --verbose",
     "api:check": "npm run build:types && api-extractor run --verbose",
+    "docs:api": "npm run api:check && node scripts/generate-api-docs.mjs",
+    "docs:prepare": "npm run build:games && node scripts/prepare-docs-assets.mjs",
+    "docs:dev": "npm run docs:api && npm run docs:prepare && vitepress dev docs",
+    "docs:build": "npm run docs:api && npm run docs:prepare && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:snapshot": "node scripts/generate-doc-version.mjs",
     "report:bundle": "node scripts/report-bundle-size.mjs",
     "verify:quality": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build && npm run api:check && node scripts/check-package-artifact.mjs && npm run bench && npm run check:games-imports",
     "verify": "npm run verify:quality && npm run test:e2e && npm run test:matrix"
@@ -88,6 +94,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.66.0",
     "vite": "^8.2.0",
+    "vitepress": "^1.6.4",
     "vitest": "^4.1.10"
   }
 }

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/logo.png" width="160" alt="Flixel-Pixi Logo" />
+</p>
+
 # flixel-pixi
 
 `flixel-pixi` is a browser-native TypeScript game engine that ports the original

@@ -1,0 +1,63 @@
+name: Documentation Website
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-docs:
+    name: Build & Verify Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          cache: npm
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build engine types & API model
+        run: npm run api:check
+
+      - name: Build example games
+        run: npm run build:games
+
+      - name: Generate API markdown documentation
+        run: npm run docs:api
+
+      - name: Sync example game assets
+        run: npm run docs:prepare
+
+      - name: Build static documentation website
+        run: npm run docs:build
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flixel-pixi-docs
+          path: docs/.vitepress/dist
+          retention-days: 14
