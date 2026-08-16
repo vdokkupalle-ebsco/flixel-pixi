@@ -15,3 +15,7 @@ reports/
 # Local Kenney dump — curated copies live under examples/games/kenney-platformer/assets/
 platform-game-assets/
 
+# VitePress Build & Cache
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/public/games/

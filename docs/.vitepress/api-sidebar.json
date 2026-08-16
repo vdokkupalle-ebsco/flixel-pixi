@@ -1,0 +1,1508 @@
+[
+  {
+    "text": "Core & Lifecycle",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FixedStepAccumulator",
+        "link": "/api/fixedstepaccumulator"
+      },
+      {
+        "text": "FixedStepAccumulatorOptions",
+        "link": "/api/fixedstepaccumulatoroptions"
+      },
+      {
+        "text": "FLX_ASSETS_SERVICE",
+        "link": "/api/flx_assets_service"
+      },
+      {
+        "text": "FLX_ATLAS_SERVICE",
+        "link": "/api/flx_atlas_service"
+      },
+      {
+        "text": "FLX_AUDIO_SERVICE",
+        "link": "/api/flx_audio_service"
+      },
+      {
+        "text": "FLX_CAMERA_HOST_SERVICE",
+        "link": "/api/flx_camera_host_service"
+      },
+      {
+        "text": "FLX_INPUT_SERVICE",
+        "link": "/api/flx_input_service"
+      },
+      {
+        "text": "FLX_LOG_SERVICE",
+        "link": "/api/flx_log_service"
+      },
+      {
+        "text": "FLX_STORAGE_SERVICE",
+        "link": "/api/flx_storage_service"
+      },
+      {
+        "text": "FLX_VIRTUAL_INPUT_SERVICE",
+        "link": "/api/flx_virtual_input_service"
+      },
+      {
+        "text": "FLX_WATCH_SERVICE",
+        "link": "/api/flx_watch_service"
+      },
+      {
+        "text": "FlxBasic",
+        "link": "/api/flxbasic"
+      },
+      {
+        "text": "FlxContainer",
+        "link": "/api/flxcontainer"
+      },
+      {
+        "text": "FlxContext",
+        "link": "/api/flxcontext"
+      },
+      {
+        "text": "FlxGame",
+        "link": "/api/flxgame"
+      },
+      {
+        "text": "FlxSignal",
+        "link": "/api/flxsignal"
+      },
+      {
+        "text": "FlxState",
+        "link": "/api/flxstate"
+      },
+      {
+        "text": "FlxSubState",
+        "link": "/api/flxsubstate"
+      },
+      {
+        "text": "libraryName",
+        "link": "/api/libraryname"
+      },
+      {
+        "text": "upstreamBaseline",
+        "link": "/api/upstreambaseline"
+      },
+      {
+        "text": "UpstreamBaseline",
+        "link": "/api/upstreambaseline"
+      }
+    ]
+  },
+  {
+    "text": "Game Objects & Sprites",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxBackdrop",
+        "link": "/api/flxbackdrop"
+      },
+      {
+        "text": "FlxBackdropRenderHandle",
+        "link": "/api/flxbackdroprenderhandle"
+      },
+      {
+        "text": "FlxEmitter",
+        "link": "/api/flxemitter"
+      },
+      {
+        "text": "FlxEmitterRenderHandle",
+        "link": "/api/flxemitterrenderhandle"
+      },
+      {
+        "text": "FlxEmitterRenderOptions",
+        "link": "/api/flxemitterrenderoptions"
+      },
+      {
+        "text": "FlxGradient",
+        "link": "/api/flxgradient"
+      },
+      {
+        "text": "FlxGradientStop",
+        "link": "/api/flxgradientstop"
+      },
+      {
+        "text": "FlxGraphics",
+        "link": "/api/flxgraphics"
+      },
+      {
+        "text": "FlxGraphicsFill",
+        "link": "/api/flxgraphicsfill"
+      },
+      {
+        "text": "FlxGraphicsRenderHandle",
+        "link": "/api/flxgraphicsrenderhandle"
+      },
+      {
+        "text": "FlxGraphicsStroke",
+        "link": "/api/flxgraphicsstroke"
+      },
+      {
+        "text": "FlxGraphicsStyle",
+        "link": "/api/flxgraphicsstyle"
+      },
+      {
+        "text": "FlxObject",
+        "link": "/api/flxobject"
+      },
+      {
+        "text": "FlxObjectInspector",
+        "link": "/api/flxobjectinspector"
+      },
+      {
+        "text": "FlxObjectInspectorModifier",
+        "link": "/api/flxobjectinspectormodifier"
+      },
+      {
+        "text": "FlxObjectInspectorOptions",
+        "link": "/api/flxobjectinspectoroptions"
+      },
+      {
+        "text": "FlxParticle",
+        "link": "/api/flxparticle"
+      },
+      {
+        "text": "FlxParticleConstructor",
+        "link": "/api/flxparticleconstructor"
+      },
+      {
+        "text": "FlxSprite",
+        "link": "/api/flxsprite"
+      },
+      {
+        "text": "FlxSpriteContainer",
+        "link": "/api/flxspritecontainer"
+      },
+      {
+        "text": "FlxSpriteGroup",
+        "link": "/api/flxspritegroup"
+      },
+      {
+        "text": "FlxSpriteGroupRenderHandle",
+        "link": "/api/flxspritegrouprenderhandle"
+      },
+      {
+        "text": "FlxSpriteRenderHandle",
+        "link": "/api/flxspriterenderhandle"
+      },
+      {
+        "text": "FlxSpriteTransform",
+        "link": "/api/flxspritetransform"
+      },
+      {
+        "text": "FlxStrip",
+        "link": "/api/flxstrip"
+      },
+      {
+        "text": "FlxStripGeometry",
+        "link": "/api/flxstripgeometry"
+      },
+      {
+        "text": "FlxStripRenderHandle",
+        "link": "/api/flxstriprenderhandle"
+      },
+      {
+        "text": "FlxStripTopology",
+        "link": "/api/flxstriptopology"
+      },
+      {
+        "text": "FlxTileblock",
+        "link": "/api/flxtileblock"
+      }
+    ]
+  },
+  {
+    "text": "Animation & Atlases",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxAnim",
+        "link": "/api/flxanim"
+      },
+      {
+        "text": "FlxAnimationCallback",
+        "link": "/api/flxanimationcallback"
+      },
+      {
+        "text": "FlxAnimationController",
+        "link": "/api/flxanimationcontroller"
+      },
+      {
+        "text": "FlxAnimationFrameEvent",
+        "link": "/api/flxanimationframeevent"
+      },
+      {
+        "text": "FlxAnimationPlayOptions",
+        "link": "/api/flxanimationplayoptions"
+      },
+      {
+        "text": "FlxAtlas",
+        "link": "/api/flxatlas"
+      },
+      {
+        "text": "FlxAtlasAnimationOptions",
+        "link": "/api/flxatlasanimationoptions"
+      },
+      {
+        "text": "FlxAtlasAssetSource",
+        "link": "/api/flxatlasassetsource"
+      },
+      {
+        "text": "FlxAtlasFrame",
+        "link": "/api/flxatlasframe"
+      },
+      {
+        "text": "FlxAtlasFrameList",
+        "link": "/api/flxatlasframelist"
+      },
+      {
+        "text": "FlxAtlasFrameRect",
+        "link": "/api/flxatlasframerect"
+      },
+      {
+        "text": "FlxAtlasGridMeta",
+        "link": "/api/flxatlasgridmeta"
+      },
+      {
+        "text": "FlxAtlasMeta",
+        "link": "/api/flxatlasmeta"
+      },
+      {
+        "text": "FlxAtlasPrefixOptions",
+        "link": "/api/flxatlasprefixoptions"
+      },
+      {
+        "text": "FlxAtlasRegistry",
+        "link": "/api/flxatlasregistry"
+      },
+      {
+        "text": "FlxFrame",
+        "link": "/api/flxframe"
+      },
+      {
+        "text": "FlxFramesCollection",
+        "link": "/api/flxframescollection"
+      }
+    ]
+  },
+  {
+    "text": "Input & Controls",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxActions",
+        "link": "/api/flxactions"
+      },
+      {
+        "text": "FlxGamepad",
+        "link": "/api/flxgamepad"
+      },
+      {
+        "text": "FlxGamepadButton",
+        "link": "/api/flxgamepadbutton"
+      },
+      {
+        "text": "FlxGamepadButtonLike",
+        "link": "/api/flxgamepadbuttonlike"
+      },
+      {
+        "text": "FlxGamepadFrameRecord",
+        "link": "/api/flxgamepadframerecord"
+      },
+      {
+        "text": "FlxGamepadLike",
+        "link": "/api/flxgamepadlike"
+      },
+      {
+        "text": "FlxGamepadManager",
+        "link": "/api/flxgamepadmanager"
+      },
+      {
+        "text": "FlxGamepadProvider",
+        "link": "/api/flxgamepadprovider"
+      },
+      {
+        "text": "FlxInputManager",
+        "link": "/api/flxinputmanager"
+      },
+      {
+        "text": "FlxInputManagerOptions",
+        "link": "/api/flxinputmanageroptions"
+      },
+      {
+        "text": "FlxInputService",
+        "link": "/api/flxinputservice"
+      },
+      {
+        "text": "FlxInputText",
+        "link": "/api/flxinputtext"
+      },
+      {
+        "text": "FlxInputTextChangeCallback",
+        "link": "/api/flxinputtextchangecallback"
+      },
+      {
+        "text": "FlxInputTextOptions",
+        "link": "/api/flxinputtextoptions"
+      },
+      {
+        "text": "FlxInputTextSubmitCallback",
+        "link": "/api/flxinputtextsubmitcallback"
+      },
+      {
+        "text": "FlxInputTextType",
+        "link": "/api/flxinputtexttype"
+      },
+      {
+        "text": "FlxKeyRecord",
+        "link": "/api/flxkeyrecord"
+      },
+      {
+        "text": "FlxMouseRecord",
+        "link": "/api/flxmouserecord"
+      },
+      {
+        "text": "FlxSwipe",
+        "link": "/api/flxswipe"
+      },
+      {
+        "text": "FlxSwipeDirection",
+        "link": "/api/flxswipedirection"
+      },
+      {
+        "text": "FlxTouch",
+        "link": "/api/flxtouch"
+      },
+      {
+        "text": "FlxTouchEventLike",
+        "link": "/api/flxtoucheventlike"
+      },
+      {
+        "text": "FlxTouchFrameRecord",
+        "link": "/api/flxtouchframerecord"
+      },
+      {
+        "text": "FlxTouchManager",
+        "link": "/api/flxtouchmanager"
+      },
+      {
+        "text": "FlxTouchOptions",
+        "link": "/api/flxtouchoptions"
+      },
+      {
+        "text": "FlxVirtualActionMode",
+        "link": "/api/flxvirtualactionmode"
+      },
+      {
+        "text": "FlxVirtualButton",
+        "link": "/api/flxvirtualbutton"
+      },
+      {
+        "text": "FlxVirtualButtonOptions",
+        "link": "/api/flxvirtualbuttonoptions"
+      },
+      {
+        "text": "FlxVirtualButtonRenderHandle",
+        "link": "/api/flxvirtualbuttonrenderhandle"
+      },
+      {
+        "text": "FlxVirtualButtonState",
+        "link": "/api/flxvirtualbuttonstate"
+      },
+      {
+        "text": "FlxVirtualDPadMode",
+        "link": "/api/flxvirtualdpadmode"
+      },
+      {
+        "text": "FlxVirtualInput",
+        "link": "/api/flxvirtualinput"
+      },
+      {
+        "text": "FlxVirtualPad",
+        "link": "/api/flxvirtualpad"
+      },
+      {
+        "text": "FlxVirtualPadActionMap",
+        "link": "/api/flxvirtualpadactionmap"
+      },
+      {
+        "text": "FlxVirtualPadAxisMap",
+        "link": "/api/flxvirtualpadaxismap"
+      },
+      {
+        "text": "FlxVirtualPadOptions",
+        "link": "/api/flxvirtualpadoptions"
+      },
+      {
+        "text": "FlxVirtualStick",
+        "link": "/api/flxvirtualstick"
+      },
+      {
+        "text": "FlxVirtualStickAxisMap",
+        "link": "/api/flxvirtualstickaxismap"
+      },
+      {
+        "text": "FlxVirtualStickOptions",
+        "link": "/api/flxvirtualstickoptions"
+      },
+      {
+        "text": "FlxVirtualStickRenderHandle",
+        "link": "/api/flxvirtualstickrenderhandle"
+      },
+      {
+        "text": "FlxVirtualStickState",
+        "link": "/api/flxvirtualstickstate"
+      },
+      {
+        "text": "Input",
+        "link": "/api/input"
+      },
+      {
+        "text": "Keyboard",
+        "link": "/api/keyboard"
+      },
+      {
+        "text": "Mouse",
+        "link": "/api/mouse"
+      },
+      {
+        "text": "MouseRecord",
+        "link": "/api/mouserecord"
+      }
+    ]
+  },
+  {
+    "text": "Collision & Math",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "clamp",
+        "link": "/api/clamp"
+      },
+      {
+        "text": "clamp01",
+        "link": "/api/clamp01"
+      },
+      {
+        "text": "FlxPoint",
+        "link": "/api/flxpoint"
+      },
+      {
+        "text": "FlxPointerEventLike",
+        "link": "/api/flxpointereventlike"
+      },
+      {
+        "text": "FlxQuadTree",
+        "link": "/api/flxquadtree"
+      },
+      {
+        "text": "FlxRandom",
+        "link": "/api/flxrandom"
+      },
+      {
+        "text": "FlxRect",
+        "link": "/api/flxrect"
+      },
+      {
+        "text": "FlxU",
+        "link": "/api/flxu"
+      },
+      {
+        "text": "nextFlixelSeed",
+        "link": "/api/nextflixelseed"
+      },
+      {
+        "text": "PointLike",
+        "link": "/api/pointlike"
+      },
+      {
+        "text": "RectangleLike",
+        "link": "/api/rectanglelike"
+      }
+    ]
+  },
+  {
+    "text": "Audio System",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxAudioBackend",
+        "link": "/api/flxaudiobackend"
+      },
+      {
+        "text": "FlxAudioControls",
+        "link": "/api/flxaudiocontrols"
+      },
+      {
+        "text": "FlxAudioControlsOptions",
+        "link": "/api/flxaudiocontrolsoptions"
+      },
+      {
+        "text": "FlxAudioControlsPosition",
+        "link": "/api/flxaudiocontrolsposition"
+      },
+      {
+        "text": "FlxAudioManager",
+        "link": "/api/flxaudiomanager"
+      },
+      {
+        "text": "FlxAudioService",
+        "link": "/api/flxaudioservice"
+      },
+      {
+        "text": "FlxAudioState",
+        "link": "/api/flxaudiostate"
+      },
+      {
+        "text": "FlxSound",
+        "link": "/api/flxsound"
+      },
+      {
+        "text": "FlxSoundAttachmentOptions",
+        "link": "/api/flxsoundattachmentoptions"
+      },
+      {
+        "text": "FlxSoundGroup",
+        "link": "/api/flxsoundgroup"
+      },
+      {
+        "text": "FlxSoundHandle",
+        "link": "/api/flxsoundhandle"
+      },
+      {
+        "text": "FlxSoundOffscreenBehavior",
+        "link": "/api/flxsoundoffscreenbehavior"
+      },
+      {
+        "text": "NullAudioBackend",
+        "link": "/api/nullaudiobackend"
+      },
+      {
+        "text": "WebAudioBackend",
+        "link": "/api/webaudiobackend"
+      },
+      {
+        "text": "WebAudioBackendOptions",
+        "link": "/api/webaudiobackendoptions"
+      },
+      {
+        "text": "WebAudioVisibilityPolicy",
+        "link": "/api/webaudiovisibilitypolicy"
+      }
+    ]
+  },
+  {
+    "text": "Tweens & Motion",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxAngleTween",
+        "link": "/api/flxangletween"
+      },
+      {
+        "text": "FlxCircularMotion",
+        "link": "/api/flxcircularmotion"
+      },
+      {
+        "text": "FlxColorTween",
+        "link": "/api/flxcolortween"
+      },
+      {
+        "text": "FlxColorTweenTarget",
+        "link": "/api/flxcolortweentarget"
+      },
+      {
+        "text": "FlxCubicMotion",
+        "link": "/api/flxcubicmotion"
+      },
+      {
+        "text": "FlxEase",
+        "link": "/api/flxease"
+      },
+      {
+        "text": "FlxEaseFunction",
+        "link": "/api/flxeasefunction"
+      },
+      {
+        "text": "FlxFlickerTween",
+        "link": "/api/flxflickertween"
+      },
+      {
+        "text": "FlxFlickerTweenOptions",
+        "link": "/api/flxflickertweenoptions"
+      },
+      {
+        "text": "FlxLinearMotion",
+        "link": "/api/flxlinearmotion"
+      },
+      {
+        "text": "FlxLinearPath",
+        "link": "/api/flxlinearpath"
+      },
+      {
+        "text": "FlxMotion",
+        "link": "/api/flxmotion"
+      },
+      {
+        "text": "FlxNumTween",
+        "link": "/api/flxnumtween"
+      },
+      {
+        "text": "FlxPath",
+        "link": "/api/flxpath"
+      },
+      {
+        "text": "FlxQuadMotion",
+        "link": "/api/flxquadmotion"
+      },
+      {
+        "text": "FlxQuadPath",
+        "link": "/api/flxquadpath"
+      },
+      {
+        "text": "FlxShakeTween",
+        "link": "/api/flxshaketween"
+      },
+      {
+        "text": "FlxTween",
+        "link": "/api/flxtween"
+      },
+      {
+        "text": "FlxTweenAxes",
+        "link": "/api/flxtweenaxes"
+      },
+      {
+        "text": "FlxTweenCallback",
+        "link": "/api/flxtweencallback"
+      },
+      {
+        "text": "FlxTweenColor",
+        "link": "/api/flxtweencolor"
+      },
+      {
+        "text": "FlxTweenColorValue",
+        "link": "/api/flxtweencolorvalue"
+      },
+      {
+        "text": "FlxTweenManager",
+        "link": "/api/flxtweenmanager"
+      },
+      {
+        "text": "FlxTweenOptions",
+        "link": "/api/flxtweenoptions"
+      },
+      {
+        "text": "FlxTweenType",
+        "link": "/api/flxtweentype"
+      },
+      {
+        "text": "FlxVarTween",
+        "link": "/api/flxvartween"
+      }
+    ]
+  },
+  {
+    "text": "UI & Typography",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxBar",
+        "link": "/api/flxbar"
+      },
+      {
+        "text": "FlxBarCallback",
+        "link": "/api/flxbarcallback"
+      },
+      {
+        "text": "FlxBarFillDirection",
+        "link": "/api/flxbarfilldirection"
+      },
+      {
+        "text": "FlxBarParentLike",
+        "link": "/api/flxbarparentlike"
+      },
+      {
+        "text": "FlxBarRenderHandle",
+        "link": "/api/flxbarrenderhandle"
+      },
+      {
+        "text": "FlxBarValueProvider",
+        "link": "/api/flxbarvalueprovider"
+      },
+      {
+        "text": "FlxBitmapFont",
+        "link": "/api/flxbitmapfont"
+      },
+      {
+        "text": "FlxBitmapFontPageSource",
+        "link": "/api/flxbitmapfontpagesource"
+      },
+      {
+        "text": "FlxBitmapText",
+        "link": "/api/flxbitmaptext"
+      },
+      {
+        "text": "FlxBitmapTextRenderHandle",
+        "link": "/api/flxbitmaptextrenderhandle"
+      },
+      {
+        "text": "FlxBmFontData",
+        "link": "/api/flxbmfontdata"
+      },
+      {
+        "text": "FlxButton",
+        "link": "/api/flxbutton"
+      },
+      {
+        "text": "FlxButtonCallback",
+        "link": "/api/flxbuttoncallback"
+      },
+      {
+        "text": "FlxButtonRenderHandle",
+        "link": "/api/flxbuttonrenderhandle"
+      },
+      {
+        "text": "FlxButtonSound",
+        "link": "/api/flxbuttonsound"
+      },
+      {
+        "text": "FlxNineSliceBorderInput",
+        "link": "/api/flxninesliceborderinput"
+      },
+      {
+        "text": "FlxNineSliceBorders",
+        "link": "/api/flxninesliceborders"
+      },
+      {
+        "text": "FlxNineSliceButton",
+        "link": "/api/flxnineslicebutton"
+      },
+      {
+        "text": "FlxNineSliceButtonRenderHandle",
+        "link": "/api/flxnineslicebuttonrenderhandle"
+      },
+      {
+        "text": "FlxNineSliceRenderHandle",
+        "link": "/api/flxnineslicerenderhandle"
+      },
+      {
+        "text": "FlxNineSliceSprite",
+        "link": "/api/flxnineslicesprite"
+      },
+      {
+        "text": "FlxText",
+        "link": "/api/flxtext"
+      },
+      {
+        "text": "FlxTextRenderHandle",
+        "link": "/api/flxtextrenderhandle"
+      },
+      {
+        "text": "FlxTextRenderMode",
+        "link": "/api/flxtextrendermode"
+      },
+      {
+        "text": "parseBmFontXml",
+        "link": "/api/parsebmfontxml"
+      }
+    ]
+  },
+  {
+    "text": "Tilemaps",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxTile",
+        "link": "/api/flxtile"
+      },
+      {
+        "text": "FlxTileCallback",
+        "link": "/api/flxtilecallback"
+      },
+      {
+        "text": "FlxTileFilter",
+        "link": "/api/flxtilefilter"
+      },
+      {
+        "text": "FlxTilemap",
+        "link": "/api/flxtilemap"
+      },
+      {
+        "text": "FlxTilemapBuffer",
+        "link": "/api/flxtilemapbuffer"
+      },
+      {
+        "text": "FlxTilemapLoadOptions",
+        "link": "/api/flxtilemaploadoptions"
+      },
+      {
+        "text": "FlxTilemapOverlapCallback",
+        "link": "/api/flxtilemapoverlapcallback"
+      },
+      {
+        "text": "FlxTilemapRenderHandle",
+        "link": "/api/flxtilemaprenderhandle"
+      }
+    ]
+  },
+  {
+    "text": "Assets & Loading",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "FlxAssetBackend",
+        "link": "/api/flxassetbackend"
+      },
+      {
+        "text": "FlxAssetBundle",
+        "link": "/api/flxassetbundle"
+      },
+      {
+        "text": "FlxAssetDescriptor",
+        "link": "/api/flxassetdescriptor"
+      },
+      {
+        "text": "FlxAssetInitOptions",
+        "link": "/api/flxassetinitoptions"
+      },
+      {
+        "text": "FlxAssetLoadError",
+        "link": "/api/flxassetloaderror"
+      },
+      {
+        "text": "FlxAssetLoadOptions",
+        "link": "/api/flxassetloadoptions"
+      },
+      {
+        "text": "FlxAssetManifest",
+        "link": "/api/flxassetmanifest"
+      },
+      {
+        "text": "FlxAssets",
+        "link": "/api/flxassets"
+      },
+      {
+        "text": "FlxGraphic",
+        "link": "/api/flxgraphic"
+      },
+      {
+        "text": "FlxLoadingBundleOptions",
+        "link": "/api/flxloadingbundleoptions"
+      },
+      {
+        "text": "FlxLoadingError",
+        "link": "/api/flxloadingerror"
+      },
+      {
+        "text": "FlxLoadingSession",
+        "link": "/api/flxloadingsession"
+      },
+      {
+        "text": "FlxLoadingSnapshot",
+        "link": "/api/flxloadingsnapshot"
+      },
+      {
+        "text": "FlxLoadingStage",
+        "link": "/api/flxloadingstage"
+      },
+      {
+        "text": "FlxLoadingState",
+        "link": "/api/flxloadingstate"
+      },
+      {
+        "text": "FlxLoadingTaskContext",
+        "link": "/api/flxloadingtaskcontext"
+      },
+      {
+        "text": "FlxLoadingTaskOptions",
+        "link": "/api/flxloadingtaskoptions"
+      },
+      {
+        "text": "FlxLoadingUpdate",
+        "link": "/api/flxloadingupdate"
+      },
+      {
+        "text": "throwIfAborted",
+        "link": "/api/throwifaborted"
+      }
+    ]
+  },
+  {
+    "text": "Browser DX & Viewport",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "BrowserGameApplication",
+        "link": "/api/browsergameapplication"
+      },
+      {
+        "text": "BrowserGameAssetOptions",
+        "link": "/api/browsergameassetoptions"
+      },
+      {
+        "text": "BrowserGameFrame",
+        "link": "/api/browsergameframe"
+      },
+      {
+        "text": "BrowserGamePreloadContext",
+        "link": "/api/browsergamepreloadcontext"
+      },
+      {
+        "text": "BrowserGamePreloaderOptions",
+        "link": "/api/browsergamepreloaderoptions"
+      },
+      {
+        "text": "BrowserGameRendererBackend",
+        "link": "/api/browsergamerendererbackend"
+      },
+      {
+        "text": "BrowserGameRendererFallback",
+        "link": "/api/browsergamerendererfallback"
+      },
+      {
+        "text": "BrowserGameRendererOptions",
+        "link": "/api/browsergamerendereroptions"
+      },
+      {
+        "text": "createBrowserGame",
+        "link": "/api/createbrowsergame"
+      },
+      {
+        "text": "FlxBrowserSafePadding",
+        "link": "/api/flxbrowsersafepadding"
+      },
+      {
+        "text": "FlxBrowserScaleMode",
+        "link": "/api/flxbrowserscalemode"
+      },
+      {
+        "text": "FlxBrowserScaleOptions",
+        "link": "/api/flxbrowserscaleoptions"
+      },
+      {
+        "text": "FlxBrowserViewport",
+        "link": "/api/flxbrowserviewport"
+      },
+      {
+        "text": "FlxBrowserViewportInsets",
+        "link": "/api/flxbrowserviewportinsets"
+      },
+      {
+        "text": "FlxBrowserViewportRect",
+        "link": "/api/flxbrowserviewportrect"
+      },
+      {
+        "text": "FlxBrowserViewportSnapshot",
+        "link": "/api/flxbrowserviewportsnapshot"
+      }
+    ]
+  },
+  {
+    "text": "Debugger & Diagnostics",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "DebugChannel",
+        "link": "/api/debugchannel"
+      },
+      {
+        "text": "DebugPathDisplay",
+        "link": "/api/debugpathdisplay"
+      },
+      {
+        "text": "FlxConsole",
+        "link": "/api/flxconsole"
+      },
+      {
+        "text": "FlxConsoleCommand",
+        "link": "/api/flxconsolecommand"
+      },
+      {
+        "text": "FlxConsoleCommandContext",
+        "link": "/api/flxconsolecommandcontext"
+      },
+      {
+        "text": "FlxConsoleOptions",
+        "link": "/api/flxconsoleoptions"
+      },
+      {
+        "text": "FlxConsoleResult",
+        "link": "/api/flxconsoleresult"
+      },
+      {
+        "text": "FlxDebugger",
+        "link": "/api/flxdebugger"
+      },
+      {
+        "text": "FlxDebuggerDiagnosticSnapshot",
+        "link": "/api/flxdebuggerdiagnosticsnapshot"
+      },
+      {
+        "text": "FlxDebuggerOptions",
+        "link": "/api/flxdebuggeroptions"
+      },
+      {
+        "text": "FlxDebuggerVCRCallbacks",
+        "link": "/api/flxdebuggervcrcallbacks"
+      },
+      {
+        "text": "FlxDiagnostics",
+        "link": "/api/flxdiagnostics"
+      },
+      {
+        "text": "FlxDiagnosticsOptions",
+        "link": "/api/flxdiagnosticsoptions"
+      },
+      {
+        "text": "FlxFpsDisplay",
+        "link": "/api/flxfpsdisplay"
+      },
+      {
+        "text": "FlxFpsDisplayOptions",
+        "link": "/api/flxfpsdisplayoptions"
+      },
+      {
+        "text": "FlxFpsDisplayPosition",
+        "link": "/api/flxfpsdisplayposition"
+      },
+      {
+        "text": "FlxFpsDisplayTheme",
+        "link": "/api/flxfpsdisplaytheme"
+      },
+      {
+        "text": "FlxLog",
+        "link": "/api/flxlog"
+      },
+      {
+        "text": "FlxPreloader",
+        "link": "/api/flxpreloader"
+      },
+      {
+        "text": "FlxPreloaderOptions",
+        "link": "/api/flxpreloaderoptions"
+      },
+      {
+        "text": "FlxPreloaderTheme",
+        "link": "/api/flxpreloadertheme"
+      },
+      {
+        "text": "FlxPreloaderView",
+        "link": "/api/flxpreloaderview"
+      },
+      {
+        "text": "FlxPreloaderViewContext",
+        "link": "/api/flxpreloaderviewcontext"
+      },
+      {
+        "text": "FlxPreloaderViewFactory",
+        "link": "/api/flxpreloaderviewfactory"
+      },
+      {
+        "text": "FlxWatch",
+        "link": "/api/flxwatch"
+      },
+      {
+        "text": "FlxWatchDefinition",
+        "link": "/api/flxwatchdefinition"
+      },
+      {
+        "text": "FlxWatchEditor",
+        "link": "/api/flxwatcheditor"
+      },
+      {
+        "text": "FlxWatchMutationGuard",
+        "link": "/api/flxwatchmutationguard"
+      },
+      {
+        "text": "FlxWatchMutationResult",
+        "link": "/api/flxwatchmutationresult"
+      },
+      {
+        "text": "LogEntry",
+        "link": "/api/logentry"
+      },
+      {
+        "text": "PreloaderState",
+        "link": "/api/preloaderstate"
+      },
+      {
+        "text": "TimerManager",
+        "link": "/api/timermanager"
+      },
+      {
+        "text": "WatchEntry",
+        "link": "/api/watchentry"
+      },
+      {
+        "text": "WatchSnapshot",
+        "link": "/api/watchsnapshot"
+      }
+    ]
+  },
+  {
+    "text": "Storage & Replay",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "CodePair",
+        "link": "/api/codepair"
+      },
+      {
+        "text": "convertAS3ReplayToFlxReplay",
+        "link": "/api/convertas3replaytoflxreplay"
+      },
+      {
+        "text": "convertFlxReplayToAS3Text",
+        "link": "/api/convertflxreplaytoas3text"
+      },
+      {
+        "text": "FlxReplay",
+        "link": "/api/flxreplay"
+      },
+      {
+        "text": "FlxSave",
+        "link": "/api/flxsave"
+      },
+      {
+        "text": "FlxSaveBindOptions",
+        "link": "/api/flxsavebindoptions"
+      },
+      {
+        "text": "FlxSaveMigration",
+        "link": "/api/flxsavemigration"
+      },
+      {
+        "text": "FlxSaveResult",
+        "link": "/api/flxsaveresult"
+      },
+      {
+        "text": "FlxStorageBackend",
+        "link": "/api/flxstoragebackend"
+      },
+      {
+        "text": "FlxVCR",
+        "link": "/api/flxvcr"
+      },
+      {
+        "text": "FrameRecord",
+        "link": "/api/framerecord"
+      },
+      {
+        "text": "FrameRecordData",
+        "link": "/api/framerecorddata"
+      },
+      {
+        "text": "IndexedDBBackend",
+        "link": "/api/indexeddbbackend"
+      },
+      {
+        "text": "LocalStorageBackend",
+        "link": "/api/localstoragebackend"
+      },
+      {
+        "text": "NullStorageBackend",
+        "link": "/api/nullstoragebackend"
+      }
+    ]
+  },
+  {
+    "text": "Rendering & Filters",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "collectRenderables",
+        "link": "/api/collectrenderables"
+      },
+      {
+        "text": "FlxBlurFilter",
+        "link": "/api/flxblurfilter"
+      },
+      {
+        "text": "FlxBlurFilterOptions",
+        "link": "/api/flxblurfilteroptions"
+      },
+      {
+        "text": "FlxCamera",
+        "link": "/api/flxcamera"
+      },
+      {
+        "text": "FlxCameraEffectCallback",
+        "link": "/api/flxcameraeffectcallback"
+      },
+      {
+        "text": "FlxCameraFollowStyle",
+        "link": "/api/flxcamerafollowstyle"
+      },
+      {
+        "text": "FlxCameraHost",
+        "link": "/api/flxcamerahost"
+      },
+      {
+        "text": "FlxCameraLike",
+        "link": "/api/flxcameralike"
+      },
+      {
+        "text": "FlxCameraObjectPick",
+        "link": "/api/flxcameraobjectpick"
+      },
+      {
+        "text": "FlxCameraRenderer",
+        "link": "/api/flxcamerarenderer"
+      },
+      {
+        "text": "FlxCameraShakeDirection",
+        "link": "/api/flxcamerashakedirection"
+      },
+      {
+        "text": "FlxCameraView",
+        "link": "/api/flxcameraview"
+      },
+      {
+        "text": "FlxColorMatrixFilter",
+        "link": "/api/flxcolormatrixfilter"
+      },
+      {
+        "text": "FlxDisplacementFilter",
+        "link": "/api/flxdisplacementfilter"
+      },
+      {
+        "text": "FlxDisplacementFilterOptions",
+        "link": "/api/flxdisplacementfilteroptions"
+      },
+      {
+        "text": "FlxFilter",
+        "link": "/api/flxfilter"
+      },
+      {
+        "text": "FlxRenderable",
+        "link": "/api/flxrenderable"
+      },
+      {
+        "text": "FlxRenderHandle",
+        "link": "/api/flxrenderhandle"
+      },
+      {
+        "text": "FlxShaderFilter",
+        "link": "/api/flxshaderfilter"
+      },
+      {
+        "text": "FlxShaderFilterOptions",
+        "link": "/api/flxshaderfilteroptions"
+      },
+      {
+        "text": "FlxShaderUniformDefinition",
+        "link": "/api/flxshaderuniformdefinition"
+      },
+      {
+        "text": "FlxShaderUniforms",
+        "link": "/api/flxshaderuniforms"
+      },
+      {
+        "text": "FlxShaderUniformSchema",
+        "link": "/api/flxshaderuniformschema"
+      },
+      {
+        "text": "FlxShaderUniformType",
+        "link": "/api/flxshaderuniformtype"
+      },
+      {
+        "text": "FlxShaderUniformValue",
+        "link": "/api/flxshaderuniformvalue"
+      },
+      {
+        "text": "makeGraphicPixels",
+        "link": "/api/makegraphicpixels"
+      },
+      {
+        "text": "PixelBuffer",
+        "link": "/api/pixelbuffer"
+      },
+      {
+        "text": "syncWorldToRenderer",
+        "link": "/api/syncworldtorenderer"
+      }
+    ]
+  },
+  {
+    "text": "Types & Utilities",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "CreateBrowserGameOptions",
+        "link": "/api/createbrowsergameoptions"
+      },
+      {
+        "text": "DebugEvents",
+        "link": "/api/debugevents"
+      },
+      {
+        "text": "DebugEventType",
+        "link": "/api/debugeventtype"
+      },
+      {
+        "text": "FixedStepAdvanceResult",
+        "link": "/api/fixedstepadvanceresult"
+      },
+      {
+        "text": "FlxActionBindingsData",
+        "link": "/api/flxactionbindingsdata"
+      },
+      {
+        "text": "FlxActionGamepadAxisSource",
+        "link": "/api/flxactiongamepadaxissource"
+      },
+      {
+        "text": "FlxActionGamepadButtonAxisSource",
+        "link": "/api/flxactiongamepadbuttonaxissource"
+      },
+      {
+        "text": "FlxActionGamepadButtonSource",
+        "link": "/api/flxactiongamepadbuttonsource"
+      },
+      {
+        "text": "FlxActionGamepadTarget",
+        "link": "/api/flxactiongamepadtarget"
+      },
+      {
+        "text": "FlxActionKeyboardAxisSource",
+        "link": "/api/flxactionkeyboardaxissource"
+      },
+      {
+        "text": "FlxActionKeyboardSource",
+        "link": "/api/flxactionkeyboardsource"
+      },
+      {
+        "text": "FlxActionMouseSource",
+        "link": "/api/flxactionmousesource"
+      },
+      {
+        "text": "FlxActionRebindOptions",
+        "link": "/api/flxactionrebindoptions"
+      },
+      {
+        "text": "FlxActionSource",
+        "link": "/api/flxactionsource"
+      },
+      {
+        "text": "FlxActionVirtualButtonAxisSource",
+        "link": "/api/flxactionvirtualbuttonaxissource"
+      },
+      {
+        "text": "FlxActionVirtualButtonSource",
+        "link": "/api/flxactionvirtualbuttonsource"
+      },
+      {
+        "text": "FlxActionVirtualStickAxisSource",
+        "link": "/api/flxactionvirtualstickaxissource"
+      },
+      {
+        "text": "FlxActionWheelSource",
+        "link": "/api/flxactionwheelsource"
+      },
+      {
+        "text": "FlxAsyncStorageBackend",
+        "link": "/api/flxasyncstoragebackend"
+      },
+      {
+        "text": "FlxBasicConstructor",
+        "link": "/api/flxbasicconstructor"
+      },
+      {
+        "text": "FlxDiagnosticSample",
+        "link": "/api/flxdiagnosticsample"
+      },
+      {
+        "text": "FlxDiagnosticSnapshot",
+        "link": "/api/flxdiagnosticsnapshot"
+      },
+      {
+        "text": "FlxDiagnosticSummary",
+        "link": "/api/flxdiagnosticsummary"
+      },
+      {
+        "text": "FlxDisplacementPoint",
+        "link": "/api/flxdisplacementpoint"
+      },
+      {
+        "text": "FlxFpsMetrics",
+        "link": "/api/flxfpsmetrics"
+      },
+      {
+        "text": "FlxG",
+        "link": "/api/flxg"
+      },
+      {
+        "text": "FlxGridFramesOptions",
+        "link": "/api/flxgridframesoptions"
+      },
+      {
+        "text": "FlxGroup",
+        "link": "/api/flxgroup"
+      },
+      {
+        "text": "FlxKeyboardEventLike",
+        "link": "/api/flxkeyboardeventlike"
+      },
+      {
+        "text": "FlxLinearGradientOptions",
+        "link": "/api/flxlineargradientoptions"
+      },
+      {
+        "text": "FlxOverlapCallback",
+        "link": "/api/flxoverlapcallback"
+      },
+      {
+        "text": "FlxPixiTextNode",
+        "link": "/api/flxpixitextnode"
+      },
+      {
+        "text": "FlxPluginConstructor",
+        "link": "/api/flxpluginconstructor"
+      },
+      {
+        "text": "FlxProcessCallback",
+        "link": "/api/flxprocesscallback"
+      },
+      {
+        "text": "FlxRadialGradientOptions",
+        "link": "/api/flxradialgradientoptions"
+      },
+      {
+        "text": "FlxShaderWebGLProgram",
+        "link": "/api/flxshaderwebglprogram"
+      },
+      {
+        "text": "FlxShaderWebGPUProgram",
+        "link": "/api/flxshaderwebgpuprogram"
+      },
+      {
+        "text": "FlxSignalListener",
+        "link": "/api/flxsignallistener"
+      },
+      {
+        "text": "FlxStateConstructor",
+        "link": "/api/flxstateconstructor"
+      },
+      {
+        "text": "FlxStateRuntime",
+        "link": "/api/flxstateruntime"
+      },
+      {
+        "text": "FlxSubStateCallback",
+        "link": "/api/flxsubstatecallback"
+      },
+      {
+        "text": "FlxTimer",
+        "link": "/api/flxtimer"
+      },
+      {
+        "text": "FlxTimerCallback",
+        "link": "/api/flxtimercallback"
+      },
+      {
+        "text": "ReplayFileFormat",
+        "link": "/api/replayfileformat"
+      }
+    ]
+  }
+]
