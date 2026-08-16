@@ -215,7 +215,7 @@ onMounted(() => {
 }
 
 .item-badge.next {
-  background: rgba(245, 158, 11, 0.10);
+  background: rgba(245, 158, 11, 0.1);
   color: #d97706;
   border: 1px solid rgba(245, 158, 11, 0.25);
 }
