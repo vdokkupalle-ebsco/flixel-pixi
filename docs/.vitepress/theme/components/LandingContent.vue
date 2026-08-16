@@ -217,10 +217,10 @@ if (host) {
           <a href="/guide/getting-started" class="btn-banner primary">
             Read the Getting Started Guide &rarr;
           </a>
-          <a href="/examples/" class="btn-banner secondary">
+          <a href="/examples/" class="btn-banner outline">
             Browse 20+ Runnable Examples &nearr;
           </a>
-          <a href="/api/" class="btn-banner ghost"> API Reference </a>
+          <a href="/api/" class="btn-banner outline"> API Reference </a>
         </div>
       </div>
     </section>
@@ -235,7 +235,7 @@ if (host) {
 }
 
 .home-section {
-  margin: 64px 0;
+  margin: 72px 0;
 }
 
 .section-badge {
@@ -244,7 +244,7 @@ if (host) {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--vp-c-accent-pink);
+  color: var(--vp-c-brand-1);
   margin-bottom: 8px;
 }
 
@@ -266,9 +266,9 @@ if (host) {
 
 .section-subtitle {
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--vp-c-text-2);
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   max-width: 720px;
 }
 
@@ -282,20 +282,16 @@ if (host) {
 .pillar-card {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-border);
+  border-left: 3px solid transparent;
   border-radius: 12px;
   padding: 24px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   transition: var(--vp-transition);
 }
 
 .pillar-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--vp-c-brand-1);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.1),
-    0 0 16px var(--vp-c-brand-soft);
+  border-left-color: var(--vp-c-brand-1);
 }
 
 .pillar-tag {
@@ -318,7 +314,7 @@ if (host) {
 
 .pillar-text {
   font-size: 13.5px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--vp-c-text-2);
   margin: 0 0 16px 0;
   flex: 1;
@@ -343,11 +339,22 @@ if (host) {
 
 /* Code Showcase Box */
 .code-showcase-box {
+  position: relative;
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-border);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.code-showcase-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--vp-c-brand-1);
+  z-index: 5;
 }
 
 .code-box-header {
@@ -423,16 +430,11 @@ if (host) {
 }
 
 .cta-banner {
-  background: linear-gradient(
-    135deg,
-    var(--vp-c-bg-mute) 0%,
-    var(--vp-c-bg-soft) 100%
-  );
+  background: var(--vp-c-bg-mute);
   border: 1px solid var(--vp-c-border);
   border-radius: 16px;
   padding: 48px 32px;
   text-align: center;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
 }
 
 .cta-banner h2 {
@@ -472,40 +474,24 @@ if (host) {
 .btn-banner.primary {
   background: var(--vp-c-brand-1);
   color: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 150, 199, 0.3);
 }
 
 html.dark .btn-banner.primary {
-  background: #00e5ff;
-  color: #07090e;
-  box-shadow: 0 4px 16px rgba(0, 229, 255, 0.35);
+  color: #111113;
 }
 
 .btn-banner.primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
-.btn-banner.secondary {
-  background: var(--vp-c-bg-elv);
-  border: 1px solid var(--vp-c-accent-pink);
-  color: var(--vp-c-accent-pink);
-}
-
-.btn-banner.secondary:hover {
-  background: var(--vp-c-accent-pink);
-  color: #ffffff;
-  transform: translateY(-2px);
-}
-
-.btn-banner.ghost {
+.btn-banner.outline {
   background: transparent;
   border: 1px solid var(--vp-c-border);
   color: var(--vp-c-text-2);
 }
 
-.btn-banner.ghost:hover {
-  background: var(--vp-c-bg-mute);
-  color: var(--vp-c-text-1);
+.btn-banner.outline:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
 }
 </style>

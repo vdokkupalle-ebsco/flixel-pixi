@@ -489,20 +489,16 @@ const filteredExamples = computed(() => {
 .interactive-card {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-border);
+  border-left: 3px solid transparent;
   border-radius: 12px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   transition: var(--vp-transition);
 }
 
 .interactive-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--vp-c-brand-1);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.15),
-    0 0 16px var(--vp-c-brand-soft);
+  border-left-color: var(--vp-c-brand-1);
 }
 
 .card-head {
@@ -529,7 +525,7 @@ const filteredExamples = computed(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--vp-c-accent-pink);
+  color: var(--vp-c-brand-1);
 }
 
 .card-name {

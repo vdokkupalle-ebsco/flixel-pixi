@@ -26,8 +26,6 @@ function copyInstall() {
 
 <template>
   <section class="hero-wrapper">
-    <div class="hero-glow-bg"></div>
-
     <div class="hero-inner">
       <!-- Logo Brand Emblem -->
       <div class="hero-logo-frame">
@@ -42,13 +40,10 @@ function copyInstall() {
 
       <!-- Engine Version and Target Line -->
       <div class="hero-badge-group">
-        <span class="badge-pill active-tag">
-          <span class="pulse-dot"></span>
-          v0.1.0-rc.5 Prerelease
-        </span>
-        <span class="badge-pill tech-tag">PixiJS v8 Engine</span>
-        <span class="badge-pill ts-tag">TypeScript 5.9</span>
-        <span class="badge-pill mit-tag">MIT Licensed</span>
+        <span class="badge-pill active-tag">v0.1.0-rc.5 Prerelease</span>
+        <span class="badge-pill">PixiJS v8 Engine</span>
+        <span class="badge-pill">TypeScript 5.9</span>
+        <span class="badge-pill">MIT Licensed</span>
       </div>
 
       <!-- Main Headline -->
@@ -132,18 +127,18 @@ function copyInstall() {
           <span>Documentation &amp; Guide</span>
           <span class="arrow">&rarr;</span>
         </a>
-        <a href="/examples/" class="btn-cta btn-secondary">
-          <span class="game-icon">&#127918;</span>
+        <a href="/examples/" class="btn-cta btn-outline">
+          <span>&#127918;</span>
           <span>Playable Examples</span>
         </a>
-        <a href="/api/" class="btn-cta btn-ghost">
+        <a href="/api/" class="btn-cta btn-outline">
           <span>API Reference</span>
         </a>
         <a
           href="https://github.com/vdokkupalle-ebsco/flixel-pixi"
           target="_blank"
           rel="noopener noreferrer"
-          class="btn-cta btn-github"
+          class="btn-cta btn-outline"
         >
           <span>GitHub</span>
           <span class="ext-icon">&#x2197;</span>
@@ -151,22 +146,22 @@ function copyInstall() {
       </div>
 
       <!-- Key Specs Bar -->
-      <div class="specs-grid">
+      <div class="specs-strip">
         <div class="spec-item">
           <span class="spec-val">Fixed-Step</span>
           <span class="spec-label">Deterministic 60/120Hz Loop</span>
         </div>
-        <div class="spec-divider"></div>
+        <span class="spec-sep">/</span>
         <div class="spec-item">
           <span class="spec-val">PixiJS v8</span>
           <span class="spec-label">WebGL &amp; WebGPU Batching</span>
         </div>
-        <div class="spec-divider"></div>
+        <span class="spec-sep">/</span>
         <div class="spec-item">
           <span class="spec-val">QuadTree</span>
           <span class="spec-label">Zero-Alloc Spatial Physics</span>
         </div>
-        <div class="spec-divider"></div>
+        <span class="spec-sep">/</span>
         <div class="spec-item">
           <span class="spec-val">0 Leaks</span>
           <span class="spec-label">Soak &amp; GC Verified</span>
@@ -179,33 +174,13 @@ function copyInstall() {
 <style scoped>
 .hero-wrapper {
   position: relative;
-  padding: 48px 16px 36px;
+  padding: 56px 16px 40px;
   max-width: 1080px;
   margin: 0 auto;
-  overflow: hidden;
-}
-
-.hero-glow-bg {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 500px;
-  height: 280px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(0, 229, 255, 0.12) 0%,
-    rgba(255, 42, 109, 0.08) 50%,
-    transparent 80%
-  );
-  filter: blur(60px);
-  pointer-events: none;
-  z-index: 0;
 }
 
 .hero-inner {
   position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -214,24 +189,22 @@ function copyInstall() {
 
 /* Logo Frame */
 .hero-logo-frame {
-  margin-bottom: 24px;
-  position: relative;
+  margin-bottom: 28px;
 }
 
 .hero-logo-img {
-  width: 120px;
-  height: 120px;
-  border-radius: 26px;
+  width: 110px;
+  height: 110px;
+  border-radius: 24px;
   box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.4),
-    0 0 24px rgba(0, 229, 255, 0.25),
-    0 0 48px rgba(255, 42, 109, 0.15);
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--vp-c-border);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero-logo-img:hover {
-  transform: scale(1.06) rotate(1deg);
+  transform: scale(1.04);
 }
 
 /* Badge Group */
@@ -240,7 +213,7 @@ function copyInstall() {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .badge-pill {
@@ -254,55 +227,31 @@ function copyInstall() {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--vp-c-bg-soft);
+  background: var(--vp-c-bg-mute);
   border: 1px solid var(--vp-c-border);
-  color: var(--vp-c-text-2);
+  color: var(--vp-c-text-3);
 }
 
 .badge-pill.active-tag {
-  background: rgba(0, 150, 199, 0.1);
-  border-color: var(--vp-c-brand-soft);
+  background: var(--vp-c-brand-soft);
+  border-color: var(--vp-c-brand-1);
   color: var(--vp-c-brand-1);
-}
-
-.pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--vp-c-brand-1);
-  box-shadow: 0 0 8px var(--vp-c-brand-1);
-}
-
-.badge-pill.tech-tag {
-  color: var(--vp-c-accent-pink);
-  border-color: var(--vp-c-accent-pink-soft);
-  background: var(--vp-c-accent-pink-soft);
-}
-
-.badge-pill.ts-tag {
-  color: #0284c7;
-  border-color: rgba(2, 132, 199, 0.25);
-}
-
-.dark .badge-pill.ts-tag {
-  color: #60a5fa;
-  border-color: rgba(96, 165, 250, 0.25);
 }
 
 /* Typography */
 .hero-headline {
-  font-size: 38px;
-  line-height: 1.15;
+  font-size: 42px;
+  line-height: 1.12;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   color: var(--vp-c-text-1);
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   max-width: 880px;
 }
 
 @media (min-width: 768px) {
   .hero-headline {
-    font-size: 52px;
+    font-size: 56px;
   }
 }
 
@@ -312,10 +261,10 @@ function copyInstall() {
 
 .hero-lead {
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--vp-c-text-2);
-  max-width: 740px;
-  margin-bottom: 32px;
+  max-width: 720px;
+  margin-bottom: 36px;
 }
 
 /* Terminal Card */
@@ -326,10 +275,7 @@ function copyInstall() {
   border: 1px solid var(--vp-c-border);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.2),
-    0 0 1px rgba(0, 0, 0, 0.1);
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .terminal-header {
@@ -408,15 +354,19 @@ function copyInstall() {
   gap: 10px;
   text-align: left;
   overflow-x: auto;
-  background: #090c14;
+  background: #18181b;
 }
 
 .term-prompt {
-  color: #ff2a6d;
+  color: var(--vp-c-accent-rose);
   font-family: var(--vp-font-family-mono);
   font-weight: 700;
   font-size: 13px;
   user-select: none;
+}
+
+html:not(.dark) .term-prompt {
+  color: #be123c;
 }
 
 .term-code {
@@ -432,7 +382,7 @@ function copyInstall() {
   flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
-  margin-bottom: 40px;
+  margin-bottom: 44px;
 }
 
 .btn-cta {
@@ -450,65 +400,34 @@ function copyInstall() {
 .btn-primary {
   background: var(--vp-c-brand-1);
   color: #ffffff;
-  box-shadow: 0 4px 20px rgba(0, 150, 199, 0.35);
 }
 
 .dark .btn-primary {
-  background: #00e5ff;
-  color: #07090e;
-  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.35);
+  color: #111113;
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
-.btn-secondary {
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-border);
-  color: var(--vp-c-text-1);
-}
-
-.btn-secondary:hover {
-  border-color: var(--vp-c-accent-pink);
-  color: var(--vp-c-accent-pink);
-  transform: translateY(-2px);
-}
-
-.btn-ghost {
+.btn-outline {
   background: transparent;
   border: 1px solid var(--vp-c-border);
   color: var(--vp-c-text-2);
 }
 
-.btn-ghost:hover {
-  background: var(--vp-c-bg-soft);
-  color: var(--vp-c-text-1);
-}
-
-.btn-github {
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-border);
-  color: var(--vp-c-text-2);
-}
-
-.btn-github:hover {
-  color: var(--vp-c-text-1);
+.btn-outline:hover {
   border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
 }
 
-/* Specs Grid */
-.specs-grid {
+/* Specs Strip */
+.specs-strip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 16px 24px;
-  padding: 16px 24px;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-border);
-  border-radius: 12px;
+  gap: 8px 16px;
   max-width: 860px;
   width: 100%;
 }
@@ -531,16 +450,16 @@ function copyInstall() {
   color: var(--vp-c-text-3);
 }
 
-.spec-divider {
-  width: 1px;
-  height: 28px;
-  background: var(--vp-c-divider);
+.spec-sep {
+  color: var(--vp-c-text-3);
+  font-size: 14px;
+  font-weight: 300;
   display: none;
 }
 
 @media (min-width: 640px) {
-  .spec-divider {
-    display: block;
+  .spec-sep {
+    display: inline;
   }
 }
 </style>

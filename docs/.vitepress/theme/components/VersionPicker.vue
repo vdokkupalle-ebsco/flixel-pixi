@@ -127,7 +127,7 @@ onMounted(() => {
 }
 
 .version-picker-btn:hover {
-  border-color: rgba(0, 229, 255, 0.4);
+  border-color: var(--vp-c-brand-1);
   background: var(--vp-c-bg-mute);
 }
 
@@ -135,8 +135,7 @@ onMounted(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #00e5ff;
-  box-shadow: 0 0 6px #00e5ff;
+  background: var(--vp-c-brand-1);
 }
 
 .chevron {
@@ -153,13 +152,12 @@ onMounted(() => {
   top: calc(100% + 6px);
   right: 0;
   min-width: 220px;
-  background: #0d121c;
+  background: var(--vp-c-bg-elv);
   border: 1px solid var(--vp-c-border);
   border-radius: 8px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   padding: 6px 0;
   z-index: 100;
-  backdrop-filter: blur(12px);
 }
 
 .dropdown-section {
@@ -198,7 +196,7 @@ onMounted(() => {
 }
 
 .dropdown-item.active {
-  color: #00e5ff;
+  color: var(--vp-c-brand-1);
   font-weight: 600;
 }
 
@@ -211,14 +209,19 @@ onMounted(() => {
 }
 
 .item-badge.latest {
-  background: rgba(0, 229, 255, 0.12);
-  color: #00e5ff;
-  border: 1px solid rgba(0, 229, 255, 0.3);
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  border: 1px solid var(--vp-c-brand-1);
 }
 
 .item-badge.next {
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.10);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+html.dark .item-badge.next {
   color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.3);
 }
 </style>

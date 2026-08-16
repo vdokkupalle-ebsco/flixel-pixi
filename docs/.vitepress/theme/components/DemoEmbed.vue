@@ -136,9 +136,6 @@ function toggleFullscreen() {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-border);
   overflow: hidden;
-  box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.15),
-    0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 .cabinet-header {
@@ -161,12 +158,11 @@ function toggleFullscreen() {
   height: 8px;
   border-radius: 50%;
   background: var(--vp-c-text-3);
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
 .status-indicator.live {
   background: var(--vp-c-brand-1);
-  box-shadow: 0 0 10px var(--vp-c-brand-1);
 }
 
 .cabinet-title {
@@ -208,7 +204,7 @@ function toggleFullscreen() {
 .cabinet-screen {
   position: relative;
   width: 100%;
-  background: #04060a;
+  background: #18181b;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -223,7 +219,7 @@ function toggleFullscreen() {
   min-height: 480px;
   padding: 32px;
   text-align: center;
-  background: radial-gradient(circle at center, #0f1524 0%, #04060a 100%);
+  background: #18181b;
 }
 
 .prompt-box {
@@ -238,7 +234,7 @@ function toggleFullscreen() {
 .prompt-title {
   font-size: 22px;
   font-weight: 800;
-  color: #ffffff;
+  color: #fafaf9;
   margin-bottom: 10px;
   letter-spacing: -0.02em;
 }
@@ -246,7 +242,7 @@ function toggleFullscreen() {
 .prompt-instructions {
   font-size: 14px;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: #a8a29e;
   margin-bottom: 24px;
 }
 
@@ -257,19 +253,16 @@ function toggleFullscreen() {
   padding: 12px 28px;
   font-size: 14px;
   font-weight: 700;
-  color: #07090e;
-  background: #00e5ff;
+  color: #111113;
+  background: var(--vp-c-brand-1);
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.4);
   transition: var(--vp-transition);
 }
 
 .launch-btn:hover {
-  background: #3beeff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 229, 255, 0.6);
+  opacity: 0.9;
 }
 
 .game-iframe {

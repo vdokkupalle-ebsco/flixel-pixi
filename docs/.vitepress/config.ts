@@ -45,10 +45,10 @@ export default defineConfig({
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400;1,14..32,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap',
       },
     ],
-    ['meta', { name: 'theme-color', content: '#080a0f' }],
+    ['meta', { name: 'theme-color', content: '#111113' }],
     ['meta', { property: 'og:type', content: 'website' }],
     [
       'meta',
