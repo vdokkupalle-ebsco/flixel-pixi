@@ -13,6 +13,7 @@ if (existsSync(apiSidebarPath)) {
 }
 
 export default defineConfig({
+  base: process.env.BASE_URL || '/flixel-pixi/',
   title: 'Flixel-Pixi',
   description:
     'A TypeScript port of the original AS3 Flixel engine using PixiJS v8.',
@@ -28,7 +29,7 @@ export default defineConfig({
     },
   },
   sitemap: {
-    hostname: 'https://flixel-pixi.dev',
+    hostname: 'https://vdokkupalle-ebsco.github.io/flixel-pixi',
   },
   head: [
     ['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }],
@@ -69,7 +70,7 @@ export default defineConfig({
       'meta',
       {
         property: 'og:image',
-        content: 'https://flixel-pixi.dev/logo.png',
+        content: 'https://vdokkupalle-ebsco.github.io/flixel-pixi/logo.png',
       },
     ],
   ],
