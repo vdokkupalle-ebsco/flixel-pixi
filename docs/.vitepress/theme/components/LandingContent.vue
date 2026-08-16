@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withBase } from 'vitepress';
 import DemoEmbed from './DemoEmbed.vue';
 
 const sampleCode = `import { createBrowserGame, FlxG, FlxSprite, FlxState } from 'flixel-pixi';
@@ -214,13 +215,18 @@ if (host) {
           complete API documentation.
         </p>
         <div class="cta-banner-actions">
-          <a href="/guide/getting-started" class="btn-banner primary">
+          <a
+            :href="withBase('/guide/getting-started')"
+            class="btn-banner primary"
+          >
             Read the Getting Started Guide &rarr;
           </a>
-          <a href="/examples/" class="btn-banner outline">
+          <a :href="withBase('/examples/')" class="btn-banner outline">
             Browse 20+ Runnable Examples &nearr;
           </a>
-          <a href="/api/" class="btn-banner outline"> API Reference </a>
+          <a :href="withBase('/api/')" class="btn-banner outline">
+            API Reference
+          </a>
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { withBase } from 'vitepress';
 
 type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
@@ -30,7 +31,7 @@ function copyInstall() {
       <!-- Logo Brand Emblem -->
       <div class="hero-logo-frame">
         <img
-          src="/logo.png"
+          :src="withBase('/logo.png')"
           alt="Flixel-Pixi Logo"
           class="hero-logo-img"
           width="130"
@@ -123,15 +124,18 @@ function copyInstall() {
 
       <!-- Action Navigation Buttons -->
       <div class="hero-cta-group">
-        <a href="/guide/getting-started" class="btn-cta btn-primary">
+        <a
+          :href="withBase('/guide/getting-started')"
+          class="btn-cta btn-primary"
+        >
           <span>Documentation &amp; Guide</span>
           <span class="arrow">&rarr;</span>
         </a>
-        <a href="/examples/" class="btn-cta btn-outline">
+        <a :href="withBase('/examples/')" class="btn-cta btn-outline">
           <span>&#127918;</span>
           <span>Playable Examples</span>
         </a>
-        <a href="/api/" class="btn-cta btn-outline">
+        <a :href="withBase('/api/')" class="btn-cta btn-outline">
           <span>API Reference</span>
         </a>
         <a
