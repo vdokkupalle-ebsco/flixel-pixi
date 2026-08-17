@@ -19,3 +19,7 @@ platform-game-assets/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/public/games/
+
+# Agent & Claude local skills
+.agents/skills/
+.claude/
