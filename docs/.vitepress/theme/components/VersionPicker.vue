@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vitepress';
+import { useRoute, useRouter, withBase } from 'vitepress';
 import versionsData from '../../versions.json';
 
 const route = useRoute();
@@ -54,7 +54,7 @@ onMounted(() => {
       <div class="dropdown-section">
         <div class="dropdown-header">Recommended</div>
         <a
-          href="/"
+          :href="withBase('/')"
           class="dropdown-item"
           :class="{
             active: currentVersionLabel === `v${versionsData.latest.version}`,
@@ -68,7 +68,7 @@ onMounted(() => {
       <div class="dropdown-section">
         <div class="dropdown-header">Development</div>
         <a
-          href="/versions/next/"
+          :href="withBase('/versions/next/')"
           class="dropdown-item"
           :class="{ active: currentVersionLabel === 'Next (main)' }"
         >
@@ -85,7 +85,7 @@ onMounted(() => {
         <a
           v-for="ver in versionsData.versions"
           :key="ver.version"
-          :href="ver.path"
+          :href="withBase(ver.path)"
           class="dropdown-item"
           :class="{
             active:

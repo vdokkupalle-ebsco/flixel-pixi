@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRoute } from 'vitepress';
+import { useRoute, withBase } from 'vitepress';
 
 const route = useRoute();
 
@@ -34,7 +34,11 @@ const versionInfo = computed(() => {
     <div class="banner-content">
       <span class="banner-badge">{{ versionInfo.badge }}</span>
       <span class="banner-text">{{ versionInfo.message }}</span>
-      <a v-if="versionInfo.showLatestLink" href="/" class="banner-link">
+      <a
+        v-if="versionInfo.showLatestLink"
+        :href="withBase('/')"
+        class="banner-link"
+      >
         View latest documentation &rarr;
       </a>
     </div>
