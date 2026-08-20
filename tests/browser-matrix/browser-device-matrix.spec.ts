@@ -19,6 +19,20 @@ async function openViewportDemo(page: Page): Promise<void> {
     .not.toBeNull();
 }
 
+async function waitForRenderedFrame(page: Page): Promise<void> {
+  const before = await page.evaluate(
+    () => window.__FLIXEL_PIXI_VIEWPORT__?.app?.frameCount ?? -1,
+  );
+  expect(before).toBeGreaterThanOrEqual(0);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.__FLIXEL_PIXI_VIEWPORT__?.app?.frameCount ?? -1,
+      ),
+    )
+    .toBeGreaterThan(before);
+}
+
 test('keeps layout, DPR, and semantic HUD controls valid across orientation changes', async ({
   page,
 }) => {
@@ -201,8 +215,8 @@ test('pauses for visibility loss and resumes without accumulated simulation debt
 test('survives repeated resize pressure and releases browser-owned surfaces', async ({
   page,
 }) => {
+  await openViewportDemo(page);
   for (let cycle = 0; cycle < matrix.pressureCycles; cycle++) {
-    await openViewportDemo(page);
     for (const viewport of [
       { height: 667, width: 375 },
       { height: 375, width: 667 },
@@ -212,15 +226,16 @@ test('survives repeated resize pressure and releases browser-owned surfaces', as
       await page.evaluate(() =>
         window.__FLIXEL_PIXI_VIEWPORT__?.app?.viewport.refresh(),
       );
+      await waitForRenderedFrame(page);
     }
-    await page.locator('[data-action="destroy"]').click();
-    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
-      'data-state',
-      'destroyed',
-    );
-    await expect(page.locator('canvas')).toHaveCount(0);
-    await expect(page.locator('[data-flx-accessible-button]')).toHaveCount(0);
   }
+  await page.locator('[data-action="destroy"]').click();
+  await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+    'data-state',
+    'destroyed',
+  );
+  await expect(page.locator('canvas')).toHaveCount(0);
+  await expect(page.locator('[data-flx-accessible-button]')).toHaveCount(0);
 });
 
 test('survives an engine memory-pressure notification when automation exposes one', async ({

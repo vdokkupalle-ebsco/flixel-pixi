@@ -9,12 +9,32 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
+## 0.1.0-rc.6 — 2026-08-20
+
+This release candidate separates mobile resize pressure from repeated
+application lifecycle soak so headless browser verification exercises each
+contract without rapid WebGL context churn obscuring the result.
+
+### Added
+
+- Added the VitePress documentation website, generated API reference, embedded
+  examples, release snapshots, and GitHub Pages deployment workflow.
+
+### Changed
+
+- Keep all five mobile resize-pressure cycles on one live application, then
+  verify canvas and accessibility surfaces are released after teardown.
+- Leave repeated boot/destroy coverage to the dedicated performance soak rather
+  than forcing rapid WebGL context loss and recreation inside the resize test.
+- Refined the documentation website layout, navigation, version picker, and
+  responsive presentation.
+
 ## 0.1.0-rc.5 — 2026-08-15
 
-This release candidate aligns trusted publishing with the browser orchestration
-already proven by the dedicated release-verification workflow. The runtime API
-and package contents are unchanged from `0.1.0-rc.1` apart from release
-metadata.
+This version was tagged but not published. Its isolated mobile browser gate
+lost the headless Chromium session during rapid repeated WebGL context
+recreation before package preview and trusted publishing, so npm's `next` tag
+remained on `0.1.0-rc.1`.
 
 ### Changed
 
