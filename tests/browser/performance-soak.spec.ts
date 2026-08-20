@@ -4,6 +4,8 @@ import budgets from '../../performance-budgets.json' with { type: 'json' };
 
 const GAMES = 'http://127.0.0.1:4174';
 const PERF_GATES = process.env.RENDER_PERF_GATES === '1';
+const REFERENCE_FPS_GATES =
+  PERF_GATES && process.env.RENDER_PERF_REFERENCE_GATES === '1';
 const SOAK_MINUTES = Number(process.env.SOAK_MINUTES ?? 0);
 const LONG_SOAK = Number.isFinite(SOAK_MINUTES) && SOAK_MINUTES > 0;
 const SOAK_DURATION_MS = LONG_SOAK ? SOAK_MINUTES * 60_000 : 0;
@@ -48,8 +50,10 @@ test.describe('Sprite stress benchmark', () => {
       expect(Number.isFinite(metrics?.medianFps)).toBe(true);
       expect(Number.isFinite(metrics?.minFps)).toBe(true);
       expect(metrics?.avgFps ?? 0).toBeGreaterThan(0);
-      // Hardware floors are enabled only by the dedicated serial perf command.
-      if (PERF_GATES && browserName === 'chromium') {
+      // Absolute FPS floors describe the reference machine in
+      // performance-budgets.json. Hosted CI still exercises the same scenes,
+      // metrics, counts, and teardown without comparing unlike hardware.
+      if (REFERENCE_FPS_GATES && browserName === 'chromium') {
         const floor =
           budgets.browser.spriteStressMedianFpsMin[
             String(active) as '2000' | '5000' | '10000'

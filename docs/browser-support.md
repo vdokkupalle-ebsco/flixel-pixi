@@ -54,10 +54,11 @@ physical-device limitations are documented in
 
 Release CI uploads coverage, API model, benchmark, bundle-size, and Playwright
 reports.
-Release candidates additionally run `npm run verify:budgets` on the documented
-Apple M4 Pro reference profile. The portable CI lane continues to record
-benchmark reports without pretending that one machine's FPS floor applies to
-every hosted runner.
+Release candidates additionally run `npm run verify:budgets` on hosted CI. That
+portable lane exercises the browser stress scenes, resource ownership, teardown,
+bundle size, and deterministic workloads without comparing hosted hardware to
+the Apple M4 Pro FPS floors. Maintainers run `npm run test:perf:reference` on the
+documented reference profile when validating those absolute frame-rate limits.
 The same candidates run `npm run test:matrix`; native Edge, desktop Firefox and
 Safari interaction checks, physical Android, and physical iOS/Safari results
 remain explicit manual approval evidence.

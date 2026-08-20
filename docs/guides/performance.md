@@ -24,8 +24,8 @@ Destroy states, unload asset bundles you no longer need, and drop render handles
 ## Release budgets
 
 Named 1.0-candidate limits live in
-[`performance-budgets.json`](../../performance-budgets.json). Run the complete
-reference-hardware lane with:
+[`performance-budgets.json`](../../performance-budgets.json). Run the portable
+CI/release lane with:
 
 ```bash
 npm run verify:budgets
@@ -35,6 +35,16 @@ npm run verify:budgets
 selected deterministic Vitest workloads, writes
 `reports/performance-budget-results.json`, and fails when a named ceiling is
 exceeded. `test:perf` runs the Chromium sprite and lifecycle budgets serially.
+It requires every stress scene to boot with the expected counts, report finite
+positive frame metrics, and release owned resources, but it does not apply an
+absolute FPS floor to variable hosted hardware.
+
+Run the hardware-sensitive FPS thresholds explicitly on the documented
+reference machine with:
+
+```bash
+npm run test:perf:reference
+```
 
 The reference machine is a 24 GB MacBook Pro `Mac16,8` with a 12-core Apple M4
 Pro CPU and 16-core GPU, macOS 26.5.2 arm64, Node 22.x, Playwright 1.62.1, and
@@ -49,9 +59,9 @@ cross-device frame-rate promises.
 | Lifecycle ownership | ≤2 render handles, 1 target, 2 generated texture sources, 1 audio context/handle, 1 canvas |
 | Teardown            | every engine-owned count returns to zero; retained process listeners ≤16                   |
 
-Median FPS is the hard browser statistic because it represents sustained frame
-delivery without allowing isolated OS/browser scheduling stalls to invalidate a
-run. Mean and minimum FPS remain report diagnostics. CPU means have explicit
+Median FPS is the reference-machine browser statistic because it represents
+sustained frame delivery without allowing isolated OS/browser scheduling stalls
+to invalidate a run. Mean and minimum FPS remain report diagnostics. CPU means have explicit
 per-workload ceilings in the JSON file, with enough headroom to detect material
 regressions without treating benchmark noise as a release failure.
 

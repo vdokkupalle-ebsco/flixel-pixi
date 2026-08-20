@@ -1,6 +1,6 @@
 {
   "name": "flixel-pixi",
-  "version": "0.1.0-rc.6",
+  "version": "0.1.0-rc.7",
   "description": "A TypeScript port of the original AS3 Flixel engine using PixiJS v8.",
   "type": "module",
   "license": "MIT",
@@ -60,6 +60,7 @@
     "test:e2e": "playwright test",
     "test:matrix": "playwright test --config=playwright.matrix.config.ts",
     "test:perf": "RENDER_PERF_GATES=1 playwright test tests/browser/performance-soak.spec.ts --project=chromium --workers=1",
+    "test:perf:reference": "RENDER_PERF_GATES=1 RENDER_PERF_REFERENCE_GATES=1 playwright test tests/browser/performance-soak.spec.ts --project=chromium --workers=1",
     "test:soak:30m": "SOAK_MINUTES=30 playwright test tests/browser/performance-soak.spec.ts --project=chromium --workers=1 --grep 'Boot/destroy soak'",
     "bench": "vitest bench --run --outputJson=reports/benchmarks.json",
     "check:budgets": "npm run build:lib && npm run report:bundle && npm run bench && node scripts/check-performance-budgets.mjs",

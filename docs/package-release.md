@@ -51,6 +51,8 @@ Only after explicit release approval:
 2. complete the manual physical-browser/device matrix;
 3. confirm that the package is publishable and the version is unused;
 4. run `npm ci`, `npm run verify`, and `npm run verify:budgets` from that commit;
+   run `npm run test:perf:reference` separately on the documented reference
+   machine when validating absolute FPS floors;
 5. create an immutable `v<version>` tag on the approved commit;
 6. dispatch `publish-npm.yml` from that tag with the exact version as input;
 7. confirm npm generated signed provenance through trusted publishing;
