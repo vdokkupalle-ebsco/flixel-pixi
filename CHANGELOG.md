@@ -9,12 +9,30 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
+## 0.1.0-rc.6 — 2026-08-20
+
+This release candidate aligns the isolated mobile browser gate with the Node.js
+22 environment proven by release verification. Package construction and npm
+trusted publishing remain on Node.js 24.
+
+### Added
+
+- Added the VitePress documentation website, generated API reference, embedded
+  examples, release snapshots, and GitHub Pages deployment workflow.
+
+### Changed
+
+- Run mobile browser pressure verification on Node.js 22 in both release
+  verification and trusted publishing while retaining the existing one-worker
+  Playwright contract.
+- Refined the documentation website layout, navigation, version picker, and
+  responsive presentation.
+
 ## 0.1.0-rc.5 — 2026-08-15
 
-This release candidate aligns trusted publishing with the browser orchestration
-already proven by the dedicated release-verification workflow. The runtime API
-and package contents are unchanged from `0.1.0-rc.1` apart from release
-metadata.
+This version was tagged but not published. Its isolated mobile browser gate
+lost the Chromium session under Node.js 24 before package preview and trusted
+publishing, so npm's `next` tag remained on `0.1.0-rc.1`.
 
 ### Changed
 
