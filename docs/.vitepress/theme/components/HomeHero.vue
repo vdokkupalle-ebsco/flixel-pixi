@@ -1,469 +1,262 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { withBase } from 'vitepress';
 
-type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
-
-const selectedPM = ref<PackageManager>('npm');
+const installCommand = 'npm install flixel-pixi@next pixi.js@^8.19.0';
 const copied = ref(false);
 
-const installCommands: Record<PackageManager, string> = {
-  npm: 'npm install flixel-pixi@next pixi.js@^8.19.0',
-  pnpm: 'pnpm add flixel-pixi@next pixi.js@^8.19.0',
-  yarn: 'yarn add flixel-pixi@next pixi.js@^8.19.0',
-  bun: 'bun add flixel-pixi@next pixi.js@^8.19.0',
-};
+async function copyInstall() {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(installCommand);
+  } else {
+    const field = document.createElement('textarea');
+    field.value = installCommand;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.appendChild(field);
+    field.select();
+    document.execCommand('copy');
+    field.remove();
+  }
 
-const currentCmd = computed(() => installCommands[selectedPM.value]);
-
-function copyInstall() {
-  navigator.clipboard?.writeText(currentCmd.value);
   copied.value = true;
-  setTimeout(() => {
-    copied.value = false;
-  }, 2000);
+  window.setTimeout(() => (copied.value = false), 1800);
 }
 </script>
 
 <template>
-  <section class="hero-wrapper">
-    <div class="hero-inner">
-      <!-- Logo Brand Emblem -->
-      <div class="hero-logo-frame">
-        <img
-          :src="withBase('/logo.png')"
-          alt="Flixel-Pixi Logo"
-          class="hero-logo-img"
-          width="130"
-          height="130"
-        />
-      </div>
-
-      <!-- Engine Version and Target Line -->
-      <div class="hero-badge-group">
-        <span class="badge-pill active-tag">v0.1.0-rc.5 Prerelease</span>
-        <span class="badge-pill">PixiJS v8 Engine</span>
-        <span class="badge-pill">TypeScript 5.9</span>
-        <span class="badge-pill">MIT Licensed</span>
-      </div>
-
-      <!-- Main Headline -->
-      <h1 class="hero-headline">
-        The Classic Flixel Engine,
-        <br />
-        <span class="accent-text"
-          >Engineered for Modern Web &amp; PixiJS v8</span
-        >
-      </h1>
-
-      <!-- Subtitle Description -->
-      <p class="hero-lead">
-        A browser-native TypeScript game engine uniting AdamAtomic's
-        battle-tested fixed-step game loop and state architecture with PixiJS
-        v8's multi-backend WebGL / WebGPU rendering pipeline.
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="hero-copy">
+      <img
+        :src="withBase('/logo.jpg')"
+        class="hero-logo"
+        width="148"
+        height="148"
+        alt="Flixel-Pixi"
+        fetchpriority="high"
+      />
+      <h1 id="home-title">Make 2D games for the web.</h1>
+      <p class="hero-intro">
+        Flixel-Pixi is a code-first TypeScript game engine built on PixiJS. It
+        includes states, sprites, animation, collision, input, sound, cameras,
+        tilemaps, and the browser runtime that connects them.
       </p>
 
-      <!-- Multi-Package Manager Install Terminal -->
-      <div class="terminal-card">
-        <div class="terminal-header">
-          <div class="pm-tabs">
-            <button
-              v-for="pm in ['npm', 'pnpm', 'yarn', 'bun'] as const"
-              :key="pm"
-              class="pm-tab"
-              :class="{ active: selectedPM === pm }"
-              @click="selectedPM = pm"
-            >
-              {{ pm }}
-            </button>
-          </div>
-          <button
-            class="copy-action-btn"
-            @click="copyInstall"
-            :title="copied ? 'Copied to clipboard' : 'Copy command'"
-          >
-            <span v-if="!copied" class="copy-label">
-              <svg
-                class="copy-icon"
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                stroke="currentColor"
-                stroke-width="2"
-                fill="none"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path
-                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                ></path>
-              </svg>
-              Copy
-            </span>
-            <span v-else class="copied-label">
-              <svg
-                class="check-icon"
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                stroke="currentColor"
-                stroke-width="2.5"
-                fill="none"
-              >
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              Copied!
-            </span>
-          </button>
-        </div>
-
-        <div class="terminal-body">
-          <span class="term-prompt">$</span>
-          <code class="term-code">{{ currentCmd }}</code>
-        </div>
-      </div>
-
-      <!-- Action Navigation Buttons -->
-      <div class="hero-cta-group">
-        <a
-          :href="withBase('/guide/getting-started')"
-          class="btn-cta btn-primary"
-        >
-          <span>Documentation &amp; Guide</span>
-          <span class="arrow">&rarr;</span>
+      <div class="hero-actions">
+        <a :href="withBase('/guide/getting-started')" class="primary-action">
+          Start building <span aria-hidden="true">→</span>
         </a>
-        <a :href="withBase('/examples/')" class="btn-cta btn-outline">
-          <span>&#127918;</span>
-          <span>Playable Examples</span>
-        </a>
-        <a :href="withBase('/api/')" class="btn-cta btn-outline">
-          <span>API Reference</span>
-        </a>
-        <a
-          href="https://github.com/vdokkupalle-ebsco/flixel-pixi"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn-cta btn-outline"
-        >
-          <span>GitHub</span>
-          <span class="ext-icon">&#x2197;</span>
+        <a :href="withBase('/examples/')" class="secondary-action">
+          Explore examples
         </a>
       </div>
 
-      <!-- Key Specs Bar -->
-      <div class="specs-strip">
-        <div class="spec-item">
-          <span class="spec-val">Fixed-Step</span>
-          <span class="spec-label">Deterministic 60/120Hz Loop</span>
-        </div>
-        <span class="spec-sep">/</span>
-        <div class="spec-item">
-          <span class="spec-val">PixiJS v8</span>
-          <span class="spec-label">WebGL &amp; WebGPU Batching</span>
-        </div>
-        <span class="spec-sep">/</span>
-        <div class="spec-item">
-          <span class="spec-val">QuadTree</span>
-          <span class="spec-label">Zero-Alloc Spatial Physics</span>
-        </div>
-        <span class="spec-sep">/</span>
-        <div class="spec-item">
-          <span class="spec-val">0 Leaks</span>
-          <span class="spec-label">Soak &amp; GC Verified</span>
-        </div>
+      <div class="install-command" aria-label="Install Flixel-Pixi">
+        <span aria-hidden="true">$</span>
+        <code>{{ installCommand }}</code>
+        <button
+          type="button"
+          :aria-label="
+            copied ? 'Install command copied' : 'Copy install command'
+          "
+          @click="copyInstall"
+        >
+          {{ copied ? 'Copied' : 'Copy' }}
+        </button>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.hero-wrapper {
+.home-hero {
   position: relative;
-  padding: 56px 16px 40px;
-  max-width: 1080px;
-  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  min-height: 670px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--vp-c-divider);
+  background:
+    radial-gradient(circle at 50% 28%, var(--vp-c-brand-soft), transparent 34%),
+    var(--vp-c-bg);
 }
 
-.hero-inner {
+.home-hero::before {
+  position: absolute;
+  inset: 0;
+  opacity: 0.26;
+  background-image:
+    linear-gradient(var(--vp-c-divider) 1px, transparent 1px),
+    linear-gradient(90deg, var(--vp-c-divider) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(circle at center, #000, transparent 72%);
+  content: '';
+  pointer-events: none;
+}
+
+.hero-copy {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  z-index: 1;
+  width: 100%;
+  max-width: 980px;
+  padding: 92px 28px 100px;
   text-align: center;
 }
 
-/* Logo Frame */
-.hero-logo-frame {
-  margin-bottom: 28px;
-}
-
-.hero-logo-img {
-  width: 110px;
-  height: 110px;
+.hero-logo {
+  display: block;
+  width: 148px;
+  height: 148px;
+  margin: 0 auto 30px;
   border-radius: 24px;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.12),
-    0 2px 6px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--vp-c-border);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  object-fit: cover;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 24%);
 }
 
-.hero-logo-img:hover {
-  transform: scale(1.04);
+h1 {
+  margin: 0;
+  color: var(--vp-c-text-1);
+  font-size: clamp(68px, 8vw, 108px);
+  font-weight: 850;
+  line-height: 0.94;
+  letter-spacing: -0.07em;
 }
 
-/* Badge Group */
-.hero-badge-group {
+.hero-intro {
+  max-width: 720px;
+  margin: 30px auto 0;
+  color: var(--vp-c-text-2);
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.hero-actions {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-top: 34px;
 }
 
-.badge-pill {
-  font-family: var(--vp-font-family-mono);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.hero-actions a {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--vp-c-bg-mute);
-  border: 1px solid var(--vp-c-border);
-  color: var(--vp-c-text-3);
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: var(--vp-transition);
 }
 
-.badge-pill.active-tag {
-  background: var(--vp-c-brand-soft);
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
+.primary-action {
+  color: #071518;
+  background: var(--vp-c-brand-1);
+  box-shadow: 0 10px 30px var(--vp-c-brand-shadow);
 }
 
-/* Typography */
-.hero-headline {
-  font-size: 42px;
-  line-height: 1.12;
-  font-weight: 800;
-  letter-spacing: -0.035em;
+.primary-action:hover {
+  background: var(--vp-c-brand-2);
+  transform: translateY(-1px);
+}
+
+.secondary-action {
   color: var(--vp-c-text-1);
-  margin-bottom: 20px;
-  max-width: 880px;
-}
-
-@media (min-width: 768px) {
-  .hero-headline {
-    font-size: 56px;
-  }
-}
-
-.accent-text {
-  color: var(--vp-c-brand-1);
-}
-
-.hero-lead {
-  font-size: 17px;
-  line-height: 1.65;
-  color: var(--vp-c-text-2);
-  max-width: 720px;
-  margin-bottom: 36px;
-}
-
-/* Terminal Card */
-.terminal-card {
-  width: 100%;
-  max-width: 640px;
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-border);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 36px;
 }
 
-.terminal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 12px;
-  background: var(--vp-c-bg-mute);
-  border-bottom: 1px solid var(--vp-c-divider);
-}
-
-.pm-tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.pm-tab {
-  padding: 4px 10px;
-  font-family: var(--vp-font-family-mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--vp-c-text-3);
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: var(--vp-transition);
-}
-
-.pm-tab:hover {
-  color: var(--vp-c-text-1);
-}
-
-.pm-tab.active {
-  color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-}
-
-.copy-action-btn {
-  padding: 4px 10px;
-  font-family: var(--vp-font-family-mono);
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--vp-c-bg-elv);
-  border: 1px solid var(--vp-c-border);
-  border-radius: 6px;
-  color: var(--vp-c-text-2);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: var(--vp-transition);
-}
-
-.copy-action-btn:hover {
-  background: var(--vp-c-bg-mute);
-  color: var(--vp-c-text-1);
+.secondary-action:hover {
   border-color: var(--vp-c-brand-1);
 }
 
-.copy-label,
-.copied-label {
-  display: flex;
+.install-command {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 4px;
-}
-
-.copied-label {
-  color: var(--vp-c-accent-green);
-}
-
-.terminal-body {
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-  overflow-x: auto;
-  background: #18181b;
-}
-
-.term-prompt {
-  color: var(--vp-c-accent-rose);
-  font-family: var(--vp-font-family-mono);
-  font-weight: 700;
-  font-size: 13px;
-  user-select: none;
-}
-
-html:not(.dark) .term-prompt {
-  color: #be123c;
-}
-
-.term-code {
-  font-family: var(--vp-font-family-mono);
-  font-size: 13px;
-  color: #e2e8f0;
-  white-space: nowrap;
-}
-
-/* CTA Group */
-.hero-cta-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 44px;
-}
-
-.btn-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 24px;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 8px;
-  text-decoration: none !important;
-  transition: var(--vp-transition);
-}
-
-.btn-primary {
-  background: var(--vp-c-brand-1);
-  color: #ffffff;
-}
-
-.dark .btn-primary {
-  color: #111113;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-}
-
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--vp-c-border);
-  color: var(--vp-c-text-2);
-}
-
-.btn-outline:hover {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
-}
-
-/* Specs Strip */
-.specs-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px 16px;
-  max-width: 860px;
+  gap: 11px;
   width: 100%;
+  max-width: 620px;
+  min-height: 54px;
+  margin: 30px auto 0;
+  padding: 8px 9px 8px 16px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 9px;
+  background: var(--vp-c-bg-soft);
+  box-shadow: var(--vp-shadow-sm);
+  text-align: left;
 }
 
-.spec-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.spec-val {
+.install-command > span {
+  color: var(--vp-c-accent-coral);
   font-family: var(--vp-font-family-mono);
-  font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
+}
+
+.install-command code {
+  overflow-x: auto;
   color: var(--vp-c-text-1);
+  font: 500 12px/1.5 var(--vp-font-family-mono);
+  white-space: nowrap;
+  scrollbar-width: none;
 }
 
-.spec-label {
-  font-size: 12px;
-  color: var(--vp-c-text-3);
-}
-
-.spec-sep {
-  color: var(--vp-c-text-3);
-  font-size: 14px;
-  font-weight: 300;
+.install-command code::-webkit-scrollbar {
   display: none;
 }
 
-@media (min-width: 640px) {
-  .spec-sep {
-    display: inline;
+.install-command button {
+  min-width: 64px;
+  min-height: 34px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  font: 700 10px var(--vp-font-family-mono);
+  cursor: pointer;
+}
+
+.install-command button:hover {
+  color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+}
+
+@media (max-width: 640px) {
+  .home-hero {
+    min-height: 620px;
+  }
+
+  .hero-copy {
+    padding: 74px 20px 82px;
+  }
+
+  h1 {
+    font-size: clamp(58px, 17vw, 78px);
+  }
+
+  .hero-logo {
+    width: 116px;
+    height: 116px;
+    margin-bottom: 24px;
+    border-radius: 18px;
+  }
+
+  .hero-intro {
+    font-size: 16px;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .install-command code {
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
 </style>

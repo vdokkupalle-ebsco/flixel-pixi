@@ -48,7 +48,7 @@ release evidence.
 
 The focused mobile lane runs through `npm run test:matrix`. Its budgets and
 physical-device limitations are documented in
-[browser-device-matrix.md](browser-device-matrix.md).
+[browser and device release matrix](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/browser-device-matrix.md).
 
 ## Reports
 

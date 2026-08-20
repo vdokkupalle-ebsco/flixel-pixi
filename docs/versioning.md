@@ -33,7 +33,7 @@ marked `@internal`.
 
 ## API freeze workflow
 
-[`etc/flixel-pixi.api.md`](../etc/flixel-pixi.api.md) is the committed public API
+[`etc/flixel-pixi.api.md`](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/etc/flixel-pixi.api.md) is the committed public API
 baseline. `npm run api:check` regenerates declarations and fails when the current
 surface differs from that baseline.
 

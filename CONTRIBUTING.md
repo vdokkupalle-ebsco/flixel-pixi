@@ -71,7 +71,7 @@ npx playwright install --with-deps chromium firefox webkit
 
 ## Public API changes
 
-The committed API baseline is [`etc/flixel-pixi.api.md`](etc/flixel-pixi.api.md).
+The committed API baseline is [`etc/flixel-pixi.api.md`](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/etc/flixel-pixi.api.md).
 Do not edit it manually.
 
 For an intentional public API change:
@@ -83,7 +83,7 @@ For an intentional public API change:
 5. run `npm run check:package`.
 
 Breaking changes during `0.1.0-rc.*` require a concrete validation reason and
-explicit review. See [versioning and API stability](docs/versioning.md).
+explicit review. See [versioning and API stability](/resources/versioning).
 
 ## Pull requests
 

@@ -6,7 +6,7 @@ Current work is organized by release outcomes rather than chronological mileston
 ## Modern HaxeFlixel parity
 
 Modern authoring improvements discovered from HaxeFlixel are tracked in the
-[HaxeFlixel parity priorities](docs/haxeflixel-priorities.md). That document is
+[HaxeFlixel parity priorities](/resources/haxeflixel-priorities). That document is
 the ordered feature backlog and records completed, active, planned, deferred,
 and unsupported work. This roadmap remains the release-outcome view; avoid
 duplicating the detailed parity list here.
@@ -89,5 +89,5 @@ all verification lanes pass, and the first external prerelease is approved.
 ## Historical record
 
 The chronological implementation plan, checkpoint evidence, and design notes are
-preserved under [`docs/history/`](docs/history/README.md). They are not part of
+preserved in the [repository history folder](https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/docs/history). They are not part of
 the current product taxonomy.
