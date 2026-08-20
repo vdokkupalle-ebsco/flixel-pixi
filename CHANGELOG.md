@@ -9,9 +9,29 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
+## 0.1.0-rc.7 — 2026-08-20
+
+This release candidate separates portable hosted-CI performance contracts from
+absolute frame-rate thresholds that are meaningful only on the documented
+reference machine.
+
+### Changed
+
+- Keep sprite stress readiness, object counts, finite positive frame metrics,
+  lifecycle ownership, and teardown checks in hosted release verification.
+- Add `npm run test:perf:reference` as the explicit Apple M4 Pro lane for the
+  frozen 2k, 5k, and 10k sprite median-FPS floors.
+- Run the portable performance and resource budget command during pre-tag
+  release verification as well as trusted publishing.
+- Give the 15-transition mobile resize-pressure contract a bounded CI timeout
+  separate from Playwright's default unit-test limit.
+
 ## 0.1.0-rc.6 — 2026-08-20
 
-This release candidate separates mobile resize pressure from repeated
+This version was tagged but not published. Functional and cross-browser gates
+passed, but trusted publishing compared Apple M4 Pro FPS floors with a
+throttled GitHub-hosted runner and stopped before package preview or publish.
+It separates mobile resize pressure from repeated
 application lifecycle soak so headless browser verification exercises each
 contract without rapid WebGL context churn obscuring the result.
 

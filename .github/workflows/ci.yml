@@ -48,6 +48,9 @@ jobs:
       - name: Run WebKit compatibility contracts
         run: npm run test:e2e -- --project=webkit
 
+      - name: Verify portable performance and resource budgets
+        run: npm run verify:budgets
+
       - name: Upload verification reports
         if: always()
         uses: actions/upload-artifact@v4

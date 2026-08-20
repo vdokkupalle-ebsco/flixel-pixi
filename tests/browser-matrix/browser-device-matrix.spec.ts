@@ -215,6 +215,10 @@ test('pauses for visibility loss and resumes without accumulated simulation debt
 test('survives repeated resize pressure and releases browser-owned surfaces', async ({
   page,
 }) => {
+  // This pressure contract performs 15 real browser viewport transitions on
+  // the default matrix. Give slow hosted runners a bounded budget proportional
+  // to that work instead of inheriting Playwright's 30-second unit-test limit.
+  test.setTimeout(90_000);
   await openViewportDemo(page);
   for (let cycle = 0; cycle < matrix.pressureCycles; cycle++) {
     for (const viewport of [

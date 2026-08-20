@@ -51,23 +51,24 @@ npx playwright install --with-deps chromium firefox webkit
 
 ### Useful commands
 
-| Command                  | Purpose                                                    |
-| ------------------------ | ---------------------------------------------------------- |
-| `npm run dev`            | Start the capability-demo index.                           |
-| `npm run build`          | Build declarations, library, demos, and examples.          |
-| `npm run test`           | Run unit tests.                                            |
-| `npm run test:coverage`  | Run unit tests with coverage gates.                        |
-| `npm run test:e2e`       | Run full Chromium and tagged Firefox/WebKit checks.        |
-| `npm run test:matrix`    | Run the Android/iOS browser-device matrix.                 |
-| `npm run test:perf`      | Run Chromium render and teardown budgets.                  |
-| `npm run test:soak:30m`  | Run the extended lifecycle/resource soak.                  |
-| `npm run check:budgets`  | Check bundle and deterministic CPU budgets.                |
-| `npm run check:package`  | Verify the packed artifact in a clean consumer.            |
-| `npm run verify:budgets` | Check reference-hardware performance and resource budgets. |
-| `npm run verify:quality` | Run release checks that do not require browser engines.    |
-| `npm run api:check`      | Compare the public API with its committed baseline.        |
-| `npm run api:update`     | Regenerate the API baseline after intentional review.      |
-| `npm run verify`         | Run the complete release-hardening verification suite.     |
+| Command                       | Purpose                                                 |
+| ----------------------------- | ------------------------------------------------------- |
+| `npm run dev`                 | Start the capability-demo index.                        |
+| `npm run build`               | Build declarations, library, demos, and examples.       |
+| `npm run test`                | Run unit tests.                                         |
+| `npm run test:coverage`       | Run unit tests with coverage gates.                     |
+| `npm run test:e2e`            | Run full Chromium and tagged Firefox/WebKit checks.     |
+| `npm run test:matrix`         | Run the Android/iOS browser-device matrix.              |
+| `npm run test:perf`           | Run portable Chromium stress and teardown checks.       |
+| `npm run test:perf:reference` | Apply FPS floors on the documented reference machine.   |
+| `npm run test:soak:30m`       | Run the extended lifecycle/resource soak.               |
+| `npm run check:budgets`       | Check bundle and deterministic CPU budgets.             |
+| `npm run check:package`       | Verify the packed artifact in a clean consumer.         |
+| `npm run verify:budgets`      | Check portable performance and resource budgets.        |
+| `npm run verify:quality`      | Run release checks that do not require browser engines. |
+| `npm run api:check`           | Compare the public API with its committed baseline.     |
+| `npm run api:update`          | Regenerate the API baseline after intentional review.   |
+| `npm run verify`              | Run the complete release-hardening verification suite.  |
 
 ## Public API changes
 
