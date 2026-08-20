@@ -11,9 +11,9 @@ assigned to a version.
 
 ## 0.1.0-rc.6 — 2026-08-20
 
-This release candidate aligns the isolated mobile browser gate with the Node.js
-22 environment proven by release verification. Package construction and npm
-trusted publishing remain on Node.js 24.
+This release candidate separates mobile resize pressure from repeated
+application lifecycle soak so headless browser verification exercises each
+contract without rapid WebGL context churn obscuring the result.
 
 ### Added
 
@@ -22,17 +22,19 @@ trusted publishing remain on Node.js 24.
 
 ### Changed
 
-- Run mobile browser pressure verification on Node.js 22 in both release
-  verification and trusted publishing while retaining the existing one-worker
-  Playwright contract.
+- Keep all five mobile resize-pressure cycles on one live application, then
+  verify canvas and accessibility surfaces are released after teardown.
+- Leave repeated boot/destroy coverage to the dedicated performance soak rather
+  than forcing rapid WebGL context loss and recreation inside the resize test.
 - Refined the documentation website layout, navigation, version picker, and
   responsive presentation.
 
 ## 0.1.0-rc.5 — 2026-08-15
 
 This version was tagged but not published. Its isolated mobile browser gate
-lost the Chromium session under Node.js 24 before package preview and trusted
-publishing, so npm's `next` tag remained on `0.1.0-rc.1`.
+lost the headless Chromium session during rapid repeated WebGL context
+recreation before package preview and trusted publishing, so npm's `next` tag
+remained on `0.1.0-rc.1`.
 
 ### Changed
 
