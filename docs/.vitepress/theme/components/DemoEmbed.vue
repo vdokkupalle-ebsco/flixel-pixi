@@ -69,6 +69,7 @@ function toggleFullscreen() {
           class="cabinet-btn"
           @click="restartDemo"
           title="Restart Game Instance"
+          aria-label="Restart game"
         >
           <span class="btn-icon">&#8635;</span>
           <span>Restart</span>
@@ -78,6 +79,7 @@ function toggleFullscreen() {
           class="cabinet-btn"
           @click="toggleFullscreen"
           title="Toggle Fullscreen"
+          aria-label="Toggle game fullscreen"
         >
           <span class="btn-icon">&#x26F6;</span>
           <span>Fullscreen</span>
@@ -115,6 +117,7 @@ function toggleFullscreen() {
         v-else
         ref="iframeRef"
         :src="resolvedSrc"
+        :title="title"
         class="game-iframe"
         allow="autoplay; fullscreen; gamepad"
         loading="lazy"
@@ -136,6 +139,29 @@ function toggleFullscreen() {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-border);
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .cabinet-header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .cabinet-title {
+    font-size: 11px;
+  }
+  .cabinet-btn span:first-child {
+    display: none;
+  }
+  .cabinet-screen {
+    min-height: 360px !important;
+  }
+  .screen-prompt {
+    min-height: 360px;
+    padding: 22px;
+  }
+  .prompt-title {
+    font-size: 19px;
+  }
 }
 
 .cabinet-header {

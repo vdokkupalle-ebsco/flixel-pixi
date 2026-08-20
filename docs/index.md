@@ -1,7 +1,8 @@
 ---
 layout: page
-title: Flixel-Pixi — High Performance TypeScript Game Engine on PixiJS v8
-description: Browser-native TypeScript port of the classic ActionScript 3 Flixel engine combining a deterministic fixed-step loop with PixiJS v8 rendering.
+title: Flixel-Pixi — TypeScript 2D Game Engine for the Web
+titleTemplate: false
+description: Build fast, playable 2D browser games with a code-first TypeScript engine powered by PixiJS. Includes sprites, animation, collision, input, audio, cameras, and tilemaps.
 ---
 
 <HomeHero />

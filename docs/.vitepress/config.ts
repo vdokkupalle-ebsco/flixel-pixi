@@ -1,8 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { defineConfig, type DefaultTheme } from 'vitepress';
+import { defineConfig, type DefaultTheme, type HeadConfig } from 'vitepress';
 
 let apiSidebar: DefaultTheme.SidebarItem[] = [];
+const docsBase = process.env.BASE_URL || '/flixel-pixi/';
+const siteUrl = 'https://vdokkupalle-ebsco.github.io/flixel-pixi';
+const defaultDescription =
+  'Build fast, playable 2D browser games with a code-first TypeScript engine powered by PixiJS.';
 const apiSidebarPath = resolve(__dirname, 'api-sidebar.json');
 if (existsSync(apiSidebarPath)) {
   try {
@@ -13,14 +17,25 @@ if (existsSync(apiSidebarPath)) {
 }
 
 export default defineConfig({
-  base: process.env.BASE_URL || '/flixel-pixi/',
+  base: docsBase,
   title: 'Flixel-Pixi',
-  description:
-    'A TypeScript port of the original AS3 Flixel engine using PixiJS v8.',
+  description: defaultDescription,
   cleanUrls: true,
   lastUpdated: true,
-  ignoreDeadLinks: true,
-  srcExclude: ['**/history/**', '**/adr/**', '**/temp/**'],
+  ignoreDeadLinks: false,
+  srcExclude: [
+    '**/history/**',
+    '**/adr/**',
+    '**/temp/**',
+    'guides/**',
+    'README.md',
+    'compatibility.md',
+    'dx-evidence.md',
+    'haxeflixel-priorities.md',
+    'versioning.md',
+    'package-release.md',
+    'browser-device-matrix.md',
+  ],
   markdown: {
     lineNumbers: true,
     theme: {
@@ -29,10 +44,56 @@ export default defineConfig({
     },
   },
   sitemap: {
-    hostname: 'https://vdokkupalle-ebsco.github.io/flixel-pixi',
+    hostname: siteUrl,
+  },
+  transformHead({ pageData }) {
+    const path = pageData.relativePath
+      .replace(/(^|\/)index\.md$/, '$1')
+      .replace(/\.md$/, '');
+    const canonicalUrl = `${siteUrl}/${path}`;
+    const pageTitle = pageData.title || 'Flixel-Pixi';
+    const pageDescription = pageData.description || defaultDescription;
+    const socialImage = `${siteUrl}/logo.jpg`;
+    const pageHead: HeadConfig[] = [
+      ['link', { rel: 'canonical', href: canonicalUrl }],
+      ['meta', { property: 'og:site_name', content: 'Flixel-Pixi' }],
+      ['meta', { property: 'og:title', content: pageTitle }],
+      ['meta', { property: 'og:description', content: pageDescription }],
+      ['meta', { property: 'og:url', content: canonicalUrl }],
+      ['meta', { property: 'og:image', content: socialImage }],
+      ['meta', { property: 'og:image:alt', content: 'Flixel-Pixi logo' }],
+      ['meta', { name: 'twitter:card', content: 'summary' }],
+      ['meta', { name: 'twitter:title', content: pageTitle }],
+      ['meta', { name: 'twitter:description', content: pageDescription }],
+      ['meta', { name: 'twitter:image', content: socialImage }],
+    ];
+
+    if (pageData.relativePath === 'index.md') {
+      pageHead.push([
+        'script',
+        { type: 'application/ld+json' },
+        JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'Flixel-Pixi',
+          applicationCategory: 'DeveloperApplication',
+          operatingSystem: 'Web browser',
+          description: defaultDescription,
+          url: `${siteUrl}/`,
+          image: socialImage,
+          codeRepository: 'https://github.com/vdokkupalle-ebsco/flixel-pixi',
+          license: 'https://opensource.org/license/mit',
+        }),
+      ]);
+    }
+
+    return pageHead;
   },
   head: [
-    ['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }],
+    [
+      'link',
+      { rel: 'icon', type: 'image/svg+xml', href: `${docsBase}favicon.svg` },
+    ],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     [
       'link',
@@ -51,32 +112,10 @@ export default defineConfig({
     ],
     ['meta', { name: 'theme-color', content: '#111113' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    [
-      'meta',
-      {
-        property: 'og:title',
-        content: 'Flixel-Pixi — TypeScript Game Engine on PixiJS v8',
-      },
-    ],
-    [
-      'meta',
-      {
-        property: 'og:description',
-        content:
-          'Browser-native TypeScript game engine combining Flixel deterministic game loop with PixiJS v8 rendering.',
-      },
-    ],
-    [
-      'meta',
-      {
-        property: 'og:image',
-        content: 'https://vdokkupalle-ebsco.github.io/flixel-pixi/logo.png',
-      },
-    ],
   ],
   themeConfig: {
     siteTitle: 'Flixel-Pixi',
-    logo: { src: '/logo.png', width: 28, height: 28, alt: 'Flixel-Pixi Logo' },
+    logo: { src: '/logo.jpg', width: 28, height: 28, alt: 'Flixel-Pixi Logo' },
     search: {
       provider: 'local',
     },

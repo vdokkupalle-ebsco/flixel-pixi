@@ -2,7 +2,7 @@
 
 Notable changes to `flixel-pixi` are recorded here. The project follows the
 versioning and compatibility rules in
-[`docs/versioning.md`](docs/versioning.md).
+[versioning and API stability](/resources/versioning).
 
 ## Unreleased
 

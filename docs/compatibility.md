@@ -22,7 +22,7 @@ boundary.
 | `FlxSprite.pixelsOverlapPoint` / per-pixel overlap     | Emulated       | Cached CPU alpha masks only.                                                 |
 | Arbitrary per-frame GPU readback for gameplay behavior | Unsupported    | Use collision shapes, AABB tests, or alpha masks prepared during asset load. |
 
-See the [historical rendering evidence](history/porting/rendering-spikes.md) for
+See the [historical rendering evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/rendering-spikes.md) for
 the original measurements and verdict.
 
 ## Headless core implementation classifications
@@ -41,7 +41,7 @@ boundaries.
 | `FlxG` (minimal headless-core facade)                         | Adapted        | Core dimensions, timing, state, world, score/level, deterministic random, and selection APIs delegate to one explicit `FlxContext`. Other services remain scheduled.                                                                                            |
 | `FlxGame` (minimal headless-core controller)                  | Adapted        | The recognizable constructor, fixed-step headless controller, and atomic state boundary are implemented. Browser/Pixi startup and later engine services remain scheduled.                                                                                       |
 
-See the [historical headless-core evidence](history/porting/headless-core.md) for
+See the [historical headless-core evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/headless-core.md) for
 contract vectors and the original verdict.
 
 ## Collision implementation classifications
@@ -65,10 +65,10 @@ inventory. At HaxeFlixel commit
 `FlxSpriteContainer`, and `FlxSpriteGroup` are classified **Adapted**:
 exclusive ownership is preserved, composite collision expands to member AABBs,
 and world-authoritative member coordinates drive adapter-owned Pixi `Container`
-branches. See the [container guide](guides/containers.md) for the exact
+branches. See the [groups and containers guide](/guide/groups) for the exact
 local/world and lifecycle contract.
 
-See the [historical collision evidence](history/porting/collision.md) for
+See the [historical collision evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/collision.md) for
 collision vectors and stress measurements.
 
 ## Sprites and text implementation classifications
@@ -91,7 +91,7 @@ plain TypeScript state; Pixi display objects are synchronized views.
 | `FlxTileblock`                                        | Adapted        | Seeded tile selection generates one uploadable texture from pixel-backed/preprocessed tile graphics; URL textures must be preprocessed rather than read back from the GPU.   |
 | `FlxAssets` (browser-native)                          | New            | Typed descriptors, aliases, manifests, bundles, progress, retries, failure state, background loading, cache lookup, and unload wrap Pixi `Assets`.                           |
 
-See the [historical sprites/text evidence](history/porting/sprites-text.md) for
+See the [historical sprites/text evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/sprites-text.md) for
 the sprite-sheet oracle, cross-browser snapshots, and lifecycle results.
 
 ## Camera implementation classifications
@@ -111,7 +111,7 @@ sprites, and their cleanup.
 | Screen/world and pointer conversion                | Adapted        | Typed transforms cover viewport translation, scroll, scroll factor, zoom, independent scale, center rotation, and shake, with inverse round-trip and rendered-transform contracts.                            |
 | `FlxCamera.buffer`, `screen`, and container access | Unsupported    | Flash `BitmapData`/display-list objects are replaced by explicit `FlxCameraView` resources owned by `FlxCameraRenderer`; gameplay code should not mutate them.                                                |
 
-See the [historical camera evidence](history/porting/cameras.md) for the pinned
+See the [historical camera evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/cameras.md) for the pinned
 AS3 oracle, split-screen scene, and resource-lifecycle proof.
 
 ## Tilemap implementation classifications
@@ -131,7 +131,7 @@ handle services every camera and rebuilds only changed visible chunks.
 | Tilemap drawing and multi-camera buffers            | Adapted        | Shared tileset subtextures feed lazy 16×16-tile Pixi containers. Camera culling is zoom-aware, dirty chunks rebuild once, and sequential camera passes never duplicate authoritative data.     |
 | `ImgAuto`, `ImgAutoAlt`, and `imageToCSV`           | Deprecated     | Built-in embedded Flash assets/classes are omitted; callers provide a tileset or a packed pixel buffer explicitly.                                                                             |
 
-See the [historical tilemap evidence](history/porting/tilemaps.md) for fixtures,
+See the [historical tilemap evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/tilemaps.md) for fixtures,
 collision/path contracts, chunk metrics, and browser snapshots.
 
 ## Input implementation classifications
@@ -154,7 +154,7 @@ publishes them through context-owned input state on fixed simulation steps.
 | Modern HaxeFlixel `FlxBar`                | Adapted        | Eight fill directions, parent/value binding, position follow offsets, renderer-owned fill geometry, and limit callbacks without per-value texture uploads.                                                                               |
 | Modern HaxeFlixel `FlxInputText`          | Adapted        | Camera-projected native input/textarea controls preserve selection, mobile keyboards, and IME while publishing edits and submission on fixed updates.                                                                                    |
 
-See the [historical input evidence](history/porting/input.md) for low-FPS
+See the [historical input evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/input.md) for low-FPS
 transition proofs, mapping notes, cancellation tests, replay snapshots, and
 browser baselines.
 
@@ -174,7 +174,7 @@ effects services and an optional high-throughput Pixi projection.
 | `DebugPathDisplay` and `FlxPath` registration | Adapted        | Paths self-register with the context plugin and render per camera through a dedicated Pixi `Graphics` layer using debug colors and scroll factors.                         |
 | Pixi `ParticleContainer` projection           | New            | An explicit render option mirrors stable group members into lightweight Pixi particles; it never owns lifespan, emission, randomness, or recycling.                        |
 
-See the [historical effects evidence](history/porting/effects.md) for seeded
+See the [historical effects evidence](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/history/porting/effects.md) for seeded
 vectors, allocation plateaus, timer/state boundaries, and plugin mutation
 proofs.
 

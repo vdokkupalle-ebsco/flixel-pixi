@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter, withBase } from 'vitepress';
+import { ref, onBeforeUnmount, onMounted, computed } from 'vue';
+import { useRoute, withBase } from 'vitepress';
 import versionsData from '../../versions.json';
 
 const route = useRoute();
-const router = useRouter();
 const isOpen = ref(false);
 
 const currentVersionLabel = computed(() => {
@@ -23,18 +22,23 @@ function toggleDropdown() {
   isOpen.value = !isOpen.value;
 }
 
-function selectVersion(targetPath: string) {
-  isOpen.value = false;
-  window.location.href = targetPath;
+function closeOnOutsideClick(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (!target.closest('.version-picker-container')) isOpen.value = false;
+}
+
+function closeOnEscape(e: KeyboardEvent) {
+  if (e.key === 'Escape') isOpen.value = false;
 }
 
 onMounted(() => {
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest('.version-picker-container')) {
-      isOpen.value = false;
-    }
-  });
+  document.addEventListener('click', closeOnOutsideClick);
+  document.addEventListener('keydown', closeOnEscape);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeOnOutsideClick);
+  document.removeEventListener('keydown', closeOnEscape);
 });
 </script>
 
@@ -43,19 +47,23 @@ onMounted(() => {
     <button
       class="version-picker-btn"
       @click="toggleDropdown"
-      aria-label="Select Version"
+      aria-label="Select documentation version"
+      aria-haspopup="menu"
+      :aria-expanded="isOpen"
+      aria-controls="version-menu"
     >
       <span class="version-indicator"></span>
       <span class="version-name">{{ currentVersionLabel }}</span>
       <span class="chevron" :class="{ open: isOpen }">&#9662;</span>
     </button>
 
-    <div v-if="isOpen" class="version-dropdown">
+    <div v-if="isOpen" id="version-menu" class="version-dropdown" role="menu">
       <div class="dropdown-section">
         <div class="dropdown-header">Recommended</div>
         <a
           :href="withBase('/')"
           class="dropdown-item"
+          role="menuitem"
           :class="{
             active: currentVersionLabel === `v${versionsData.latest.version}`,
           }"
@@ -70,6 +78,7 @@ onMounted(() => {
         <a
           :href="withBase('/versions/next/')"
           class="dropdown-item"
+          role="menuitem"
           :class="{ active: currentVersionLabel === 'Next (main)' }"
         >
           <span class="item-title">Next</span>
@@ -87,6 +96,7 @@ onMounted(() => {
           :key="ver.version"
           :href="withBase(ver.path)"
           class="dropdown-item"
+          role="menuitem"
           :class="{
             active:
               currentVersionLabel === ver.tag ||

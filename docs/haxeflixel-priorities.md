@@ -2,7 +2,7 @@
 
 This document is the source of truth for work discovered by comparing
 `flixel-pixi` with modern HaxeFlixel. It complements the AS3 compatibility
-ledger in [`compatibility.md`](compatibility.md): the ledger records the original
+ledger in the [AS3 compatibility ledger](/resources/compatibility): the ledger records the original
 port contract, while this document prioritizes modern authoring features that
 can improve the TypeScript engine.
 
@@ -100,7 +100,7 @@ Implemented slices:
 Evidence: unit contracts cover controller state, frame lookup, reverse/flip,
 loop/finish/frame signals, per-frame durations, validation, and ownership. The
 public animation showcase exercises these features through package exports and
-has a browser lifecycle test. See [`guides/animation.md`](guides/animation.md).
+has a browser lifecycle test. See the [animation guide](/guide/animation).
 
 Risks: asset ownership, texture lifetime, callback order, API duplication, and
 animation state during atlas unload.
@@ -150,8 +150,8 @@ Evidence: unit contracts cover exclusive reparenting, coordinate conversion,
 transform propagation, collision gaps, nested lifecycle, and leaf-safe Pixi
 ownership. The public container showcase exercises nested transforms,
 world-space collision, renderer lifecycle, and teardown across the supported
-browser projects. See [`guides/containers.md`](guides/containers.md) and
-[`adr/0013-container-coordinate-and-render-ownership.md`](adr/0013-container-coordinate-and-render-ownership.md).
+browser projects. See the [groups and containers guide](/guide/groups) and
+[ADR 0013](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/adr/0013-container-coordinate-and-render-ownership.md).
 
 ### Input expansion
 
@@ -249,8 +249,8 @@ Current slice:
   dead-zone remapping, normalized serializable axes, stable texture-free Pixi
   geometry, and replay derivation through the same virtual-input registry.
 
-Checkpoint complete. See [`guides/ui.md`](guides/ui.md) and
-[`adr/0017-native-accessibility-over-render-textures.md`](adr/0017-native-accessibility-over-render-textures.md).
+Checkpoint complete. See the [UI guide](/guide/ui) and
+[ADR 0017](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/adr/0017-native-accessibility-over-render-textures.md).
 
 ### Atlas and content-pipeline expansion
 
@@ -421,16 +421,9 @@ Current slice:
 - The vector quest scene applies the helpers to game scenery, a route, pickup,
   and HUD, with a day/night rebuild contract. Its cross-browser test is
   committed but awaiting the next available browser execution window.
-- The filters, shaders, meshes, gradients, reusable drawing helpers, and explicit snapshot/readback policy slices are complete. See [`guides/graphics.md`](guides/graphics.md),
-  [`guides/meshes.md`](guides/meshes.md),
-  [`guides/filters.md`](guides/filters.md),
-  [`adr/0018-renderer-neutral-filter-descriptors.md`](adr/0018-renderer-neutral-filter-descriptors.md),
-  [`adr/0019-typed-cross-renderer-shader-filters.md`](adr/0019-typed-cross-renderer-shader-filters.md),
-  [`adr/0020-non-owning-displacement-maps.md`](adr/0020-non-owning-displacement-maps.md),
-  [`adr/0021-local-explicit-filter-areas.md`](adr/0021-local-explicit-filter-areas.md),
-  [`adr/0022-revisioned-camera-local-strip-geometry.md`](adr/0022-revisioned-camera-local-strip-geometry.md),
-  [`adr/0023-stable-camera-local-vector-graphics.md`](adr/0023-stable-camera-local-vector-graphics.md),
-  and [`adr/0024-explicit-asynchronous-renderer-readback.md`](adr/0024-explicit-asynchronous-renderer-readback.md).
+- The filters, shaders, meshes, gradients, reusable drawing helpers, and explicit snapshot/readback policy slices are complete. See the [graphics](/guide/graphics),
+  [meshes](/guide/meshes), and [filters](/guide/filters) guides, plus
+  [ADRs 0018–0024](https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/docs/adr) for the renderer policy decisions.
 
 ### Debugger and runtime inspection
 
