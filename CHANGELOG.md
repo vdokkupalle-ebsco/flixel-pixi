@@ -23,6 +23,8 @@ reference machine.
   frozen 2k, 5k, and 10k sprite median-FPS floors.
 - Run the portable performance and resource budget command during pre-tag
   release verification as well as trusted publishing.
+- Give the 15-transition mobile resize-pressure contract a bounded CI timeout
+  separate from Playwright's default unit-test limit.
 
 ## 0.1.0-rc.6 — 2026-08-20
 
