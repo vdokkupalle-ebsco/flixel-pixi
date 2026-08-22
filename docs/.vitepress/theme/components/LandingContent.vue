@@ -195,6 +195,9 @@ const paths = [
 .path-section {
   border-top: 0;
 }
+.path-section + .home-section {
+  border-top: 0;
+}
 .section-heading {
   margin-bottom: 48px;
 }
