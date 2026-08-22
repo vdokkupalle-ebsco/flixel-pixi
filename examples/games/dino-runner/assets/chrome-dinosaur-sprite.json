@@ -1,0 +1,197 @@
+{
+  "frames": {
+    "dino_jump": {
+      "frame": { "x": 1338, "y": 0, "w": 88, "h": 94 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 88, "h": 94 },
+      "sourceSize": { "w": 88, "h": 94 }
+    },
+    "dino_run_1": {
+      "frame": { "x": 1514, "y": 0, "w": 88, "h": 94 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 88, "h": 94 },
+      "sourceSize": { "w": 88, "h": 94 }
+    },
+    "dino_run_2": {
+      "frame": { "x": 1603, "y": 0, "w": 88, "h": 94 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 88, "h": 94 },
+      "sourceSize": { "w": 88, "h": 94 }
+    },
+    "dino_crashed": {
+      "frame": { "x": 1426, "y": 0, "w": 88, "h": 94 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 88, "h": 94 },
+      "sourceSize": { "w": 88, "h": 94 }
+    },
+    "cactus_small_1": {
+      "frame": { "x": 446, "y": 2, "w": 34, "h": 70 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 34, "h": 70 },
+      "sourceSize": { "w": 34, "h": 70 }
+    },
+    "cactus_small_2": {
+      "frame": { "x": 480, "y": 2, "w": 68, "h": 70 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 68, "h": 70 },
+      "sourceSize": { "w": 68, "h": 70 }
+    },
+    "cactus_small_3": {
+      "frame": { "x": 548, "y": 2, "w": 102, "h": 70 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 102, "h": 70 },
+      "sourceSize": { "w": 102, "h": 70 }
+    },
+    "cactus_large_1": {
+      "frame": { "x": 652, "y": 2, "w": 50, "h": 100 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 50, "h": 100 },
+      "sourceSize": { "w": 50, "h": 100 }
+    },
+    "cactus_large_2": {
+      "frame": { "x": 702, "y": 2, "w": 100, "h": 100 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 100, "h": 100 },
+      "sourceSize": { "w": 100, "h": 100 }
+    },
+    "cactus_large_3": {
+      "frame": { "x": 802, "y": 2, "w": 150, "h": 100 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 150, "h": 100 },
+      "sourceSize": { "w": 150, "h": 100 }
+    },
+    "cloud": {
+      "frame": { "x": 166, "y": 2, "w": 92, "h": 28 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 92, "h": 28 },
+      "sourceSize": { "w": 92, "h": 28 }
+    },
+    "restart": {
+      "frame": { "x": 2, "y": 2, "w": 72, "h": 64 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 72, "h": 64 },
+      "sourceSize": { "w": 72, "h": 64 }
+    },
+    "font_0": {
+      "frame": { "x": 954, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_1": {
+      "frame": { "x": 974, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_2": {
+      "frame": { "x": 994, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_3": {
+      "frame": { "x": 1014, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_4": {
+      "frame": { "x": 1034, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_5": {
+      "frame": { "x": 1054, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_6": {
+      "frame": { "x": 1074, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_7": {
+      "frame": { "x": 1094, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_8": {
+      "frame": { "x": 1114, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_9": {
+      "frame": { "x": 1134, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_h": {
+      "frame": { "x": 1154, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "font_i": {
+      "frame": { "x": 1174, "y": 2, "w": 20, "h": 26 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 26 },
+      "sourceSize": { "w": 20, "h": 26 }
+    },
+    "game_over": {
+      "frame": { "x": 954, "y": 28, "w": 382, "h": 22 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 382, "h": 22 },
+      "sourceSize": { "w": 382, "h": 22 }
+    },
+    "ground": {
+      "frame": { "x": 0, "y": 104, "w": 1200, "h": 18 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 1200, "h": 18 },
+      "sourceSize": { "w": 1200, "h": 18 }
+    }
+  },
+  "animations": {
+    "dino_run": ["dino_run_1", "dino_run_2"]
+  },
+  "meta": {
+    "app": "Flixel-Pixi tutorial atlas metadata",
+    "version": "1.0",
+    "image": "chrome-dinosaur-sprite.png",
+    "format": "RGBA8888",
+    "size": { "w": 2404, "h": 130 },
+    "scale": "1"
+  }
+}

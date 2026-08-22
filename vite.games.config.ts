@@ -66,6 +66,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/flx-invaders/index.html',
         ),
+        'dino-runner': resolve(
+          import.meta.dirname,
+          'examples/games/dino-runner/index.html',
+        ),
         'kenney-platformer': resolve(
           import.meta.dirname,
           'examples/games/kenney-platformer/index.html',
