@@ -30,6 +30,23 @@ set, and size ceilings without installing the tarball or launching a browser.
 The complete `check:package` gate remains responsible for testing the packed
 artifact in a clean consumer project and Chromium.
 
+## Workspace publishing boundary
+
+The repository root remains the `flixel-pixi` npm package. Adding
+`packages/*` and `apps/*` workspaces does not change the engine release command:
+
+```bash
+npm publish --access public --tag next
+```
+
+The release workflow must not add `--workspaces`; that option selects nested
+workspace packages instead of the root package. Reusable ecosystem packages
+are released by explicit package-specific workflows. Editor applications under
+`apps/*` are private and must never be published to npm.
+
+Run `npm run check:workspaces` to verify workspace naming, privacy, provenance,
+and lockfile boundaries before a release.
+
 The gate then creates a temporary consumer project and verifies:
 
 - the exact tarball file allowlist and size ceilings;
