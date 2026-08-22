@@ -8,7 +8,8 @@ not import the private schema or particle-runtime workspaces.
 npm run dev --workspace @flixel-pixi/particle-editor
 ```
 
-The first shell milestone includes a responsive editor workspace, starter
-preset, live `FlxParticleEmitter` preview, transport controls, diagnostics, and
-accessible document structure. Property editing and persistence are deliberately
-reserved for later mergeable slices.
+The editor includes a responsive branded workspace, deterministic live preview,
+starter-effect library, complete emitter inspector, texture/spritesheet frame
+selection, transport and slow-motion controls, undo/redo, reset, autosave and
+recovery, validated JSON import/export, and a copyable TypeScript integration
+snippet.

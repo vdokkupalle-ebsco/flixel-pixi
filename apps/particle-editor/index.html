@@ -7,7 +7,14 @@
       name="description"
       content="Author deterministic particle effects for Flixel-Pixi."
     />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <title>Particle Lab · Flixel-Pixi</title>
+    <script>
+      document.documentElement.dataset.theme =
+        localStorage.getItem('flixel-pixi:particle-editor:theme') === 'light'
+          ? 'light'
+          : 'dark';
+    </script>
   </head>
   <body>
     <div id="app"></div>
