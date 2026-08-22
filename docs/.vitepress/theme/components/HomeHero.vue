@@ -768,14 +768,16 @@ h1 span {
 }
 @media (max-width: 1050px) {
   .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 54px;
     padding-bottom: 84px;
   }
   .hero-copy {
+    min-width: 0;
     max-width: 780px;
   }
   .hero-visual {
+    min-width: 0;
     min-height: 500px;
     width: min(680px, 100%);
   }
@@ -807,12 +809,31 @@ h1 span {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    width: 100%;
     min-height: 0;
   }
   .code-window {
     position: relative;
     inset: auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     transform: none;
+  }
+  .code-titlebar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding-inline: 10px;
+  }
+  .code-tabs {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .code-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .code-tabs button {
+    flex: 0 0 auto;
   }
   .code-window pre {
     padding: 22px 18px;
@@ -822,6 +843,8 @@ h1 span {
     position: relative;
     inset: auto;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     border-width: 4px;
     transform: none;
   }
