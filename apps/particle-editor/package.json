@@ -1,0 +1,28 @@
+{
+  "name": "@flixel-pixi/particle-editor",
+  "version": "0.0.0",
+  "description": "Private visual particle authoring application for Flixel-Pixi.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "test": "vitest run --config vitest.config.ts",
+    "test:coverage": "vitest run --coverage --config vitest.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "flixel-pixi": "0.1.0-rc.7",
+    "pixi.js": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "happy-dom": "^20.11.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
