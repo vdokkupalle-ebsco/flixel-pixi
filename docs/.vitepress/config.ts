@@ -132,6 +132,7 @@ export default defineConfig({
                 'Sprites and animation',
                 'Collision detection and physics',
                 'Keyboard, pointer, touch, and gamepad input',
+                'Responsive viewport and layout handling',
                 'Cameras, audio, particles, and visual effects',
                 'Tilemaps and asset preloading',
                 'Save data, deterministic replays, and debugging tools',

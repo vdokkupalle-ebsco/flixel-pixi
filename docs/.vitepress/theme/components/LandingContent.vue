@@ -130,6 +130,20 @@ const paths = [
           </p>
         </article>
         <article class="capability-card capability-wide">
+          <div class="responsive-graphic" aria-hidden="true">
+            <span class="responsive-desktop"><i></i></span>
+            <span class="responsive-tablet"><i></i></span>
+            <span class="responsive-phone"><i></i></span>
+          </div>
+          <div class="capability-copy">
+            <h3>A game that fits the screen it is on</h3>
+            <p>
+              Scale, align, and letterbox the game across phones, tablets, and
+              desktops, with safe-area-aware layouts and fullscreen support.
+            </p>
+          </div>
+        </article>
+        <article class="capability-card capability-wide">
           <div class="service-row" aria-hidden="true">
             <span>assets</span><i></i><span>storage</span><i></i>
             <span>debugger</span><i></i><span>replay</span><i></i>
@@ -582,6 +596,58 @@ h2 {
   box-shadow:
     0 0 0 28px var(--vp-c-brand-soft),
     0 0 0 56px color-mix(in srgb, var(--vp-c-logo-pink) 5%, transparent);
+}
+.responsive-graphic {
+  display: grid;
+  grid-template-columns: minmax(150px, 2.2fr) minmax(70px, 0.9fr) minmax(
+      44px,
+      0.55fr
+    );
+  gap: clamp(8px, 2vw, 18px);
+  align-items: end;
+  width: min(100%, 520px);
+  min-height: 176px;
+  margin: 18px auto 8px;
+}
+.responsive-graphic span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 9px;
+  background: var(--vp-c-bg-elv);
+  box-shadow: var(--vp-shadow-sm);
+}
+.responsive-graphic span::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 14px;
+  border-bottom: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-mute);
+  content: '';
+}
+.responsive-graphic i {
+  position: absolute;
+  inset: 30px 16% 16px;
+  border-radius: 5px;
+  background:
+    linear-gradient(
+      135deg,
+      var(--vp-c-brand-soft),
+      var(--vp-c-accent-coral-soft)
+    ),
+    var(--vp-c-bg-soft);
+  box-shadow: inset 0 0 0 1px var(--vp-c-divider);
+}
+.responsive-desktop {
+  height: 150px;
+}
+.responsive-tablet {
+  height: 132px;
+}
+.responsive-graphic .responsive-phone {
+  height: 108px;
+  border-radius: 12px;
 }
 .service-row {
   display: flex;
