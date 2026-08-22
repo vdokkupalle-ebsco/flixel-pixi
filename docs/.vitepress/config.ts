@@ -7,6 +7,11 @@ const docsBase = process.env.BASE_URL || '/flixel-pixi/';
 const siteUrl = 'https://vdokkupalle-ebsco.github.io/flixel-pixi';
 const defaultDescription =
   'Build fast, playable 2D browser games with a code-first TypeScript engine powered by PixiJS.';
+const packageVersion = JSON.parse(
+  readFileSync(resolve(__dirname, '../../package.json'), 'utf8'),
+).version as string;
+const repositoryUrl = 'https://github.com/vdokkupalle-ebsco/flixel-pixi';
+const npmUrl = 'https://www.npmjs.com/package/flixel-pixi';
 const apiSidebarPath = resolve(__dirname, 'api-sidebar.json');
 if (existsSync(apiSidebarPath)) {
   try {
@@ -20,6 +25,13 @@ export default defineConfig({
   base: docsBase,
   title: 'Flixel-Pixi',
   description: defaultDescription,
+  vite: {
+    resolve: {
+      alias: {
+        'flixel-pixi': resolve(__dirname, '../../src/index.ts'),
+      },
+    },
+  },
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: false,
@@ -44,7 +56,7 @@ export default defineConfig({
     },
   },
   sitemap: {
-    hostname: siteUrl,
+    hostname: `${siteUrl}/`,
   },
   transformHead({ pageData }) {
     const path = pageData.relativePath
@@ -54,18 +66,33 @@ export default defineConfig({
     const pageTitle = pageData.title || 'Flixel-Pixi';
     const pageDescription = pageData.description || defaultDescription;
     const socialImage = `${siteUrl}/logo.jpg`;
+    const socialImageAlt =
+      'Flixel-Pixi pixel-art logo in cyan and pink on a dark background';
     const pageHead: HeadConfig[] = [
       ['link', { rel: 'canonical', href: canonicalUrl }],
+      [
+        'meta',
+        {
+          name: 'robots',
+          content:
+            'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+        },
+      ],
       ['meta', { property: 'og:site_name', content: 'Flixel-Pixi' }],
+      ['meta', { property: 'og:locale', content: 'en_US' }],
       ['meta', { property: 'og:title', content: pageTitle }],
       ['meta', { property: 'og:description', content: pageDescription }],
       ['meta', { property: 'og:url', content: canonicalUrl }],
       ['meta', { property: 'og:image', content: socialImage }],
-      ['meta', { property: 'og:image:alt', content: 'Flixel-Pixi logo' }],
+      ['meta', { property: 'og:image:type', content: 'image/jpeg' }],
+      ['meta', { property: 'og:image:width', content: '1024' }],
+      ['meta', { property: 'og:image:height', content: '1024' }],
+      ['meta', { property: 'og:image:alt', content: socialImageAlt }],
       ['meta', { name: 'twitter:card', content: 'summary' }],
       ['meta', { name: 'twitter:title', content: pageTitle }],
       ['meta', { name: 'twitter:description', content: pageDescription }],
       ['meta', { name: 'twitter:image', content: socialImage }],
+      ['meta', { name: 'twitter:image:alt', content: socialImageAlt }],
     ];
 
     if (pageData.relativePath === 'index.md') {
@@ -74,15 +101,49 @@ export default defineConfig({
         { type: 'application/ld+json' },
         JSON.stringify({
           '@context': 'https://schema.org',
-          '@type': 'SoftwareApplication',
-          name: 'Flixel-Pixi',
-          applicationCategory: 'DeveloperApplication',
-          operatingSystem: 'Web browser',
-          description: defaultDescription,
-          url: `${siteUrl}/`,
-          image: socialImage,
-          codeRepository: 'https://github.com/vdokkupalle-ebsco/flixel-pixi',
-          license: 'https://opensource.org/license/mit',
+          '@graph': [
+            {
+              '@type': 'WebSite',
+              '@id': `${siteUrl}/#website`,
+              name: 'Flixel-Pixi',
+              alternateName: 'Flixel Pixi',
+              description: defaultDescription,
+              inLanguage: 'en-US',
+              url: `${siteUrl}/`,
+            },
+            {
+              '@type': 'SoftwareApplication',
+              '@id': `${siteUrl}/#software`,
+              name: 'Flixel-Pixi',
+              applicationCategory: 'DeveloperApplication',
+              operatingSystem: 'Web browser',
+              description: defaultDescription,
+              url: `${siteUrl}/`,
+              image: socialImage,
+              softwareVersion: packageVersion,
+              programmingLanguage: 'TypeScript',
+              runtimePlatform: 'Web browser',
+              isAccessibleForFree: true,
+              downloadUrl: npmUrl,
+              codeRepository: repositoryUrl,
+              license: 'https://opensource.org/license/mit',
+              sameAs: [repositoryUrl, npmUrl],
+              featureList: [
+                'Sprites and animation',
+                'Collision detection and physics',
+                'Keyboard, pointer, touch, and gamepad input',
+                'Responsive viewport and layout handling',
+                'Cameras, audio, particles, and visual effects',
+                'Tilemaps and asset preloading',
+                'Save data, deterministic replays, and debugging tools',
+              ],
+              offers: {
+                '@type': 'Offer',
+                price: 0,
+                priceCurrency: 'USD',
+              },
+            },
+          ],
         }),
       ]);
     }
@@ -107,10 +168,10 @@ export default defineConfig({
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400;1,14..32,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap',
       },
     ],
-    ['meta', { name: 'theme-color', content: '#111113' }],
+    ['meta', { name: 'theme-color', content: '#090d16' }],
     ['meta', { property: 'og:type', content: 'website' }],
   ],
   themeConfig: {
