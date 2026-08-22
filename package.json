@@ -82,7 +82,7 @@
     "api:update": "npm run build:types && api-extractor run --local --verbose",
     "api:check": "npm run build:types && api-extractor run --verbose",
     "docs:api": "npm run api:check && node scripts/generate-api-docs.mjs",
-    "docs:prepare": "npm run build:games && node scripts/prepare-docs-assets.mjs",
+    "docs:prepare": "npm run build:games && npm run build:apps && node scripts/prepare-docs-assets.mjs",
     "docs:dev": "npm run docs:api && npm run docs:prepare && vitepress dev docs",
     "docs:build": "npm run docs:api && npm run docs:prepare && vitepress build docs",
     "docs:preview": "vitepress preview docs",

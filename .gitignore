@@ -20,6 +20,7 @@ platform-game-assets/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/public/games/
+docs/public/particle-editor/
 
 # Agent & Claude local skills
 .agents/skills/
