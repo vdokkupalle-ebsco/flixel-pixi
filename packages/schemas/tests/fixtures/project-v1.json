@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "id": "runner",
+    "name": "Runner"
+  },
+  "assets": [
+    {
+      "id": "hero",
+      "kind": "image",
+      "src": "assets/hero.png",
+      "metadata": {
+        "pixelArt": true
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "level-1",
+      "name": "Level 1",
+      "entities": [
+        {
+          "id": "hero-spawn",
+          "type": "hero",
+          "position": {
+            "x": 32,
+            "y": 96
+          },
+          "properties": {
+            "facing": "right",
+            "lives": 3
+          }
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "example.plugin": {
+      "enabled": true
+    }
+  }
+}
