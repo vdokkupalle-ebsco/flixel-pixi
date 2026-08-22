@@ -468,7 +468,8 @@ export class DinoRunnerState extends FlxState {
     }
 
     for (; glyphIndex < this.#scoreGlyphs.length; glyphIndex += 1) {
-      this.#scoreGlyphs[glyphIndex]!.visible = false;
+      const glyph = this.#scoreGlyphs[glyphIndex];
+      if (glyph) glyph.visible = false;
     }
   }
 
