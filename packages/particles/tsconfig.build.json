@@ -11,5 +11,6 @@
     "types": []
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["tests/**/*.ts"]
+  "exclude": ["tests/**/*.ts"],
+  "references": [{ "path": "../schemas/tsconfig.build.json" }]
 }
