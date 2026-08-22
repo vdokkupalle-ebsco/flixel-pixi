@@ -281,19 +281,6 @@ body,
   .VPNavBar .content-body {
     min-width: 0;
   }
-
-  .version-picker-container {
-    margin-left: 2px !important;
-  }
-
-  .version-picker-btn {
-    gap: 4px !important;
-    padding: 4px 7px !important;
-  }
-
-  .version-indicator {
-    display: none;
-  }
 }
 
 .vp-doc strong {
