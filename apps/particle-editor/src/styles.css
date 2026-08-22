@@ -413,6 +413,91 @@ h3 {
     ),
     #07101c;
 }
+.preset-art-5 {
+  background:
+    radial-gradient(ellipse at 48% 78%, var(--preset-start), transparent 38%),
+    radial-gradient(ellipse at 60% 48%, var(--preset-end), transparent 34%),
+    radial-gradient(ellipse at 40% 24%, #c8d0d8, transparent 28%), #07101c;
+  filter: saturate(0.7);
+}
+.preset-art-6 {
+  background:
+    radial-gradient(ellipse at 50% 100%, #fff 0 8%, transparent 20%),
+    radial-gradient(ellipse at 50% 86%, var(--preset-start), transparent 42%),
+    radial-gradient(ellipse at 50% 72%, var(--preset-end), transparent 58%),
+    #18090c;
+}
+.preset-art-7 {
+  background:
+    radial-gradient(
+      ellipse at 50% 72%,
+      transparent 0 24%,
+      var(--preset-start) 26% 30%,
+      transparent 33%
+    ),
+    conic-gradient(
+      from 30deg at 50% 72%,
+      transparent,
+      var(--preset-end),
+      transparent
+    ),
+    #061324;
+}
+.preset-art-8 {
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0 8px,
+      var(--preset-start) 9px 11px,
+      transparent 12px 18px
+    ),
+    linear-gradient(#07101c, #102b45);
+}
+.preset-art-9 {
+  background:
+    radial-gradient(ellipse at 50% 78%, var(--preset-start), transparent 48%),
+    radial-gradient(ellipse at 24% 62%, var(--preset-end), transparent 30%),
+    radial-gradient(ellipse at 76% 58%, #f5d39a, transparent 28%), #17110d;
+}
+.preset-art-10 {
+  background:
+    conic-gradient(
+      from 12deg at 50% 80%,
+      transparent,
+      var(--preset-start),
+      transparent 18%,
+      #ffe45c 24%,
+      transparent 36%,
+      var(--preset-end),
+      transparent 58%
+    ),
+    #07101c;
+}
+.preset-art-11 {
+  background:
+    radial-gradient(circle at 25% 32%, #f8ffb5 0 4%, transparent 7%),
+    radial-gradient(
+      circle at 68% 24%,
+      var(--preset-start) 0 3%,
+      transparent 7%
+    ),
+    radial-gradient(circle at 72% 68%, var(--preset-end) 0 4%, transparent 8%),
+    radial-gradient(circle at 38% 76%, #b5ff72 0 3%, transparent 7%), #07130e;
+}
+.preset-art-12 {
+  background:
+    conic-gradient(
+      from 50deg at 50% 50%,
+      transparent 0 10%,
+      var(--preset-start) 11% 13%,
+      transparent 14% 28%,
+      #fff 29% 31%,
+      transparent 32% 54%,
+      var(--preset-end) 55% 58%,
+      transparent 59%
+    ),
+    radial-gradient(circle, #7ff6ff 0 5%, transparent 7%), #070b1c;
+}
 .emitter-row {
   width: 100%;
   padding: 11px;

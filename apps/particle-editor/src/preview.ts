@@ -39,13 +39,10 @@ class ParticlePreviewState extends FlxState {
     }
     this.#graphic?.destroy();
     this.#graphic = FlxGraphic.fromPixels(texture, 'particle-editor-texture');
-    const fallsDown = preset.motion.velocity.y.min > 0;
-    this.#emitter = new FlxParticleEmitter(
-      preset,
-      this.#graphic,
-      160,
-      fallsDown ? 12 : 174,
-    );
+    const verticalVelocity = preset.motion.velocity.y;
+    const originY =
+      verticalVelocity.min >= 0 ? 12 : verticalVelocity.max <= 0 ? 174 : 110;
+    this.#emitter = new FlxParticleEmitter(preset, this.#graphic, 160, originY);
     this.add(this.#emitter);
     this.#emitter.start();
   }

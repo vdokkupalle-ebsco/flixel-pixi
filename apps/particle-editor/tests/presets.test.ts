@@ -8,13 +8,25 @@ describe('particle editor starter presets', () => {
   it('ships distinct presets that satisfy the public schema', () => {
     const parsed = starterPresets.map((preset) => parseParticlePreset(preset));
 
-    expect(parsed).toHaveLength(4);
+    expect(parsed).toHaveLength(12);
     expect(new Set(parsed.map((preset) => preset.id)).size).toBe(parsed.length);
     expect(parsed.some((preset) => preset.emission.mode === 'burst')).toBe(
       true,
     );
     expect(parsed.some((preset) => preset.emission.mode === 'continuous')).toBe(
       true,
+    );
+    expect(parsed.map((preset) => preset.name)).toEqual(
+      expect.arrayContaining([
+        'Smoke plume',
+        'Flame jet',
+        'Water splash',
+        'Rain shower',
+        'Dust poof',
+        'Confetti pop',
+        'Fireflies',
+        'Electric sparks',
+      ]),
     );
   });
 });
