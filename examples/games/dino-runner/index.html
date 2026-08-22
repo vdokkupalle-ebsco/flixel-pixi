@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A playable endless Dino Runner built with Flixel-Pixi."
+    />
+    <title>Flixel-Pixi — Dino Runner Tutorial</title>
+    <link rel="stylesheet" href="../_kit/shell.css" />
+    <style>
+      .canvas-host canvas {
+        max-width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div>
+          <h1>Dino Runner</h1>
+          <p
+            id="status"
+            class="status"
+            data-testid="status"
+            data-state="loading"
+          >
+            Initializing…
+          </p>
+        </div>
+        <p>Space / ↑ / W / tap to jump · ↓ / S to drop</p>
+      </header>
+      <div data-testid="canvas-host" class="canvas-host"></div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

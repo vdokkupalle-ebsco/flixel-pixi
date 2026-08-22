@@ -189,6 +189,7 @@ export default defineConfig({
     },
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
+      { text: 'Tutorials', link: '/tutorials/' },
       { text: 'Examples', link: '/examples/' },
       { text: 'API Reference', link: '/api/' },
       {
@@ -319,6 +320,15 @@ export default defineConfig({
               text: 'Deployment & Cloudflare Pages',
               link: '/guide/deployment',
             },
+          ],
+        },
+      ],
+      '/tutorials/': [
+        {
+          text: 'Game Tutorials',
+          items: [
+            { text: 'All Tutorials', link: '/tutorials/' },
+            { text: 'Build a Dino Runner', link: '/tutorials/dino-runner/' },
           ],
         },
       ],
