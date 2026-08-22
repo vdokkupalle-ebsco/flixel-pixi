@@ -13,6 +13,7 @@ export {
 } from './particle-serialization.js';
 export type {
   ParticleAppearanceDefinition,
+  ParticleBlendMode,
   ParticleColorStop,
   ParticleCurve,
   ParticleCurveInterpolation,

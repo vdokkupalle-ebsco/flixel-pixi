@@ -189,6 +189,7 @@ export class FlxParticleEmitter extends FlxEmitter {
       const particle = new FlxParticle();
       if (source instanceof FlxFramesCollection) particle.loadFrames(source);
       else particle.loadGraphic(source);
+      particle.blend = preset.appearance.blendMode ?? null;
       particle.active = false;
       particle.allowCollisions = FlxObject.NONE;
       particle.exists = false;

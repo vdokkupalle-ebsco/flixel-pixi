@@ -36,7 +36,7 @@ describe('particle preset schema', () => {
     expect(
       validateParticlePreset({
         ...base,
-        appearance: { texture: { assetId: 'smoke' } },
+        appearance: { blendMode: 'multiply', texture: { assetId: 'smoke' } },
         emission: { duration: 0, mode: 'continuous', rate: 12 },
         spawn: { shape: 'point' },
       }).success,
@@ -138,6 +138,7 @@ describe('particle preset schema', () => {
     const result = validateParticlePreset({
       ...base,
       appearance: {
+        blendMode: 'overlay',
         alpha: {
           interpolation: 'spline',
           stops: [{ time: 0.5, value: 2 }, { time: 0.4, value: -1 }, null],
@@ -161,6 +162,7 @@ describe('particle preset schema', () => {
       expect(result.issues.map(({ path }) => path)).toEqual(
         expect.arrayContaining([
           '$.appearance.alpha.interpolation',
+          '$.appearance.blendMode',
           '$.appearance.alpha.stops[1].time',
           '$.appearance.alpha.stops[2]',
           '$.appearance.colors[1].color',
