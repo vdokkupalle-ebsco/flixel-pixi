@@ -164,6 +164,49 @@ export type { FlxTimerCallback } from './objects/flx-timer';
 export { FlxParticle } from './objects/flx-particle';
 export { FlxEmitter } from './objects/flx-emitter';
 export type { FlxParticleConstructor } from './objects/flx-emitter';
+export { FlxParticleEmitter } from './objects/flx-particle-emitter';
+export type {
+  FlxParticleEmitterAssetOptions,
+  FlxParticleEmitterSource,
+} from './objects/flx-particle-emitter';
+export {
+  isParticlePresetValidationError,
+  parseParticlePreset,
+  ParticlePresetValidationError,
+  serializeParticlePreset,
+  validateParticlePreset,
+} from '@flixel-pixi/schemas';
+export type {
+  ParticleAppearanceDefinition,
+  ParticleColorStop,
+  ParticleCurve,
+  ParticleCurveInterpolation,
+  ParticleCurveStop,
+  ParticleEmissionDefinition,
+  ParticleFrameSelection,
+  ParticleMotionDefinition,
+  ParticleNumberRange,
+  ParticlePreset,
+  ParticlePresetV1,
+  ParticlePresetValidationResult,
+  ParticleRotationDefinition,
+  ParticleSpace,
+  ParticleSpawnDefinition,
+  ParticleTextureDefinition,
+  ParticleVectorRange,
+  SerializeParticlePresetOptions,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
+  ValidationIssue,
+  ValidationIssueCode,
+  ValidationResult,
+} from '@flixel-pixi/schemas';
+export type {
+  ParticleEmitterDiagnostics,
+  ParticleEmitterState,
+  ParticleState,
+} from '@flixel-pixi/particles';
 export { FlxSprite } from './objects/flx-sprite';
 export type {
   FlxAnimationCallback,

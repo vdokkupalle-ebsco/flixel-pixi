@@ -9,7 +9,7 @@ const generatedDirectories = [
   'test-results',
 ];
 
-const workspaceDirectories = [];
+const workspaceArtifacts = [];
 for (const workspaceRoot of ['packages', 'apps']) {
   const entries = await readdir(
     new URL(`../${workspaceRoot}/`, import.meta.url),
@@ -19,14 +19,17 @@ for (const workspaceRoot of ['packages', 'apps']) {
   );
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      workspaceDirectories.push(`${workspaceRoot}/${entry.name}/dist`);
+      workspaceArtifacts.push(
+        `${workspaceRoot}/${entry.name}/dist`,
+        `${workspaceRoot}/${entry.name}/tsconfig.build.tsbuildinfo`,
+      );
     }
   }
 }
 
 await Promise.all(
-  [...generatedDirectories, ...workspaceDirectories].map((directory) =>
-    rm(new URL(`../${directory}`, import.meta.url), {
+  [...generatedDirectories, ...workspaceArtifacts].map((artifact) =>
+    rm(new URL(`../${artifact}`, import.meta.url), {
       force: true,
       recursive: true,
     }),

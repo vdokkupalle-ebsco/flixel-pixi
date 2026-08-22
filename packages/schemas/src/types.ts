@@ -1,7 +1,10 @@
+/** @public */
 export type JsonPrimitive = boolean | null | number | string;
 
+/** @public */
 export type JsonValue = JsonPrimitive | JsonValue[] | JsonObject;
 
+/** @public */
 export interface JsonObject {
   [key: string]: JsonValue;
 }
@@ -60,6 +63,7 @@ export interface LegacyProjectDocumentV0 {
 
 export type ProjectDocument = ProjectDocumentV1;
 
+/** @public */
 export type ValidationIssueCode =
   | 'duplicate_id'
   | 'invalid_type'
@@ -67,11 +71,13 @@ export type ValidationIssueCode =
   | 'missing_value'
   | 'unsupported_version';
 
+/** @public */
 export interface ValidationIssue {
   code: ValidationIssueCode;
   message: string;
   path: string;
 }
 
+/** @public */
 export type ValidationResult<T> =
   { data: T; success: true } | { issues: ValidationIssue[]; success: false };
