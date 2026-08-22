@@ -191,6 +191,11 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Tutorials', link: '/tutorials/' },
       { text: 'Examples', link: '/examples/' },
+      {
+        text: 'Particle Editor',
+        link: `${siteUrl}/particle-editor/`,
+        target: '_blank',
+      },
       { text: 'API Reference', link: '/api/' },
       {
         text: 'Resources',
