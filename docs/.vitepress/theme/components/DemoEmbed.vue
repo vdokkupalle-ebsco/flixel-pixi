@@ -280,7 +280,7 @@ function toggleFullscreen() {
   font-size: 14px;
   font-weight: 700;
   color: #111113;
-  background: var(--vp-c-brand-1);
+  background: var(--vp-c-logo-pink);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -288,7 +288,7 @@ function toggleFullscreen() {
 }
 
 .launch-btn:hover {
-  opacity: 0.9;
+  background: color-mix(in srgb, var(--vp-c-logo-pink) 88%, white);
 }
 
 .game-iframe {

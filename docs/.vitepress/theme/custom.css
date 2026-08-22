@@ -2,45 +2,47 @@
 
 :root {
   /* Brand Accents - Light Mode */
-  --vp-c-brand-1: #087f82;
-  --vp-c-brand-2: #16a6a4;
-  --vp-c-brand-3: #075f63;
-  --vp-c-brand-soft: rgba(8, 127, 130, 0.1);
-  --vp-c-brand-soft-strong: rgba(8, 127, 130, 0.22);
-  --vp-c-brand-shadow: rgba(8, 127, 130, 0.2);
-  --vp-c-accent-rose: #be123c;
-  --vp-c-accent-rose-soft: rgba(190, 18, 60, 0.08);
-  --vp-c-accent-green: #16815f;
-  --vp-c-accent-coral: #e85d4f;
-  --vp-c-accent-coral-soft: rgba(232, 93, 79, 0.13);
+  --vp-c-logo-cyan: #12d9e6;
+  --vp-c-logo-pink: #ff1f6d;
+  --vp-c-brand-1: #007b87;
+  --vp-c-brand-2: #009ba8;
+  --vp-c-brand-3: #00636d;
+  --vp-c-brand-soft: rgba(18, 217, 230, 0.1);
+  --vp-c-brand-soft-strong: rgba(18, 217, 230, 0.2);
+  --vp-c-brand-shadow: rgba(0, 123, 135, 0.2);
+  --vp-c-accent-rose: #cf1554;
+  --vp-c-accent-rose-soft: rgba(255, 31, 109, 0.09);
+  --vp-c-accent-green: #007b87;
+  --vp-c-accent-coral: #ff1f6d;
+  --vp-c-accent-coral-soft: rgba(255, 31, 109, 0.12);
 
   /* Surfaces & Backgrounds - Light Mode */
-  --vp-c-bg: #f7f6f2;
-  --vp-c-bg-alt: #f0efe9;
-  --vp-c-bg-soft: #fcfbf7;
-  --vp-c-bg-mute: #eae9e2;
+  --vp-c-bg: #f7f8fa;
+  --vp-c-bg-alt: #eff2f5;
+  --vp-c-bg-soft: #fbfcfd;
+  --vp-c-bg-mute: #e9edf1;
   --vp-c-bg-elv: #ffffff;
 
   --vp-c-border: rgba(0, 0, 0, 0.09);
   --vp-c-divider: rgba(0, 0, 0, 0.06);
   --vp-c-gutter: rgba(0, 0, 0, 0.04);
 
-  --vp-c-text-1: #17201f;
-  --vp-c-text-2: #4b5a58;
-  --vp-c-text-3: #77827f;
+  --vp-c-text-1: #0b1119;
+  --vp-c-text-2: #46515e;
+  --vp-c-text-3: #6f7a87;
 
   --vp-code-bg: #efeee8;
   --vp-code-block-bg: #f5f4ef;
   --vp-code-inline-bg: rgba(8, 145, 178, 0.06);
   --vp-code-inline-color: #0e7490;
 
-  --vp-nav-bg-color: rgba(247, 246, 242, 0.88);
-  --vp-sidebar-bg-color: #f7f6f2;
+  --vp-nav-bg-color: rgba(247, 248, 250, 0.9);
+  --vp-sidebar-bg-color: #f7f8fa;
 
   /* Typography */
   --vp-font-family-base:
-    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, sans-serif;
+    'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
   --vp-font-family-mono:
     'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     monospace;
@@ -60,39 +62,41 @@
 /* Dark Mode Tokens */
 html.dark,
 .dark {
-  --vp-c-brand-1: #5de1da;
-  --vp-c-brand-2: #7aebe5;
-  --vp-c-brand-3: #2ebbb8;
-  --vp-c-brand-soft: rgba(93, 225, 218, 0.1);
-  --vp-c-brand-soft-strong: rgba(93, 225, 218, 0.22);
-  --vp-c-brand-shadow: rgba(26, 185, 181, 0.2);
-  --vp-c-accent-rose: #fb7185;
-  --vp-c-accent-rose-soft: rgba(251, 113, 133, 0.1);
-  --vp-c-accent-green: #34d399;
-  --vp-c-accent-coral: #ff7163;
-  --vp-c-accent-coral-soft: rgba(255, 113, 99, 0.14);
+  --vp-c-logo-cyan: #1de8f1;
+  --vp-c-logo-pink: #ff397e;
+  --vp-c-brand-1: #1de8f1;
+  --vp-c-brand-2: #6df4fa;
+  --vp-c-brand-3: #12c7d2;
+  --vp-c-brand-soft: rgba(29, 232, 241, 0.1);
+  --vp-c-brand-soft-strong: rgba(29, 232, 241, 0.22);
+  --vp-c-brand-shadow: rgba(29, 232, 241, 0.18);
+  --vp-c-accent-rose: #ff5b93;
+  --vp-c-accent-rose-soft: rgba(255, 57, 126, 0.12);
+  --vp-c-accent-green: #1de8f1;
+  --vp-c-accent-coral: #ff397e;
+  --vp-c-accent-coral-soft: rgba(255, 57, 126, 0.14);
 
-  --vp-c-bg: #091113;
-  --vp-c-bg-alt: #0e191b;
-  --vp-c-bg-soft: #111d1f;
-  --vp-c-bg-mute: #172426;
-  --vp-c-bg-elv: #1b292b;
+  --vp-c-bg: #090d16;
+  --vp-c-bg-alt: #0d1320;
+  --vp-c-bg-soft: #101725;
+  --vp-c-bg-mute: #172132;
+  --vp-c-bg-elv: #1b2638;
 
   --vp-c-border: rgba(255, 255, 255, 0.08);
   --vp-c-divider: rgba(255, 255, 255, 0.06);
   --vp-c-gutter: rgba(255, 255, 255, 0.04);
 
-  --vp-c-text-1: #edf5f3;
-  --vp-c-text-2: #a9b9b6;
-  --vp-c-text-3: #718481;
+  --vp-c-text-1: #f7f9fc;
+  --vp-c-text-2: #b1bdca;
+  --vp-c-text-3: #7f8d9d;
 
   --vp-code-bg: #19191b;
   --vp-code-block-bg: #19191b;
   --vp-code-inline-bg: rgba(34, 211, 238, 0.08);
   --vp-code-inline-color: #22d3ee;
 
-  --vp-nav-bg-color: rgba(9, 17, 19, 0.9);
-  --vp-sidebar-bg-color: #091113;
+  --vp-nav-bg-color: rgba(9, 13, 22, 0.92);
+  --vp-sidebar-bg-color: #090d16;
   --vp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.18), 0 8px 26px rgba(0, 0, 0, 0.18);
   --vp-shadow-lg:
     0 32px 80px rgba(0, 0, 0, 0.4), 0 2px 10px rgba(0, 0, 0, 0.28);
