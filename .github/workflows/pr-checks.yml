@@ -57,6 +57,9 @@ jobs:
       - name: Check the public API baseline
         run: npm run api:check
 
+      - name: Verify npm package contract
+        run: npm run check:package:contract
+
   node-22-compatibility:
     name: Node 22 compatibility
     runs-on: ubuntu-latest

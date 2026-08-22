@@ -11,6 +11,7 @@ reports/
 
 .worktrees/
 .superpowers/
+ECOSYSTEM_PLAN.md
 
 # Local Kenney dump — curated copies live under examples/games/kenney-platformer/assets/
 platform-game-assets/

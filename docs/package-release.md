@@ -13,9 +13,22 @@ npm run check:package
 
 The command builds the ESM entry and declarations, checks the committed API
 report, and creates a tarball with an isolated temporary npm cache. The allowed
-files and compressed/uncompressed size ceilings live in
+root package metadata, exports, publish settings, peer dependencies, files, and
+compressed/uncompressed size ceilings live in
 [`package-artifact.json`](../package-artifact.json). Demos, test output, game
 assets, and source files are deliberately excluded from the published package.
+
+Every pull request runs the faster contract-only gate after the production
+build and API extraction:
+
+```bash
+npm run check:package:contract
+```
+
+That command uses `npm pack --dry-run` to verify the root manifest, exact file
+set, and size ceilings without installing the tarball or launching a browser.
+The complete `check:package` gate remains responsible for testing the packed
+artifact in a clean consumer project and Chromium.
 
 The gate then creates a temporary consumer project and verifies:
 
