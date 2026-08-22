@@ -7,6 +7,35 @@ export {
   serializeProjectDocument,
   type SerializeProjectOptions,
 } from './serialization.js';
+export {
+  serializeParticlePreset,
+  type SerializeParticlePresetOptions,
+} from './particle-serialization.js';
+export type {
+  ParticleAppearanceDefinition,
+  ParticleColorStop,
+  ParticleCurve,
+  ParticleCurveInterpolation,
+  ParticleCurveStop,
+  ParticleEmissionDefinition,
+  ParticleFrameSelection,
+  ParticleMotionDefinition,
+  ParticleNumberRange,
+  ParticlePreset,
+  ParticlePresetV1,
+  ParticlePresetValidationResult,
+  ParticleRotationDefinition,
+  ParticleSpace,
+  ParticleSpawnDefinition,
+  ParticleTextureDefinition,
+  ParticleVectorRange,
+} from './particle-types.js';
+export {
+  isParticlePresetValidationError,
+  parseParticlePreset,
+  ParticlePresetValidationError,
+  validateParticlePreset,
+} from './particle-validation.js';
 export type {
   AssetDefinition,
   AssetKind,

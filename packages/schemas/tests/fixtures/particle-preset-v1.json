@@ -1,0 +1,56 @@
+{
+  "appearance": {
+    "alpha": {
+      "stops": [
+        { "time": 0, "value": 1 },
+        { "time": 1, "value": 0 }
+      ]
+    },
+    "colors": [
+      { "color": 4294945280, "time": 0 },
+      { "color": 4282384384, "time": 1 }
+    ],
+    "rotation": {
+      "initial": { "max": 180, "min": -180 },
+      "velocity": { "max": 240, "min": -240 }
+    },
+    "scale": {
+      "interpolation": "linear",
+      "stops": [
+        { "time": 0, "value": 0.25 },
+        { "time": 0.2, "value": 1 },
+        { "time": 1, "value": 0 }
+      ]
+    },
+    "texture": {
+      "assetId": "spark-atlas",
+      "frames": ["spark-1", "spark-2", "spark-3"],
+      "selection": "random"
+    }
+  },
+  "capacity": 128,
+  "emission": { "count": 24, "mode": "burst" },
+  "extensions": { "editor": { "category": "impact" } },
+  "id": "impact-sparks",
+  "kind": "particle-preset",
+  "lifespan": { "max": 0.8, "min": 0.35 },
+  "motion": {
+    "acceleration": {
+      "x": { "max": 0, "min": 0 },
+      "y": { "max": 380, "min": 260 }
+    },
+    "drag": {
+      "x": { "max": 24, "min": 12 },
+      "y": { "max": 8, "min": 0 }
+    },
+    "velocity": {
+      "x": { "max": 260, "min": -260 },
+      "y": { "max": -80, "min": -340 }
+    }
+  },
+  "name": "Impact sparks",
+  "schemaVersion": 1,
+  "seed": 1337,
+  "space": "world",
+  "spawn": { "innerRadius": 2, "radius": 12, "shape": "circle" }
+}
