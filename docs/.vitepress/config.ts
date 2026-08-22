@@ -25,6 +25,13 @@ export default defineConfig({
   base: docsBase,
   title: 'Flixel-Pixi',
   description: defaultDescription,
+  vite: {
+    resolve: {
+      alias: {
+        'flixel-pixi': resolve(__dirname, '../../src/index.ts'),
+      },
+    },
+  },
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: false,
