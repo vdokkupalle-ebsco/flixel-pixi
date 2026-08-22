@@ -123,10 +123,13 @@ body,
 
 /* Top Navbar */
 .VPNav {
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid var(--vp-c-border) !important;
   background-color: var(--vp-nav-bg-color) !important;
+}
+
+.VPNavBar {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
 }
 
 .VPNavBarMenuLink {
