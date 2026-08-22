@@ -171,6 +171,13 @@ export default defineConfig({
         href: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap',
       },
     ],
+    [
+      'meta',
+      {
+        name: 'google-site-verification',
+        content: 'PJHAmw3hV-a-ltlpP58NyRE1fGirr_szAeLhOq3SiPw',
+      },
+    ],
     ['meta', { name: 'theme-color', content: '#090d16' }],
     ['meta', { property: 'og:type', content: 'website' }],
   ],
