@@ -178,6 +178,7 @@ export {
 } from '@flixel-pixi/schemas';
 export type {
   ParticleAppearanceDefinition,
+  ParticleBlendMode,
   ParticleColorStop,
   ParticleCurve,
   ParticleCurveInterpolation,

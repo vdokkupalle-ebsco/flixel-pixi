@@ -10,7 +10,6 @@ export interface EditorShellElements {
   presetList: HTMLElement;
   root: HTMLElement;
   status: HTMLElement;
-  timeline: HTMLInputElement;
   toast: HTMLElement;
 }
 
@@ -48,7 +47,7 @@ export function renderEditorShell(
       <header class="topbar">
         <div class="brand-lockup">
           <span class="brand-mark" aria-hidden="true"><i></i><b></b></span>
-          <div><p class="eyebrow">Flixel-Pixi</p><h1 id="editor-title">Particle Lab</h1></div>
+          <div><p class="eyebrow">Flixel-Pixi</p><h1 id="editor-title">Particle Editor</h1></div>
           <span class="beta-badge">Beta</span>
         </div>
         <div class="top-actions" aria-label="Document actions">
@@ -84,6 +83,7 @@ export function renderEditorShell(
           </div>
           <div class="preview-tools" aria-label="Preview display options">
             <label>Background <input data-preview-background type="color" value="#07101c" /></label>
+            <label>Pointer <select data-pointer-mode aria-label="Pointer interaction"><option value="auto" selected>Auto preview</option><option value="burst">Burst on click</option><option value="trail">Trail while dragging</option></select></label>
             <label>Canvas size <select data-preview-scale><option value="compact">Compact</option><option value="fit" selected>Fit</option><option value="large">Large</option></select></label>
             <label>Speed <select data-time-scale><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
           </div>
@@ -92,7 +92,6 @@ export function renderEditorShell(
             <div class="canvas-host" data-canvas-host aria-label="Particle preview canvas"></div>
             <p class="preview-status" data-preview-status role="status" aria-live="polite">Loading preview…</p>
           </div>
-          <div class="timeline"><span>0s</span><input data-timeline type="range" min="0" max="1000" value="0" aria-label="Preview timeline" readonly /><span data-duration>∞</span></div>
           <div class="transport" aria-label="Preview controls">
             <button class="button secondary" data-action="pause" type="button" aria-pressed="false">Pause</button>
             <button class="button secondary" data-action="burst" type="button">Single burst</button>
@@ -132,15 +131,18 @@ export function renderEditorShell(
             </div></details>
 
             <details open><summary>Appearance</summary><div class="property-grid">
+              <label class="field span-2"><span>Blend mode</span><select name="blendMode"><option value="normal">Normal</option><option value="add">Additive glow</option><option value="screen">Screen</option><option value="multiply">Multiply</option></select></label>
               <label class="field"><span>Start color</span><input name="startColor" type="color" /></label><label class="field"><span>End color</span><input name="endColor" type="color" /></label>
               ${numberField('Alpha start', 'alphaStart', '0.05')}${numberField('Alpha end', 'alphaEnd', '0.05')}${numberField('Scale start', 'scaleStart', '0.05')}${numberField('Scale end', 'scaleEnd', '0.05')}
               ${numberField('Angle min', 'angleMin', '1')}${numberField('Angle max', 'angleMax', '1')}${numberField('Spin min', 'spinMin', '1')}${numberField('Spin max', 'spinMax', '1')}
             </div></details>
 
             <details><summary>Texture & atlas frame</summary><div class="property-grid">
+              <label class="field"><span>Drawing shape</span><select name="textureShape"><option value="circle">Circle</option><option value="square">Square</option></select></label>
+              <div class="field"><span>Generated texture</span><span class="texture-actions"><button class="button secondary compact-button" data-action="generated-texture" type="button">Use effect texture</button><button class="button secondary compact-button" data-action="download-texture" type="button">Download PNG</button></span></div>
               <label class="field span-2"><span>Texture</span><span class="file-control"><input data-texture-input type="file" accept="image/*" /><span data-texture-label>Flixel spark</span></span></label>
               ${numberField('Columns', 'textureColumns')}${numberField('Rows', 'textureRows')}${numberField('Frame', 'textureFrame')}
-              <p class="field-help span-2">Upload a spritesheet, then select its grid and zero-based frame. The chosen frame is cropped through the public Flixel-Pixi pixel-buffer API.</p>
+              <p class="field-help span-2">Generated textures can use a circle or square mask. Uploaded spritesheets keep their alpha and support grid-based frame selection.</p>
             </div></details>
           </form>
         </aside>
@@ -158,7 +160,6 @@ export function renderEditorShell(
     presetList: requireElement(host, '[data-preset-list]'),
     root: requireElement(host, '.editor'),
     status: requireElement(host, '[data-preview-status]'),
-    timeline: requireElement(host, '[data-timeline]'),
     toast: requireElement(host, '[data-toast]'),
   };
 }

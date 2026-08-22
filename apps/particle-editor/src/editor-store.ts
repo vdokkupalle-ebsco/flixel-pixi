@@ -7,7 +7,9 @@ import { clonePreset } from './presets';
 
 export interface PreviewSettings {
   background: string;
+  pointerMode: 'auto' | 'burst' | 'trail';
   scale: 'compact' | 'fit' | 'large';
+  textureShape: 'circle' | 'square';
   timeScale: number;
 }
 export interface EditorSnapshot {

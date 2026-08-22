@@ -6,6 +6,8 @@ export type ParticleSpace = 'local' | 'world';
 export type ParticleFrameSelection = 'random' | 'sequence';
 /** @public */
 export type ParticleCurveInterpolation = 'linear' | 'step';
+/** Portable blend modes supported by particle presets. @public */
+export type ParticleBlendMode = 'add' | 'multiply' | 'normal' | 'screen';
 
 /** @public */
 export interface ParticleNumberRange {
@@ -79,6 +81,7 @@ export interface ParticleRotationDefinition {
 /** @public */
 export interface ParticleAppearanceDefinition {
   alpha?: ParticleCurve;
+  blendMode?: ParticleBlendMode;
   colors?: ParticleColorStop[];
   rotation?: ParticleRotationDefinition;
   scale?: ParticleCurve;

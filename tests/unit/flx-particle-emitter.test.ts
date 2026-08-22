@@ -40,6 +40,7 @@ function preset(overrides: Partial<ParticlePresetV1> = {}): ParticlePresetV1 {
           { time: 1, value: 0 },
         ],
       },
+      blendMode: 'add',
       colors: [
         { color: 0xff00_00ff, time: 0 },
         { color: 0x0000_ffff, time: 1 },
@@ -100,6 +101,7 @@ describe('FlxParticleEmitter', () => {
     expect(emitter.members[0]).toMatchObject({
       alpha: 1,
       angle: 10,
+      blend: 'add',
       color: 0xff0000,
       currentFrameName: 'one.png',
       x: 10,

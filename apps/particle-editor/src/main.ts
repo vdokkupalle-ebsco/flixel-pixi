@@ -2,6 +2,7 @@ import './styles.css';
 
 import {
   serializeParticlePreset,
+  type ParticleBlendMode,
   type ParticleCurve,
   type ParticlePresetV1,
   type ParticleVectorRange,
@@ -28,10 +29,11 @@ import {
 } from './presets';
 import { createParticlePreview } from './preview';
 import {
-  createDefaultTexture,
+  createPresetTexture,
   destroyTexture,
   loadTextureFile,
   selectTextureFrame,
+  texturePngBlob,
   type TextureSelection,
 } from './texture';
 
@@ -40,7 +42,9 @@ if (host === null) throw new Error('Particle editor host was not found.');
 
 const defaultPreview = {
   background: '#07101c',
+  pointerMode: 'auto',
   scale: 'fit',
+  textureShape: 'circle',
   timeScale: 1,
 } as const;
 
@@ -67,14 +71,18 @@ const shell = renderEditorShell(host, starterPresets);
 const recovered = recoverSnapshot();
 const store = new ParticleEditorStore(recovered);
 let resetSnapshot = store.status.snapshot;
-let texture: TextureSelection = createDefaultTexture();
+let texture: TextureSelection = createPresetTexture(
+  recovered.preset.appearance.texture.assetId,
+  recovered.preview.textureShape,
+);
 let paused = false;
-let timelineStartedAt = performance.now();
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 let renderedPreset = serializeParticlePreset(recovered.preset);
 let renderedBackground = '';
+let renderedPointerMode = '';
 let renderedTimeScale = Number.NaN;
+let renderedTextureKey = `${recovered.preset.appearance.texture.assetId}:${recovered.preview.textureShape}`;
 
 const preview = await createParticlePreview(
   shell.canvasHost,
@@ -88,7 +96,6 @@ const preview = await createParticlePreview(
     );
     const pool = shell.root.querySelector<HTMLElement>('[data-pool-reuse]');
     if (pool !== null) pool.textContent = `${String(reuse)} reused`;
-    updateTimeline(store.status.snapshot.preset);
   },
 );
 
@@ -206,6 +213,7 @@ function syncForm(status: EditorStoreStatus): void {
     setValue(`${prefix}YMax`, range.y.max);
   }
   const colors = preset.appearance.colors ?? [];
+  setValue('blendMode', preset.appearance.blendMode ?? 'normal');
   setValue('startColor', colorToHex(colors[0]?.color ?? 0x1de8f1ff));
   setValue('endColor', colorToHex(colors.at(-1)?.color ?? 0xff397eff));
   setValue('alphaStart', firstCurveValue(preset.appearance.alpha, 1));
@@ -216,9 +224,17 @@ function syncForm(status: EditorStoreStatus): void {
   setValue('angleMax', preset.appearance.rotation?.initial.max ?? 0);
   setValue('spinMin', preset.appearance.rotation?.velocity.min ?? 0);
   setValue('spinMax', preset.appearance.rotation?.velocity.max ?? 0);
+  setValue('textureShape', settings.textureShape);
   setValue('textureColumns', texture.columns);
   setValue('textureRows', texture.rows);
   setValue('textureFrame', texture.frame);
+  control('textureColumns').disabled = texture.kind === 'generated';
+  control('textureRows').disabled = texture.kind === 'generated';
+  control('textureFrame').disabled = texture.kind === 'generated';
+  const textureLabel = shell.root.querySelector<HTMLElement>(
+    '[data-texture-label]',
+  );
+  if (textureLabel !== null) textureLabel.textContent = texture.label;
 
   const name = shell.root.querySelector<HTMLElement>('[data-emitter-name]');
   const summary = shell.root.querySelector<HTMLElement>(
@@ -254,29 +270,22 @@ function syncForm(status: EditorStoreStatus): void {
   const scale = shell.root.querySelector<HTMLSelectElement>(
     '[data-preview-scale]',
   );
+  const pointerMode = shell.root.querySelector<HTMLSelectElement>(
+    '[data-pointer-mode]',
+  );
   const speed =
     shell.root.querySelector<HTMLSelectElement>('[data-time-scale]');
   const canvasFrame = shell.root.querySelector<HTMLElement>(
     '[data-canvas-frame]',
   );
   if (background !== null) background.value = settings.background;
+  if (pointerMode !== null) pointerMode.value = settings.pointerMode;
   if (scale !== null) scale.value = settings.scale;
   if (speed !== null) speed.value = String(settings.timeScale);
-  if (canvasFrame !== null) canvasFrame.dataset.scale = settings.scale;
-
-  shell.timeline.max = String(Math.max(100, preset.lifespan.max * 1000));
-  const duration = shell.root.querySelector<HTMLElement>('[data-duration]');
-  if (duration !== null)
-    duration.textContent = `${preset.lifespan.max.toFixed(1)}s`;
-}
-
-function updateTimeline(preset: ParticlePresetV1): void {
-  if (paused) return;
-  const duration = Math.max(0.1, preset.lifespan.max) * 1000;
-  const elapsed =
-    (performance.now() - timelineStartedAt) *
-    store.status.snapshot.preview.timeScale;
-  shell.timeline.value = String(Math.min(duration, elapsed % duration));
+  if (canvasFrame !== null) {
+    canvasFrame.dataset.scale = settings.scale;
+    canvasFrame.style.setProperty('--preview-background', settings.background);
+  }
 }
 
 function numberValue(element: HTMLInputElement | HTMLSelectElement): number {
@@ -285,12 +294,28 @@ function numberValue(element: HTMLInputElement | HTMLSelectElement): number {
   return value;
 }
 
+function particleBlendMode(value: string): ParticleBlendMode {
+  if (value === 'add' || value === 'multiply' || value === 'screen') {
+    return value;
+  }
+  return 'normal';
+}
+
+function isDarkBackground(color: string): boolean {
+  const value = Number.parseInt(color.slice(1), 16);
+  const red = (value >>> 16) & 0xff;
+  const green = (value >>> 8) & 0xff;
+  const blue = value & 0xff;
+  return (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255 < 0.45;
+}
+
 function applyControlChange(
   element: HTMLInputElement | HTMLSelectElement,
 ): void {
   const name = element.name;
   const value = element.value;
-  store.update(`Changed ${name}`, ({ preset }) => {
+  store.update(`Changed ${name}`, (draft) => {
+    const { preset } = draft;
     const number = () => numberValue(element);
     switch (name) {
       case 'name':
@@ -307,6 +332,15 @@ function applyControlChange(
         break;
       case 'space':
         preset.space = value === 'local' ? 'local' : 'world';
+        break;
+      case 'blendMode':
+        preset.appearance.blendMode = particleBlendMode(value);
+        if (
+          value === 'multiply' &&
+          isDarkBackground(draft.preview.background)
+        ) {
+          draft.preview.background = '#e8edf2';
+        }
         break;
       case 'emissionMode':
         preset.emission =
@@ -483,9 +517,30 @@ function downloadPreset(preset: ParticlePresetV1): void {
   URL.revokeObjectURL(url);
 }
 
+async function downloadTexture(): Promise<void> {
+  const blob = await texturePngBlob(texture.buffer);
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${store.status.snapshot.preset.appearance.texture.assetId}.png`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 function setTheme(theme: 'dark' | 'light'): void {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem('flixel-pixi:particle-editor:theme', theme);
+}
+
+function useGeneratedTexture(
+  preset: ParticlePresetV1,
+  shape: 'circle' | 'square',
+): void {
+  destroyTexture(texture);
+  texture = createPresetTexture(preset.appearance.texture.assetId, shape);
+  renderedTextureKey = `${preset.appearance.texture.assetId}:${shape}`;
+  preview.load(preset, texture.buffer);
+  if (paused) preview.pause();
 }
 
 setTheme(
@@ -495,18 +550,34 @@ setTheme(
 );
 
 store.subscribe((status) => {
+  const desiredTextureKey = `${status.snapshot.preset.appearance.texture.assetId}:${status.snapshot.preview.textureShape}`;
+  let textureChanged = false;
+  if (
+    texture.kind === 'generated' &&
+    desiredTextureKey !== renderedTextureKey
+  ) {
+    texture = createPresetTexture(
+      status.snapshot.preset.appearance.texture.assetId,
+      status.snapshot.preview.textureShape,
+    );
+    renderedTextureKey = desiredTextureKey;
+    textureChanged = true;
+  }
   clearError();
   syncForm(status);
   const nextPreset = serializeParticlePreset(status.snapshot.preset);
-  if (nextPreset !== renderedPreset) {
+  if (nextPreset !== renderedPreset || textureChanged) {
     preview.load(status.snapshot.preset, texture.buffer);
     if (paused) preview.pause();
     renderedPreset = nextPreset;
-    timelineStartedAt = performance.now();
   }
   if (status.snapshot.preview.background !== renderedBackground) {
     preview.setBackground(status.snapshot.preview.background);
     renderedBackground = status.snapshot.preview.background;
+  }
+  if (status.snapshot.preview.pointerMode !== renderedPointerMode) {
+    preview.setPointerMode(status.snapshot.preview.pointerMode);
+    renderedPointerMode = status.snapshot.preview.pointerMode;
   }
   if (status.snapshot.preview.timeScale !== renderedTimeScale) {
     preview.setTimeScale(status.snapshot.preview.timeScale);
@@ -531,6 +602,15 @@ shell.form.addEventListener('change', (event) => {
   ))
     return;
   if (element.matches('[data-texture-input]')) return;
+  if (element.name === 'textureShape') {
+    const shape = element.value === 'square' ? 'square' : 'circle';
+    useGeneratedTexture(store.status.snapshot.preset, shape);
+    store.update('Changed drawing shape', (draft) => {
+      draft.preview.textureShape = shape;
+    });
+    showToast(`${shape === 'circle' ? 'Circle' : 'Square'} drawing selected`);
+    return;
+  }
   if (
     ['textureColumns', 'textureRows', 'textureFrame'].includes(element.name)
   ) {
@@ -550,7 +630,14 @@ shell.form.addEventListener('change', (event) => {
     return;
   }
   try {
+    const revealsMultiply =
+      element.name === 'blendMode' &&
+      element.value === 'multiply' &&
+      isDarkBackground(store.status.snapshot.preview.background);
     applyControlChange(element);
+    if (revealsMultiply) {
+      showToast('Light preview selected so Multiply remains visible');
+    }
   } catch (error) {
     showError(error);
   }
@@ -586,12 +673,28 @@ shell.presetList.addEventListener('click', (event) => {
   if (card === null) return;
   const preset = findStarterPreset(card.dataset.presetId ?? '');
   if (preset === undefined) return;
+  useGeneratedTexture(preset, store.status.snapshot.preview.textureShape);
   resetSnapshot = {
     preset: clonePreset(preset),
     preview: { ...store.status.snapshot.preview },
   };
   store.replace(`Loaded ${preset.name}`, resetSnapshot);
   showToast(`${preset.name} loaded`);
+});
+
+shell.root.addEventListener('input', (event) => {
+  const element = event.target;
+  if (
+    element instanceof HTMLInputElement &&
+    element.matches('[data-preview-background]')
+  ) {
+    preview.setBackground(element.value);
+    renderedBackground = element.value;
+    const canvasFrame = shell.root.querySelector<HTMLElement>(
+      '[data-canvas-frame]',
+    );
+    canvasFrame?.style.setProperty('--preview-background', element.value);
+  }
 });
 
 shell.root.addEventListener('change', (event) => {
@@ -602,6 +705,16 @@ shell.root.addEventListener('change', (event) => {
   ) {
     store.update('Changed preview background', (draft) => {
       draft.preview.background = element.value;
+    });
+  } else if (
+    element instanceof HTMLSelectElement &&
+    element.matches('[data-pointer-mode]')
+  ) {
+    store.update('Changed pointer interaction', (draft) => {
+      draft.preview.pointerMode =
+        element.value === 'burst' || element.value === 'trail'
+          ? element.value
+          : 'auto';
     });
   } else if (
     element instanceof HTMLSelectElement &&
@@ -636,6 +749,10 @@ shell.root.addEventListener('click', async (event) => {
       store.redo();
       break;
     case 'reset':
+      useGeneratedTexture(
+        resetSnapshot.preset,
+        resetSnapshot.preview.textureShape,
+      );
       store.replace('Reset preset', resetSnapshot);
       showToast('Preset reset');
       break;
@@ -649,13 +766,27 @@ shell.root.addEventListener('click', async (event) => {
       break;
     case 'restart':
       preview.restart();
-      timelineStartedAt = performance.now();
       shell.status.textContent = 'Effect restarted';
       break;
     case 'burst':
       preview.burst();
-      timelineStartedAt = performance.now();
       shell.status.textContent = 'Single burst fired';
+      break;
+    case 'generated-texture':
+      useGeneratedTexture(
+        store.status.snapshot.preset,
+        store.status.snapshot.preview.textureShape,
+      );
+      syncForm(store.status);
+      showToast('Generated effect texture restored');
+      break;
+    case 'download-texture':
+      try {
+        await downloadTexture();
+        showToast('Texture PNG downloaded');
+      } catch (error) {
+        showError(error);
+      }
       break;
     case 'import':
       shell.importInput.click();
@@ -689,6 +820,7 @@ shell.importInput.addEventListener('change', async () => {
   if (file === undefined) return;
   try {
     const preset = parseImportedPreset(await file.text());
+    useGeneratedTexture(preset, store.status.snapshot.preview.textureShape);
     resetSnapshot = {
       preset: clonePreset(preset),
       preview: { ...store.status.snapshot.preview },

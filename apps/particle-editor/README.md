@@ -1,4 +1,4 @@
-# Flixel-Pixi Particle Lab
+# Flixel-Pixi Particle Editor
 
 Private visual authoring application for deterministic Flixel-Pixi particle
 presets. It consumes the public `flixel-pixi` package API; application code does
@@ -10,6 +10,7 @@ npm run dev --workspace @flixel-pixi/particle-editor
 
 The editor includes a responsive branded workspace, deterministic live preview,
 starter-effect library, complete emitter inspector, texture/spritesheet frame
-selection, transport and slow-motion controls, undo/redo, reset, autosave and
-recovery, validated JSON import/export, and a copyable TypeScript integration
-snippet.
+selection, effect-specific procedural textures, circle and square drawing modes,
+portable blend modes, texture PNG download, transport and slow-motion controls,
+undo/redo, reset, autosave and recovery, validated JSON import/export, and a
+copyable TypeScript integration snippet.

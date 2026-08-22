@@ -6,7 +6,13 @@ import { getDefaultStarterPreset } from '../src/presets';
 function snapshot(): EditorSnapshot {
   return {
     preset: getDefaultStarterPreset(),
-    preview: { background: '#07101c', scale: 'fit', timeScale: 1 },
+    preview: {
+      background: '#07101c',
+      pointerMode: 'auto',
+      scale: 'fit',
+      textureShape: 'circle',
+      timeScale: 1,
+    },
   };
 }
 

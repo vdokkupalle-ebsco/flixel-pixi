@@ -5542,6 +5542,8 @@ export interface ParticleAppearanceDefinition {
     // (undocumented)
     alpha?: ParticleCurve;
     // (undocumented)
+    blendMode?: ParticleBlendMode;
+    // (undocumented)
     colors?: ParticleColorStop[];
     // (undocumented)
     rotation?: ParticleRotationDefinition;
@@ -5550,6 +5552,9 @@ export interface ParticleAppearanceDefinition {
     // (undocumented)
     texture: ParticleTextureDefinition;
 }
+
+// @public
+export type ParticleBlendMode = 'add' | 'multiply' | 'normal' | 'screen';
 
 // @public (undocumented)
 export interface ParticleColorStop {

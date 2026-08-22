@@ -271,6 +271,21 @@ function validateAppearance(
   const appearance = requireRecord(value, path, issues);
   if (!appearance) return false;
   let valid = validateTexture(appearance.texture, `${path}.texture`, issues);
+  if (
+    appearance.blendMode !== undefined &&
+    appearance.blendMode !== 'normal' &&
+    appearance.blendMode !== 'add' &&
+    appearance.blendMode !== 'multiply' &&
+    appearance.blendMode !== 'screen'
+  ) {
+    issue(
+      issues,
+      `${path}.blendMode`,
+      'invalid_value',
+      'Expected normal, add, multiply, or screen.',
+    );
+    valid = false;
+  }
   if (appearance.alpha !== undefined) {
     valid =
       validateCurve(appearance.alpha, `${path}.alpha`, issues, 0, 1) && valid;

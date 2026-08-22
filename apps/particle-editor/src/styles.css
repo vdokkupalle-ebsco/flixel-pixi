@@ -596,7 +596,7 @@ h3 {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: #07101c;
+  background: var(--preview-background, #07101c);
   box-shadow: var(--shadow);
 }
 .canvas-grid {
@@ -636,27 +636,24 @@ h3 {
   color: rgba(210, 229, 241, 0.6);
   font-size: 9px;
 }
-.timeline {
-  padding: 12px 3px 0;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-subtle);
-  font:
-    600 9px 'JetBrains Mono',
-    ui-monospace,
-    monospace;
-}
-.timeline input {
-  width: 100%;
-  accent-color: var(--brand-pink);
-}
 .transport {
   padding-top: 12px;
   display: flex;
   justify-content: center;
   gap: 8px;
+}
+.compact-button {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 9px;
+  font-size: 9px;
+}
+.texture-actions {
+  display: flex;
+  gap: 5px;
+}
+.texture-actions .compact-button {
+  min-width: 0;
 }
 
 .inspector-panel {

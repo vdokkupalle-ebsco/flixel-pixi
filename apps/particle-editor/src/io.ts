@@ -38,14 +38,23 @@ export function serializeEditorSnapshot(snapshot: EditorSnapshot): string {
   );
 }
 
-function isPreviewSettings(value: unknown): value is PreviewSettings {
+type PersistedPreviewSettings = Omit<PreviewSettings, 'pointerMode'> & {
+  pointerMode?: PreviewSettings['pointerMode'];
+};
+
+function isPreviewSettings(value: unknown): value is PersistedPreviewSettings {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as Record<string, unknown>;
   return (
     typeof record.background === 'string' &&
+    (record.pointerMode === undefined ||
+      record.pointerMode === 'auto' ||
+      record.pointerMode === 'burst' ||
+      record.pointerMode === 'trail') &&
     (record.scale === 'compact' ||
       record.scale === 'fit' ||
       record.scale === 'large') &&
+    (record.textureShape === 'circle' || record.textureShape === 'square') &&
     typeof record.timeScale === 'number' &&
     Number.isFinite(record.timeScale) &&
     record.timeScale > 0
@@ -63,6 +72,9 @@ export function parseEditorSnapshot(text: string): EditorSnapshot {
   }
   return {
     preset: parseParticlePreset(record.preset),
-    preview: record.preview,
+    preview: {
+      ...record.preview,
+      pointerMode: record.preview.pointerMode ?? 'auto',
+    },
   };
 }

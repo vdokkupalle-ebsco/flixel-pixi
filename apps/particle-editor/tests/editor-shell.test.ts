@@ -9,12 +9,16 @@ describe('particle editor shell', () => {
     const shell = renderEditorShell(host, starterPresets);
 
     expect(shell.root.getAttribute('aria-labelledby')).toBe('editor-title');
-    expect(host.querySelector('h1')?.textContent).toBe('Particle Lab');
+    expect(host.querySelector('h1')?.textContent).toBe('Particle Editor');
     expect(host.querySelectorAll('aside')).toHaveLength(2);
     expect(shell.canvasHost.getAttribute('aria-label')).toBe(
       'Particle preview canvas',
     );
     expect(shell.pauseButton.getAttribute('aria-pressed')).toBe('false');
+    expect(host.querySelector('[data-timeline]')).toBeNull();
+    expect(host.querySelector('[name="blendMode"]')).not.toBeNull();
+    expect(host.querySelector('[name="textureShape"]')).not.toBeNull();
+    expect(host.querySelector('[data-pointer-mode]')).not.toBeNull();
     expect(
       host.querySelector('[data-action="restart"]')?.textContent,
     ).toContain('Restart effect');
