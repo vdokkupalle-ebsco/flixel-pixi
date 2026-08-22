@@ -23,6 +23,23 @@ Use a feature branch and keep unrelated changes out of the same pull request.
 Game and demo code must consume package-root exports rather than private engine
 modules.
 
+## Workspace boundaries
+
+The repository uses npm workspaces without moving the existing `flixel-pixi`
+engine package from the root:
+
+- `packages/*` contains reusable `@flixel-pixi/*` libraries;
+- `apps/*` contains private authoring tools and deployable applications.
+
+Run `npm install` from the repository root when adding or changing a workspace
+dependency so `package-lock.json` stays synchronized. Do not create nested lock
+files. Applications must set `private: true`; publishable packages must enable
+public npm access and provenance. Verify these rules with:
+
+```bash
+npm run check:workspaces
+```
+
 ## Verification
 
 Run the standard local checks before opening a pull request:
@@ -31,6 +48,7 @@ Run the standard local checks before opening a pull request:
 npm run format:check
 npm run lint
 npm run typecheck
+npm run check:workspaces
 npm run test:coverage
 npm run build
 npm run api:check
@@ -64,6 +82,7 @@ npx playwright install --with-deps chromium firefox webkit
 | `npm run test:soak:30m`       | Run the extended lifecycle/resource soak.               |
 | `npm run check:budgets`       | Check bundle and deterministic CPU budgets.             |
 | `npm run check:package`       | Verify the packed artifact in a clean consumer.         |
+| `npm run check:workspaces`    | Verify workspace names and publishing boundaries.       |
 | `npm run verify:budgets`      | Check portable performance and resource budgets.        |
 | `npm run verify:quality`      | Run release checks that do not require browser engines. |
 | `npm run api:check`           | Compare the public API with its committed baseline.     |
