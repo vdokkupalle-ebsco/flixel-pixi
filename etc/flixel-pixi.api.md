@@ -3295,6 +3295,46 @@ export class FlxParticle extends FlxSprite {
 export type FlxParticleConstructor = new () => FlxParticle;
 
 // @public
+export class FlxParticleEmitter extends FlxEmitter {
+    constructor(preset: unknown, source: FlxParticleEmitterSource, x?: number, y?: number);
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    get diagnostics(): ParticleEmitterDiagnostics;
+    static fromAssets(preset: unknown, options?: FlxParticleEmitterAssetOptions): FlxParticleEmitter;
+    // (undocumented)
+    kill(): void;
+    // (undocumented)
+    pause(): void;
+    // (undocumented)
+    get preset(): ParticlePresetV1;
+    // (undocumented)
+    resetPreset(): void;
+    // (undocumented)
+    resume(): void;
+    start(restart?: boolean, _lifespan?: number, _frequency?: number, _quantity?: number): void;
+    // (undocumented)
+    stop(clear?: boolean): void;
+    // (undocumented)
+    update(): void;
+}
+
+// @public
+export interface FlxParticleEmitterAssetOptions {
+    // (undocumented)
+    assets?: FlxAssets;
+    // (undocumented)
+    frames?: FlxFramesCollection;
+    // (undocumented)
+    x?: number;
+    // (undocumented)
+    y?: number;
+}
+
+// @public
+export type FlxParticleEmitterSource = FlxGraphic | FlxFramesCollection;
+
+// @public
 export class FlxPath {
     constructor(nodes?: FlxPoint[] | null);
     // (undocumented)
@@ -5145,6 +5185,21 @@ export class Input {
 }
 
 // @public
+export function isParticlePresetValidationError(error: unknown): error is ParticlePresetValidationError;
+
+// @public (undocumented)
+export interface JsonObject {
+    // (undocumented)
+    [key: string]: JsonValue;
+}
+
+// @public (undocumented)
+export type JsonPrimitive = boolean | null | number | string;
+
+// @public (undocumented)
+export type JsonValue = JsonPrimitive | JsonValue[] | JsonObject;
+
+// @public
 export class Keyboard extends Input {
     constructor();
     // (undocumented)
@@ -5480,6 +5535,226 @@ export class NullStorageBackend implements FlxStorageBackend {
 export function parseBmFontXml(xmlText: string): FlxBmFontData;
 
 // @public
+export function parseParticlePreset(value: unknown): ParticlePresetV1;
+
+// @public (undocumented)
+export interface ParticleAppearanceDefinition {
+    // (undocumented)
+    alpha?: ParticleCurve;
+    // (undocumented)
+    colors?: ParticleColorStop[];
+    // (undocumented)
+    rotation?: ParticleRotationDefinition;
+    // (undocumented)
+    scale?: ParticleCurve;
+    // (undocumented)
+    texture: ParticleTextureDefinition;
+}
+
+// @public (undocumented)
+export interface ParticleColorStop {
+    color: number;
+    // (undocumented)
+    time: number;
+}
+
+// @public (undocumented)
+export interface ParticleCurve {
+    // (undocumented)
+    interpolation?: ParticleCurveInterpolation;
+    // (undocumented)
+    stops: ParticleCurveStop[];
+}
+
+// @public (undocumented)
+export type ParticleCurveInterpolation = 'linear' | 'step';
+
+// @public (undocumented)
+export interface ParticleCurveStop {
+    // (undocumented)
+    time: number;
+    // (undocumented)
+    value: number;
+}
+
+// @public (undocumented)
+export type ParticleEmissionDefinition = {
+    count: number;
+    mode: 'burst';
+} | {
+    duration?: number;
+    mode: 'continuous';
+    rate: number;
+};
+
+// @public (undocumented)
+export interface ParticleEmitterDiagnostics {
+    // (undocumented)
+    activeCount: number;
+    // (undocumented)
+    capacity: number;
+    // (undocumented)
+    droppedCount: number;
+    // (undocumented)
+    emittedCount: number;
+    // (undocumented)
+    emitting: boolean;
+    // (undocumented)
+    pooledCount: number;
+    // (undocumented)
+    state: ParticleEmitterState;
+}
+
+// @public (undocumented)
+export type ParticleEmitterState = 'complete' | 'destroyed' | 'idle' | 'paused' | 'running';
+
+// @public (undocumented)
+export type ParticleFrameSelection = 'random' | 'sequence';
+
+// @public (undocumented)
+export interface ParticleMotionDefinition {
+    // (undocumented)
+    acceleration?: ParticleVectorRange;
+    // (undocumented)
+    drag?: ParticleVectorRange;
+    // (undocumented)
+    velocity: ParticleVectorRange;
+}
+
+// @public (undocumented)
+export interface ParticleNumberRange {
+    // (undocumented)
+    max: number;
+    // (undocumented)
+    min: number;
+}
+
+// @public (undocumented)
+export type ParticlePreset = ParticlePresetV1;
+
+// @public (undocumented)
+export interface ParticlePresetV1 {
+    // (undocumented)
+    appearance: ParticleAppearanceDefinition;
+    // (undocumented)
+    capacity: number;
+    // (undocumented)
+    emission: ParticleEmissionDefinition;
+    // (undocumented)
+    extensions?: JsonObject;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    kind: 'particle-preset';
+    // (undocumented)
+    lifespan: ParticleNumberRange;
+    // (undocumented)
+    motion: ParticleMotionDefinition;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    schemaVersion: 1;
+    // (undocumented)
+    seed: number;
+    // (undocumented)
+    space: ParticleSpace;
+    // (undocumented)
+    spawn: ParticleSpawnDefinition;
+}
+
+// @public
+export class ParticlePresetValidationError extends Error {
+    constructor(issues: ValidationIssue[]);
+    // (undocumented)
+    readonly issues: ValidationIssue[];
+}
+
+// @public (undocumented)
+export type ParticlePresetValidationResult = ValidationResult<ParticlePresetV1>;
+
+// @public (undocumented)
+export interface ParticleRotationDefinition {
+    // (undocumented)
+    initial: ParticleNumberRange;
+    // (undocumented)
+    velocity: ParticleNumberRange;
+}
+
+// @public (undocumented)
+export type ParticleSpace = 'local' | 'world';
+
+// @public (undocumented)
+export type ParticleSpawnDefinition = {
+    shape: 'point';
+} | {
+    height: number;
+    shape: 'rectangle';
+    width: number;
+} | {
+    innerRadius?: number;
+    radius: number;
+    shape: 'circle';
+};
+
+// @public (undocumented)
+export interface ParticleState {
+    // (undocumented)
+    accelerationX: number;
+    // (undocumented)
+    accelerationY: number;
+    // (undocumented)
+    active: boolean;
+    // (undocumented)
+    age: number;
+    // (undocumented)
+    alpha: number;
+    // (undocumented)
+    angularVelocity: number;
+    // (undocumented)
+    color: number;
+    // (undocumented)
+    dragX: number;
+    // (undocumented)
+    dragY: number;
+    // (undocumented)
+    frame?: string;
+    // (undocumented)
+    readonly index: number;
+    // (undocumented)
+    lifespan: number;
+    // (undocumented)
+    rotation: number;
+    // (undocumented)
+    scale: number;
+    // (undocumented)
+    velocityX: number;
+    // (undocumented)
+    velocityY: number;
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+}
+
+// @public (undocumented)
+export interface ParticleTextureDefinition {
+    // (undocumented)
+    assetId: string;
+    // (undocumented)
+    frames?: string[];
+    // (undocumented)
+    selection?: ParticleFrameSelection;
+}
+
+// @public (undocumented)
+export interface ParticleVectorRange {
+    // (undocumented)
+    x: ParticleNumberRange;
+    // (undocumented)
+    y: ParticleNumberRange;
+}
+
+// @public
 export interface PixelBuffer {
     // (undocumented)
     readonly data: Uint32Array;
@@ -5529,6 +5804,15 @@ export interface ReplayFileFormat {
 }
 
 // @public
+export function serializeParticlePreset(value: ParticlePresetV1, options?: SerializeParticlePresetOptions): string;
+
+// @public (undocumented)
+export interface SerializeParticlePresetOptions {
+    // (undocumented)
+    space?: number;
+}
+
+// @public
 export function syncWorldToRenderer(game: FlxGame, renderer: FlxCameraRenderer): void;
 
 // @public
@@ -5562,6 +5846,31 @@ export interface UpstreamBaseline {
 
 // @public
 export const upstreamBaseline: Readonly<UpstreamBaseline>;
+
+// @public
+export function validateParticlePreset(value: unknown): ParticlePresetValidationResult;
+
+// @public (undocumented)
+export interface ValidationIssue {
+    // (undocumented)
+    code: ValidationIssueCode;
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    path: string;
+}
+
+// @public (undocumented)
+export type ValidationIssueCode = 'duplicate_id' | 'invalid_type' | 'invalid_value' | 'missing_value' | 'unsupported_version';
+
+// @public (undocumented)
+export type ValidationResult<T> = {
+    data: T;
+    success: true;
+} | {
+    issues: ValidationIssue[];
+    success: false;
+};
 
 // @public
 export interface WatchEntry {

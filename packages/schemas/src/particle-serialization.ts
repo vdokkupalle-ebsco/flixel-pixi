@@ -13,10 +13,12 @@ function sortJson(value: JsonValue): JsonValue {
   return sorted;
 }
 
+/** @public */
 export interface SerializeParticlePresetOptions {
   space?: number;
 }
 
+/** Serialize a validated particle preset with deterministic key ordering. @public */
 export function serializeParticlePreset(
   value: ParticlePresetV1,
   options: SerializeParticlePresetOptions = {},

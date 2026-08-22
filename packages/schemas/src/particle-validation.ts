@@ -409,6 +409,7 @@ function validateJson(
   return valid;
 }
 
+/** Error thrown when a particle preset cannot be parsed. @public */
 export class ParticlePresetValidationError extends Error {
   readonly issues: ValidationIssue[];
 
@@ -421,6 +422,7 @@ export class ParticlePresetValidationError extends Error {
   }
 }
 
+/** Validate an unknown value as a version 1 particle preset. @public */
 export function validateParticlePreset(
   value: unknown,
 ): ParticlePresetValidationResult {
@@ -531,12 +533,14 @@ export function validateParticlePreset(
     : { issues, success: false };
 }
 
+/** Parse an unknown value or throw a {@link ParticlePresetValidationError}. @public */
 export function parseParticlePreset(value: unknown): ParticlePresetV1 {
   const result = validateParticlePreset(value);
   if (!result.success) throw new ParticlePresetValidationError(result.issues);
   return result.data;
 }
 
+/** Return whether an error came from particle preset parsing. @public */
 export function isParticlePresetValidationError(
   error: unknown,
 ): error is ParticlePresetValidationError {

@@ -94,7 +94,40 @@ async function writeConsumerFixture() {
   );
   await writeFile(
     join(consumerDirectory, 'src/main.ts'),
-    `import { createBrowserGame, FlxSprite, FlxState } from 'flixel-pixi';
+    `import {
+  createBrowserGame,
+  FlxParticleEmitter,
+  FlxSprite,
+  FlxState,
+  validateParticlePreset,
+  type ParticlePresetV1,
+} from 'flixel-pixi';
+
+const particlePreset = {
+  appearance: { texture: { assetId: 'spark' } },
+  capacity: 4,
+  emission: { count: 1, mode: 'burst' },
+  id: 'package-check',
+  kind: 'particle-preset',
+  lifespan: { max: 1, min: 1 },
+  motion: {
+    velocity: {
+      x: { max: 0, min: 0 },
+      y: { max: 0, min: 0 },
+    },
+  },
+  name: 'Package check',
+  schemaVersion: 1,
+  seed: 1,
+  space: 'world',
+  spawn: { shape: 'point' },
+} satisfies ParticlePresetV1;
+if (
+  !validateParticlePreset(particlePreset).success ||
+  typeof FlxParticleEmitter !== 'function'
+) {
+  throw new Error('Particle preset exports are unusable.');
+}
 
 class PackageState extends FlxState {
   override create(): void {
@@ -134,12 +167,20 @@ try {
   );
   await writeFile(
     join(consumerDirectory, 'runtime-check.mjs'),
-    `import { FlxPoint, libraryName, upstreamBaseline } from 'flixel-pixi';
+    `import {
+  FlxPoint,
+  libraryName,
+  upstreamBaseline,
+  validateParticlePreset,
+} from 'flixel-pixi';
 
 const point = new FlxPoint(2, 3);
 if (point.x !== 2 || point.y !== 3) throw new Error('Root ESM export is unusable.');
 if (libraryName !== 'flixel-pixi' || !upstreamBaseline.commit) {
   throw new Error('Package metadata exports are unusable.');
+}
+if (validateParticlePreset({}).success) {
+  throw new Error('Particle preset validation export is unusable.');
 }
 
 try {

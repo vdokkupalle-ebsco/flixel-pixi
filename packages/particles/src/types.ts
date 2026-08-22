@@ -1,8 +1,10 @@
 import type { ParticlePresetV1 } from '@flixel-pixi/schemas';
 
+/** @public */
 export type ParticleEmitterState =
   'complete' | 'destroyed' | 'idle' | 'paused' | 'running';
 
+/** @public */
 export interface ParticleState {
   accelerationX: number;
   accelerationY: number;
@@ -24,6 +26,7 @@ export interface ParticleState {
   y: number;
 }
 
+/** @public */
 export interface ParticleEmitterDiagnostics {
   activeCount: number;
   capacity: number;
