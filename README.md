@@ -4,6 +4,13 @@
 
 # flixel-pixi
 
+[![npm prerelease](https://img.shields.io/npm/v/flixel-pixi/next?style=flat-square&logo=npm&label=npm)](https://www.npmjs.com/package/flixel-pixi)
+[![monthly downloads](https://img.shields.io/npm/dm/flixel-pixi?style=flat-square&logo=npm&label=downloads)](https://www.npmjs.com/package/flixel-pixi)
+[![PR checks](https://img.shields.io/github/actions/workflow/status/vdokkupalle-ebsco/flixel-pixi/pr-checks.yml?branch=main&style=flat-square&label=checks)](https://github.com/vdokkupalle-ebsco/flixel-pixi/actions/workflows/pr-checks.yml)
+[![documentation](https://img.shields.io/badge/docs-live-12c7d2?style=flat-square)](https://vdokkupalle-ebsco.github.io/flixel-pixi/)
+[![PixiJS](https://img.shields.io/badge/PixiJS-%5E8.19.0-e91e63?style=flat-square)](https://www.npmjs.com/package/pixi.js)
+[![MIT license](https://img.shields.io/npm/l/flixel-pixi?style=flat-square)](./LICENSE)
+
 `flixel-pixi` is a browser-native TypeScript game engine that ports the original
 ActionScript 3 Flixel API onto PixiJS v8. It combines a deterministic fixed-step
 game loop with modern rendering, input, audio, assets, accessibility, and
