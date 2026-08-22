@@ -32,6 +32,10 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function canonicalJson(value) {
+  return JSON.stringify(value);
+}
+
 async function run(command, arguments_, options = {}) {
   try {
     return await execute(command, arguments_, {
@@ -257,35 +261,17 @@ try {
   const packageJson = JSON.parse(
     await readFile(join(installedRoot, 'package.json'), 'utf8'),
   );
-  assert(packageJson.type === 'module', 'Packed package is not ESM.');
+  for (const [field, expected] of Object.entries(contract.manifest)) {
+    const actual = packageJson[field];
+    assert(
+      canonicalJson(actual) === canonicalJson(expected),
+      `Packed package ${field} differs from the contract.\nExpected: ${canonicalJson(expected)}\nActual: ${canonicalJson(actual)}`,
+    );
+  }
   assert(
     /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(packageJson.version),
     `Package version is invalid: ${packageJson.version}.`,
   );
-  assert(
-    packageJson.exports?.['.']?.import === './dist/index.js',
-    'Root ESM export is wrong.',
-  );
-  assert(
-    packageJson.exports?.['.']?.types === './dist/index.d.ts',
-    'Root types export is wrong.',
-  );
-  assert(
-    packageJson.peerDependencies?.['pixi.js'] === '^8.19.0',
-    'PixiJS peer range changed.',
-  );
-  assert(packageJson.license === 'MIT', 'Package license is not MIT.');
-  assert(packageJson.repository?.url, 'Repository provenance is missing.');
-  assert(
-    packageJson.publishConfig?.provenance === true,
-    'npm provenance is not enabled.',
-  );
-  if (packageJson.version.includes('-')) {
-    assert(
-      packageJson.publishConfig?.tag === 'next',
-      'Prerelease packages must use the npm next tag.',
-    );
-  }
   const changelog = await readFile(join(installedRoot, 'CHANGELOG.md'), 'utf8');
   assert(
     changelog.includes(`## ${packageJson.version}`),
