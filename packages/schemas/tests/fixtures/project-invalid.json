@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "id": "runner",
+    "name": "Runner"
+  },
+  "assets": [
+    {
+      "id": "hero",
+      "kind": "image",
+      "src": "assets/hero.png"
+    },
+    {
+      "id": "hero",
+      "kind": "video",
+      "src": ""
+    }
+  ],
+  "scenes": []
+}

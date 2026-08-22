@@ -72,6 +72,13 @@ for (const { directory, manifest, path } of manifests) {
   assert(!names.has(manifest.name), `Duplicate workspace: ${manifest.name}.`);
   names.add(manifest.name);
 
+  const workspacePath = path.slice(0, -'/package.json'.length);
+  const lockEntry = packageLock.packages?.[workspacePath];
+  assert(
+    lockEntry?.name === manifest.name && lockEntry.version === manifest.version,
+    `${path} is not synchronized with package-lock.json.`,
+  );
+
   if (directory === 'apps') {
     assert(manifest.private === true, `${path} must set private to true.`);
     continue;
