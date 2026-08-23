@@ -9,7 +9,7 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
-## 0.1.0-rc.9 — 2026-08-23
+## 0.1.0-rc.10 — 2026-08-23
 
 This release candidate establishes the Particle Editor-to-game pipeline: author
 single or layered effects visually, export a versioned document and textures,
@@ -36,7 +36,7 @@ runtime object.
 
 - Existing `0.1.0-rc.7` games require no source changes. The new particle-effect
   APIs and hosted editor are additive.
-- Particle Editor exports use effect-document version `1`; `0.1.0-rc.9`
+- Particle Editor exports use effect-document version `1`; `0.1.0-rc.10`
   validates and loads that contract through `parseParticleEffect` and
   `FlxParticleEffect`.
 
@@ -47,6 +47,14 @@ runtime object.
   remains unchanged.
 - Build the private runtime workspaces before the isolated mobile browser
   release gate starts its Vite server on a clean GitHub runner.
+- Retain slow completed render intervals in hosted sprite-stress metrics so a
+  throttled 10,000-sprite scene reports its observed rate instead of zero FPS.
+
+## 0.1.0-rc.9 — 2026-08-23
+
+This version was tagged but not published. All functional and cross-browser
+gates passed, but the hosted 10,000-sprite performance scene discarded every
+render interval above 250 ms and consequently reported zero average FPS.
 
 ## 0.1.0-rc.8 — 2026-08-23
 

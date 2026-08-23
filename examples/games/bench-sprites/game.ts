@@ -154,7 +154,10 @@ export class BenchSpritesState extends FlxState {
     }
 
     if (!this.measured) {
-      if (elapsedMS < 250) this.#frameTimes.push(elapsedMS);
+      // Keep every completed render interval. Hosted runners can legitimately
+      // exceed 250 ms under the 10k-sprite load; dropping those frames made a
+      // completed measurement report zero FPS instead of the observed rate.
+      this.#frameTimes.push(elapsedMS);
       if (this.#sampleElapsed >= 4) {
         const totalMS = this.#frameTimes.reduce((sum, ms) => sum + ms, 0);
         const maxMS = Math.max(...this.#frameTimes);
