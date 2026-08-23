@@ -34,6 +34,18 @@ describe('particle editor shell', () => {
     expect(host.querySelectorAll('.preset-art')).toHaveLength(
       starterPresets.length,
     );
+    const projectLinks =
+      host.querySelectorAll<HTMLAnchorElement>('.project-links a');
+    expect([...projectLinks].map((link) => link.href)).toEqual([
+      'https://vdokkupalle-ebsco.github.io/flixel-pixi/',
+      'https://github.com/vdokkupalle-ebsco/flixel-pixi',
+    ]);
+    expect([...projectLinks].every((link) => link.target === '_blank')).toBe(
+      true,
+    );
+    expect(
+      [...projectLinks].every((link) => link.rel === 'noopener noreferrer'),
+    ).toBe(true);
     expect(
       host
         .querySelector<HTMLElement>('.preset-art')

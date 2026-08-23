@@ -140,6 +140,10 @@ export function renderEditorShell(
           <div><p class="eyebrow">Flixel-Pixi</p><h1 id="editor-title">Particle Editor</h1></div>
           <span class="beta-badge">Beta</span>
         </div>
+        <nav class="project-links" aria-label="Flixel-Pixi project links">
+          <a href="https://vdokkupalle-ebsco.github.io/flixel-pixi/" target="_blank" rel="noopener noreferrer" aria-label="Open the Flixel-Pixi documentation in a new tab">Docs <span aria-hidden="true">↗</span></a>
+          <a href="https://github.com/vdokkupalle-ebsco/flixel-pixi" target="_blank" rel="noopener noreferrer" aria-label="Open the Flixel-Pixi GitHub repository in a new tab">GitHub <span aria-hidden="true">↗</span></a>
+        </nav>
         <div class="top-actions" aria-label="Document actions">
           <div class="save-state" role="status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span data-document-status>Saved preset</span></div>
           <button class="icon-button" data-action="undo" type="button" aria-label="Undo" title="Undo (Ctrl/⌘ Z)">↶</button>
