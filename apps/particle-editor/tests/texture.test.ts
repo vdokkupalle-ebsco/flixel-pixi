@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cloneTextureSelection,
   createPresetTexture,
+  normalizeTextureDisplay,
   normalizeTextureRegion,
 } from '../src/texture';
 
@@ -71,9 +72,9 @@ describe('particle editor generated textures', () => {
   it('normalizes a manual texture crop to whole pixels', () => {
     expect(normalizeTextureRegion(256, 128, 31.9, 24.8, 16.5, 8.2)).toEqual({
       height: 24,
-      originX: 16,
-      originY: 8,
       width: 31,
+      x: 16,
+      y: 8,
     });
   });
 
@@ -85,7 +86,19 @@ describe('particle editor generated textures', () => {
       'Texture width and height must be at least 1 pixel.',
     );
     expect(() => normalizeTextureRegion(64, 64, 32, 32, -1, 0)).toThrow(
-      'Texture origin cannot be negative.',
+      'Texture frame coordinates cannot be negative.',
+    );
+  });
+
+  it('accepts normalized center origins while resizing textures', () => {
+    expect(normalizeTextureDisplay(32, 32, 0.5, 0.5)).toEqual({
+      height: 32,
+      originX: 0.5,
+      originY: 0.5,
+      width: 32,
+    });
+    expect(() => normalizeTextureDisplay(32, 32, 1.1, 0.5)).toThrow(
+      'Texture origin must be between 0 and 1.',
     );
   });
 });

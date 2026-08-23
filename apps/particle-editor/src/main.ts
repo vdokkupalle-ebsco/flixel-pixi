@@ -6,7 +6,6 @@ import {
   type ParticleCurve,
   type ParticlePresetV1,
   type ParticleVectorRange,
-  type PixelBuffer,
 } from 'flixel-pixi';
 
 import {
@@ -42,8 +41,8 @@ import {
   createPresetTexture,
   destroyTexture,
   loadTextureFile,
+  resizeTextureSelection,
   selectTextureFrame,
-  selectTextureRegion,
   texturePngBlob,
   type TextureSelection,
 } from './texture';
@@ -101,8 +100,13 @@ function getLayerTextureSelection(
   );
 }
 
-function getLayerTextureBuffer(layer: ParticleEmitterLayerV1): PixelBuffer {
-  return getLayerTextureSelection(layer).buffer;
+function getLayerPreviewTexture(layer: ParticleEmitterLayerV1) {
+  const texture = getLayerTextureSelection(layer);
+  return {
+    buffer: texture.buffer,
+    originX: texture.originX,
+    originY: texture.originY,
+  };
 }
 
 let paused = false;
@@ -116,7 +120,7 @@ let renderedTimeScale = Number.NaN;
 const preview = await createParticlePreview(
   shell.canvasHost,
   recovered.document,
-  getLayerTextureBuffer,
+  getLayerPreviewTexture,
   (diagnostics) => {
     shell.activeCount.textContent = `${String(diagnostics.activeCount)} / ${String(diagnostics.capacity)}`;
     const reuse = Math.max(
@@ -644,7 +648,7 @@ store.subscribe((status) => {
 
   const nextFingerprint = documentFingerprint(status.snapshot);
   if (nextFingerprint !== renderedFingerprint) {
-    preview.load(status.snapshot.document, getLayerTextureBuffer);
+    preview.load(status.snapshot.document, getLayerPreviewTexture);
     if (paused) preview.pause();
     renderedFingerprint = nextFingerprint;
   }
@@ -711,7 +715,7 @@ shell.form.addEventListener('change', (event) => {
         element.name.startsWith('textureOrigin') ||
         element.name === 'textureWidth' ||
         element.name === 'textureHeight'
-          ? selectTextureRegion(
+          ? resizeTextureSelection(
               existing,
               numberValue(control('textureWidth')),
               numberValue(control('textureHeight')),
@@ -725,7 +729,7 @@ shell.form.addEventListener('change', (event) => {
               numberValue(control('textureFrame')),
             );
       customTextures.set(currentLayer.layerId, next);
-      preview.load(store.status.snapshot.document, getLayerTextureBuffer);
+      preview.load(store.status.snapshot.document, getLayerPreviewTexture);
       if (paused) preview.pause();
       syncForm(store.status);
     } catch (error) {
@@ -1055,7 +1059,7 @@ shell.root.addEventListener('click', async (event) => {
         destroyTexture(custom);
         customTextures.delete(layer.layerId);
       }
-      preview.load(store.status.snapshot.document, getLayerTextureBuffer);
+      preview.load(store.status.snapshot.document, getLayerPreviewTexture);
       syncForm(store.status);
       showToast('Generated effect texture restored');
       break;

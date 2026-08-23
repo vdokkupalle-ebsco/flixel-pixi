@@ -236,11 +236,11 @@ export function renderEditorShell(
               <label class="field"><span>Drawing shape</span><select name="textureShape"><option value="circle">Circle</option><option value="square">Square</option></select></label>
               <div class="field"><span>Generated texture</span><span class="texture-actions"><button class="button secondary compact-button" data-action="generated-texture" type="button">Use effect texture</button><button class="button secondary compact-button" data-action="download-texture" type="button">Download PNG</button></span></div>
               <label class="field span-2"><span>Texture</span><span class="file-control"><input data-texture-input type="file" accept="image/*" /><span data-texture-label>Flixel spark</span></span></label>
-              <h3 class="span-2 texture-subheading">Manual crop</h3>
+              <h3 class="span-2 texture-subheading">Display size &amp; origin</h3>
               ${numberField('Width', 'textureWidth', '1')}${numberField('Height', 'textureHeight', '1')}${numberField('Origin X', 'textureOriginX', '1')}${numberField('Origin Y', 'textureOriginY', '1')}
               <h3 class="span-2 texture-subheading">Grid frame</h3>
               ${numberField('Columns', 'textureColumns')}${numberField('Rows', 'textureRows')}${numberField('Frame', 'textureFrame')}
-              <p class="field-help span-2">Uploaded spritesheets keep their alpha. Choose an exact rectangle with Width, Height, and Origin X/Y, or select a uniform grid frame with Columns, Rows, and Frame.</p>
+              <p class="field-help span-2">Width and Height resize the full uploaded image or selected grid frame. Origin X/Y are normalized anchors from 0 to 1; use 0.5 / 0.5 to center particles.</p>
             </div></details>
           </form>
         </aside>

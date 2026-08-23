@@ -21,7 +21,13 @@ const PREVIEW_HEIGHT = 220;
 
 let activeState: ParticlePreviewState | undefined;
 let pendingDocument: ParticleEffectDocumentV1;
-let pendingTextureResolver: (layer: ParticleEmitterLayerV1) => PixelBuffer;
+let pendingTextureResolver: (layer: ParticleEmitterLayerV1) => PreviewTexture;
+
+export interface PreviewTexture {
+  buffer: PixelBuffer;
+  originX: number;
+  originY: number;
+}
 
 function previewBackground(color: string): {
   camera: number;
@@ -33,6 +39,19 @@ function previewBackground(color: string): {
 
 function setActiveState(state: ParticlePreviewState | undefined): void {
   activeState = state;
+}
+
+function applyTextureOrigin(
+  emitter: FlxParticleEmitter,
+  texture: PreviewTexture,
+): void {
+  for (const particle of emitter.members) {
+    if (particle === null) continue;
+    particle.origin.make(
+      texture.buffer.width * texture.originX,
+      texture.buffer.height * texture.originY,
+    );
+  }
 }
 
 interface PreviewEmitterInstance {
@@ -122,7 +141,7 @@ class ParticlePreviewState extends FlxState {
 
   load(
     document: ParticleEffectDocumentV1,
-    getTexture: (layer: ParticleEmitterLayerV1) => PixelBuffer,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
     source?: { x: number; y: number },
   ): void {
     this.#destroyGroup(this.#primaryGroup);
@@ -136,7 +155,7 @@ class ParticlePreviewState extends FlxState {
       this.#effectSequence += 1;
       const texture = getTexture(layer);
       const graphic = FlxGraphic.fromPixels(
-        texture,
+        texture.buffer,
         `particle-editor-primary-${layer.layerId}-${String(this.#effectSequence)}`,
       );
       const verticalVelocity = layer.preset.motion.velocity.y;
@@ -146,6 +165,7 @@ class ParticlePreviewState extends FlxState {
       const posY = (source?.y ?? originY) + layer.offset.y;
 
       const emitter = new FlxParticleEmitter(layer.preset, graphic, posX, posY);
+      applyTextureOrigin(emitter, texture);
       this.add(emitter);
       emitter.start();
       emitterInstances.push({
@@ -169,7 +189,7 @@ class ParticlePreviewState extends FlxState {
 
   spawnBurst(
     document: ParticleEffectDocumentV1,
-    getTexture: (layer: ParticleEmitterLayerV1) => PixelBuffer,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
     source?: { x: number; y: number },
   ): void {
     const enabledLayers = document.emitters.filter((layer) => layer.enabled);
@@ -183,7 +203,7 @@ class ParticlePreviewState extends FlxState {
       this.#effectSequence += 1;
       const texture = getTexture(layer);
       const graphic = FlxGraphic.fromPixels(
-        texture,
+        texture.buffer,
         `particle-editor-burst-${String(this.#effectSequence)}-${layer.layerId}`,
       );
       const emitter = new FlxParticleEmitter(
@@ -192,6 +212,7 @@ class ParticlePreviewState extends FlxState {
         originX + layer.offset.x,
         originY + layer.offset.y,
       );
+      applyTextureOrigin(emitter, texture);
       this.add(emitter);
       emitter.start();
       emitterInstances.push({
@@ -207,7 +228,7 @@ class ParticlePreviewState extends FlxState {
 
   startTrail(
     document: ParticleEffectDocumentV1,
-    getTexture: (layer: ParticleEmitterLayerV1) => PixelBuffer,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
     source: { x: number; y: number },
   ): void {
     this.#destroyGroup(this.#primaryGroup);
@@ -221,7 +242,7 @@ class ParticlePreviewState extends FlxState {
       this.#effectSequence += 1;
       const texture = getTexture(layer);
       const graphic = FlxGraphic.fromPixels(
-        texture,
+        texture.buffer,
         `particle-editor-trail-${String(this.#effectSequence)}-${layer.layerId}`,
       );
       const emitter = new FlxParticleEmitter(
@@ -230,6 +251,7 @@ class ParticlePreviewState extends FlxState {
         source.x + layer.offset.x,
         source.y + layer.offset.y,
       );
+      applyTextureOrigin(emitter, texture);
       this.add(emitter);
       emitter.start();
       emitterInstances.push({
@@ -330,7 +352,7 @@ export interface ParticlePreviewController {
   destroy(): void;
   load(
     document: ParticleEffectDocumentV1,
-    getTexture: (layer: ParticleEmitterLayerV1) => PixelBuffer,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
   ): void;
   pause(): void;
   restart(): void;
@@ -343,7 +365,7 @@ export interface ParticlePreviewController {
 export async function createParticlePreview(
   host: HTMLElement,
   initialDocument: ParticleEffectDocumentV1,
-  getTexture: (layer: ParticleEmitterLayerV1) => PixelBuffer,
+  getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
   onDiagnostics: (diagnostics: ParticleEmitterDiagnostics) => void,
 ): Promise<ParticlePreviewController> {
   pendingDocument = initialDocument;
