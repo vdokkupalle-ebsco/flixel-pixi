@@ -49,3 +49,27 @@ For an intentional public API change:
 Public consumers should import only from `flixel-pixi`. Deep imports into
 `dist/` or repository `src/` paths are unsupported and blocked by the package
 export map.
+
+## Particle Editor compatibility
+
+The Particle Editor is a hosted application deployed from the same commit as
+the documentation. It is not an independently installable npm package and does
+not have a separate public application version.
+
+Portable `*.effect.json` files are the compatibility boundary between the
+editor and a game. Each document carries its own format version:
+
+- Particle Editor effect-document version `1` is supported by
+  `flixel-pixi@0.1.0-rc.8` and later compatible releases.
+- A breaking document-shape change requires a new document version and explicit
+  migration guidance. Existing version `1` exports remain valid.
+- The runtime validates an export before constructing emitters and reports an
+  unsupported or malformed document rather than silently changing its meaning.
+- Texture files are external assets. Their `assetId` values must be preloaded
+  with `FlxAssets` before calling `FlxParticleEffect.fromAssets`.
+
+The editor's private workspace manifest references the latest engine already
+available from npm, so clean installs never depend on an unpublished version.
+Its production and test builds alias `flixel-pixi` to the engine source in the
+same repository, ensuring the deployed editor is verified against the exact
+runtime shipped from that commit.

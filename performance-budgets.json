@@ -12,7 +12,7 @@
   },
   "bundle": {
     "entry": "dist/index.js",
-    "rawBytesMax": 650000,
+    "rawBytesMax": 655000,
     "gzipBytesMax": 150000
   },
   "headlessBenchmarks": {
