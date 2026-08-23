@@ -16,6 +16,9 @@ assigned to a version.
 - Added `FlxParticleEffect` for loading, positioning, controlling, and
   monitoring ordered multi-emitter effects through preloaded Flixel-Pixi
   assets.
+- Added a playable campfire example that preloads a Particle Editor export and
+  its flame, ember, and smoke textures, then runs the composition through
+  `FlxParticleEffect`.
 
 ## 0.1.0-rc.7 — 2026-08-20
 

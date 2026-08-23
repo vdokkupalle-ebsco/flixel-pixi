@@ -366,6 +366,10 @@ export default defineConfig({
           text: 'Rendering & FX',
           items: [
             {
+              text: 'Composed Particle Effect',
+              link: '/examples/particle-effect/',
+            },
+            {
               text: 'Sprite Animation & Atlases',
               link: '/examples/animation/',
             },
