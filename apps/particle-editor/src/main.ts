@@ -23,6 +23,7 @@ import {
   selectedEmitter,
   type EditorSnapshot,
   type EditorStoreStatus,
+  type ParticleEffectDocumentV1,
   type ParticleEmitterLayerV1,
 } from './editor-store';
 import {
@@ -31,10 +32,11 @@ import {
 } from './editor-shell';
 import {
   AUTOSAVE_KEY,
-  createTypeScriptSnippet,
+  createMultiEmitterTypeScriptSnippet,
   parseEditorSnapshot,
-  parseImportedPreset,
+  parseImportedDocument,
   serializeEditorSnapshot,
+  serializeEffectDocument,
 } from './io';
 import { createParticlePreview } from './preview';
 import {
@@ -559,6 +561,18 @@ function applyControlChange(
   });
 }
 
+function downloadEffect(effectDoc: ParticleEffectDocumentV1): void {
+  const blob = new Blob([serializeEffectDocument(effectDoc)], {
+    type: 'application/json',
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${effectDoc.id}.effect.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 function downloadPreset(preset: ParticlePresetV1): void {
   const blob = new Blob([serializeParticlePreset(preset, { space: 2 })], {
     type: 'application/json',
@@ -943,14 +957,19 @@ shell.root.addEventListener('click', async (event) => {
     case 'import':
       shell.importInput.click();
       break;
+    case 'export-effect':
+      downloadEffect(store.status.snapshot.document);
+      showToast('Effect document exported');
+      break;
+    case 'export-emitter':
     case 'export':
       downloadPreset(selectedEmitter(store.status.snapshot).preset);
-      showToast('Preset exported');
+      showToast('Emitter preset exported');
       break;
     case 'copy-code':
       try {
         await navigator.clipboard.writeText(
-          createTypeScriptSnippet(selectedEmitter(store.status.snapshot).preset),
+          createMultiEmitterTypeScriptSnippet(store.status.snapshot.document),
         );
         showToast('TypeScript copied');
       } catch (error) {
@@ -971,20 +990,18 @@ shell.importInput.addEventListener('change', async () => {
   const file = shell.importInput.files?.[0];
   if (file === undefined) return;
   try {
-    const preset = parseImportedPreset(await file.text());
-    const currentLayer = selectedEmitter(store.status.snapshot);
-    const newDoc = createEffectDocument(preset, currentLayer.textureShape);
+    const document = parseImportedDocument(await file.text());
     for (const texture of customTextures.values()) {
       destroyTexture(texture);
     }
     customTextures.clear();
     resetSnapshot = {
-      document: newDoc,
-      selectedEmitterId: newDoc.emitters[0]?.layerId ?? '',
+      document,
+      selectedEmitterId: document.emitters[0]?.layerId ?? '',
       preview: { ...store.status.snapshot.preview },
     };
-    store.replace(`Imported ${preset.name}`, resetSnapshot);
-    showToast('Preset imported and validated');
+    store.replace(`Imported ${document.name}`, resetSnapshot);
+    showToast(`Imported ${document.name}`);
   } catch (error) {
     showError(error);
   }
@@ -1000,7 +1017,7 @@ window.addEventListener('keydown', (event) => {
   }
   if (event.key.toLowerCase() === 's') {
     event.preventDefault();
-    downloadPreset(selectedEmitter(store.status.snapshot).preset);
+    downloadEffect(store.status.snapshot.document);
   }
 });
 

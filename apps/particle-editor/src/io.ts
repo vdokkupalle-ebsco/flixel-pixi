@@ -14,6 +14,22 @@ import {
 
 export const AUTOSAVE_KEY = 'flixel-pixi:particle-editor:v1';
 
+function toSafeIdentifier(name: string, fallback: string): string {
+  const cleaned = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(' ')
+    .map((word, index) =>
+      index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1),
+    )
+    .join('');
+  if (cleaned.length === 0 || /^[0-9]/.test(cleaned)) {
+    return `${fallback}${cleaned}`;
+  }
+  return cleaned;
+}
+
 export function createTypeScriptSnippet(preset: ParticlePresetV1): string {
   return `import {
   FlxParticleEmitter,
@@ -28,6 +44,133 @@ add(emitter);
 emitter.start();`;
 }
 
+export function createMultiEmitterTypeScriptSnippet(
+  document: ParticleEffectDocumentV1,
+): string {
+  const enabledLayers = document.emitters.filter((e) => e.enabled);
+  if (enabledLayers.length === 0) {
+    return `// Effect "${document.name}" has no enabled emitters.`;
+  }
+
+  const textureIds = Array.from(
+    new Set(
+      enabledLayers.map((e) => e.preset.appearance.texture.assetId),
+    ),
+  );
+
+  const usedIdentifiers = new Set<string>();
+  const layerVarNames = enabledLayers.map((layer, index) => {
+    let base = toSafeIdentifier(layer.name, 'layer');
+    if (base.length === 0) base = `layer${String(index + 1)}`;
+    let varName = `${base}Preset`;
+    let suffix = 2;
+    while (usedIdentifiers.has(varName)) {
+      varName = `${base}Preset${String(suffix)}`;
+      suffix += 1;
+    }
+    usedIdentifiers.add(varName);
+    return varName;
+  });
+
+  const presetDeclarations = enabledLayers
+    .map((layer, index) => {
+      const varName = layerVarNames[index];
+      const serialized = serializeParticlePreset(layer.preset, { space: 2 });
+      return `const ${varName} = ${serialized} satisfies ParticlePresetV1;`;
+    })
+    .join('\n\n');
+
+  const layerObjects = enabledLayers
+    .map((layer, index) => {
+      const varName = layerVarNames[index];
+      return `  {
+    name: ${JSON.stringify(layer.name)},
+    offset: { x: ${String(layer.offset.x)}, y: ${String(layer.offset.y)} },
+    preset: ${varName},
+  },`;
+    })
+    .join('\n');
+
+  const preloadComments = textureIds
+    .map((id) => `// - ${id}`)
+    .join('\n');
+
+  const rawFnName = toSafeIdentifier(document.name, 'Effect');
+  const effectFnName = `create${rawFnName.charAt(0).toUpperCase()}${rawFnName.slice(1)}Emitters`;
+
+  return `import {
+  FlxParticleEmitter,
+  type ParticlePresetV1,
+} from 'flixel-pixi';
+
+// Preload texture assets with FlxAssets before creating emitters:
+${preloadComments}
+
+${presetDeclarations}
+
+const layers = [
+${layerObjects}
+];
+
+export function ${effectFnName}(
+  originX = 160,
+  originY = 120,
+): FlxParticleEmitter[] {
+  return layers.map(({ preset, offset }) => {
+    const emitter = FlxParticleEmitter.fromAssets(preset, {
+      x: originX + offset.x,
+      y: originY + offset.y,
+    });
+    emitter.start();
+    return emitter;
+  });
+}`;
+}
+
+export function serializeEffectDocument(
+  document: ParticleEffectDocumentV1,
+): string {
+  return JSON.stringify(
+    {
+      kind: 'flixel-pixi-particle-effect',
+      version: 1,
+      id: document.id,
+      name: document.name,
+      emitters: document.emitters.map((emitter) => ({
+        layerId: emitter.layerId,
+        name: emitter.name,
+        enabled: emitter.enabled,
+        offset: emitter.offset,
+        textureShape: emitter.textureShape,
+        preset: JSON.parse(serializeParticlePreset(emitter.preset)) as unknown,
+      })),
+    },
+    undefined,
+    2,
+  );
+}
+
+export function parseImportedDocument(text: string): ParticleEffectDocumentV1 {
+  const value = JSON.parse(text) as unknown;
+  if (typeof value !== 'object' || value === null) {
+    throw new TypeError('Imported file must be a JSON object.');
+  }
+  const record = value as Record<string, unknown>;
+
+  if (record.kind === 'flixel-pixi-particle-effect') {
+    return validateEffectDocument(record);
+  }
+
+  if (record.kind === 'particle-preset') {
+    const preset = parseParticlePreset(record);
+    return createEffectDocument(preset);
+  }
+
+  throw new TypeError(
+    `Unsupported file kind: "${String(record.kind)}". Expected "flixel-pixi-particle-effect" or "particle-preset".`,
+  );
+}
+
 export function parseImportedPreset(text: string): ParticlePresetV1 {
   return parseParticlePreset(JSON.parse(text) as unknown);
 }
@@ -35,13 +178,7 @@ export function parseImportedPreset(text: string): ParticlePresetV1 {
 export function serializeEditorSnapshot(snapshot: EditorSnapshot): string {
   return JSON.stringify(
     {
-      document: {
-        ...snapshot.document,
-        emitters: snapshot.document.emitters.map((emitter) => ({
-          ...emitter,
-          preset: JSON.parse(serializeParticlePreset(emitter.preset)) as unknown,
-        })),
-      },
+      document: JSON.parse(serializeEffectDocument(snapshot.document)) as unknown,
       selectedEmitterId: snapshot.selectedEmitterId,
       preview: snapshot.preview,
       savedAt: new Date().toISOString(),

@@ -96,7 +96,8 @@ export function renderEditorShell(
           <button class="icon-button" data-action="undo" type="button" aria-label="Undo" title="Undo (Ctrl/⌘ Z)">↶</button>
           <button class="icon-button" data-action="redo" type="button" aria-label="Redo" title="Redo (Ctrl/⌘ Shift Z)">↷</button>
           <button class="button quiet" data-action="import" type="button">Import</button>
-          <button class="button quiet" data-action="export" type="button">Export JSON</button>
+          <button class="button quiet" data-action="export-effect" type="button" title="Export complete multi-emitter effect JSON">Export Effect</button>
+          <button class="button quiet" data-action="export-emitter" type="button" title="Export selected emitter preset JSON">Export Layer</button>
           <button class="button brand" data-action="copy-code" type="button">Copy TypeScript</button>
           <button class="icon-button theme-button" data-action="theme" type="button" aria-label="Switch color theme" title="Switch color theme">◐</button>
           <input data-import-input type="file" accept="application/json,.json" hidden />
