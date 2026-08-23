@@ -29,6 +29,16 @@ export interface PreviewTexture {
   originY: number;
 }
 
+export function getTextureAdjustedOffset(
+  texture: PreviewTexture,
+  offset: { x: number; y: number },
+): { x: number; y: number } {
+  return {
+    x: offset.x - texture.buffer.width * texture.originX,
+    y: offset.y - texture.buffer.height * texture.originY,
+  };
+}
+
 function previewBackground(color: string): {
   camera: number;
   renderer: number;
@@ -161,8 +171,9 @@ class ParticlePreviewState extends FlxState {
       const verticalVelocity = layer.preset.motion.velocity.y;
       const originY =
         verticalVelocity.min >= 0 ? 12 : verticalVelocity.max <= 0 ? 174 : 110;
-      const posX = (source?.x ?? PREVIEW_WIDTH / 2) + layer.offset.x;
-      const posY = (source?.y ?? originY) + layer.offset.y;
+      const offset = getTextureAdjustedOffset(texture, layer.offset);
+      const posX = (source?.x ?? PREVIEW_WIDTH / 2) + offset.x;
+      const posY = (source?.y ?? originY) + offset.y;
 
       const emitter = new FlxParticleEmitter(layer.preset, graphic, posX, posY);
       applyTextureOrigin(emitter, texture);
@@ -172,7 +183,7 @@ class ParticlePreviewState extends FlxState {
         layerId: layer.layerId,
         emitter,
         graphic,
-        offset: { ...layer.offset },
+        offset,
       });
     }
 
@@ -206,11 +217,12 @@ class ParticlePreviewState extends FlxState {
         texture.buffer,
         `particle-editor-burst-${String(this.#effectSequence)}-${layer.layerId}`,
       );
+      const offset = getTextureAdjustedOffset(texture, layer.offset);
       const emitter = new FlxParticleEmitter(
         burstPreset(layer.preset),
         graphic,
-        originX + layer.offset.x,
-        originY + layer.offset.y,
+        originX + offset.x,
+        originY + offset.y,
       );
       applyTextureOrigin(emitter, texture);
       this.add(emitter);
@@ -219,7 +231,7 @@ class ParticlePreviewState extends FlxState {
         layerId: layer.layerId,
         emitter,
         graphic,
-        offset: { ...layer.offset },
+        offset,
       });
     }
 
@@ -245,11 +257,12 @@ class ParticlePreviewState extends FlxState {
         texture.buffer,
         `particle-editor-trail-${String(this.#effectSequence)}-${layer.layerId}`,
       );
+      const offset = getTextureAdjustedOffset(texture, layer.offset);
       const emitter = new FlxParticleEmitter(
         trailPreset(layer.preset),
         graphic,
-        source.x + layer.offset.x,
-        source.y + layer.offset.y,
+        source.x + offset.x,
+        source.y + offset.y,
       );
       applyTextureOrigin(emitter, texture);
       this.add(emitter);
@@ -258,7 +271,7 @@ class ParticlePreviewState extends FlxState {
         layerId: layer.layerId,
         emitter,
         graphic,
-        offset: { ...layer.offset },
+        offset,
       });
     }
 
