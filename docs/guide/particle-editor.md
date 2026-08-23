@@ -109,52 +109,30 @@ Integrating a composed multi-emitter effect into your Flixel-Pixi game is straig
 ```ts
 import {
   FlxG,
-  FlxParticleEmitter,
+  FlxParticleEffect,
   FlxState,
-  type ParticlePresetV1,
+  parseParticleEffect,
 } from 'flixel-pixi';
+import campfireJson from './campfire.effect.json';
 
-// 1. Define presets for each layer (or load from JSON)
-const flamesPreset = {
-  // ... flames ParticlePresetV1 ...
-} satisfies ParticlePresetV1;
+const campfire = parseParticleEffect(campfireJson);
 
-const smokePreset = {
-  // ... smoke ParticlePresetV1 ...
-} satisfies ParticlePresetV1;
-
-const layers = [
-  { name: 'Flames', offset: { x: 0, y: 0 }, preset: flamesPreset },
-  { name: 'Smoke', offset: { x: 0, y: -16 }, preset: smokePreset },
-];
-
-export function createCampfireEmitters(
-  originX = 160,
-  originY = 120,
-): FlxParticleEmitter[] {
-  return layers.map(({ preset, offset }) => {
-    const emitter = FlxParticleEmitter.fromAssets(preset, {
-      x: originX + offset.x,
-      y: originY + offset.y,
-    });
-    emitter.start();
-    return emitter;
-  });
-}
-
-// 2. Instantiate and add in your PlayState
 export class PlayState extends FlxState {
   override create(): void {
     super.create();
 
-    // Preload texture assets with FlxAssets beforehand, then spawn emitters:
-    const campfireEmitters = createCampfireEmitters(
-      FlxG.width / 2,
-      FlxG.height / 2,
-    );
-    for (const emitter of campfireEmitters) {
-      this.add(emitter);
-    }
+    // Load every preset.appearance.texture.assetId with FlxAssets first.
+    const effect = FlxParticleEffect.fromAssets(campfire, {
+      autoStart: true,
+      x: FlxG.width / 2,
+      y: FlxG.height / 2,
+    });
+    this.add(effect);
   }
 }
 ```
+
+`FlxParticleEffect` preserves layer ordering and offsets, ignores disabled
+layers, aggregates diagnostics, and moves local-space particles with the effect
+origin. Its textures must be loaded through Flixel-Pixi's built-in asset
+preloader before the effect is created.

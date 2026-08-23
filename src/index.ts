@@ -169,14 +169,30 @@ export type {
   FlxParticleEmitterAssetOptions,
   FlxParticleEmitterSource,
 } from './objects/flx-particle-emitter';
+export { FlxParticleEffect } from './objects/flx-particle-effect';
+export type {
+  FlxParticleEffectAssetOptions,
+  FlxParticleEffectDiagnostics,
+  FlxParticleEffectLayer,
+  FlxParticleEffectSourceResolver,
+} from './objects/flx-particle-effect';
 export {
+  isParticleEffectValidationError,
   isParticlePresetValidationError,
+  parseParticleEffect,
   parseParticlePreset,
+  ParticleEffectValidationError,
   ParticlePresetValidationError,
+  serializeParticleEffect,
   serializeParticlePreset,
+  validateParticleEffect,
   validateParticlePreset,
 } from '@flixel-pixi/schemas';
 export type {
+  ParticleEffectDocumentV1,
+  ParticleEffectOffset,
+  ParticleEffectValidationResult,
+  ParticleEmitterLayerV1,
   ParticleAppearanceDefinition,
   ParticleBlendMode,
   ParticleColorStop,
@@ -196,6 +212,8 @@ export type {
   ParticleTextureDefinition,
   ParticleVectorRange,
   SerializeParticlePresetOptions,
+  SerializeParticleEffectOptions,
+  ParticleTextureShape,
   JsonObject,
   JsonPrimitive,
   JsonValue,
@@ -203,6 +221,7 @@ export type {
   ValidationIssueCode,
   ValidationResult,
 } from '@flixel-pixi/schemas';
+export { MAX_PARTICLE_EFFECT_EMITTERS } from '@flixel-pixi/schemas';
 export type {
   ParticleEmitterDiagnostics,
   ParticleEmitterState,

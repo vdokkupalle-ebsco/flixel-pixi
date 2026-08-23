@@ -9,6 +9,14 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
+### Added
+
+- Added the public, versioned `ParticleEffectDocumentV1` contract with
+  validation and deterministic serialization for Particle Editor exports.
+- Added `FlxParticleEffect` for loading, positioning, controlling, and
+  monitoring ordered multi-emitter effects through preloaded Flixel-Pixi
+  assets.
+
 ## 0.1.0-rc.7 — 2026-08-20
 
 This release candidate separates portable hosted-CI performance contracts from

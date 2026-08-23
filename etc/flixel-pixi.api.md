@@ -3295,6 +3295,66 @@ export class FlxParticle extends FlxSprite {
 export type FlxParticleConstructor = new () => FlxParticle;
 
 // @public
+export class FlxParticleEffect extends FlxGroup<FlxParticleEmitter> {
+    constructor(document: unknown, resolveSource: FlxParticleEffectSourceResolver, x?: number, y?: number);
+    get diagnostics(): FlxParticleEffectDiagnostics;
+    readonly document: ParticleEffectDocumentV1;
+    static fromAssets(document: unknown, options?: FlxParticleEffectAssetOptions): FlxParticleEffect;
+    readonly layers: readonly FlxParticleEffectLayer[];
+    pause(): void;
+    reset(): void;
+    resume(): void;
+    setPosition(x: number, y: number): void;
+    start(restart?: boolean): void;
+    stop(clear?: boolean): void;
+    // (undocumented)
+    update(): void;
+    x: number;
+    y: number;
+}
+
+// @public
+export interface FlxParticleEffectAssetOptions {
+    // (undocumented)
+    assets?: FlxAssets;
+    // (undocumented)
+    autoStart?: boolean;
+    // (undocumented)
+    frames?: Readonly<Record<string, FlxFramesCollection>>;
+    // (undocumented)
+    x?: number;
+    // (undocumented)
+    y?: number;
+}
+
+// @public
+export interface FlxParticleEffectDiagnostics {
+    // (undocumented)
+    activeCount: number;
+    // (undocumented)
+    capacity: number;
+    // (undocumented)
+    droppedCount: number;
+    // (undocumented)
+    emittedCount: number;
+    // (undocumented)
+    emitting: boolean;
+    // (undocumented)
+    pooledCount: number;
+}
+
+// @public
+export interface FlxParticleEffectLayer {
+    // (undocumented)
+    readonly definition: Readonly<ParticleEmitterLayerV1>;
+    // (undocumented)
+    readonly emitter: FlxParticleEmitter;
+}
+
+// @public
+export type FlxParticleEffectSourceResolver = (assetId: string, layer: Readonly<ParticleEmitterLayerV1>) => FlxParticleEmitterSource | undefined;
+
+// @public
 export class FlxParticleEmitter extends FlxEmitter {
     constructor(preset: unknown, source: FlxParticleEmitterSource, x?: number, y?: number);
     // (undocumented)
@@ -5185,6 +5245,9 @@ export class Input {
 }
 
 // @public
+export function isParticleEffectValidationError(error: unknown): error is ParticleEffectValidationError;
+
+// @public
 export function isParticlePresetValidationError(error: unknown): error is ParticlePresetValidationError;
 
 // @public (undocumented)
@@ -5421,6 +5484,9 @@ export interface LogEntry {
 export function makeGraphicPixels(width: number, height: number, color: number): PixelBuffer;
 
 // @public
+export const MAX_PARTICLE_EFFECT_EMITTERS = 8;
+
+// @public
 export class Mouse extends FlxPoint {
     constructor(context: FlxContext);
     // (undocumented)
@@ -5535,6 +5601,9 @@ export class NullStorageBackend implements FlxStorageBackend {
 export function parseBmFontXml(xmlText: string): FlxBmFontData;
 
 // @public
+export function parseParticleEffect(value: unknown): ParticleEffectDocumentV1;
+
+// @public
 export function parseParticlePreset(value: unknown): ParticlePresetV1;
 
 // @public (undocumented)
@@ -5582,6 +5651,38 @@ export interface ParticleCurveStop {
     value: number;
 }
 
+// @public
+export interface ParticleEffectDocumentV1 {
+    // (undocumented)
+    emitters: ParticleEmitterLayerV1[];
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    kind: 'flixel-pixi-particle-effect';
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    version: 1;
+}
+
+// @public
+export interface ParticleEffectOffset {
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+}
+
+// @public
+export class ParticleEffectValidationError extends TypeError {
+    constructor(issues: ValidationIssue[]);
+    // (undocumented)
+    readonly issues: ValidationIssue[];
+}
+
+// @public
+export type ParticleEffectValidationResult = ValidationResult<ParticleEffectDocumentV1>;
+
 // @public (undocumented)
 export type ParticleEmissionDefinition = {
     count: number;
@@ -5608,6 +5709,22 @@ export interface ParticleEmitterDiagnostics {
     pooledCount: number;
     // (undocumented)
     state: ParticleEmitterState;
+}
+
+// @public
+export interface ParticleEmitterLayerV1 {
+    // (undocumented)
+    enabled: boolean;
+    // (undocumented)
+    layerId: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    offset: ParticleEffectOffset;
+    // (undocumented)
+    preset: ParticlePresetV1;
+    // (undocumented)
+    textureShape: ParticleTextureShape;
 }
 
 // @public (undocumented)
@@ -5751,6 +5868,9 @@ export interface ParticleTextureDefinition {
     selection?: ParticleFrameSelection;
 }
 
+// @public
+export type ParticleTextureShape = 'circle' | 'square';
+
 // @public (undocumented)
 export interface ParticleVectorRange {
     // (undocumented)
@@ -5809,6 +5929,15 @@ export interface ReplayFileFormat {
 }
 
 // @public
+export function serializeParticleEffect(value: ParticleEffectDocumentV1, options?: SerializeParticleEffectOptions): string;
+
+// @public (undocumented)
+export interface SerializeParticleEffectOptions {
+    // (undocumented)
+    space?: number;
+}
+
+// @public
 export function serializeParticlePreset(value: ParticlePresetV1, options?: SerializeParticlePresetOptions): string;
 
 // @public (undocumented)
@@ -5851,6 +5980,9 @@ export interface UpstreamBaseline {
 
 // @public
 export const upstreamBaseline: Readonly<UpstreamBaseline>;
+
+// @public
+export function validateParticleEffect(value: unknown): ParticleEffectValidationResult;
 
 // @public
 export function validateParticlePreset(value: unknown): ParticlePresetValidationResult;

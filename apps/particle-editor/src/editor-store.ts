@@ -1,37 +1,21 @@
 import {
-  parseParticlePreset,
+  MAX_PARTICLE_EFFECT_EMITTERS,
+  parseParticleEffect,
   serializeParticlePreset,
+  type ParticleEffectDocumentV1,
+  type ParticleEmitterLayerV1,
   type ParticlePresetV1,
 } from 'flixel-pixi';
 import { clonePreset } from './presets';
 
-export const MAX_EMITTERS = 8;
+export const MAX_EMITTERS = MAX_PARTICLE_EFFECT_EMITTERS;
+export type { ParticleEffectDocumentV1, ParticleEmitterLayerV1 };
 
 export interface PreviewSettings {
   background: string;
   pointerMode: 'auto' | 'burst' | 'trail';
   scale: 'compact' | 'fit' | 'large';
   timeScale: number;
-}
-
-export interface ParticleEmitterLayerV1 {
-  layerId: string;
-  name: string;
-  enabled: boolean;
-  offset: {
-    x: number;
-    y: number;
-  };
-  textureShape: 'circle' | 'square';
-  preset: ParticlePresetV1;
-}
-
-export interface ParticleEffectDocumentV1 {
-  kind: 'flixel-pixi-particle-effect';
-  version: 1;
-  id: string;
-  name: string;
-  emitters: ParticleEmitterLayerV1[];
 }
 
 export interface EditorSnapshot {
@@ -103,107 +87,7 @@ export function cloneEffectDocument(
 export function validateEffectDocument(
   document: unknown,
 ): ParticleEffectDocumentV1 {
-  if (typeof document !== 'object' || document === null) {
-    throw new TypeError('Particle effect document must be an object.');
-  }
-  const record = document as Record<string, unknown>;
-  if (record.kind !== 'flixel-pixi-particle-effect') {
-    throw new TypeError('Invalid effect document kind.');
-  }
-  if (record.version !== 1) {
-    throw new TypeError(
-      `Unsupported effect document version: ${String(record.version)}`,
-    );
-  }
-  if (typeof record.id !== 'string' || record.id.trim().length === 0) {
-    throw new TypeError('Effect document requires a non-empty id.');
-  }
-  if (typeof record.name !== 'string' || record.name.trim().length === 0) {
-    throw new TypeError('Effect document requires a non-empty name.');
-  }
-  if (!Array.isArray(record.emitters)) {
-    throw new TypeError('Effect document emitters must be an array.');
-  }
-  if (record.emitters.length === 0) {
-    throw new RangeError('Effect document must contain at least one emitter.');
-  }
-  if (record.emitters.length > MAX_EMITTERS) {
-    throw new RangeError(
-      `Effect document cannot exceed ${String(MAX_EMITTERS)} emitters.`,
-    );
-  }
-
-  const seenIds = new Set<string>();
-  const emitters: ParticleEmitterLayerV1[] = record.emitters.map(
-    (item, index) => {
-      if (typeof item !== 'object' || item === null) {
-        throw new TypeError(
-          `Emitter layer at index ${String(index)} must be an object.`,
-        );
-      }
-      const layer = item as Record<string, unknown>;
-      if (
-        typeof layer.layerId !== 'string' ||
-        layer.layerId.trim().length === 0
-      ) {
-        throw new TypeError(
-          `Emitter layer at index ${String(index)} requires a valid layerId.`,
-        );
-      }
-      if (seenIds.has(layer.layerId)) {
-        throw new Error(`Duplicate emitter layerId: "${layer.layerId}".`);
-      }
-      seenIds.add(layer.layerId);
-
-      if (typeof layer.name !== 'string' || layer.name.trim().length === 0) {
-        throw new TypeError(
-          `Emitter layer "${layer.layerId}" requires a non-empty name.`,
-        );
-      }
-      if (typeof layer.enabled !== 'boolean') {
-        throw new TypeError(
-          `Emitter layer "${layer.layerId}" enabled property must be a boolean.`,
-        );
-      }
-      if (
-        typeof layer.offset !== 'object' ||
-        layer.offset === null ||
-        typeof (layer.offset as Record<string, unknown>).x !== 'number' ||
-        !Number.isFinite((layer.offset as Record<string, unknown>).x) ||
-        typeof (layer.offset as Record<string, unknown>).y !== 'number' ||
-        !Number.isFinite((layer.offset as Record<string, unknown>).y)
-      ) {
-        throw new TypeError(
-          `Emitter layer "${layer.layerId}" offset must contain finite x and y numbers.`,
-        );
-      }
-      if (layer.textureShape !== 'circle' && layer.textureShape !== 'square') {
-        throw new TypeError(
-          `Emitter layer "${layer.layerId}" textureShape must be 'circle' or 'square'.`,
-        );
-      }
-
-      return {
-        layerId: layer.layerId,
-        name: layer.name,
-        enabled: layer.enabled,
-        offset: {
-          x: (layer.offset as { x: number; y: number }).x,
-          y: (layer.offset as { x: number; y: number }).y,
-        },
-        textureShape: layer.textureShape,
-        preset: parseParticlePreset(layer.preset),
-      };
-    },
-  );
-
-  return {
-    kind: 'flixel-pixi-particle-effect',
-    version: 1,
-    id: record.id,
-    name: record.name,
-    emitters,
-  };
+  return parseParticleEffect(document);
 }
 
 export function selectedEmitter(

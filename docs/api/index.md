@@ -60,6 +60,14 @@ Visual entities, sprites, groups, graphics, and emitters.
 | [**`FlxObjectInspectorOptions`**](./flxobjectinspectoroptions.md) | `Interface` | Configuration for the optional pointer object inspector. |
 | [**`FlxParticle`**](./flxparticle.md) | `Class` | Sprite with lifespan and gravity-contact behavior for emitters. |
 | [**`FlxParticleConstructor`**](./flxparticleconstructor.md) | `TypeAlias` | Constructor for custom particles created and recycled by an emitter. |
+| [**`FlxParticleEffect`**](./flxparticleeffect.md) | `Class` | A movable, ordered group of emitters created from a Particle Editor export. Add the effect itself to a state; its child emitters follow the document's layer order and offsets. |
+| [**`FlxParticleEffectAssetOptions`**](./flxparticleeffectassetoptions.md) | `Interface` | Options for creating a composed effect from preloaded [link](#). |
+| [**`FlxParticleEffectDiagnostics`**](./flxparticleeffectdiagnostics.md) | `Interface` | Aggregate diagnostics across every enabled emitter layer. |
+| [**`FlxParticleEffectLayer`**](./flxparticleeffectlayer.md) | `Interface` | Runtime association between an exported layer and its emitter. |
+| [**`FlxParticleEffectSourceResolver`**](./flxparticleeffectsourceresolver.md) | `TypeAlias` | Resolve a preloaded particle texture or frame collection for one layer. |
+| [**`FlxParticleEmitter`**](./flxparticleemitter.md) | `Class` | Renders a validated particle preset through Flixel-Pixi's existing emitter and camera pipeline while delegating simulation to the deterministic runtime. |
+| [**`FlxParticleEmitterAssetOptions`**](./flxparticleemitterassetoptions.md) | `Interface` | Options for resolving a preset's preloaded asset through [link](#). |
+| [**`FlxParticleEmitterSource`**](./flxparticleemittersource.md) | `TypeAlias` | A preloaded image or named frame collection used by a particle preset. |
 | [**`FlxSprite`**](./flxsprite.md) | `Class` | Renderer-neutral Flixel sprite state with adapter-owned Pixi views. |
 | [**`FlxSpriteContainer`**](./flxspritecontainer.md) | `Class` | Sprite composite whose backing group enforces exclusive ownership. |
 | [**`FlxSpriteGroup`**](./flxspritegroup.md) | `Class` | A transformable sprite composite backed by a logical `FlxGroup`.<br><br>Members use world-space `x`/`y` while owned. `add()` interprets an incoming member position as local to the composite and translates it into world space; `remove()` converts it back to local space. Collision expands to the member AABBs rather than treating the composite as one rectangle. |
@@ -465,5 +473,50 @@ Data types, helper interfaces, and utility declarations.
 | [**`FlxSubStateCallback`**](./flxsubstatecallback.md) | `TypeAlias` | Lifecycle callback invoked when a substate opens or closes. |
 | [**`FlxTimer`**](./flxtimer.md) | `Class` | Deterministic timer advanced by the context's `TimerManager`. |
 | [**`FlxTimerCallback`**](./flxtimercallback.md) | `TypeAlias` | Callback fired for each completed timer loop. |
+| [**`isParticleEffectValidationError`**](./isparticleeffectvalidationerror.md) | `Function` | Narrow an unknown thrown value to a particle effect validation error. |
+| [**`isParticlePresetValidationError`**](./isparticlepresetvalidationerror.md) | `Function` | Return whether an error came from particle preset parsing. |
+| [**`JsonObject`**](./jsonobject.md) | `Interface` |  |
+| [**`JsonPrimitive`**](./jsonprimitive.md) | `TypeAlias` |  |
+| [**`JsonValue`**](./jsonvalue.md) | `TypeAlias` |  |
+| [**`MAX_PARTICLE_EFFECT_EMITTERS`**](./max_particle_effect_emitters.md) | `Variable` | Maximum number of emitter layers supported by a version 1 effect. |
+| [**`parseParticleEffect`**](./parseparticleeffect.md) | `Function` | Parse and validate a versioned particle effect document. |
+| [**`parseParticlePreset`**](./parseparticlepreset.md) | `Function` | Parse an unknown value or throw a [link](#). |
+| [**`ParticleAppearanceDefinition`**](./particleappearancedefinition.md) | `Interface` |  |
+| [**`ParticleBlendMode`**](./particleblendmode.md) | `TypeAlias` | Portable blend modes supported by particle presets. |
+| [**`ParticleColorStop`**](./particlecolorstop.md) | `Interface` |  |
+| [**`ParticleCurve`**](./particlecurve.md) | `Interface` |  |
+| [**`ParticleCurveInterpolation`**](./particlecurveinterpolation.md) | `TypeAlias` |  |
+| [**`ParticleCurveStop`**](./particlecurvestop.md) | `Interface` |  |
+| [**`ParticleEffectDocumentV1`**](./particleeffectdocumentv1.md) | `Interface` | Portable, ordered multi-emitter effect exported by the Particle Editor. |
+| [**`ParticleEffectOffset`**](./particleeffectoffset.md) | `Interface` | Local emitter offset from the composed effect origin. |
+| [**`ParticleEffectValidationError`**](./particleeffectvalidationerror.md) | `Class` | Structured error thrown while parsing a particle effect document. |
+| [**`ParticleEffectValidationResult`**](./particleeffectvalidationresult.md) | `TypeAlias` | Validation result for a composed particle effect document. |
+| [**`ParticleEmissionDefinition`**](./particleemissiondefinition.md) | `TypeAlias` |  |
+| [**`ParticleEmitterDiagnostics`**](./particleemitterdiagnostics.md) | `Interface` |  |
+| [**`ParticleEmitterLayerV1`**](./particleemitterlayerv1.md) | `Interface` | One ordered emitter layer inside a composed particle effect. |
+| [**`ParticleEmitterState`**](./particleemitterstate.md) | `TypeAlias` |  |
+| [**`ParticleFrameSelection`**](./particleframeselection.md) | `TypeAlias` |  |
+| [**`ParticleMotionDefinition`**](./particlemotiondefinition.md) | `Interface` |  |
+| [**`ParticleNumberRange`**](./particlenumberrange.md) | `Interface` |  |
+| [**`ParticlePreset`**](./particlepreset.md) | `TypeAlias` |  |
+| [**`ParticlePresetV1`**](./particlepresetv1.md) | `Interface` |  |
+| [**`ParticlePresetValidationError`**](./particlepresetvalidationerror.md) | `Class` | Error thrown when a particle preset cannot be parsed. |
+| [**`ParticlePresetValidationResult`**](./particlepresetvalidationresult.md) | `TypeAlias` |  |
+| [**`ParticleRotationDefinition`**](./particlerotationdefinition.md) | `Interface` |  |
+| [**`ParticleSpace`**](./particlespace.md) | `TypeAlias` |  |
+| [**`ParticleSpawnDefinition`**](./particlespawndefinition.md) | `TypeAlias` |  |
+| [**`ParticleState`**](./particlestate.md) | `Interface` |  |
+| [**`ParticleTextureDefinition`**](./particletexturedefinition.md) | `Interface` |  |
+| [**`ParticleTextureShape`**](./particletextureshape.md) | `TypeAlias` | Editor drawing hint retained so exported effects can be reopened losslessly. |
+| [**`ParticleVectorRange`**](./particlevectorrange.md) | `Interface` |  |
 | [**`ReplayFileFormat`**](./replayfileformat.md) | `Interface` | Structure of a serialized FlxReplay JSON file. |
+| [**`serializeParticleEffect`**](./serializeparticleeffect.md) | `Function` | Serialize a validated particle effect with deterministic field ordering. |
+| [**`SerializeParticleEffectOptions`**](./serializeparticleeffectoptions.md) | `Interface` |  |
+| [**`serializeParticlePreset`**](./serializeparticlepreset.md) | `Function` | Serialize a validated particle preset with deterministic key ordering. |
+| [**`SerializeParticlePresetOptions`**](./serializeparticlepresetoptions.md) | `Interface` |  |
+| [**`validateParticleEffect`**](./validateparticleeffect.md) | `Function` | Validate an exported particle effect and report every actionable path. |
+| [**`validateParticlePreset`**](./validateparticlepreset.md) | `Function` | Validate an unknown value as a version 1 particle preset. |
+| [**`ValidationIssue`**](./validationissue.md) | `Interface` |  |
+| [**`ValidationIssueCode`**](./validationissuecode.md) | `TypeAlias` |  |
+| [**`ValidationResult`**](./validationresult.md) | `TypeAlias` |  |
 

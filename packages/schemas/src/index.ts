@@ -11,6 +11,24 @@ export {
   serializeParticlePreset,
   type SerializeParticlePresetOptions,
 } from './particle-serialization.js';
+export {
+  serializeParticleEffect,
+  type SerializeParticleEffectOptions,
+} from './particle-effect-serialization.js';
+export {
+  MAX_PARTICLE_EFFECT_EMITTERS,
+  type ParticleEffectDocumentV1,
+  type ParticleEffectOffset,
+  type ParticleEffectValidationResult,
+  type ParticleEmitterLayerV1,
+  type ParticleTextureShape,
+} from './particle-effect-types.js';
+export {
+  isParticleEffectValidationError,
+  parseParticleEffect,
+  ParticleEffectValidationError,
+  validateParticleEffect,
+} from './particle-effect-validation.js';
 export type {
   ParticleAppearanceDefinition,
   ParticleBlendMode,

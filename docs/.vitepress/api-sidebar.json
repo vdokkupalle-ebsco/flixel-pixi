@@ -166,6 +166,38 @@
         "link": "/api/flxparticleconstructor"
       },
       {
+        "text": "FlxParticleEffect",
+        "link": "/api/flxparticleeffect"
+      },
+      {
+        "text": "FlxParticleEffectAssetOptions",
+        "link": "/api/flxparticleeffectassetoptions"
+      },
+      {
+        "text": "FlxParticleEffectDiagnostics",
+        "link": "/api/flxparticleeffectdiagnostics"
+      },
+      {
+        "text": "FlxParticleEffectLayer",
+        "link": "/api/flxparticleeffectlayer"
+      },
+      {
+        "text": "FlxParticleEffectSourceResolver",
+        "link": "/api/flxparticleeffectsourceresolver"
+      },
+      {
+        "text": "FlxParticleEmitter",
+        "link": "/api/flxparticleemitter"
+      },
+      {
+        "text": "FlxParticleEmitterAssetOptions",
+        "link": "/api/flxparticleemitterassetoptions"
+      },
+      {
+        "text": "FlxParticleEmitterSource",
+        "link": "/api/flxparticleemittersource"
+      },
+      {
         "text": "FlxSprite",
         "link": "/api/flxsprite"
       },
@@ -1500,8 +1532,188 @@
         "link": "/api/flxtimercallback"
       },
       {
+        "text": "isParticleEffectValidationError",
+        "link": "/api/isparticleeffectvalidationerror"
+      },
+      {
+        "text": "isParticlePresetValidationError",
+        "link": "/api/isparticlepresetvalidationerror"
+      },
+      {
+        "text": "JsonObject",
+        "link": "/api/jsonobject"
+      },
+      {
+        "text": "JsonPrimitive",
+        "link": "/api/jsonprimitive"
+      },
+      {
+        "text": "JsonValue",
+        "link": "/api/jsonvalue"
+      },
+      {
+        "text": "MAX_PARTICLE_EFFECT_EMITTERS",
+        "link": "/api/max_particle_effect_emitters"
+      },
+      {
+        "text": "parseParticleEffect",
+        "link": "/api/parseparticleeffect"
+      },
+      {
+        "text": "parseParticlePreset",
+        "link": "/api/parseparticlepreset"
+      },
+      {
+        "text": "ParticleAppearanceDefinition",
+        "link": "/api/particleappearancedefinition"
+      },
+      {
+        "text": "ParticleBlendMode",
+        "link": "/api/particleblendmode"
+      },
+      {
+        "text": "ParticleColorStop",
+        "link": "/api/particlecolorstop"
+      },
+      {
+        "text": "ParticleCurve",
+        "link": "/api/particlecurve"
+      },
+      {
+        "text": "ParticleCurveInterpolation",
+        "link": "/api/particlecurveinterpolation"
+      },
+      {
+        "text": "ParticleCurveStop",
+        "link": "/api/particlecurvestop"
+      },
+      {
+        "text": "ParticleEffectDocumentV1",
+        "link": "/api/particleeffectdocumentv1"
+      },
+      {
+        "text": "ParticleEffectOffset",
+        "link": "/api/particleeffectoffset"
+      },
+      {
+        "text": "ParticleEffectValidationError",
+        "link": "/api/particleeffectvalidationerror"
+      },
+      {
+        "text": "ParticleEffectValidationResult",
+        "link": "/api/particleeffectvalidationresult"
+      },
+      {
+        "text": "ParticleEmissionDefinition",
+        "link": "/api/particleemissiondefinition"
+      },
+      {
+        "text": "ParticleEmitterDiagnostics",
+        "link": "/api/particleemitterdiagnostics"
+      },
+      {
+        "text": "ParticleEmitterLayerV1",
+        "link": "/api/particleemitterlayerv1"
+      },
+      {
+        "text": "ParticleEmitterState",
+        "link": "/api/particleemitterstate"
+      },
+      {
+        "text": "ParticleFrameSelection",
+        "link": "/api/particleframeselection"
+      },
+      {
+        "text": "ParticleMotionDefinition",
+        "link": "/api/particlemotiondefinition"
+      },
+      {
+        "text": "ParticleNumberRange",
+        "link": "/api/particlenumberrange"
+      },
+      {
+        "text": "ParticlePreset",
+        "link": "/api/particlepreset"
+      },
+      {
+        "text": "ParticlePresetV1",
+        "link": "/api/particlepresetv1"
+      },
+      {
+        "text": "ParticlePresetValidationError",
+        "link": "/api/particlepresetvalidationerror"
+      },
+      {
+        "text": "ParticlePresetValidationResult",
+        "link": "/api/particlepresetvalidationresult"
+      },
+      {
+        "text": "ParticleRotationDefinition",
+        "link": "/api/particlerotationdefinition"
+      },
+      {
+        "text": "ParticleSpace",
+        "link": "/api/particlespace"
+      },
+      {
+        "text": "ParticleSpawnDefinition",
+        "link": "/api/particlespawndefinition"
+      },
+      {
+        "text": "ParticleState",
+        "link": "/api/particlestate"
+      },
+      {
+        "text": "ParticleTextureDefinition",
+        "link": "/api/particletexturedefinition"
+      },
+      {
+        "text": "ParticleTextureShape",
+        "link": "/api/particletextureshape"
+      },
+      {
+        "text": "ParticleVectorRange",
+        "link": "/api/particlevectorrange"
+      },
+      {
         "text": "ReplayFileFormat",
         "link": "/api/replayfileformat"
+      },
+      {
+        "text": "serializeParticleEffect",
+        "link": "/api/serializeparticleeffect"
+      },
+      {
+        "text": "SerializeParticleEffectOptions",
+        "link": "/api/serializeparticleeffectoptions"
+      },
+      {
+        "text": "serializeParticlePreset",
+        "link": "/api/serializeparticlepreset"
+      },
+      {
+        "text": "SerializeParticlePresetOptions",
+        "link": "/api/serializeparticlepresetoptions"
+      },
+      {
+        "text": "validateParticleEffect",
+        "link": "/api/validateparticleeffect"
+      },
+      {
+        "text": "validateParticlePreset",
+        "link": "/api/validateparticlepreset"
+      },
+      {
+        "text": "ValidationIssue",
+        "link": "/api/validationissue"
+      },
+      {
+        "text": "ValidationIssueCode",
+        "link": "/api/validationissuecode"
+      },
+      {
+        "text": "ValidationResult",
+        "link": "/api/validationresult"
       }
     ]
   }
