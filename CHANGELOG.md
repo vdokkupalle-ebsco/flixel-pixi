@@ -9,6 +9,11 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
+### Changed
+
+- Aligned the private Particle Editor workspace dependency with the published
+  `flixel-pixi@0.1.0-rc.10` prerelease used by clean installs.
+
 ## 0.1.0-rc.10 — 2026-08-23
 
 This release candidate establishes the Particle Editor-to-game pipeline: author
