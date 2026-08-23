@@ -10,14 +10,34 @@ import {
   type ParticlePresetV1,
   type PixelBuffer,
 } from 'flixel-pixi';
-import type { PreviewSettings } from './editor-store';
+import type {
+  ParticleEffectDocumentV1,
+  ParticleEmitterLayerV1,
+  PreviewSettings,
+} from './editor-store';
 
 const PREVIEW_WIDTH = 320;
 const PREVIEW_HEIGHT = 220;
 
 let activeState: ParticlePreviewState | undefined;
-let pendingPreset: ParticlePresetV1;
-let pendingTexture: PixelBuffer;
+let pendingDocument: ParticleEffectDocumentV1;
+let pendingTextureResolver: (layer: ParticleEmitterLayerV1) => PreviewTexture;
+
+export interface PreviewTexture {
+  buffer: PixelBuffer;
+  originX: number;
+  originY: number;
+}
+
+export function getTextureAdjustedOffset(
+  texture: PreviewTexture,
+  offset: { x: number; y: number },
+): { x: number; y: number } {
+  return {
+    x: offset.x - texture.buffer.width * texture.originX,
+    y: offset.y - texture.buffer.height * texture.originY,
+  };
+}
 
 function previewBackground(color: string): {
   camera: number;
@@ -31,154 +51,28 @@ function setActiveState(state: ParticlePreviewState | undefined): void {
   activeState = state;
 }
 
-class ParticlePreviewState extends FlxState {
-  readonly #burstEffects: {
-    emitter: FlxParticleEmitter;
-    graphic: FlxGraphic;
-  }[] = [];
-  #emitter: FlxParticleEmitter | undefined;
-  #graphic: FlxGraphic | undefined;
-  #effectSequence = 0;
-
-  override create(): void {
-    setActiveState(this);
-    this.load(pendingPreset, pendingTexture);
-  }
-
-  get diagnostics(): ParticleEmitterDiagnostics | undefined {
-    const diagnostics = [
-      ...(this.#emitter === undefined ? [] : [this.#emitter.diagnostics]),
-      ...this.#burstEffects.map(({ emitter }) => emitter.diagnostics),
-    ];
-    const latest = diagnostics.at(-1);
-    if (latest === undefined) return undefined;
-    return {
-      ...latest,
-      activeCount: diagnostics.reduce(
-        (total, item) => total + item.activeCount,
-        0,
-      ),
-      capacity: diagnostics.reduce((total, item) => total + item.capacity, 0),
-      droppedCount: diagnostics.reduce(
-        (total, item) => total + item.droppedCount,
-        0,
-      ),
-      emittedCount: diagnostics.reduce(
-        (total, item) => total + item.emittedCount,
-        0,
-      ),
-      emitting: diagnostics.some((item) => item.emitting),
-      pooledCount: diagnostics.reduce(
-        (total, item) => total + item.pooledCount,
-        0,
-      ),
-    };
-  }
-
-  load(
-    preset: ParticlePresetV1,
-    texture: PixelBuffer,
-    source?: { x: number; y: number },
-  ): void {
-    if (this.#emitter !== undefined) {
-      this.remove(this.#emitter, true);
-      this.#emitter.destroy();
-    }
-    this.#graphic?.destroy();
-    this.#graphic = FlxGraphic.fromPixels(texture, 'particle-editor-texture');
-    const verticalVelocity = preset.motion.velocity.y;
-    const originY =
-      verticalVelocity.min >= 0 ? 12 : verticalVelocity.max <= 0 ? 174 : 110;
-    this.#emitter = new FlxParticleEmitter(
-      preset,
-      this.#graphic,
-      source?.x ?? PREVIEW_WIDTH / 2,
-      source?.y ?? originY,
+function applyTextureOrigin(
+  emitter: FlxParticleEmitter,
+  texture: PreviewTexture,
+): void {
+  for (const particle of emitter.members) {
+    if (particle === null) continue;
+    particle.origin.make(
+      texture.buffer.width * texture.originX,
+      texture.buffer.height * texture.originY,
     );
-    this.add(this.#emitter);
-    this.#emitter.start();
-  }
-
-  moveSource(x: number, y: number): void {
-    if (this.#emitter === undefined) return;
-    this.#emitter.x = x;
-    this.#emitter.y = y;
-  }
-
-  spawnBurst(
-    preset: ParticlePresetV1,
-    texture: PixelBuffer,
-    source?: { x: number; y: number },
-  ): void {
-    const graphic = FlxGraphic.fromPixels(
-      texture,
-      `particle-editor-burst-${String(this.#effectSequence)}`,
-    );
-    this.#effectSequence += 1;
-    const emitter = new FlxParticleEmitter(
-      preset,
-      graphic,
-      source?.x ?? PREVIEW_WIDTH / 2,
-      source?.y ?? PREVIEW_HEIGHT / 2,
-    );
-    this.#burstEffects.push({ emitter, graphic });
-    this.add(emitter);
-    emitter.start();
-  }
-
-  pause(): void {
-    this.#emitter?.pause();
-  }
-
-  resume(): void {
-    this.#emitter?.resume();
-  }
-
-  stop(clear = false): void {
-    this.#emitter?.stop(clear);
-  }
-
-  override update(): void {
-    super.update();
-    for (let index = this.#burstEffects.length - 1; index >= 0; index -= 1) {
-      const effect = this.#burstEffects[index];
-      if (
-        effect === undefined ||
-        effect.emitter.diagnostics.emitting ||
-        effect.emitter.diagnostics.activeCount > 0
-      ) {
-        continue;
-      }
-      this.remove(effect.emitter, true);
-      effect.emitter.destroy();
-      effect.graphic.destroy();
-      this.#burstEffects.splice(index, 1);
-    }
-  }
-
-  override destroy(): void {
-    if (activeState === this) setActiveState(undefined);
-    for (const { emitter, graphic } of this.#burstEffects) {
-      emitter.destroy();
-      graphic.destroy();
-    }
-    this.#burstEffects.length = 0;
-    this.#graphic = undefined;
-    this.#emitter = undefined;
-    super.destroy();
   }
 }
 
-export interface ParticlePreviewController {
-  burst(): void;
-  destroy(): void;
-  load(preset: ParticlePresetV1, texture: PixelBuffer): void;
-  pause(): void;
-  restart(): void;
-  resume(): void;
-  setBackground(color: string): void;
-  setPointerMode(mode: PreviewSettings['pointerMode']): void;
-  setTimeScale(scale: number): void;
+interface PreviewEmitterInstance {
+  layerId: string;
+  emitter: FlxParticleEmitter;
+  graphic: FlxGraphic;
+  offset: { x: number; y: number };
+}
+
+interface PreviewEffectGroup {
+  emitters: PreviewEmitterInstance[];
 }
 
 function burstPreset(preset: ParticlePresetV1): ParticlePresetV1 {
@@ -206,14 +100,290 @@ function trailPreset(preset: ParticlePresetV1): ParticlePresetV1 {
   });
 }
 
+class ParticlePreviewState extends FlxState {
+  readonly #burstGroups: PreviewEffectGroup[] = [];
+  #primaryGroup: PreviewEffectGroup | undefined;
+  #effectSequence = 0;
+
+  override create(): void {
+    setActiveState(this);
+    this.load(pendingDocument, pendingTextureResolver);
+  }
+
+  get diagnostics(): ParticleEmitterDiagnostics | undefined {
+    const allEmitters: FlxParticleEmitter[] = [
+      ...(this.#primaryGroup?.emitters.map((item) => item.emitter) ?? []),
+      ...this.#burstGroups.flatMap((group) =>
+        group.emitters.map((item) => item.emitter),
+      ),
+    ];
+    if (allEmitters.length === 0) return undefined;
+
+    const allDiagnostics = allEmitters.map((emitter) => emitter.diagnostics);
+    const latest = allDiagnostics.at(-1);
+    if (latest === undefined) return undefined;
+
+    return {
+      ...latest,
+      activeCount: allDiagnostics.reduce(
+        (total, item) => total + item.activeCount,
+        0,
+      ),
+      capacity: allDiagnostics.reduce(
+        (total, item) => total + item.capacity,
+        0,
+      ),
+      droppedCount: allDiagnostics.reduce(
+        (total, item) => total + item.droppedCount,
+        0,
+      ),
+      emittedCount: allDiagnostics.reduce(
+        (total, item) => total + item.emittedCount,
+        0,
+      ),
+      emitting: allDiagnostics.some((item) => item.emitting),
+      pooledCount: allDiagnostics.reduce(
+        (total, item) => total + item.pooledCount,
+        0,
+      ),
+    };
+  }
+
+  load(
+    document: ParticleEffectDocumentV1,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
+    source?: { x: number; y: number },
+  ): void {
+    this.#destroyGroup(this.#primaryGroup);
+    this.#primaryGroup = undefined;
+
+    const enabledLayers = document.emitters.filter((layer) => layer.enabled);
+    if (enabledLayers.length === 0) return;
+
+    const emitterInstances: PreviewEmitterInstance[] = [];
+    for (const layer of enabledLayers) {
+      this.#effectSequence += 1;
+      const texture = getTexture(layer);
+      const graphic = FlxGraphic.fromPixels(
+        texture.buffer,
+        `particle-editor-primary-${layer.layerId}-${String(this.#effectSequence)}`,
+      );
+      const verticalVelocity = layer.preset.motion.velocity.y;
+      const originY =
+        verticalVelocity.min >= 0 ? 12 : verticalVelocity.max <= 0 ? 174 : 110;
+      const offset = getTextureAdjustedOffset(texture, layer.offset);
+      const posX = (source?.x ?? PREVIEW_WIDTH / 2) + offset.x;
+      const posY = (source?.y ?? originY) + offset.y;
+
+      const emitter = new FlxParticleEmitter(layer.preset, graphic, posX, posY);
+      applyTextureOrigin(emitter, texture);
+      this.add(emitter);
+      emitter.start();
+      emitterInstances.push({
+        layerId: layer.layerId,
+        emitter,
+        graphic,
+        offset,
+      });
+    }
+
+    this.#primaryGroup = { emitters: emitterInstances };
+  }
+
+  moveSource(x: number, y: number): void {
+    if (this.#primaryGroup === undefined) return;
+    for (const item of this.#primaryGroup.emitters) {
+      item.emitter.x = x + item.offset.x;
+      item.emitter.y = y + item.offset.y;
+    }
+  }
+
+  spawnBurst(
+    document: ParticleEffectDocumentV1,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
+    source?: { x: number; y: number },
+  ): void {
+    const enabledLayers = document.emitters.filter((layer) => layer.enabled);
+    if (enabledLayers.length === 0) return;
+
+    const emitterInstances: PreviewEmitterInstance[] = [];
+    const originX = source?.x ?? PREVIEW_WIDTH / 2;
+    const originY = source?.y ?? PREVIEW_HEIGHT / 2;
+
+    for (const layer of enabledLayers) {
+      this.#effectSequence += 1;
+      const texture = getTexture(layer);
+      const graphic = FlxGraphic.fromPixels(
+        texture.buffer,
+        `particle-editor-burst-${String(this.#effectSequence)}-${layer.layerId}`,
+      );
+      const offset = getTextureAdjustedOffset(texture, layer.offset);
+      const emitter = new FlxParticleEmitter(
+        burstPreset(layer.preset),
+        graphic,
+        originX + offset.x,
+        originY + offset.y,
+      );
+      applyTextureOrigin(emitter, texture);
+      this.add(emitter);
+      emitter.start();
+      emitterInstances.push({
+        layerId: layer.layerId,
+        emitter,
+        graphic,
+        offset,
+      });
+    }
+
+    this.#burstGroups.push({ emitters: emitterInstances });
+  }
+
+  startTrail(
+    document: ParticleEffectDocumentV1,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
+    source: { x: number; y: number },
+  ): void {
+    this.#destroyGroup(this.#primaryGroup);
+    this.#primaryGroup = undefined;
+
+    const enabledLayers = document.emitters.filter((layer) => layer.enabled);
+    if (enabledLayers.length === 0) return;
+
+    const emitterInstances: PreviewEmitterInstance[] = [];
+    for (const layer of enabledLayers) {
+      this.#effectSequence += 1;
+      const texture = getTexture(layer);
+      const graphic = FlxGraphic.fromPixels(
+        texture.buffer,
+        `particle-editor-trail-${String(this.#effectSequence)}-${layer.layerId}`,
+      );
+      const offset = getTextureAdjustedOffset(texture, layer.offset);
+      const emitter = new FlxParticleEmitter(
+        trailPreset(layer.preset),
+        graphic,
+        source.x + offset.x,
+        source.y + offset.y,
+      );
+      applyTextureOrigin(emitter, texture);
+      this.add(emitter);
+      emitter.start();
+      emitterInstances.push({
+        layerId: layer.layerId,
+        emitter,
+        graphic,
+        offset,
+      });
+    }
+
+    this.#primaryGroup = { emitters: emitterInstances };
+  }
+
+  stopTrail(): void {
+    if (this.#primaryGroup === undefined) return;
+    for (const item of this.#primaryGroup.emitters) {
+      item.emitter.stop(false);
+    }
+    this.#burstGroups.push(this.#primaryGroup);
+    this.#primaryGroup = undefined;
+  }
+
+  pause(): void {
+    const groups = [
+      ...(this.#primaryGroup === undefined ? [] : [this.#primaryGroup]),
+      ...this.#burstGroups,
+    ];
+    for (const group of groups) {
+      for (const item of group.emitters) {
+        item.emitter.pause();
+      }
+    }
+  }
+
+  resume(): void {
+    const groups = [
+      ...(this.#primaryGroup === undefined ? [] : [this.#primaryGroup]),
+      ...this.#burstGroups,
+    ];
+    for (const group of groups) {
+      for (const item of group.emitters) {
+        item.emitter.resume();
+      }
+    }
+  }
+
+  stop(clear = false): void {
+    if (this.#primaryGroup !== undefined) {
+      for (const item of this.#primaryGroup.emitters) {
+        item.emitter.stop(clear);
+      }
+    }
+  }
+
+  #destroyGroup(group: PreviewEffectGroup | undefined): void {
+    if (group === undefined) return;
+    for (const item of group.emitters) {
+      this.remove(item.emitter, true);
+      item.emitter.destroy();
+      item.graphic.destroy();
+    }
+    group.emitters.length = 0;
+  }
+
+  override update(): void {
+    super.update();
+    for (let index = this.#burstGroups.length - 1; index >= 0; index -= 1) {
+      const group = this.#burstGroups[index];
+      if (group === undefined) continue;
+
+      const isComplete = group.emitters.every(
+        (item) =>
+          !item.emitter.diagnostics.emitting &&
+          item.emitter.diagnostics.activeCount === 0,
+      );
+
+      if (isComplete) {
+        this.#destroyGroup(group);
+        this.#burstGroups.splice(index, 1);
+      }
+    }
+  }
+
+  override destroy(): void {
+    if (activeState === this) setActiveState(undefined);
+    this.#destroyGroup(this.#primaryGroup);
+    this.#primaryGroup = undefined;
+    for (const group of this.#burstGroups) {
+      this.#destroyGroup(group);
+    }
+    this.#burstGroups.length = 0;
+    super.destroy();
+  }
+}
+
+export interface ParticlePreviewController {
+  burst(): void;
+  destroy(): void;
+  load(
+    document: ParticleEffectDocumentV1,
+    getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
+  ): void;
+  pause(): void;
+  restart(): void;
+  resume(): void;
+  setBackground(color: string): void;
+  setPointerMode(mode: PreviewSettings['pointerMode']): void;
+  setTimeScale(scale: number): void;
+}
+
 export async function createParticlePreview(
   host: HTMLElement,
-  initialPreset: ParticlePresetV1,
-  texture: PixelBuffer,
+  initialDocument: ParticleEffectDocumentV1,
+  getTexture: (layer: ParticleEmitterLayerV1) => PreviewTexture,
   onDiagnostics: (diagnostics: ParticleEmitterDiagnostics) => void,
 ): Promise<ParticlePreviewController> {
-  pendingPreset = initialPreset;
-  pendingTexture = texture;
+  pendingDocument = initialDocument;
+  pendingTextureResolver = getTexture;
+
   const application: BrowserGameApplication = await createBrowserGame({
     accessibility: false,
     autoPause: false,
@@ -225,10 +395,12 @@ export async function createParticlePreview(
     scaling: 'fit',
     width: 320,
   });
+
   const unsubscribe = application.onFrame(() => {
     const diagnostics = activeState?.diagnostics;
     if (diagnostics !== undefined) onDiagnostics(diagnostics);
   });
+
   const canvas = application.app.canvas as HTMLCanvasElement;
   let pointerMode: PreviewSettings['pointerMode'] = 'auto';
   let draggingPointer: number | undefined;
@@ -254,36 +426,36 @@ export async function createParticlePreview(
       ),
     };
   };
+
   const endDrag = (event: PointerEvent): void => {
     if (event.pointerId !== draggingPointer) return;
-    activeState?.stop();
+    activeState?.stopTrail();
     draggingPointer = undefined;
     if (canvas.hasPointerCapture(event.pointerId)) {
       canvas.releasePointerCapture(event.pointerId);
     }
   };
+
   const handlePointerDown = (event: PointerEvent): void => {
     if (pointerMode === 'auto') return;
     event.preventDefault();
     const source = pointerPosition(event);
     if (pointerMode === 'burst') {
-      activeState?.spawnBurst(
-        burstPreset(pendingPreset),
-        pendingTexture,
-        source,
-      );
+      activeState?.spawnBurst(pendingDocument, pendingTextureResolver, source);
       return;
     }
     draggingPointer = event.pointerId;
     canvas.setPointerCapture(event.pointerId);
-    activeState?.load(trailPreset(pendingPreset), pendingTexture, source);
+    activeState?.startTrail(pendingDocument, pendingTextureResolver, source);
   };
+
   const handlePointerMove = (event: PointerEvent): void => {
     if (pointerMode !== 'trail' || event.pointerId !== draggingPointer) return;
     event.preventDefault();
     const source = pointerPosition(event);
     activeState?.moveSource(source.x, source.y);
   };
+
   canvas.addEventListener('pointerdown', handlePointerDown);
   canvas.addEventListener('pointermove', handlePointerMove);
   canvas.addEventListener('pointerup', endDrag);
@@ -292,7 +464,7 @@ export async function createParticlePreview(
 
   return {
     burst() {
-      activeState?.spawnBurst(burstPreset(pendingPreset), pendingTexture);
+      activeState?.spawnBurst(pendingDocument, pendingTextureResolver);
     },
     destroy() {
       canvas.removeEventListener('pointerdown', handlePointerDown);
@@ -303,19 +475,25 @@ export async function createParticlePreview(
       FlxG.timeScale = 1;
       application.destroy();
     },
-    load(preset, nextTexture) {
-      pendingPreset = preset;
-      pendingTexture = nextTexture;
-      activeState?.load(preset, nextTexture);
-      if (pointerMode !== 'auto') activeState?.stop(true);
+    load(document, textureResolver) {
+      pendingDocument = document;
+      pendingTextureResolver = textureResolver;
+      if (pointerMode === 'auto') {
+        activeState?.load(document, textureResolver);
+      } else {
+        activeState?.stop(true);
+      }
       application.syncRenderer();
     },
     pause() {
       activeState?.pause();
     },
     restart() {
-      activeState?.load(pendingPreset, pendingTexture);
-      if (pointerMode !== 'auto') activeState?.stop(true);
+      if (pointerMode === 'auto') {
+        activeState?.load(pendingDocument, pendingTextureResolver);
+      } else {
+        activeState?.stop(true);
+      }
     },
     resume() {
       activeState?.resume();
@@ -330,8 +508,11 @@ export async function createParticlePreview(
       draggingPointer = undefined;
       canvas.style.cursor = mode === 'auto' ? 'default' : 'crosshair';
       canvas.style.touchAction = mode === 'auto' ? 'auto' : 'none';
-      if (mode === 'auto') activeState?.load(pendingPreset, pendingTexture);
-      else activeState?.stop(true);
+      if (mode === 'auto') {
+        activeState?.load(pendingDocument, pendingTextureResolver);
+      } else {
+        activeState?.stop(true);
+      }
     },
     setTimeScale(scale) {
       FlxG.timeScale = scale;

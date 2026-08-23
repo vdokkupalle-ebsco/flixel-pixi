@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { createPresetTexture } from '../src/texture';
+import {
+  cloneTextureSelection,
+  createPresetTexture,
+  normalizeTextureDisplay,
+  normalizeTextureRegion,
+} from '../src/texture';
 
 describe('particle editor generated textures', () => {
   it.each([
@@ -52,5 +57,48 @@ describe('particle editor generated textures', () => {
     expect(circle.shape).toBe('circle');
     expect(square.shape).toBe('square');
     expect(circle.buffer.data).not.toEqual(square.buffer.data);
+  });
+
+  it('clones texture pixel ownership for duplicated emitters', async () => {
+    const original = createPresetTexture('editor-spark');
+    const duplicate = await cloneTextureSelection(original);
+
+    expect(duplicate).not.toBe(original);
+    expect(duplicate.buffer).not.toBe(original.buffer);
+    expect(duplicate.buffer.data).not.toBe(original.buffer.data);
+    expect(duplicate.buffer.data).toEqual(original.buffer.data);
+  });
+
+  it('normalizes a manual texture crop to whole pixels', () => {
+    expect(normalizeTextureRegion(256, 128, 31.9, 24.8, 16.5, 8.2)).toEqual({
+      height: 24,
+      width: 31,
+      x: 16,
+      y: 8,
+    });
+  });
+
+  it('rejects manual crops outside the uploaded image', () => {
+    expect(() => normalizeTextureRegion(64, 64, 32, 32, 40, 0)).toThrow(
+      'Texture region must fit inside the 64 × 64 source image.',
+    );
+    expect(() => normalizeTextureRegion(64, 64, 0, 32, 0, 0)).toThrow(
+      'Texture width and height must be at least 1 pixel.',
+    );
+    expect(() => normalizeTextureRegion(64, 64, 32, 32, -1, 0)).toThrow(
+      'Texture frame coordinates cannot be negative.',
+    );
+  });
+
+  it('accepts normalized center origins while resizing textures', () => {
+    expect(normalizeTextureDisplay(32, 32, 0.5, 0.5)).toEqual({
+      height: 32,
+      originX: 0.5,
+      originY: 0.5,
+      width: 32,
+    });
+    expect(() => normalizeTextureDisplay(32, 32, 1.1, 0.5)).toThrow(
+      'Texture origin must be between 0 and 1.',
+    );
   });
 });

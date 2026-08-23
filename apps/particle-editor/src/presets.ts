@@ -1,4 +1,8 @@
 import { parseParticlePreset, type ParticlePresetV1 } from 'flixel-pixi';
+import {
+  createEffectDocument,
+  type ParticleEffectDocumentV1,
+} from './editor-store';
 
 function range(min: number, max = min) {
   return { max, min };
@@ -512,4 +516,116 @@ export function getDefaultStarterPreset(): ParticlePresetV1 {
 export function findStarterPreset(id: string): ParticlePresetV1 | undefined {
   const preset = starterPresets.find((candidate) => candidate.id === id);
   return preset === undefined ? undefined : clonePreset(preset);
+}
+
+export function findStarterEffectDocument(
+  id: string,
+): ParticleEffectDocumentV1 | undefined {
+  const campfire = findStarterPreset('starter-campfire');
+  const smoke = findStarterPreset('starter-smoke-plume');
+  const spark = findStarterPreset('starter-spark-fountain');
+  const rain = findStarterPreset('starter-rain-shower');
+  const splash = findStarterPreset('starter-water-splash');
+  const magic = findStarterPreset('starter-magic-burst');
+  const electric = findStarterPreset('starter-electric-sparks');
+
+  if (id === 'starter-campfire' && campfire && smoke && spark) {
+    return {
+      kind: 'flixel-pixi-particle-effect',
+      version: 1,
+      id: 'starter-campfire',
+      name: 'Campfire',
+      emitters: [
+        {
+          layerId: 'layer-flames',
+          name: 'Flames',
+          enabled: true,
+          offset: { x: 0, y: 0 },
+          textureShape: 'circle',
+          preset: campfire,
+        },
+        {
+          layerId: 'layer-smoke',
+          name: 'Smoke Plume',
+          enabled: true,
+          offset: { x: 0, y: -16 },
+          textureShape: 'circle',
+          preset: smoke,
+        },
+        {
+          layerId: 'layer-embers',
+          name: 'Floating Embers',
+          enabled: true,
+          offset: { x: 0, y: -4 },
+          textureShape: 'circle',
+          preset: {
+            ...spark,
+            capacity: 60,
+            emission: { mode: 'continuous', rate: 16 },
+          },
+        },
+      ],
+    };
+  }
+
+  if (id === 'starter-rain-shower' && rain && splash) {
+    return {
+      kind: 'flixel-pixi-particle-effect',
+      version: 1,
+      id: 'starter-rain-shower',
+      name: 'Rain Storm',
+      emitters: [
+        {
+          layerId: 'layer-rain',
+          name: 'Rain',
+          enabled: true,
+          offset: { x: 0, y: 0 },
+          textureShape: 'circle',
+          preset: rain,
+        },
+        {
+          layerId: 'layer-splashes',
+          name: 'Puddle Splashes',
+          enabled: true,
+          offset: { x: 0, y: 70 },
+          textureShape: 'circle',
+          preset: {
+            ...splash,
+            capacity: 80,
+            emission: { mode: 'continuous', rate: 30 },
+          },
+        },
+      ],
+    };
+  }
+
+  if (id === 'starter-magic-burst' && magic && electric) {
+    return {
+      kind: 'flixel-pixi-particle-effect',
+      version: 1,
+      id: 'starter-magic-burst',
+      name: 'Magic Portal Burst',
+      emitters: [
+        {
+          layerId: 'layer-burst',
+          name: 'Energy Core',
+          enabled: true,
+          offset: { x: 0, y: 0 },
+          textureShape: 'circle',
+          preset: magic,
+        },
+        {
+          layerId: 'layer-orbit-sparks',
+          name: 'Electric Sparks',
+          enabled: true,
+          offset: { x: 0, y: 0 },
+          textureShape: 'circle',
+          preset: electric,
+        },
+      ],
+    };
+  }
+
+  const single = findStarterPreset(id);
+  return single === undefined ? undefined : createEffectDocument(single);
 }

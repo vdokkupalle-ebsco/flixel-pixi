@@ -1,16 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ParticleEditorStore, type EditorSnapshot } from '../src/editor-store';
+import {
+  createEffectDocument,
+  ParticleEditorStore,
+  selectedEmitter,
+  type EditorSnapshot,
+} from '../src/editor-store';
 import { getDefaultStarterPreset } from '../src/presets';
 
 function snapshot(): EditorSnapshot {
+  const doc = createEffectDocument(getDefaultStarterPreset(), 'circle');
   return {
-    preset: getDefaultStarterPreset(),
+    document: doc,
+    selectedEmitterId: doc.emitters[0]?.layerId ?? '',
     preview: {
       background: '#07101c',
       pointerMode: 'auto',
       scale: 'fit',
-      textureShape: 'circle',
       timeScale: 1,
     },
   };
@@ -22,28 +28,34 @@ describe('ParticleEditorStore', () => {
     const listener = vi.fn();
     const unsubscribe = store.subscribe(listener);
 
-    store.update('Renamed emitter', ({ preset }) => {
-      preset.name = 'Celebration sparks';
+    store.update('Renamed emitter', (draft) => {
+      const emitter = selectedEmitter(draft);
+      emitter.name = 'Celebration sparks';
+      emitter.preset.name = 'Celebration sparks';
     });
 
-    expect(store.status.snapshot.preset.name).toBe('Celebration sparks');
+    expect(selectedEmitter(store.status.snapshot).name).toBe(
+      'Celebration sparks',
+    );
     expect(store.status.canUndo).toBe(true);
     expect(store.status.dirty).toBe(true);
 
     store.undo();
-    expect(store.status.snapshot.preset.name).toBe('Spark fountain');
+    expect(selectedEmitter(store.status.snapshot).name).toBe('Spark fountain');
     expect(store.status.canRedo).toBe(true);
 
     store.redo();
-    expect(store.status.snapshot.preset.name).toBe('Celebration sparks');
+    expect(selectedEmitter(store.status.snapshot).name).toBe(
+      'Celebration sparks',
+    );
     expect(listener).toHaveBeenCalledTimes(4);
     unsubscribe();
   });
 
   it('marks the current snapshot as saved without losing history', () => {
     const store = new ParticleEditorStore(snapshot());
-    store.update('Changed capacity', ({ preset }) => {
-      preset.capacity = 96;
+    store.update('Changed capacity', (draft) => {
+      selectedEmitter(draft).preset.capacity = 96;
     });
 
     store.markSaved();
@@ -57,11 +69,11 @@ describe('ParticleEditorStore', () => {
     const store = new ParticleEditorStore(snapshot());
 
     expect(() =>
-      store.update('Invalid capacity', ({ preset }) => {
-        preset.capacity = 0;
+      store.update('Invalid capacity', (draft) => {
+        selectedEmitter(draft).preset.capacity = 0;
       }),
     ).toThrow();
-    expect(store.status.snapshot.preset.capacity).toBe(160);
+    expect(selectedEmitter(store.status.snapshot).preset.capacity).toBe(160);
     expect(store.status.canUndo).toBe(false);
   });
 });
