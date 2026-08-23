@@ -19,6 +19,8 @@ assigned to a version.
 - Added a playable campfire example that preloads a Particle Editor export and
   its flame, ember, and smoke textures, then runs the composition through
   `FlxParticleEffect`.
+- Added an editor-export-to-runtime compatibility test and downloadable
+  campfire starter files for the documented authoring workflow.
 
 ## 0.1.0-rc.7 — 2026-08-20
 

@@ -21,6 +21,7 @@ docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/public/games/
 docs/public/particle-editor/
+docs/public/downloads/
 
 # Agent & Claude local skills
 .agents/skills/
