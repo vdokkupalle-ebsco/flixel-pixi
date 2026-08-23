@@ -1,0 +1,13 @@
+Campfire particle-effect starter
+================================
+
+These files are a complete Particle Editor export that can be loaded by a
+Flixel-Pixi game:
+
+- campfire-effect.json is the portable composed-effect document.
+- flame.svg, ember.svg, and smoke.svg are the textures referenced by its
+  emitter layers.
+
+Preload the JSON as text and the three textures with FlxAssets, then pass the
+parsed document to FlxParticleEffect.fromAssets. The playable example in this
+directory shows the complete setup.

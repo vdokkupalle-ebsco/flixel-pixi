@@ -9,6 +9,11 @@ const gamesDist = join(rootDir, 'dist/games');
 const publicGamesDir = join(rootDir, 'docs/public/games');
 const particleEditorDist = join(rootDir, 'apps/particle-editor/dist');
 const publicParticleEditorDir = join(rootDir, 'docs/public/particle-editor');
+const particleEffectSampleDir = join(rootDir, 'examples/games/particle-effect');
+const publicParticleEffectSampleDir = join(
+  rootDir,
+  'docs/public/downloads/campfire-particle-effect',
+);
 
 if (existsSync(gamesDist)) {
   mkdirSync(publicGamesDir, { recursive: true });
@@ -26,5 +31,25 @@ if (existsSync(particleEditorDist)) {
 } else {
   console.log(
     'apps/particle-editor/dist does not exist yet. Run npm run build:apps first.',
+  );
+}
+
+if (existsSync(particleEffectSampleDir)) {
+  rmSync(publicParticleEffectSampleDir, { force: true, recursive: true });
+  mkdirSync(publicParticleEffectSampleDir, { recursive: true });
+  for (const filename of [
+    'campfire-effect.json',
+    'flame.svg',
+    'ember.svg',
+    'smoke.svg',
+    'STARTER.txt',
+  ]) {
+    cpSync(
+      join(particleEffectSampleDir, filename),
+      join(publicParticleEffectSampleDir, filename),
+    );
+  }
+  console.log(
+    `Copied the campfire starter files to ${publicParticleEffectSampleDir}`,
   );
 }

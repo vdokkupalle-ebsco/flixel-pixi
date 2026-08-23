@@ -60,4 +60,14 @@ effect.resume();
 effect.reset();
 ```
 
-[View the complete source and exported JSON on GitHub](https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/examples/games/particle-effect)
+## Try the editor-to-game workflow
+
+Download the same portable files used by this demo, import the JSON into the Particle Editor, adjust it, and export it again. The runtime accepts the editor's exported document directly; texture asset IDs remain the link between each layer and its preloaded graphic.
+
+- [Download the campfire effect JSON](/downloads/campfire-particle-effect/campfire-effect.json)
+- [Download the flame texture](/downloads/campfire-particle-effect/flame.svg)
+- [Download the ember texture](/downloads/campfire-particle-effect/ember.svg)
+- [Download the smoke texture](/downloads/campfire-particle-effect/smoke.svg)
+- [Download the starter instructions](/downloads/campfire-particle-effect/STARTER.txt)
+
+[Open the Particle Editor](/particle-editor/) · [View the complete example source on GitHub](https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/examples/games/particle-effect)
