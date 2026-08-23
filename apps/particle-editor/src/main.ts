@@ -6,16 +6,29 @@ import {
   type ParticleCurve,
   type ParticlePresetV1,
   type ParticleVectorRange,
+  type PixelBuffer,
 } from 'flixel-pixi';
 
 import {
+  clonePreset,
+  findStarterPreset,
+  getDefaultStarterPreset,
+  starterPresets,
+} from './presets';
+import {
   createEffectDocument,
+  createLayerId,
+  MAX_EMITTERS,
   ParticleEditorStore,
   selectedEmitter,
   type EditorSnapshot,
   type EditorStoreStatus,
+  type ParticleEmitterLayerV1,
 } from './editor-store';
-import { renderEditorShell } from './editor-shell';
+import {
+  renderEditorShell,
+  renderEmitterLayerList,
+} from './editor-shell';
 import {
   AUTOSAVE_KEY,
   createTypeScriptSnippet,
@@ -23,11 +36,6 @@ import {
   parseImportedPreset,
   serializeEditorSnapshot,
 } from './io';
-import {
-  findStarterPreset,
-  getDefaultStarterPreset,
-  starterPresets,
-} from './presets';
 import { createParticlePreview } from './preview';
 import {
   createPresetTexture,
@@ -77,24 +85,36 @@ const shell = renderEditorShell(host, starterPresets);
 const recovered = recoverSnapshot();
 const store = new ParticleEditorStore(recovered);
 let resetSnapshot = store.status.snapshot;
-const initialLayer = selectedEmitter(recovered);
-let texture: TextureSelection = createPresetTexture(
-  initialLayer.preset.appearance.texture.assetId,
-  initialLayer.textureShape,
-);
+
+const customTextures = new Map<string, TextureSelection>();
+
+function getLayerTextureSelection(
+  layer: ParticleEmitterLayerV1,
+): TextureSelection {
+  const custom = customTextures.get(layer.layerId);
+  if (custom !== undefined) return custom;
+  return createPresetTexture(
+    layer.preset.appearance.texture.assetId,
+    layer.textureShape,
+  );
+}
+
+function getLayerTextureBuffer(layer: ParticleEmitterLayerV1): PixelBuffer {
+  return getLayerTextureSelection(layer).buffer;
+}
+
 let paused = false;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
-let renderedPreset = serializeParticlePreset(initialLayer.preset);
+let renderedFingerprint = '';
 let renderedBackground = '';
 let renderedPointerMode = '';
 let renderedTimeScale = Number.NaN;
-let renderedTextureKey = `${initialLayer.preset.appearance.texture.assetId}:${initialLayer.textureShape}`;
 
 const preview = await createParticlePreview(
   shell.canvasHost,
-  initialLayer.preset,
-  texture.buffer,
+  recovered.document,
+  getLayerTextureBuffer,
   (diagnostics) => {
     shell.activeCount.textContent = `${String(diagnostics.activeCount)} / ${String(diagnostics.capacity)}`;
     const reuse = Math.max(
@@ -177,6 +197,8 @@ function syncForm(status: EditorStoreStatus): void {
   const layer = selectedEmitter(status.snapshot);
   const { preset } = layer;
   const { preview: settings } = status.snapshot;
+  const activeTexture = getLayerTextureSelection(layer);
+
   setValue('name', preset.name);
   setValue('id', preset.id);
   setValue('seed', preset.seed);
@@ -234,21 +256,17 @@ function syncForm(status: EditorStoreStatus): void {
   setValue('spinMin', preset.appearance.rotation?.velocity.min ?? 0);
   setValue('spinMax', preset.appearance.rotation?.velocity.max ?? 0);
   setValue('textureShape', layer.textureShape);
-  setValue('textureColumns', texture.columns);
-  setValue('textureRows', texture.rows);
-  setValue('textureFrame', texture.frame);
-  control('textureColumns').disabled = texture.kind === 'generated';
-  control('textureRows').disabled = texture.kind === 'generated';
-  control('textureFrame').disabled = texture.kind === 'generated';
+  setValue('textureColumns', activeTexture.columns);
+  setValue('textureRows', activeTexture.rows);
+  setValue('textureFrame', activeTexture.frame);
+  control('textureColumns').disabled = activeTexture.kind === 'generated';
+  control('textureRows').disabled = activeTexture.kind === 'generated';
+  control('textureFrame').disabled = activeTexture.kind === 'generated';
   const textureLabel = shell.root.querySelector<HTMLElement>(
     '[data-texture-label]',
   );
-  if (textureLabel !== null) textureLabel.textContent = texture.label;
+  if (textureLabel !== null) textureLabel.textContent = activeTexture.label;
 
-  const name = shell.root.querySelector<HTMLElement>('[data-emitter-name]');
-  const summary = shell.root.querySelector<HTMLElement>(
-    '[data-emitter-summary]',
-  );
   const seed = shell.root.querySelector<HTMLElement>('[data-seed]');
   const documentStatus = shell.root.querySelector<HTMLElement>(
     '[data-document-status]',
@@ -259,19 +277,44 @@ function syncForm(status: EditorStoreStatus): void {
   const redo = shell.root.querySelector<HTMLButtonElement>(
     '[data-action="redo"]',
   );
-  if (name !== null) name.textContent = preset.name;
-  if (summary !== null) {
-    summary.textContent =
-      preset.emission.mode === 'continuous'
-        ? `Continuous · ${String(preset.emission.rate)}/s`
-        : `Burst · ${String(preset.emission.count)}`;
-  }
   if (seed !== null) seed.textContent = String(preset.seed);
   if (documentStatus !== null) {
     documentStatus.textContent = status.dirty ? 'Saving…' : status.label;
   }
   if (undo !== null) undo.disabled = !status.canUndo;
   if (redo !== null) redo.disabled = !status.canRedo;
+
+  // Update Emitter List
+  shell.emitterList.innerHTML = renderEmitterLayerList(
+    status.snapshot.document,
+    status.snapshot.selectedEmitterId,
+  );
+  shell.addEmitterButton.disabled =
+    status.snapshot.document.emitters.length >= MAX_EMITTERS;
+  const duplicateBtn = shell.root.querySelector<HTMLButtonElement>(
+    '[data-action="duplicate-emitter"]',
+  );
+  const deleteBtn = shell.root.querySelector<HTMLButtonElement>(
+    '[data-action="delete-emitter"]',
+  );
+  if (duplicateBtn !== null) {
+    duplicateBtn.disabled =
+      status.snapshot.document.emitters.length >= MAX_EMITTERS;
+  }
+  if (deleteBtn !== null) {
+    deleteBtn.disabled = status.snapshot.document.emitters.length <= 1;
+  }
+
+  // Combined capacity warning
+  const totalCapacity = status.snapshot.document.emitters
+    .filter((e) => e.enabled)
+    .reduce((sum, e) => sum + e.preset.capacity, 0);
+  const capacityWarning = shell.root.querySelector<HTMLElement>(
+    '[data-capacity-warning]',
+  );
+  if (capacityWarning !== null) {
+    capacityWarning.hidden = totalCapacity <= 2000;
+  }
 
   const background = shell.root.querySelector<HTMLInputElement>(
     '[data-preview-background]',
@@ -529,11 +572,13 @@ function downloadPreset(preset: ParticlePresetV1): void {
 }
 
 async function downloadTexture(): Promise<void> {
-  const blob = await texturePngBlob(texture.buffer);
+  const currentLayer = selectedEmitter(store.status.snapshot);
+  const currentTexture = getLayerTextureSelection(currentLayer);
+  const blob = await texturePngBlob(currentTexture.buffer);
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `${selectedEmitter(store.status.snapshot).preset.appearance.texture.assetId}.png`;
+  anchor.download = `${currentLayer.preset.appearance.texture.assetId}.png`;
   anchor.click();
   URL.revokeObjectURL(url);
 }
@@ -543,45 +588,33 @@ function setTheme(theme: 'dark' | 'light'): void {
   localStorage.setItem('flixel-pixi:particle-editor:theme', theme);
 }
 
-function useGeneratedTexture(
-  preset: ParticlePresetV1,
-  shape: 'circle' | 'square',
-): void {
-  destroyTexture(texture);
-  texture = createPresetTexture(preset.appearance.texture.assetId, shape);
-  renderedTextureKey = `${preset.appearance.texture.assetId}:${shape}`;
-  preview.load(preset, texture.buffer);
-  if (paused) preview.pause();
-}
-
 setTheme(
   localStorage.getItem('flixel-pixi:particle-editor:theme') === 'light'
     ? 'light'
     : 'dark',
 );
 
+function documentFingerprint(snapshot: EditorSnapshot): string {
+  return JSON.stringify({
+    emitters: snapshot.document.emitters.map((e) => ({
+      enabled: e.enabled,
+      layerId: e.layerId,
+      offset: e.offset,
+      preset: serializeParticlePreset(e.preset),
+      textureShape: e.textureShape,
+    })),
+  });
+}
+
 store.subscribe((status) => {
-  const layer = selectedEmitter(status.snapshot);
-  const desiredTextureKey = `${layer.preset.appearance.texture.assetId}:${layer.textureShape}`;
-  let textureChanged = false;
-  if (
-    texture.kind === 'generated' &&
-    desiredTextureKey !== renderedTextureKey
-  ) {
-    texture = createPresetTexture(
-      layer.preset.appearance.texture.assetId,
-      layer.textureShape,
-    );
-    renderedTextureKey = desiredTextureKey;
-    textureChanged = true;
-  }
   clearError();
   syncForm(status);
-  const nextPreset = serializeParticlePreset(layer.preset);
-  if (nextPreset !== renderedPreset || textureChanged) {
-    preview.load(layer.preset, texture.buffer);
+
+  const nextFingerprint = documentFingerprint(status.snapshot);
+  if (nextFingerprint !== renderedFingerprint) {
+    preview.load(status.snapshot.document, getLayerTextureBuffer);
     if (paused) preview.pause();
-    renderedPreset = nextPreset;
+    renderedFingerprint = nextFingerprint;
   }
   if (status.snapshot.preview.background !== renderedBackground) {
     preview.setBackground(status.snapshot.preview.background);
@@ -617,7 +650,11 @@ shell.form.addEventListener('change', (event) => {
   if (element.name === 'textureShape') {
     const shape = element.value === 'square' ? 'square' : 'circle';
     const currentLayer = selectedEmitter(store.status.snapshot);
-    useGeneratedTexture(currentLayer.preset, shape);
+    const custom = customTextures.get(currentLayer.layerId);
+    if (custom !== undefined) {
+      destroyTexture(custom);
+      customTextures.delete(currentLayer.layerId);
+    }
     store.update('Changed drawing shape', (draft) => {
       selectedEmitter(draft).textureShape = shape;
     });
@@ -628,13 +665,16 @@ shell.form.addEventListener('change', (event) => {
     ['textureColumns', 'textureRows', 'textureFrame'].includes(element.name)
   ) {
     try {
-      texture = selectTextureFrame(
-        texture,
+      const currentLayer = selectedEmitter(store.status.snapshot);
+      const existing = getLayerTextureSelection(currentLayer);
+      const next = selectTextureFrame(
+        existing,
         numberValue(control('textureColumns')),
         numberValue(control('textureRows')),
         numberValue(control('textureFrame')),
       );
-      preview.load(selectedEmitter(store.status.snapshot).preset, texture.buffer);
+      customTextures.set(currentLayer.layerId, next);
+      preview.load(store.status.snapshot.document, getLayerTextureBuffer);
       if (paused) preview.pause();
       syncForm(store.status);
     } catch (error) {
@@ -663,9 +703,11 @@ textureInput?.addEventListener('change', async () => {
   const file = textureInput.files?.[0];
   if (file === undefined) return;
   try {
+    const currentLayer = selectedEmitter(store.status.snapshot);
+    const existing = customTextures.get(currentLayer.layerId);
+    if (existing !== undefined) destroyTexture(existing);
     const next = await loadTextureFile(file);
-    destroyTexture(texture);
-    texture = next;
+    customTextures.set(currentLayer.layerId, next);
     const label = shell.root.querySelector<HTMLElement>('[data-texture-label]');
     if (label !== null) label.textContent = next.label;
     store.update('Changed texture', (draft) => {
@@ -687,8 +729,11 @@ shell.presetList.addEventListener('click', (event) => {
   const preset = findStarterPreset(card.dataset.presetId ?? '');
   if (preset === undefined) return;
   const currentLayer = selectedEmitter(store.status.snapshot);
-  useGeneratedTexture(preset, currentLayer.textureShape);
   const newDoc = createEffectDocument(preset, currentLayer.textureShape);
+  for (const texture of customTextures.values()) {
+    destroyTexture(texture);
+  }
+  customTextures.clear();
   resetSnapshot = {
     document: newDoc,
     selectedEmitterId: newDoc.emitters[0]?.layerId ?? '',
@@ -755,9 +800,95 @@ shell.root.addEventListener('change', (event) => {
 shell.root.addEventListener('click', async (event) => {
   const target = event.target;
   if (!(target instanceof Element)) return;
-  const action = target.closest<HTMLElement>('[data-action]')?.dataset.action;
+  const actionElement = target.closest<HTMLElement>('[data-action]');
+  if (actionElement === null) return;
+  const action = actionElement.dataset.action;
   if (action === undefined) return;
+
   switch (action) {
+    case 'add-emitter': {
+      if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS) return;
+      const count = store.status.snapshot.document.emitters.length + 1;
+      const layerId = createLayerId();
+      const basePreset = clonePreset(starterPresets[0] ?? getDefaultStarterPreset());
+      basePreset.id = `emitter-${String(count)}`;
+      basePreset.name = `Emitter ${String(count)}`;
+      store.update(`Added Emitter ${String(count)}`, (draft) => {
+        draft.document.emitters.push({
+          layerId,
+          name: `Emitter ${String(count)}`,
+          enabled: true,
+          offset: { x: 0, y: 0 },
+          textureShape: 'circle',
+          preset: basePreset,
+        });
+        draft.selectedEmitterId = layerId;
+      });
+      showToast(`Emitter ${String(count)} added`);
+      break;
+    }
+    case 'select-emitter': {
+      const layerId = actionElement.dataset.layerId;
+      if (layerId !== undefined && layerId !== store.status.snapshot.selectedEmitterId) {
+        store.update('Selected emitter', (draft) => {
+          draft.selectedEmitterId = layerId;
+        });
+      }
+      break;
+    }
+    case 'toggle-emitter': {
+      const layerId = actionElement.dataset.layerId;
+      if (layerId !== undefined) {
+        store.update('Toggled emitter layer', (draft) => {
+          const layer = draft.document.emitters.find((e) => e.layerId === layerId);
+          if (layer !== undefined) {
+            layer.enabled = !layer.enabled;
+          }
+        });
+      }
+      break;
+    }
+    case 'duplicate-emitter': {
+      if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS) return;
+      const current = selectedEmitter(store.status.snapshot);
+      const newLayerId = createLayerId();
+      const duplicatePreset = clonePreset(current.preset);
+      duplicatePreset.id = `${current.preset.id}-copy-${String(Date.now()).slice(-4)}`;
+      duplicatePreset.name = `${current.name} copy`;
+      store.update(`Duplicated ${current.name}`, (draft) => {
+        const index = draft.document.emitters.findIndex((e) => e.layerId === current.layerId);
+        const newLayer: ParticleEmitterLayerV1 = {
+          layerId: newLayerId,
+          name: `${current.name} copy`,
+          enabled: true,
+          offset: { ...current.offset },
+          textureShape: current.textureShape,
+          preset: duplicatePreset,
+        };
+        draft.document.emitters.splice(index + 1, 0, newLayer);
+        draft.selectedEmitterId = newLayerId;
+      });
+      showToast(`${current.name} duplicated`);
+      break;
+    }
+    case 'delete-emitter': {
+      if (store.status.snapshot.document.emitters.length <= 1) return;
+      const current = selectedEmitter(store.status.snapshot);
+      const doc = store.status.snapshot.document;
+      const index = doc.emitters.findIndex((e) => e.layerId === current.layerId);
+      const nextSelected = doc.emitters[index === 0 ? 1 : index - 1]?.layerId ?? '';
+      store.update(`Deleted ${current.name}`, (draft) => {
+        draft.document.emitters = draft.document.emitters.filter((e) => e.layerId !== current.layerId);
+        draft.selectedEmitterId = nextSelected;
+      });
+      const custom = customTextures.get(current.layerId);
+      if (custom !== undefined) {
+        destroyTexture(custom);
+        customTextures.delete(current.layerId);
+      }
+      showToast(`${current.name} deleted`);
+      break;
+    }
     case 'undo':
       store.undo();
       break;
@@ -765,11 +896,10 @@ shell.root.addEventListener('click', async (event) => {
       store.redo();
       break;
     case 'reset': {
-      const resetLayer = selectedEmitter(resetSnapshot);
-      useGeneratedTexture(
-        resetLayer.preset,
-        resetLayer.textureShape,
-      );
+      for (const texture of customTextures.values()) {
+        destroyTexture(texture);
+      }
+      customTextures.clear();
       store.replace('Reset preset', resetSnapshot);
       showToast('Preset reset');
       break;
@@ -792,10 +922,12 @@ shell.root.addEventListener('click', async (event) => {
       break;
     case 'generated-texture': {
       const layer = selectedEmitter(store.status.snapshot);
-      useGeneratedTexture(
-        layer.preset,
-        layer.textureShape,
-      );
+      const custom = customTextures.get(layer.layerId);
+      if (custom !== undefined) {
+        destroyTexture(custom);
+        customTextures.delete(layer.layerId);
+      }
+      preview.load(store.status.snapshot.document, getLayerTextureBuffer);
       syncForm(store.status);
       showToast('Generated effect texture restored');
       break;
@@ -841,8 +973,11 @@ shell.importInput.addEventListener('change', async () => {
   try {
     const preset = parseImportedPreset(await file.text());
     const currentLayer = selectedEmitter(store.status.snapshot);
-    useGeneratedTexture(preset, currentLayer.textureShape);
     const newDoc = createEffectDocument(preset, currentLayer.textureShape);
+    for (const texture of customTextures.values()) {
+      destroyTexture(texture);
+    }
+    customTextures.clear();
     resetSnapshot = {
       document: newDoc,
       selectedEmitterId: newDoc.emitters[0]?.layerId ?? '',
@@ -878,7 +1013,10 @@ window.addEventListener(
       AUTOSAVE_KEY,
       serializeEditorSnapshot(store.status.snapshot),
     );
-    destroyTexture(texture);
+    for (const texture of customTextures.values()) {
+      destroyTexture(texture);
+    }
+    customTextures.clear();
     preview.destroy();
   },
   { once: true },

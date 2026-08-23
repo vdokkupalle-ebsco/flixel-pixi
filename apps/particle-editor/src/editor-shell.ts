@@ -1,8 +1,14 @@
+import type {
+  ParticleEffectDocumentV1,
+  ParticleEmitterLayerV1,
+} from './editor-store';
 import type { ParticlePresetV1 } from 'flixel-pixi';
 
 export interface EditorShellElements {
   activeCount: HTMLElement;
+  addEmitterButton: HTMLButtonElement;
   canvasHost: HTMLElement;
+  emitterList: HTMLElement;
   error: HTMLElement;
   form: HTMLFormElement;
   importInput: HTMLInputElement;
@@ -38,6 +44,41 @@ function numberField(label: string, name: string, step = '1'): string {
   return `<label class="field"><span>${label}</span><input name="${name}" type="number" step="${step}" required /></label>`;
 }
 
+export function renderEmitterLayerRow(
+  layer: ParticleEmitterLayerV1,
+  isSelected: boolean,
+): string {
+  const summary =
+    layer.preset.emission.mode === 'continuous'
+      ? `${String(layer.preset.emission.rate)}/sec`
+      : `${String(layer.preset.emission.count)} burst`;
+  return `
+    <div class="emitter-row-container ${isSelected ? 'is-selected' : ''} ${!layer.enabled ? 'is-disabled' : ''}" data-layer-id="${layer.layerId}">
+      <button class="emitter-toggle-button" type="button" data-action="toggle-emitter" data-layer-id="${layer.layerId}" aria-label="${layer.enabled ? 'Disable' : 'Enable'} ${layer.name}" title="${layer.enabled ? 'Disable layer' : 'Enable layer'}">
+        <span class="toggle-dot ${layer.enabled ? 'enabled' : 'disabled'}" aria-hidden="true"></span>
+      </button>
+      <button class="emitter-row" type="button" data-action="select-emitter" data-layer-id="${layer.layerId}" aria-current="${isSelected ? 'true' : 'false'}">
+        <span class="emitter-icon" aria-hidden="true">${layer.textureShape === 'square' ? '■' : '✦'}</span>
+        <span class="emitter-details">
+          <strong class="emitter-name">${layer.name}</strong>
+          <small class="emitter-summary">${summary}</small>
+        </span>
+      </button>
+    </div>
+  `;
+}
+
+export function renderEmitterLayerList(
+  document: ParticleEffectDocumentV1,
+  selectedEmitterId: string,
+): string {
+  return document.emitters
+    .map((layer) =>
+      renderEmitterLayerRow(layer, layer.layerId === selectedEmitterId),
+    )
+    .join('');
+}
+
 export function renderEditorShell(
   host: HTMLElement,
   presets: readonly ParticlePresetV1[],
@@ -67,14 +108,25 @@ export function renderEditorShell(
           <div class="panel-heading"><div><p class="eyebrow">Effect library</p><h2 id="library-title">Starter effects</h2></div></div>
           <div class="preset-list" data-preset-list>${presets.map(presetCard).join('')}</div>
           <div class="section-divider"></div>
-          <div class="panel-heading compact"><div><p class="eyebrow">Effect graph</p><h2>Emitter</h2></div><button class="icon-button" type="button" aria-label="Add emitter" disabled>+</button></div>
-          <button class="emitter-row" type="button" aria-current="true"><span class="emitter-icon" aria-hidden="true">✦</span><span><strong data-emitter-name>Emitter</strong><small data-emitter-summary>Continuous</small></span></button>
-          <p class="panel-note">One focused emitter per preset keeps exported effects portable and easy to compose in a game.</p>
+          <div class="panel-heading compact">
+            <div><p class="eyebrow">Effect graph</p><h2>Emitters</h2></div>
+            <button class="icon-button" data-action="add-emitter" type="button" aria-label="Add emitter" title="Add emitter">+</button>
+          </div>
+          <div class="emitter-list" data-emitter-list role="listbox" aria-label="Emitter layers"></div>
+          <div class="emitter-actions">
+            <button class="button secondary compact-button" data-action="duplicate-emitter" type="button" title="Duplicate selected emitter">Duplicate</button>
+            <button class="button secondary compact-button" data-action="delete-emitter" type="button" title="Delete selected emitter">Delete</button>
+          </div>
+          <p class="panel-note">Layer multiple emitters together to create rich multi-layered effects. Each layer remains a standard ParticlePresetV1.</p>
         </aside>
 
         <section class="preview-panel" aria-labelledby="preview-title">
           <div class="preview-heading">
-            <div><p class="eyebrow">Live canvas</p><h2 id="preview-title">Deterministic preview</h2></div>
+            <div>
+              <p class="eyebrow">Live canvas</p>
+              <h2 id="preview-title">Deterministic preview</h2>
+              <p class="capacity-warning" data-capacity-warning hidden role="alert">⚠️ Combined capacity exceeds 2,000 particles</p>
+            </div>
             <dl class="metrics" aria-label="Preview diagnostics">
               <div><dt>Particles</dt><dd data-active-count>0 / 0</dd></div>
               <div><dt>Pool</dt><dd data-pool-reuse>0 reused</dd></div>
@@ -152,7 +204,9 @@ export function renderEditorShell(
 
   return {
     activeCount: requireElement(host, '[data-active-count]'),
+    addEmitterButton: requireElement(host, '[data-action="add-emitter"]'),
     canvasHost: requireElement(host, '[data-canvas-host]'),
+    emitterList: requireElement(host, '[data-emitter-list]'),
     error: requireElement(host, '[data-error]'),
     form: requireElement(host, '[data-inspector]'),
     importInput: requireElement(host, '[data-import-input]'),

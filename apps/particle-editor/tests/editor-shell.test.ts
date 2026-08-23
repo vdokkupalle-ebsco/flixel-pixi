@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderEditorShell } from '../src/editor-shell';
+import {
+  renderEditorShell,
+  renderEmitterLayerList,
+} from '../src/editor-shell';
+import { createEffectDocument } from '../src/editor-store';
 import { starterPresets } from '../src/presets';
 
 describe('particle editor shell', () => {
@@ -23,6 +27,19 @@ describe('particle editor shell', () => {
       host.querySelector('[data-action="restart"]')?.textContent,
     ).toContain('Restart effect');
     expect(shell.status.getAttribute('aria-live')).toBe('polite');
+    expect(shell.addEmitterButton.getAttribute('aria-label')).toBe('Add emitter');
+  });
+
+  it('renders multi-emitter layer list with accessible selection and toggle controls', () => {
+    const starter = starterPresets[0];
+    if (starter === undefined) throw new Error('starter preset not found');
+    const doc = createEffectDocument(starter, 'circle');
+    const selectedId = doc.emitters[0]?.layerId ?? '';
+
+    const html = renderEmitterLayerList(doc, selectedId);
+    expect(html).toContain('data-layer-id');
+    expect(html).toContain('aria-current="true"');
+    expect(html).toContain('data-action="toggle-emitter"');
   });
 
   it('replaces stale host content when mounted again', () => {
