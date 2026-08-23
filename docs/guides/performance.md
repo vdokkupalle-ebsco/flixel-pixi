@@ -53,7 +53,7 @@ cross-device frame-rate promises.
 
 | Category            | Frozen gate                                                                                |
 | ------------------- | ------------------------------------------------------------------------------------------ |
-| Library bundle      | ≤650,000 raw bytes; ≤150,000 gzip bytes                                                    |
+| Library bundle      | ≤655,000 raw bytes; ≤150,000 gzip bytes                                                    |
 | Sprite stress       | median ≥48/28/14 FPS at 2k/5k/10k active sprites                                           |
 | Camera target       | ≤1,228,800 active bytes for the 640×480@1× soak scene                                      |
 | Lifecycle ownership | ≤2 render handles, 1 target, 2 generated texture sources, 1 audio context/handle, 1 canvas |

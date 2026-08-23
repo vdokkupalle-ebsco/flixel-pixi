@@ -80,6 +80,8 @@ is unmounted.
   replay.
 - PixiJS sprites, animation, text, tilemaps, cameras, filters, meshes, particles,
   and responsive viewports.
+- A hosted Particle Editor for layered effects, generated or uploaded textures,
+  versioned JSON exports, and ready-to-integrate bundles.
 - Keyboard, pointer, touch, swipe, gamepad, virtual controls, remappable actions,
   and accessible native UI overlays.
 - Asset bundles, customizable preloaders, Web Audio, spatial sound, storage,
@@ -93,6 +95,7 @@ is unmounted.
 - [Lifecycle and browser boot](docs/guides/lifecycle.md)
 - [Making games](docs/guides/making-games.md)
 - [Browser support](docs/browser-support.md)
+- [Particle Editor and layered effects](docs/guide/particle-editor.md)
 - [Compatibility with the AS3 baseline](docs/compatibility.md)
 - [Versioning and API stability](docs/versioning.md)
 - [Contributing](CONTRIBUTING.md)
