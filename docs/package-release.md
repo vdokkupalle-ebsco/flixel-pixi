@@ -90,3 +90,18 @@ Only after explicit release approval:
    and fix the release-candidate defect.
 
 Publishing is never part of `npm run verify` or `npm run check:package`.
+
+## Latest validated prerelease
+
+`flixel-pixi@0.1.0-rc.10` was published to the npm `next` channel on
+2026-08-23 from immutable tag `v0.1.0-rc.10`. The
+[trusted-publishing workflow](https://github.com/vdokkupalle-ebsco/flixel-pixi/actions/runs/32631596625)
+passed the mobile, quality, package, Chromium, Firefox, WebKit, performance,
+resource, and publication-preview gates before publishing.
+
+Post-publication verification confirmed npm's SLSA provenance attestation and
+integrity metadata. A clean temporary consumer installed the registry package
+with its PixiJS peer and imported `FlxParticleEffect`, `FlxParticleEmitter`,
+`parseParticleEffect`, and `createBrowserGame` from the public package root.
+The stable `latest` channel remains unchanged while `rc.10` receives
+prerelease validation.
