@@ -34,7 +34,11 @@ describe('multi-emitter CRUD and inspector interactions', () => {
         enabled: true,
         offset: { x: 10, y: -20 },
         textureShape: 'square',
-        preset: { ...getDefaultStarterPreset(), id: 'emitter-2', name: 'Emitter 2' },
+        preset: {
+          ...getDefaultStarterPreset(),
+          id: 'emitter-2',
+          name: 'Emitter 2',
+        },
       });
       draft.selectedEmitterId = layerId2;
     });
@@ -42,7 +46,10 @@ describe('multi-emitter CRUD and inspector interactions', () => {
     expect(store.status.snapshot.document.emitters).toHaveLength(2);
     expect(store.status.snapshot.selectedEmitterId).toBe(layerId2);
     expect(selectedEmitter(store.status.snapshot).name).toBe('Emitter 2');
-    expect(selectedEmitter(store.status.snapshot).offset).toEqual({ x: 10, y: -20 });
+    expect(selectedEmitter(store.status.snapshot).offset).toEqual({
+      x: 10,
+      y: -20,
+    });
     expect(selectedEmitter(store.status.snapshot).textureShape).toBe('square');
   });
 
@@ -90,8 +97,12 @@ describe('multi-emitter CRUD and inspector interactions', () => {
       selectedEmitter(draft).preset.capacity = 48;
     });
 
-    expect(store.status.snapshot.document.emitters[0]?.preset.capacity).toBe(160);
-    expect(store.status.snapshot.document.emitters[1]?.preset.capacity).toBe(48);
+    expect(store.status.snapshot.document.emitters[0]?.preset.capacity).toBe(
+      160,
+    );
+    expect(store.status.snapshot.document.emitters[1]?.preset.capacity).toBe(
+      48,
+    );
   });
 
   it('deletes an emitter and selects a valid remaining emitter', () => {
@@ -147,7 +158,9 @@ describe('multi-emitter CRUD and inspector interactions', () => {
 
     // Delete middle layer (layer2) -> should select layer1
     store.update('Delete layer 2', (draft) => {
-      draft.document.emitters = draft.document.emitters.filter((e) => e.layerId !== layer2);
+      draft.document.emitters = draft.document.emitters.filter(
+        (e) => e.layerId !== layer2,
+      );
       draft.selectedEmitterId = layer1;
     });
 
@@ -217,7 +230,9 @@ describe('multi-emitter CRUD and inspector interactions', () => {
     });
 
     store.update('Disable layer 1', (draft) => {
-      const layer1 = draft.document.emitters.find((e) => e.layerId === 'layer-1');
+      const layer1 = draft.document.emitters.find(
+        (e) => e.layerId === 'layer-1',
+      );
       if (layer1) layer1.enabled = false;
     });
 
@@ -270,21 +285,28 @@ describe('multi-emitter CRUD and inspector interactions', () => {
       selected.preset.motion.velocity.x.min = -500;
     });
 
-    expect(store.status.snapshot.document.emitters[0]?.preset.seed).toBe(20260823);
+    expect(store.status.snapshot.document.emitters[0]?.preset.seed).toBe(
+      20260823,
+    );
     expect(store.status.snapshot.document.emitters[1]?.preset.seed).toBe(99999);
-    expect(store.status.snapshot.document.emitters[1]?.preset.motion.velocity.x.min).toBe(-500);
+    expect(
+      store.status.snapshot.document.emitters[1]?.preset.motion.velocity.x.min,
+    ).toBe(-500);
   });
 
   it('rejects adding beyond MAX_EMITTERS', () => {
     const starter = getDefaultStarterPreset();
-    const emitters: ParticleEmitterLayerV1[] = Array.from({ length: MAX_EMITTERS }, (_, i) => ({
-      layerId: `layer-${String(i + 1)}`,
-      name: `Layer ${String(i + 1)}`,
-      enabled: true,
-      offset: { x: 0, y: 0 },
-      textureShape: 'circle',
-      preset: starter,
-    }));
+    const emitters: ParticleEmitterLayerV1[] = Array.from(
+      { length: MAX_EMITTERS },
+      (_, i) => ({
+        layerId: `layer-${String(i + 1)}`,
+        name: `Layer ${String(i + 1)}`,
+        enabled: true,
+        offset: { x: 0, y: 0 },
+        textureShape: 'circle',
+        preset: starter,
+      }),
+    );
 
     const store = new ParticleEditorStore({
       document: {

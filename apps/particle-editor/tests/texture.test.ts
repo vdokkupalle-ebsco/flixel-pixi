@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createPresetTexture } from '../src/texture';
+import { cloneTextureSelection, createPresetTexture } from '../src/texture';
 
 describe('particle editor generated textures', () => {
   it.each([
@@ -52,5 +52,15 @@ describe('particle editor generated textures', () => {
     expect(circle.shape).toBe('circle');
     expect(square.shape).toBe('square');
     expect(circle.buffer.data).not.toEqual(square.buffer.data);
+  });
+
+  it('clones texture pixel ownership for duplicated emitters', async () => {
+    const original = createPresetTexture('editor-spark');
+    const duplicate = await cloneTextureSelection(original);
+
+    expect(duplicate).not.toBe(original);
+    expect(duplicate.buffer).not.toBe(original.buffer);
+    expect(duplicate.buffer.data).not.toBe(original.buffer.data);
+    expect(duplicate.buffer.data).toEqual(original.buffer.data);
   });
 });

@@ -77,7 +77,9 @@ describe('ParticleEffectDocumentV1', () => {
       ],
     };
 
-    expect(() => validateEffectDocument(doc)).toThrow(/Duplicate emitter layerId/);
+    expect(() => validateEffectDocument(doc)).toThrow(
+      /Duplicate emitter layerId/,
+    );
   });
 
   it('rejects an empty emitter list', () => {
@@ -113,7 +115,9 @@ describe('ParticleEffectDocumentV1', () => {
       emitters,
     };
 
-    expect(() => validateEffectDocument(doc)).toThrow(/cannot exceed 8 emitters/);
+    expect(() => validateEffectDocument(doc)).toThrow(
+      /cannot exceed 8 emitters/,
+    );
   });
 
   it('rejects an invalid selected emitter that does not exist in the document', () => {

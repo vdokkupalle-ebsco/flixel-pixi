@@ -124,7 +124,9 @@ describe('multi-emitter import and export', () => {
     expect(code).not.toContain('hiddenSmokePreset');
     expect(code).toContain('x: originX + offset.x');
     expect(code).toContain('y: originY + offset.y');
-    expect(code).toContain('// Preload texture assets with FlxAssets before creating emitters:');
+    expect(code).toContain(
+      '// Preload texture assets with FlxAssets before creating emitters:',
+    );
     expect(code).toContain('// - editor-flame');
     expect(code).toContain('// - editor-spark');
   });

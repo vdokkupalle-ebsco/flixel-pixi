@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { ParticleEffectDocumentV1 } from '../src/editor-store';
 import { createEffectBundleZip } from '../src/io';
-import { findStarterEffectDocument, findStarterPreset, getDefaultStarterPreset } from '../src/presets';
+import {
+  findStarterEffectDocument,
+  findStarterPreset,
+  getDefaultStarterPreset,
+} from '../src/presets';
 
 describe('effect bundle ZIP export and starter effects', () => {
   it('builds an effect bundle ZIP containing JSON, TypeScript, textures, and README', async () => {
@@ -34,9 +38,12 @@ describe('effect bundle ZIP export and starter effects', () => {
       ],
     };
 
-    const dummyPngBlob = new Blob([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], {
-      type: 'image/png',
-    });
+    const dummyPngBlob = new Blob(
+      [new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])],
+      {
+        type: 'image/png',
+      },
+    );
 
     const zipBlob = await createEffectBundleZip(doc, async () => dummyPngBlob);
     expect(zipBlob.type).toBe('application/zip');
@@ -65,5 +72,50 @@ describe('effect bundle ZIP export and starter effects', () => {
     const single = findStarterEffectDocument('starter-snowfall');
     expect(single).toBeDefined();
     expect(single?.emitters).toHaveLength(1);
+  });
+
+  it('exports different pixels under unique asset IDs when filenames collide', async () => {
+    const preset = getDefaultStarterPreset();
+    const firstPreset = structuredClone(preset);
+    const secondPreset = structuredClone(preset);
+    firstPreset.appearance.texture.assetId = 'shared-texture';
+    secondPreset.appearance.texture.assetId = 'shared-texture';
+    const doc: ParticleEffectDocumentV1 = {
+      kind: 'flixel-pixi-particle-effect',
+      version: 1,
+      id: 'texture-collision',
+      name: 'Texture collision',
+      emitters: [
+        {
+          layerId: 'layer-1',
+          name: 'First',
+          enabled: true,
+          offset: { x: 0, y: 0 },
+          textureShape: 'circle',
+          preset: firstPreset,
+        },
+        {
+          layerId: 'layer-2',
+          name: 'Second',
+          enabled: true,
+          offset: { x: 0, y: 0 },
+          textureShape: 'circle',
+          preset: secondPreset,
+        },
+      ],
+    };
+
+    const zipBlob = await createEffectBundleZip(
+      doc,
+      async (layer) =>
+        new Blob([
+          new Uint8Array(layer.layerId === 'layer-1' ? [1, 2, 3] : [4, 5, 6]),
+        ]),
+    );
+    const text = new TextDecoder().decode(await zipBlob.arrayBuffer());
+
+    expect(text).toContain('textures/shared-texture.png');
+    expect(text).toContain('textures/shared-texture-layer-2.png');
+    expect(text).toContain('"assetId": "shared-texture-layer-2"');
   });
 });

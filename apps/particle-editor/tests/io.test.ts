@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  createEffectDocument,
-  type EditorSnapshot,
-} from '../src/editor-store';
+import { createEffectDocument, type EditorSnapshot } from '../src/editor-store';
 import {
   createTypeScriptSnippet,
   parseEditorSnapshot,

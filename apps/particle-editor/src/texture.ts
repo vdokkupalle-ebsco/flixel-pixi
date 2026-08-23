@@ -271,6 +271,23 @@ export function selectTextureFrame(
   };
 }
 
+export async function cloneTextureSelection(
+  selection: TextureSelection,
+): Promise<TextureSelection> {
+  const source =
+    selection.source === undefined
+      ? undefined
+      : await createImageBitmap(selection.source);
+  return {
+    ...selection,
+    buffer: {
+      ...selection.buffer,
+      data: selection.buffer.data.slice(),
+    },
+    ...(source === undefined ? {} : { source }),
+  };
+}
+
 export function destroyTexture(selection: TextureSelection): void {
   selection.source?.close();
 }

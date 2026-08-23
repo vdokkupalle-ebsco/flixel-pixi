@@ -111,7 +111,9 @@ export function validateEffectDocument(
     throw new TypeError('Invalid effect document kind.');
   }
   if (record.version !== 1) {
-    throw new TypeError(`Unsupported effect document version: ${String(record.version)}`);
+    throw new TypeError(
+      `Unsupported effect document version: ${String(record.version)}`,
+    );
   }
   if (typeof record.id !== 'string' || record.id.trim().length === 0) {
     throw new TypeError('Effect document requires a non-empty id.');
@@ -126,55 +128,74 @@ export function validateEffectDocument(
     throw new RangeError('Effect document must contain at least one emitter.');
   }
   if (record.emitters.length > MAX_EMITTERS) {
-    throw new RangeError(`Effect document cannot exceed ${String(MAX_EMITTERS)} emitters.`);
+    throw new RangeError(
+      `Effect document cannot exceed ${String(MAX_EMITTERS)} emitters.`,
+    );
   }
 
   const seenIds = new Set<string>();
-  const emitters: ParticleEmitterLayerV1[] = record.emitters.map((item, index) => {
-    if (typeof item !== 'object' || item === null) {
-      throw new TypeError(`Emitter layer at index ${String(index)} must be an object.`);
-    }
-    const layer = item as Record<string, unknown>;
-    if (typeof layer.layerId !== 'string' || layer.layerId.trim().length === 0) {
-      throw new TypeError(`Emitter layer at index ${String(index)} requires a valid layerId.`);
-    }
-    if (seenIds.has(layer.layerId)) {
-      throw new Error(`Duplicate emitter layerId: "${layer.layerId}".`);
-    }
-    seenIds.add(layer.layerId);
+  const emitters: ParticleEmitterLayerV1[] = record.emitters.map(
+    (item, index) => {
+      if (typeof item !== 'object' || item === null) {
+        throw new TypeError(
+          `Emitter layer at index ${String(index)} must be an object.`,
+        );
+      }
+      const layer = item as Record<string, unknown>;
+      if (
+        typeof layer.layerId !== 'string' ||
+        layer.layerId.trim().length === 0
+      ) {
+        throw new TypeError(
+          `Emitter layer at index ${String(index)} requires a valid layerId.`,
+        );
+      }
+      if (seenIds.has(layer.layerId)) {
+        throw new Error(`Duplicate emitter layerId: "${layer.layerId}".`);
+      }
+      seenIds.add(layer.layerId);
 
-    if (typeof layer.name !== 'string' || layer.name.trim().length === 0) {
-      throw new TypeError(`Emitter layer "${layer.layerId}" requires a non-empty name.`);
-    }
-    if (typeof layer.enabled !== 'boolean') {
-      throw new TypeError(`Emitter layer "${layer.layerId}" enabled property must be a boolean.`);
-    }
-    if (
-      typeof layer.offset !== 'object' ||
-      layer.offset === null ||
-      typeof (layer.offset as Record<string, unknown>).x !== 'number' ||
-      !Number.isFinite((layer.offset as Record<string, unknown>).x) ||
-      typeof (layer.offset as Record<string, unknown>).y !== 'number' ||
-      !Number.isFinite((layer.offset as Record<string, unknown>).y)
-    ) {
-      throw new TypeError(`Emitter layer "${layer.layerId}" offset must contain finite x and y numbers.`);
-    }
-    if (layer.textureShape !== 'circle' && layer.textureShape !== 'square') {
-      throw new TypeError(`Emitter layer "${layer.layerId}" textureShape must be 'circle' or 'square'.`);
-    }
+      if (typeof layer.name !== 'string' || layer.name.trim().length === 0) {
+        throw new TypeError(
+          `Emitter layer "${layer.layerId}" requires a non-empty name.`,
+        );
+      }
+      if (typeof layer.enabled !== 'boolean') {
+        throw new TypeError(
+          `Emitter layer "${layer.layerId}" enabled property must be a boolean.`,
+        );
+      }
+      if (
+        typeof layer.offset !== 'object' ||
+        layer.offset === null ||
+        typeof (layer.offset as Record<string, unknown>).x !== 'number' ||
+        !Number.isFinite((layer.offset as Record<string, unknown>).x) ||
+        typeof (layer.offset as Record<string, unknown>).y !== 'number' ||
+        !Number.isFinite((layer.offset as Record<string, unknown>).y)
+      ) {
+        throw new TypeError(
+          `Emitter layer "${layer.layerId}" offset must contain finite x and y numbers.`,
+        );
+      }
+      if (layer.textureShape !== 'circle' && layer.textureShape !== 'square') {
+        throw new TypeError(
+          `Emitter layer "${layer.layerId}" textureShape must be 'circle' or 'square'.`,
+        );
+      }
 
-    return {
-      layerId: layer.layerId,
-      name: layer.name,
-      enabled: layer.enabled,
-      offset: {
-        x: (layer.offset as { x: number; y: number }).x,
-        y: (layer.offset as { x: number; y: number }).y,
-      },
-      textureShape: layer.textureShape,
-      preset: parseParticlePreset(layer.preset),
-    };
-  });
+      return {
+        layerId: layer.layerId,
+        name: layer.name,
+        enabled: layer.enabled,
+        offset: {
+          x: (layer.offset as { x: number; y: number }).x,
+          y: (layer.offset as { x: number; y: number }).y,
+        },
+        textureShape: layer.textureShape,
+        preset: parseParticlePreset(layer.preset),
+      };
+    },
+  );
 
   return {
     kind: 'flixel-pixi-particle-effect',

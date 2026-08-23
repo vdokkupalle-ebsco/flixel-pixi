@@ -145,12 +145,7 @@ class ParticlePreviewState extends FlxState {
       const posX = (source?.x ?? PREVIEW_WIDTH / 2) + layer.offset.x;
       const posY = (source?.y ?? originY) + layer.offset.y;
 
-      const emitter = new FlxParticleEmitter(
-        layer.preset,
-        graphic,
-        posX,
-        posY,
-      );
+      const emitter = new FlxParticleEmitter(layer.preset, graphic, posX, posY);
       this.add(emitter);
       emitter.start();
       emitterInstances.push({
@@ -258,16 +253,24 @@ class ParticlePreviewState extends FlxState {
   }
 
   pause(): void {
-    if (this.#primaryGroup !== undefined) {
-      for (const item of this.#primaryGroup.emitters) {
+    const groups = [
+      ...(this.#primaryGroup === undefined ? [] : [this.#primaryGroup]),
+      ...this.#burstGroups,
+    ];
+    for (const group of groups) {
+      for (const item of group.emitters) {
         item.emitter.pause();
       }
     }
   }
 
   resume(): void {
-    if (this.#primaryGroup !== undefined) {
-      for (const item of this.#primaryGroup.emitters) {
+    const groups = [
+      ...(this.#primaryGroup === undefined ? [] : [this.#primaryGroup]),
+      ...this.#burstGroups,
+    ];
+    for (const group of groups) {
+      for (const item of group.emitters) {
         item.emitter.resume();
       }
     }

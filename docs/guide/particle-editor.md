@@ -10,6 +10,7 @@ You can launch the live editor directly in your browser:
 ## Overview
 
 In games, rich visual phenomena are rarely produced by a single particle emitter alone:
+
 - **Campfire**: Flames + rising smoke plume + floating glowing embers.
 - **Explosion**: Core flash burst + fast fiery sparks + expanding smoke debris.
 - **Rainstorm**: Falling rain streaks + ground puddle splashes + atmospheric mist.
@@ -22,19 +23,23 @@ The Particle Editor lets you layer multiple emitters into a single composed effe
 ## Emitter Layer Management
 
 ### Adding and Selecting Layers
+
 - Click the **`+`** button in the sidebar to add a new emitter layer (up to 8 layers per effect).
 - Click any layer row to select it. The inspector on the right updates to display and edit properties for the selected layer.
 - Active layers are indicated with an active gradient highlight.
 
 ### Enable and Disable Layers
+
 - Click the toggle dot on the left of any layer row to enable or disable it.
 - Disabled layers are muted in the preview and omitted from exported game code, allowing you to test layers in isolation without deleting them.
 
 ### Layer Ordering & Rendering
+
 - Use the **`↑`** and **`↓`** buttons below the layer list to reorder layers.
 - In Flixel-Pixi, emitters are rendered in sequence: **layers lower down the list render on top of earlier layers**. For example, place background smoke at the top of the list and foreground sparks at the bottom.
 
 ### Duplicating and Deleting
+
 - Click **Duplicate** to clone the selected layer with a new identifier and independent settings.
 - Click **Delete** to remove a layer. The editor automatically selects the nearest remaining layer. (The last remaining layer cannot be deleted).
 
@@ -43,6 +48,7 @@ The Particle Editor lets you layer multiple emitters into a single composed effe
 ## Layer Offsets
 
 Each layer supports local **Offset X** and **Offset Y** coordinates in the inspector:
+
 - Offsets position the emitter relative to the overall effect origin.
 - For example, in a campfire effect:
   - Flames at `[0, 0]`
@@ -56,6 +62,7 @@ When the effect moves in your game (e.g. following a rocket or character), all e
 ## Combined Capacity & Performance
 
 Each emitter allocates a deterministic particle pool based on its `capacity`.
+
 - The live preview aggregates the active count, capacity, dropped particles, and pool reuse across all enabled layers.
 - If the combined capacity across all enabled layers exceeds **2,000 particles**, a capacity warning is displayed.
 - Keeping capacity tuned to your particle emission rate and lifespan ensures consistent 60fps / 120fps performance on mobile and desktop devices without garbage collection spikes.
@@ -67,7 +74,9 @@ Each emitter allocates a deterministic particle pool based on its `capacity`.
 The Particle Editor offers several export workflows:
 
 ### 1. Export Bundle (ZIP)
+
 Click **Export Bundle** in the top bar to download a complete, self-contained ZIP archive:
+
 ```text
 campfire/
   campfire.effect.json    # Composed multi-emitter document
@@ -80,12 +89,15 @@ campfire/
 ```
 
 ### 2. Export Composed Effect (JSON)
+
 Click **Export Effect** to download the portable `*.effect.json` file. This contains all layer presets, offsets, and texture settings. You can re-import this JSON into the editor anytime using the **Import** button.
 
 ### 3. Export Single Layer Preset (JSON)
+
 Click **Export Layer** to download only the currently selected layer as a standalone `ParticlePresetV1` JSON file (`*.particle.json`).
 
 ### 4. Copy TypeScript
+
 Click **Copy TypeScript** to copy a complete code snippet for the entire effect directly to your clipboard.
 
 ---
@@ -116,7 +128,10 @@ const layers = [
   { name: 'Smoke', offset: { x: 0, y: -16 }, preset: smokePreset },
 ];
 
-export function createCampfireEmitters(originX = 160, originY = 120): FlxParticleEmitter[] {
+export function createCampfireEmitters(
+  originX = 160,
+  originY = 120,
+): FlxParticleEmitter[] {
   return layers.map(({ preset, offset }) => {
     const emitter = FlxParticleEmitter.fromAssets(preset, {
       x: originX + offset.x,
@@ -133,7 +148,10 @@ export class PlayState extends FlxState {
     super.create();
 
     // Preload texture assets with FlxAssets beforehand, then spawn emitters:
-    const campfireEmitters = createCampfireEmitters(FlxG.width / 2, FlxG.height / 2);
+    const campfireEmitters = createCampfireEmitters(
+      FlxG.width / 2,
+      FlxG.height / 2,
+    );
     for (const emitter of campfireEmitters) {
       this.add(emitter);
     }

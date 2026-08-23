@@ -5,6 +5,7 @@ import {
 } from 'flixel-pixi';
 
 import {
+  cloneEffectDocument,
   createEffectDocument,
   validateEffectDocument,
   type EditorSnapshot,
@@ -55,9 +56,7 @@ export function createMultiEmitterTypeScriptSnippet(
   }
 
   const textureIds = Array.from(
-    new Set(
-      enabledLayers.map((e) => e.preset.appearance.texture.assetId),
-    ),
+    new Set(enabledLayers.map((e) => e.preset.appearance.texture.assetId)),
   );
 
   const usedIdentifiers = new Set<string>();
@@ -93,9 +92,7 @@ export function createMultiEmitterTypeScriptSnippet(
     })
     .join('\n');
 
-  const preloadComments = textureIds
-    .map((id) => `// - ${id}`)
-    .join('\n');
+  const preloadComments = textureIds.map((id) => `// - ${id}`).join('\n');
 
   const rawFnName = toSafeIdentifier(document.name, 'Effect');
   const effectFnName = `create${rawFnName.charAt(0).toUpperCase()}${rawFnName.slice(1)}Emitters`;
@@ -180,7 +177,9 @@ export function parseImportedPreset(text: string): ParticlePresetV1 {
 export function serializeEditorSnapshot(snapshot: EditorSnapshot): string {
   return JSON.stringify(
     {
-      document: JSON.parse(serializeEffectDocument(snapshot.document)) as unknown,
+      document: JSON.parse(
+        serializeEffectDocument(snapshot.document),
+      ) as unknown,
       selectedEmitterId: snapshot.selectedEmitterId,
       preview: snapshot.preview,
       savedAt: new Date().toISOString(),
@@ -252,7 +251,8 @@ export function migrateEditorSnapshot(value: unknown): EditorSnapshot {
   // Legacy single-preset migration
   if ('preset' in record && record.preset !== undefined) {
     const preset = parseParticlePreset(record.preset);
-    const legacyPreview = record.preview as PersistedPreviewSettings | undefined;
+    const legacyPreview = record.preview as
+      PersistedPreviewSettings | undefined;
     const textureShape =
       legacyPreview?.textureShape === 'square' ? 'square' : 'circle';
     const document: ParticleEffectDocumentV1 = createEffectDocument(
@@ -268,7 +268,9 @@ export function migrateEditorSnapshot(value: unknown): EditorSnapshot {
     };
   }
 
-  throw new TypeError('Saved editor data contains neither document nor preset.');
+  throw new TypeError(
+    'Saved editor data contains neither document nor preset.',
+  );
 }
 
 export function parseEditorSnapshot(text: string): EditorSnapshot {
@@ -280,14 +282,61 @@ export async function createEffectBundleZip(
   document: ParticleEffectDocumentV1,
   getTexturePngBlob: (layer: ParticleEmitterLayerV1) => Promise<Blob>,
 ): Promise<Blob> {
-  const effectJson = serializeEffectDocument(document);
-  const tsCode = createMultiEmitterTypeScriptSnippet(document);
-  const rootDir = document.id;
+  const bundleDocument = cloneEffectDocument(document);
+  const rootDir = safePathSegment(document.id, 'particle-effect');
+
+  const textureEntries: ZipFileEntry[] = [];
+  const texturesByRequestedId = new Map<
+    string,
+    { assetId: string; data: Uint8Array }[]
+  >();
+  const usedAssetIds = new Set<string>();
+
+  for (let index = 0; index < document.emitters.length; index += 1) {
+    const sourceLayer = document.emitters[index];
+    const bundleLayer = bundleDocument.emitters[index];
+    if (sourceLayer === undefined || bundleLayer === undefined) continue;
+
+    const requestedId = sourceLayer.preset.appearance.texture.assetId;
+    const pngBlob = await getTexturePngBlob(sourceLayer);
+    const data = new Uint8Array(await pngBlob.arrayBuffer());
+    const matchingTexture = texturesByRequestedId
+      .get(requestedId)
+      ?.find((texture) => equalBytes(texture.data, data));
+
+    if (matchingTexture !== undefined) {
+      bundleLayer.preset.appearance.texture.assetId = matchingTexture.assetId;
+      continue;
+    }
+
+    const baseAssetId = safePathSegment(
+      requestedId,
+      `texture-${String(index + 1)}`,
+    );
+    const assetId = uniqueAssetId(
+      baseAssetId,
+      sourceLayer.layerId,
+      usedAssetIds,
+    );
+    usedAssetIds.add(assetId);
+    bundleLayer.preset.appearance.texture.assetId = assetId;
+    const record = { assetId, data };
+    const previous = texturesByRequestedId.get(requestedId) ?? [];
+    previous.push(record);
+    texturesByRequestedId.set(requestedId, previous);
+    textureEntries.push({
+      path: `${rootDir}/textures/${assetId}.png`,
+      data,
+    });
+  }
+
+  const effectJson = serializeEffectDocument(bundleDocument);
+  const tsCode = createMultiEmitterTypeScriptSnippet(bundleDocument);
 
   const rawFnName = toSafeIdentifier(document.name, 'Effect');
   const effectFnName = `create${rawFnName.charAt(0).toUpperCase()}${rawFnName.slice(1)}Emitters`;
 
-  const layerList = document.emitters
+  const layerList = bundleDocument.emitters
     .map(
       (e) =>
         `- **${e.name}** (${e.preset.emission.mode === 'continuous' ? `${String(e.preset.emission.rate)}/sec` : `${String(e.preset.emission.count)} burst`}, offset: [${String(e.offset.x)}, ${String(e.offset.y)}])`,
@@ -307,7 +356,7 @@ ${layerList}
 2. Instantiate and add the emitters in your state:
 
 \`\`\`ts
-import { ${effectFnName} } from './${document.id}';
+import { ${effectFnName} } from './${rootDir}';
 
 // Inside your FlxState.create():
 const emitters = ${effectFnName}(160, 120);
@@ -319,11 +368,11 @@ for (const emitter of emitters) {
 
   const entries: ZipFileEntry[] = [
     {
-      path: `${rootDir}/${document.id}.effect.json`,
+      path: `${rootDir}/${rootDir}.effect.json`,
       data: effectJson,
     },
     {
-      path: `${rootDir}/${document.id}.ts`,
+      path: `${rootDir}/${rootDir}.ts`,
       data: tsCode,
     },
     {
@@ -332,18 +381,37 @@ for (const emitter of emitters) {
     },
   ];
 
-  const processedAssets = new Set<string>();
-  for (const layer of document.emitters) {
-    const assetId = layer.preset.appearance.texture.assetId;
-    if (processedAssets.has(assetId)) continue;
-    processedAssets.add(assetId);
-    const pngBlob = await getTexturePngBlob(layer);
-    const arrayBuffer = await pngBlob.arrayBuffer();
-    entries.push({
-      path: `${rootDir}/textures/${assetId}.png`,
-      data: new Uint8Array(arrayBuffer),
-    });
-  }
+  entries.push(...textureEntries);
 
   return createZipBlob(entries);
+}
+
+function safePathSegment(value: string, fallback: string): string {
+  const safe = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return safe.length === 0 ? fallback : safe;
+}
+
+function uniqueAssetId(
+  baseAssetId: string,
+  layerId: string,
+  usedAssetIds: ReadonlySet<string>,
+): string {
+  if (!usedAssetIds.has(baseAssetId)) return baseAssetId;
+  const layerSuffix = safePathSegment(layerId, 'layer');
+  let candidate = `${baseAssetId}-${layerSuffix}`;
+  let suffix = 2;
+  while (usedAssetIds.has(candidate)) {
+    candidate = `${baseAssetId}-${layerSuffix}-${String(suffix)}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
+function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
 }

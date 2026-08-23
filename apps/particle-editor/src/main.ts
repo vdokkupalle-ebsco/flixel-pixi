@@ -26,10 +26,7 @@ import {
   type ParticleEffectDocumentV1,
   type ParticleEmitterLayerV1,
 } from './editor-store';
-import {
-  renderEditorShell,
-  renderEmitterLayerList,
-} from './editor-shell';
+import { renderEditorShell, renderEmitterLayerList } from './editor-shell';
 import {
   AUTOSAVE_KEY,
   createEffectBundleZip,
@@ -41,6 +38,7 @@ import {
 } from './io';
 import { createParticlePreview } from './preview';
 import {
+  cloneTextureSelection,
   createPresetTexture,
   destroyTexture,
   loadTextureFile,
@@ -153,9 +151,7 @@ function findControl(
   name: string,
 ): HTMLInputElement | HTMLSelectElement | null {
   const item = shell.form.elements.namedItem(name);
-  if (
-    item instanceof HTMLInputElement || item instanceof HTMLSelectElement
-  ) {
+  if (item instanceof HTMLInputElement || item instanceof HTMLSelectElement) {
     return item;
   }
   return null;
@@ -830,10 +826,13 @@ shell.root.addEventListener('click', async (event) => {
 
   switch (action) {
     case 'add-emitter': {
-      if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS) return;
+      if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS)
+        return;
       const count = store.status.snapshot.document.emitters.length + 1;
       const layerId = createLayerId();
-      const basePreset = clonePreset(starterPresets[0] ?? getDefaultStarterPreset());
+      const basePreset = clonePreset(
+        starterPresets[0] ?? getDefaultStarterPreset(),
+      );
       basePreset.id = `emitter-${String(count)}`;
       basePreset.name = `Emitter ${String(count)}`;
       store.update(`Added Emitter ${String(count)}`, (draft) => {
@@ -852,7 +851,10 @@ shell.root.addEventListener('click', async (event) => {
     }
     case 'select-emitter': {
       const layerId = actionElement.dataset.layerId;
-      if (layerId !== undefined && layerId !== store.status.snapshot.selectedEmitterId) {
+      if (
+        layerId !== undefined &&
+        layerId !== store.status.snapshot.selectedEmitterId
+      ) {
         store.update('Selected emitter', (draft) => {
           draft.selectedEmitterId = layerId;
         });
@@ -863,7 +865,9 @@ shell.root.addEventListener('click', async (event) => {
       const layerId = actionElement.dataset.layerId;
       if (layerId !== undefined) {
         store.update('Toggled emitter layer', (draft) => {
-          const layer = draft.document.emitters.find((e) => e.layerId === layerId);
+          const layer = draft.document.emitters.find(
+            (e) => e.layerId === layerId,
+          );
           if (layer !== undefined) {
             layer.enabled = !layer.enabled;
           }
@@ -872,7 +876,9 @@ shell.root.addEventListener('click', async (event) => {
       break;
     }
     case 'move-emitter-up': {
-      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
+      const layerId =
+        actionElement.dataset.layerId ??
+        store.status.snapshot.selectedEmitterId;
       const doc = store.status.snapshot.document;
       const index = doc.emitters.findIndex((e) => e.layerId === layerId);
       if (index > 0) {
@@ -889,7 +895,9 @@ shell.root.addEventListener('click', async (event) => {
       break;
     }
     case 'move-emitter-down': {
-      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
+      const layerId =
+        actionElement.dataset.layerId ??
+        store.status.snapshot.selectedEmitterId;
       const doc = store.status.snapshot.document;
       const index = doc.emitters.findIndex((e) => e.layerId === layerId);
       if (index >= 0 && index < doc.emitters.length - 1) {
@@ -906,15 +914,28 @@ shell.root.addEventListener('click', async (event) => {
       break;
     }
     case 'duplicate-emitter': {
-      if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS) return;
-      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
-      const current = store.status.snapshot.document.emitters.find((e) => e.layerId === layerId) ?? selectedEmitter(store.status.snapshot);
+      if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS)
+        return;
+      const layerId =
+        actionElement.dataset.layerId ??
+        store.status.snapshot.selectedEmitterId;
+      const current =
+        store.status.snapshot.document.emitters.find(
+          (e) => e.layerId === layerId,
+        ) ?? selectedEmitter(store.status.snapshot);
       const newLayerId = createLayerId();
+      const currentTexture = customTextures.get(current.layerId);
+      const duplicateTexture =
+        currentTexture === undefined
+          ? undefined
+          : await cloneTextureSelection(currentTexture);
       const duplicatePreset = clonePreset(current.preset);
       duplicatePreset.id = `${current.preset.id}-copy-${String(Date.now()).slice(-4)}`;
       duplicatePreset.name = `${current.name} copy`;
       store.update(`Duplicated ${current.name}`, (draft) => {
-        const index = draft.document.emitters.findIndex((e) => e.layerId === current.layerId);
+        const index = draft.document.emitters.findIndex(
+          (e) => e.layerId === current.layerId,
+        );
         const newLayer: ParticleEmitterLayerV1 = {
           layerId: newLayerId,
           name: `${current.name} copy`,
@@ -926,18 +947,31 @@ shell.root.addEventListener('click', async (event) => {
         draft.document.emitters.splice(index + 1, 0, newLayer);
         draft.selectedEmitterId = newLayerId;
       });
+      if (duplicateTexture !== undefined) {
+        customTextures.set(newLayerId, duplicateTexture);
+      }
       showToast(`${current.name} duplicated`);
       break;
     }
     case 'delete-emitter': {
       if (store.status.snapshot.document.emitters.length <= 1) return;
-      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
-      const current = store.status.snapshot.document.emitters.find((e) => e.layerId === layerId) ?? selectedEmitter(store.status.snapshot);
+      const layerId =
+        actionElement.dataset.layerId ??
+        store.status.snapshot.selectedEmitterId;
+      const current =
+        store.status.snapshot.document.emitters.find(
+          (e) => e.layerId === layerId,
+        ) ?? selectedEmitter(store.status.snapshot);
       const doc = store.status.snapshot.document;
-      const index = doc.emitters.findIndex((e) => e.layerId === current.layerId);
-      const nextSelected = doc.emitters[index === 0 ? 1 : index - 1]?.layerId ?? '';
+      const index = doc.emitters.findIndex(
+        (e) => e.layerId === current.layerId,
+      );
+      const nextSelected =
+        doc.emitters[index === 0 ? 1 : index - 1]?.layerId ?? '';
       store.update(`Deleted ${current.name}`, (draft) => {
-        draft.document.emitters = draft.document.emitters.filter((e) => e.layerId !== current.layerId);
+        draft.document.emitters = draft.document.emitters.filter(
+          (e) => e.layerId !== current.layerId,
+        );
         if (draft.selectedEmitterId === current.layerId) {
           draft.selectedEmitterId = nextSelected;
         }

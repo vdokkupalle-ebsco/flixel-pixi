@@ -19,10 +19,15 @@ export interface EditorShellElements {
   toast: HTMLElement;
 }
 
-function requireElement<T extends Element>(parent: ParentNode, selector: string): T {
+function requireElement<T extends Element>(
+  parent: ParentNode,
+  selector: string,
+): T {
   const element = parent.querySelector<T>(selector);
   if (element === null) {
-    throw new Error(`Required particle editor element "${selector}" was not found.`);
+    throw new Error(
+      `Required particle editor element "${selector}" was not found.`,
+    );
   }
   return element;
 }
@@ -36,16 +41,37 @@ function numberField(label: string, name: string, step = 'any'): string {
   `;
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character] ?? character,
+  );
+}
+
+function presetColor(color: number): string {
+  return `#${((color >>> 8) & 0xff_ffff).toString(16).padStart(6, '0')}`;
+}
+
 function presetCard(preset: ParticlePresetV1, index: number): string {
   const summary =
     preset.emission.mode === 'continuous'
       ? `${String(preset.emission.rate)}/sec`
       : `${String(preset.emission.count)} particle burst`;
+  const colors = preset.appearance.colors ?? [];
+  const firstColor = colors[0]?.color ?? 0x1de8f1ff;
+  const lastColor = colors.at(-1)?.color ?? 0xff397eff;
   return `
-    <button class="preset-card" type="button" data-action="load-preset" data-preset-id="${preset.id}">
-      <span class="preset-art preset-art-${String(index + 1)}" aria-hidden="true"></span>
+    <button class="preset-card" type="button" data-action="load-preset" data-preset-id="${escapeHtml(preset.id)}">
+      <span class="preset-art preset-art-${String(index + 1)}" style="--preset-start: ${presetColor(firstColor)}; --preset-end: ${presetColor(lastColor)}" aria-hidden="true"></span>
       <span>
-        <strong>${preset.name}</strong>
+        <strong>${escapeHtml(preset.name)}</strong>
         <small>${summary}</small>
       </span>
     </button>
@@ -55,20 +81,34 @@ function presetCard(preset: ParticlePresetV1, index: number): string {
 export function renderEmitterLayerRow(
   layer: ParticleEmitterLayerV1,
   isSelected: boolean,
+  index = 0,
+  totalLayers = 1,
 ): string {
   const summary =
     layer.preset.emission.mode === 'continuous'
       ? `${String(layer.preset.emission.rate)}/sec`
       : `${String(layer.preset.emission.count)} particle burst`;
 
+  const layerId = escapeHtml(layer.layerId);
+  const layerName = escapeHtml(layer.name);
+  const stateLabel = layer.enabled ? 'Disable' : 'Enable';
   return `
-    <button class="emitter-row" type="button" data-action="select-emitter" data-layer-id="${layer.layerId}" aria-current="${isSelected ? 'true' : 'false'}">
-      <span class="emitter-icon" aria-hidden="true">${layer.textureShape === 'square' ? '■' : '✦'}</span>
-      <span>
-        <strong>${layer.name}</strong>
-        <small>${summary}</small>
-      </span>
-    </button>
+    <div class="emitter-row" role="option" aria-selected="${String(isSelected)}" data-enabled="${String(layer.enabled)}">
+      <button class="emitter-select" type="button" data-action="select-emitter" data-layer-id="${layerId}" aria-label="Select ${layerName}">
+        <span class="emitter-icon" aria-hidden="true">${layer.textureShape === 'square' ? '■' : '✦'}</span>
+        <span class="emitter-copy">
+          <strong>${layerName}</strong>
+          <small>${summary}</small>
+        </span>
+      </button>
+      <div class="emitter-actions" aria-label="${layerName} actions">
+        <button class="emitter-action emitter-toggle" type="button" data-action="toggle-emitter" data-layer-id="${layerId}" aria-label="${stateLabel} ${layerName}" title="${stateLabel} emitter" aria-pressed="${String(layer.enabled)}">${layer.enabled ? '●' : '○'}</button>
+        <button class="emitter-action" type="button" data-action="move-emitter-up" data-layer-id="${layerId}" aria-label="Move ${layerName} up" title="Move up"${index === 0 ? ' disabled' : ''}>↑</button>
+        <button class="emitter-action" type="button" data-action="move-emitter-down" data-layer-id="${layerId}" aria-label="Move ${layerName} down" title="Move down"${index === totalLayers - 1 ? ' disabled' : ''}>↓</button>
+        <button class="emitter-action" type="button" data-action="duplicate-emitter" data-layer-id="${layerId}" aria-label="Duplicate ${layerName}" title="Duplicate emitter">⧉</button>
+        <button class="emitter-action emitter-delete" type="button" data-action="delete-emitter" data-layer-id="${layerId}" aria-label="Delete ${layerName}" title="Delete emitter"${totalLayers <= 1 ? ' disabled' : ''}>×</button>
+      </div>
+    </div>
   `;
 }
 
@@ -77,8 +117,13 @@ export function renderEmitterLayerList(
   selectedEmitterId: string,
 ): string {
   return document.emitters
-    .map((layer) =>
-      renderEmitterLayerRow(layer, layer.layerId === selectedEmitterId),
+    .map((layer, index) =>
+      renderEmitterLayerRow(
+        layer,
+        layer.layerId === selectedEmitterId,
+        index,
+        document.emitters.length,
+      ),
     )
     .join('');
 }
