@@ -1,6 +1,6 @@
 {
   "name": "flixel-pixi",
-  "version": "0.1.0-rc.9",
+  "version": "0.1.0-rc.10",
   "description": "A TypeScript port of the original AS3 Flixel engine using PixiJS v8.",
   "type": "module",
   "license": "MIT",

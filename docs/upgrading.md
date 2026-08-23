@@ -4,20 +4,20 @@ This guide records consumer actions required when moving between package
 versions. The current entry starts from repository snapshots because
 `0.1.0-rc.1` is the first published external package.
 
-## 0.1.0-rc.7 to 0.1.0-rc.9
+## 0.1.0-rc.7 to 0.1.0-rc.10
 
 This is an additive upgrade. Existing games do not require source changes.
 
 Install the exact candidate for reproducible validation:
 
 ```bash
-npm install flixel-pixi@0.1.0-rc.9 pixi.js@^8.19.0
+npm install flixel-pixi@0.1.0-rc.10 pixi.js@^8.19.0
 ```
 
 The release adds the public `ParticleEffectDocumentV1` contract,
 `parseParticleEffect`, deterministic effect serialization, and
 `FlxParticleEffect`. Particle Editor exports with document version `1` can be
-loaded directly by `0.1.0-rc.9` after every referenced texture `assetId` is
+loaded directly by `0.1.0-rc.10` after every referenced texture `assetId` is
 registered with `FlxAssets`.
 
 The Particle Editor remains a hosted private application, not a separately
