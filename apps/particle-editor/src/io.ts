@@ -9,8 +9,10 @@ import {
   validateEffectDocument,
   type EditorSnapshot,
   type ParticleEffectDocumentV1,
+  type ParticleEmitterLayerV1,
   type PreviewSettings,
 } from './editor-store';
+import { createZipBlob, type ZipFileEntry } from './zip';
 
 export const AUTOSAVE_KEY = 'flixel-pixi:particle-editor:v1';
 
@@ -272,4 +274,76 @@ export function migrateEditorSnapshot(value: unknown): EditorSnapshot {
 export function parseEditorSnapshot(text: string): EditorSnapshot {
   const value = JSON.parse(text) as unknown;
   return migrateEditorSnapshot(value);
+}
+
+export async function createEffectBundleZip(
+  document: ParticleEffectDocumentV1,
+  getTexturePngBlob: (layer: ParticleEmitterLayerV1) => Promise<Blob>,
+): Promise<Blob> {
+  const effectJson = serializeEffectDocument(document);
+  const tsCode = createMultiEmitterTypeScriptSnippet(document);
+  const rootDir = document.id;
+
+  const rawFnName = toSafeIdentifier(document.name, 'Effect');
+  const effectFnName = `create${rawFnName.charAt(0).toUpperCase()}${rawFnName.slice(1)}Emitters`;
+
+  const layerList = document.emitters
+    .map(
+      (e) =>
+        `- **${e.name}** (${e.preset.emission.mode === 'continuous' ? `${String(e.preset.emission.rate)}/sec` : `${String(e.preset.emission.count)} burst`}, offset: [${String(e.offset.x)}, ${String(e.offset.y)}])`,
+    )
+    .join('\n');
+
+  const readme = `# ${document.name} Particle Effect
+
+Composed multi-emitter particle effect created with the Flixel-Pixi Particle Editor.
+
+## Emitter Layers
+${layerList}
+
+## Quick Integration
+
+1. Preload all textures in \`textures/\` using \`FlxAssets\`.
+2. Instantiate and add the emitters in your state:
+
+\`\`\`ts
+import { ${effectFnName} } from './${document.id}';
+
+// Inside your FlxState.create():
+const emitters = ${effectFnName}(160, 120);
+for (const emitter of emitters) {
+  add(emitter);
+}
+\`\`\`
+`;
+
+  const entries: ZipFileEntry[] = [
+    {
+      path: `${rootDir}/${document.id}.effect.json`,
+      data: effectJson,
+    },
+    {
+      path: `${rootDir}/${document.id}.ts`,
+      data: tsCode,
+    },
+    {
+      path: `${rootDir}/README.md`,
+      data: readme,
+    },
+  ];
+
+  const processedAssets = new Set<string>();
+  for (const layer of document.emitters) {
+    const assetId = layer.preset.appearance.texture.assetId;
+    if (processedAssets.has(assetId)) continue;
+    processedAssets.add(assetId);
+    const pngBlob = await getTexturePngBlob(layer);
+    const arrayBuffer = await pngBlob.arrayBuffer();
+    entries.push({
+      path: `${rootDir}/textures/${assetId}.png`,
+      data: new Uint8Array(arrayBuffer),
+    });
+  }
+
+  return createZipBlob(entries);
 }

@@ -259,6 +259,7 @@ export default defineConfig({
             { text: 'Groups & Containers', link: '/guide/groups' },
             { text: 'Vector Graphics & Gradients', link: '/guide/graphics' },
             { text: 'Particles & Emitters', link: '/guide/particles' },
+            { text: 'Particle Editor & Effects', link: '/guide/particle-editor' },
             { text: 'Tilemaps & Level Design', link: '/guide/tilemaps' },
           ],
         },

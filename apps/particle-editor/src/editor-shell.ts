@@ -98,6 +98,7 @@ export function renderEditorShell(
           <button class="button quiet" data-action="import" type="button">Import</button>
           <button class="button quiet" data-action="export-effect" type="button" title="Export complete multi-emitter effect JSON">Export Effect</button>
           <button class="button quiet" data-action="export-emitter" type="button" title="Export selected emitter preset JSON">Export Layer</button>
+          <button class="button quiet" data-action="export-bundle" type="button" title="Download effect ZIP bundle with textures, TypeScript code, and README">Export Bundle</button>
           <button class="button brand" data-action="copy-code" type="button">Copy TypeScript</button>
           <button class="icon-button theme-button" data-action="theme" type="button" aria-label="Switch color theme" title="Switch color theme">◐</button>
           <input data-import-input type="file" accept="application/json,.json" hidden />
@@ -115,10 +116,12 @@ export function renderEditorShell(
           </div>
           <div class="emitter-list" data-emitter-list role="listbox" aria-label="Emitter layers"></div>
           <div class="emitter-actions">
+            <button class="button secondary compact-button" data-action="move-emitter-up" type="button" title="Move selected layer up">↑</button>
+            <button class="button secondary compact-button" data-action="move-emitter-down" type="button" title="Move selected layer down">↓</button>
             <button class="button secondary compact-button" data-action="duplicate-emitter" type="button" title="Duplicate selected emitter">Duplicate</button>
             <button class="button secondary compact-button" data-action="delete-emitter" type="button" title="Delete selected emitter">Delete</button>
           </div>
-          <p class="panel-note">Layer multiple emitters together to create rich multi-layered effects. Each layer remains a standard ParticlePresetV1.</p>
+          <p class="panel-note">Layer multiple emitters together to create rich multi-layered effects. Later layers render above earlier layers.</p>
         </aside>
 
         <section class="preview-panel" aria-labelledby="preview-title">
@@ -156,12 +159,14 @@ export function renderEditorShell(
           <div class="panel-heading inspector-heading"><div><p class="eyebrow">Selection</p><h2 id="inspector-title">Emitter properties</h2></div><button class="button text-button" data-action="reset" type="button">Reset preset</button></div>
           <p class="form-error" data-error role="alert" hidden></p>
           <form data-inspector novalidate>
-            <details open><summary>Identity</summary><div class="property-grid">
+            <details open><summary>Identity & offset</summary><div class="property-grid">
               <label class="field span-2"><span>Name</span><input name="name" required /></label>
               <label class="field span-2"><span>Stable ID</span><input name="id" required pattern="[a-z0-9][a-z0-9-]*" /></label>
+              ${numberField('Offset X', 'offsetX', '1')}
+              ${numberField('Offset Y', 'offsetY', '1')}
               ${numberField('Seed', 'seed')}
               ${numberField('Capacity', 'capacity')}
-              <label class="field"><span>Space</span><select name="space"><option value="world">World</option><option value="local">Local</option></select></label>
+              <label class="field span-2"><span>Space</span><select name="space"><option value="world">World</option><option value="local">Local</option></select></label>
             </div></details>
 
             <details open><summary>Emission</summary><div class="property-grid">

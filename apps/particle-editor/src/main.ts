@@ -11,7 +11,7 @@ import {
 
 import {
   clonePreset,
-  findStarterPreset,
+  findStarterEffectDocument,
   getDefaultStarterPreset,
   starterPresets,
 } from './presets';
@@ -32,6 +32,7 @@ import {
 } from './editor-shell';
 import {
   AUTOSAVE_KEY,
+  createEffectBundleZip,
   createMultiEmitterTypeScriptSnippet,
   parseEditorSnapshot,
   parseImportedDocument,
@@ -203,6 +204,8 @@ function syncForm(status: EditorStoreStatus): void {
 
   setValue('name', preset.name);
   setValue('id', preset.id);
+  setValue('offsetX', layer.offset.x);
+  setValue('offsetY', layer.offset.y);
   setValue('seed', preset.seed);
   setValue('capacity', preset.capacity);
   setValue('space', preset.space);
@@ -293,12 +296,29 @@ function syncForm(status: EditorStoreStatus): void {
   );
   shell.addEmitterButton.disabled =
     status.snapshot.document.emitters.length >= MAX_EMITTERS;
+
+  const moveUpBtn = shell.root.querySelector<HTMLButtonElement>(
+    '[data-action="move-emitter-up"]',
+  );
+  const moveDownBtn = shell.root.querySelector<HTMLButtonElement>(
+    '[data-action="move-emitter-down"]',
+  );
   const duplicateBtn = shell.root.querySelector<HTMLButtonElement>(
     '[data-action="duplicate-emitter"]',
   );
   const deleteBtn = shell.root.querySelector<HTMLButtonElement>(
     '[data-action="delete-emitter"]',
   );
+
+  const selectedIndex = status.snapshot.document.emitters.findIndex(
+    (e) => e.layerId === status.snapshot.selectedEmitterId,
+  );
+  if (moveUpBtn !== null) moveUpBtn.disabled = selectedIndex <= 0;
+  if (moveDownBtn !== null) {
+    moveDownBtn.disabled =
+      selectedIndex < 0 ||
+      selectedIndex >= status.snapshot.document.emitters.length - 1;
+  }
   if (duplicateBtn !== null) {
     duplicateBtn.disabled =
       status.snapshot.document.emitters.length >= MAX_EMITTERS;
@@ -379,6 +399,12 @@ function applyControlChange(
         break;
       case 'id':
         preset.id = value;
+        break;
+      case 'offsetX':
+        layer.offset.x = number();
+        break;
+      case 'offsetY':
+        layer.offset.y = number();
         break;
       case 'seed':
         preset.seed = number();
@@ -740,21 +766,21 @@ shell.presetList.addEventListener('click', (event) => {
   if (!(target instanceof Element)) return;
   const card = target.closest<HTMLElement>('[data-preset-id]');
   if (card === null) return;
-  const preset = findStarterPreset(card.dataset.presetId ?? '');
-  if (preset === undefined) return;
-  const currentLayer = selectedEmitter(store.status.snapshot);
-  const newDoc = createEffectDocument(preset, currentLayer.textureShape);
+  const presetId = card.dataset.presetId ?? '';
+  const starterEffect = findStarterEffectDocument(presetId);
+  if (starterEffect === undefined) return;
+
   for (const texture of customTextures.values()) {
     destroyTexture(texture);
   }
   customTextures.clear();
   resetSnapshot = {
-    document: newDoc,
-    selectedEmitterId: newDoc.emitters[0]?.layerId ?? '',
+    document: starterEffect,
+    selectedEmitterId: starterEffect.emitters[0]?.layerId ?? '',
     preview: { ...store.status.snapshot.preview },
   };
-  store.replace(`Loaded ${preset.name}`, resetSnapshot);
-  showToast(`${preset.name} loaded`);
+  store.replace(`Loaded ${starterEffect.name}`, resetSnapshot);
+  showToast(`${starterEffect.name} loaded`);
 });
 
 shell.root.addEventListener('input', (event) => {
@@ -862,6 +888,40 @@ shell.root.addEventListener('click', async (event) => {
       }
       break;
     }
+    case 'move-emitter-up': {
+      const doc = store.status.snapshot.document;
+      const currentId = store.status.snapshot.selectedEmitterId;
+      const index = doc.emitters.findIndex((e) => e.layerId === currentId);
+      if (index > 0) {
+        store.update('Moved emitter up', (draft) => {
+          const temp = draft.document.emitters[index];
+          const prev = draft.document.emitters[index - 1];
+          if (temp && prev) {
+            draft.document.emitters[index] = prev;
+            draft.document.emitters[index - 1] = temp;
+          }
+        });
+        showToast('Layer moved up');
+      }
+      break;
+    }
+    case 'move-emitter-down': {
+      const doc = store.status.snapshot.document;
+      const currentId = store.status.snapshot.selectedEmitterId;
+      const index = doc.emitters.findIndex((e) => e.layerId === currentId);
+      if (index >= 0 && index < doc.emitters.length - 1) {
+        store.update('Moved emitter down', (draft) => {
+          const temp = draft.document.emitters[index];
+          const next = draft.document.emitters[index + 1];
+          if (temp && next) {
+            draft.document.emitters[index] = next;
+            draft.document.emitters[index + 1] = temp;
+          }
+        });
+        showToast('Layer moved down');
+      }
+      break;
+    }
     case 'duplicate-emitter': {
       if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS) return;
       const current = selectedEmitter(store.status.snapshot);
@@ -965,6 +1025,26 @@ shell.root.addEventListener('click', async (event) => {
     case 'export':
       downloadPreset(selectedEmitter(store.status.snapshot).preset);
       showToast('Emitter preset exported');
+      break;
+    case 'export-bundle':
+      try {
+        const zipBlob = await createEffectBundleZip(
+          store.status.snapshot.document,
+          async (layer) => {
+            const sel = getLayerTextureSelection(layer);
+            return texturePngBlob(sel.buffer);
+          },
+        );
+        const url = URL.createObjectURL(zipBlob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `${store.status.snapshot.document.id}.bundle.zip`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        showToast('Effect bundle ZIP downloaded');
+      } catch (error) {
+        showError(error);
+      }
       break;
     case 'copy-code':
       try {
