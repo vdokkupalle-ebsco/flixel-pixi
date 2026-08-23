@@ -117,13 +117,13 @@ describe('multi-emitter import and export', () => {
 
     expect(code).toContain("from 'flixel-pixi'");
     expect(code).not.toContain('pixi.js');
-    expect(code).toContain('createVolcanoBlastEmitters');
-    expect(code).toContain('FlxParticleEmitter.fromAssets');
+    expect(code).toContain('createVolcanoBlastEffect');
+    expect(code).toContain('FlxParticleEffect.fromAssets');
     expect(code).toContain('flamesFirePreset');
     expect(code).toContain('electricSparksPreset');
     expect(code).not.toContain('hiddenSmokePreset');
-    expect(code).toContain('x: originX + offset.x');
-    expect(code).toContain('y: originY + offset.y');
+    expect(code).toContain('x: originX');
+    expect(code).toContain('y: originY');
     expect(code).toContain(
       '// Preload texture assets with FlxAssets before creating emitters:',
     );

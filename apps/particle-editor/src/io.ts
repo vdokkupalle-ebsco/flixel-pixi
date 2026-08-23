@@ -1,5 +1,6 @@
 import {
   parseParticlePreset,
+  serializeParticleEffect,
   serializeParticlePreset,
   type ParticlePresetV1,
 } from 'flixel-pixi';
@@ -85,9 +86,12 @@ export function createMultiEmitterTypeScriptSnippet(
     .map((layer, index) => {
       const varName = layerVarNames[index];
       return `  {
+    enabled: true,
+    layerId: ${JSON.stringify(layer.layerId)},
     name: ${JSON.stringify(layer.name)},
     offset: { x: ${String(layer.offset.x)}, y: ${String(layer.offset.y)} },
     preset: ${varName},
+    textureShape: ${JSON.stringify(layer.textureShape)},
   },`;
     })
     .join('\n');
@@ -95,10 +99,11 @@ export function createMultiEmitterTypeScriptSnippet(
   const preloadComments = textureIds.map((id) => `// - ${id}`).join('\n');
 
   const rawFnName = toSafeIdentifier(document.name, 'Effect');
-  const effectFnName = `create${rawFnName.charAt(0).toUpperCase()}${rawFnName.slice(1)}Emitters`;
+  const effectFnName = `create${rawFnName.charAt(0).toUpperCase()}${rawFnName.slice(1)}Effect`;
 
   return `import {
-  FlxParticleEmitter,
+  FlxParticleEffect,
+  type ParticleEffectDocumentV1,
   type ParticlePresetV1,
 } from 'flixel-pixi';
 
@@ -107,21 +112,24 @@ ${preloadComments}
 
 ${presetDeclarations}
 
-const layers = [
+const effectDocument = {
+  emitters: [
 ${layerObjects}
-];
+  ],
+  id: ${JSON.stringify(document.id)},
+  kind: 'flixel-pixi-particle-effect',
+  name: ${JSON.stringify(document.name)},
+  version: 1,
+} satisfies ParticleEffectDocumentV1;
 
 export function ${effectFnName}(
   originX = 160,
   originY = 120,
-): FlxParticleEmitter[] {
-  return layers.map(({ preset, offset }) => {
-    const emitter = FlxParticleEmitter.fromAssets(preset, {
-      x: originX + offset.x,
-      y: originY + offset.y,
-    });
-    emitter.start();
-    return emitter;
+): FlxParticleEffect {
+  return FlxParticleEffect.fromAssets(effectDocument, {
+    autoStart: true,
+    x: originX,
+    y: originY,
   });
 }`;
 }
@@ -129,24 +137,7 @@ export function ${effectFnName}(
 export function serializeEffectDocument(
   document: ParticleEffectDocumentV1,
 ): string {
-  return JSON.stringify(
-    {
-      kind: 'flixel-pixi-particle-effect',
-      version: 1,
-      id: document.id,
-      name: document.name,
-      emitters: document.emitters.map((emitter) => ({
-        layerId: emitter.layerId,
-        name: emitter.name,
-        enabled: emitter.enabled,
-        offset: emitter.offset,
-        textureShape: emitter.textureShape,
-        preset: JSON.parse(serializeParticlePreset(emitter.preset)) as unknown,
-      })),
-    },
-    undefined,
-    2,
-  );
+  return serializeParticleEffect(document, { space: 2 });
 }
 
 export function parseImportedDocument(text: string): ParticleEffectDocumentV1 {
