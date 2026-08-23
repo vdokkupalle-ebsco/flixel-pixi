@@ -1,8 +1,8 @@
+import type { ParticlePresetV1 } from 'flixel-pixi';
 import type {
   ParticleEffectDocumentV1,
   ParticleEmitterLayerV1,
 } from './editor-store';
-import type { ParticlePresetV1 } from 'flixel-pixi';
 
 export interface EditorShellElements {
   activeCount: HTMLElement;
@@ -19,29 +19,37 @@ export interface EditorShellElements {
   toast: HTMLElement;
 }
 
-function requireElement<T extends Element>(
-  root: ParentNode,
-  selector: string,
-): T {
-  const element = root.querySelector<T>(selector);
-  if (element === null) throw new Error(`Editor shell is missing ${selector}.`);
+function requireElement<T extends Element>(parent: ParentNode, selector: string): T {
+  const element = parent.querySelector<T>(selector);
+  if (element === null) {
+    throw new Error(`Required particle editor element "${selector}" was not found.`);
+  }
   return element;
 }
 
-function presetCard(preset: ParticlePresetV1, index: number): string {
-  const colors = preset.appearance.colors ?? [];
-  const start = colors[0]?.color ?? 0x1de8f1ff;
-  const end = colors.at(-1)?.color ?? 0xff397eff;
-  const cssColor = (color: number) =>
-    `#${(color >>> 8).toString(16).padStart(6, '0')}`;
-  return `<button class="preset-card" type="button" data-preset-id="${preset.id}" aria-label="Load ${preset.name}">
-    <span class="preset-art preset-art-${String(index + 1)}" style="--preset-start:${cssColor(start)};--preset-end:${cssColor(end)}" aria-hidden="true"></span>
-    <span><strong>${preset.name}</strong><small>${preset.emission.mode === 'continuous' ? `${String(preset.emission.rate)}/sec` : `${String(preset.emission.count)} particle burst`}</small></span>
-  </button>`;
+function numberField(label: string, name: string, step = 'any'): string {
+  return `
+    <label class="field">
+      <span>${label}</span>
+      <input name="${name}" type="number" step="${step}" required />
+    </label>
+  `;
 }
 
-function numberField(label: string, name: string, step = '1'): string {
-  return `<label class="field"><span>${label}</span><input name="${name}" type="number" step="${step}" required /></label>`;
+function presetCard(preset: ParticlePresetV1, index: number): string {
+  const summary =
+    preset.emission.mode === 'continuous'
+      ? `${String(preset.emission.rate)}/sec`
+      : `${String(preset.emission.count)} particle burst`;
+  return `
+    <button class="preset-card" type="button" data-action="load-preset" data-preset-id="${preset.id}">
+      <span class="preset-art preset-art-${String(index + 1)}" aria-hidden="true"></span>
+      <span>
+        <strong>${preset.name}</strong>
+        <small>${summary}</small>
+      </span>
+    </button>
+  `;
 }
 
 export function renderEmitterLayerRow(
@@ -51,20 +59,16 @@ export function renderEmitterLayerRow(
   const summary =
     layer.preset.emission.mode === 'continuous'
       ? `${String(layer.preset.emission.rate)}/sec`
-      : `${String(layer.preset.emission.count)} burst`;
+      : `${String(layer.preset.emission.count)} particle burst`;
+
   return `
-    <div class="emitter-row-container ${isSelected ? 'is-selected' : ''} ${!layer.enabled ? 'is-disabled' : ''}" data-layer-id="${layer.layerId}">
-      <button class="emitter-toggle-button" type="button" data-action="toggle-emitter" data-layer-id="${layer.layerId}" aria-label="${layer.enabled ? 'Disable' : 'Enable'} ${layer.name}" title="${layer.enabled ? 'Disable layer' : 'Enable layer'}">
-        <span class="toggle-dot ${layer.enabled ? 'enabled' : 'disabled'}" aria-hidden="true"></span>
-      </button>
-      <button class="emitter-row" type="button" data-action="select-emitter" data-layer-id="${layer.layerId}" aria-current="${isSelected ? 'true' : 'false'}">
-        <span class="emitter-icon" aria-hidden="true">${layer.textureShape === 'square' ? '■' : '✦'}</span>
-        <span class="emitter-details">
-          <strong class="emitter-name">${layer.name}</strong>
-          <small class="emitter-summary">${summary}</small>
-        </span>
-      </button>
-    </div>
+    <button class="emitter-row" type="button" data-action="select-emitter" data-layer-id="${layer.layerId}" aria-current="${isSelected ? 'true' : 'false'}">
+      <span class="emitter-icon" aria-hidden="true">${layer.textureShape === 'square' ? '■' : '✦'}</span>
+      <span>
+        <strong>${layer.name}</strong>
+        <small>${summary}</small>
+      </span>
+    </button>
   `;
 }
 
@@ -92,13 +96,11 @@ export function renderEditorShell(
           <span class="beta-badge">Beta</span>
         </div>
         <div class="top-actions" aria-label="Document actions">
-          <div class="save-state" role="status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span data-document-status>Ready</span></div>
+          <div class="save-state" role="status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span data-document-status>Saved preset</span></div>
           <button class="icon-button" data-action="undo" type="button" aria-label="Undo" title="Undo (Ctrl/⌘ Z)">↶</button>
           <button class="icon-button" data-action="redo" type="button" aria-label="Redo" title="Redo (Ctrl/⌘ Shift Z)">↷</button>
           <button class="button quiet" data-action="import" type="button">Import</button>
-          <button class="button quiet" data-action="export-effect" type="button" title="Export complete multi-emitter effect JSON">Export Effect</button>
-          <button class="button quiet" data-action="export-emitter" type="button" title="Export selected emitter preset JSON">Export Layer</button>
-          <button class="button quiet" data-action="export-bundle" type="button" title="Download effect ZIP bundle with textures, TypeScript code, and README">Export Bundle</button>
+          <button class="button quiet" data-action="export-effect" type="button">Export JSON</button>
           <button class="button brand" data-action="copy-code" type="button">Copy TypeScript</button>
           <button class="icon-button theme-button" data-action="theme" type="button" aria-label="Switch color theme" title="Switch color theme">◐</button>
           <input data-import-input type="file" accept="application/json,.json" hidden />
@@ -111,26 +113,16 @@ export function renderEditorShell(
           <div class="preset-list" data-preset-list>${presets.map(presetCard).join('')}</div>
           <div class="section-divider"></div>
           <div class="panel-heading compact">
-            <div><p class="eyebrow">Effect graph</p><h2>Emitters</h2></div>
+            <div><p class="eyebrow">Effect graph</p><h2>Emitter</h2></div>
             <button class="icon-button" data-action="add-emitter" type="button" aria-label="Add emitter" title="Add emitter">+</button>
           </div>
           <div class="emitter-list" data-emitter-list role="listbox" aria-label="Emitter layers"></div>
-          <div class="emitter-actions">
-            <button class="button secondary compact-button" data-action="move-emitter-up" type="button" title="Move selected layer up">↑</button>
-            <button class="button secondary compact-button" data-action="move-emitter-down" type="button" title="Move selected layer down">↓</button>
-            <button class="button secondary compact-button" data-action="duplicate-emitter" type="button" title="Duplicate selected emitter">Duplicate</button>
-            <button class="button secondary compact-button" data-action="delete-emitter" type="button" title="Delete selected emitter">Delete</button>
-          </div>
-          <p class="panel-note">Layer multiple emitters together to create rich multi-layered effects. Later layers render above earlier layers.</p>
+          <p class="panel-note">One focused emitter per preset keeps exported effects portable and easy to compose in a game.</p>
         </aside>
 
         <section class="preview-panel" aria-labelledby="preview-title">
           <div class="preview-heading">
-            <div>
-              <p class="eyebrow">Live canvas</p>
-              <h2 id="preview-title">Deterministic preview</h2>
-              <p class="capacity-warning" data-capacity-warning hidden role="alert">⚠️ Combined capacity exceeds 2,000 particles</p>
-            </div>
+            <div><p class="eyebrow">Live canvas</p><h2 id="preview-title">Deterministic preview</h2></div>
             <dl class="metrics" aria-label="Preview diagnostics">
               <div><dt>Particles</dt><dd data-active-count>0 / 0</dd></div>
               <div><dt>Pool</dt><dd data-pool-reuse>0 reused</dd></div>
@@ -159,9 +151,9 @@ export function renderEditorShell(
           <div class="panel-heading inspector-heading"><div><p class="eyebrow">Selection</p><h2 id="inspector-title">Emitter properties</h2></div><button class="button text-button" data-action="reset" type="button">Reset preset</button></div>
           <p class="form-error" data-error role="alert" hidden></p>
           <form data-inspector novalidate>
-            <details open><summary>Identity & offset</summary><div class="property-grid">
+            <details open><summary>Identity</summary><div class="property-grid">
               <label class="field span-2"><span>Name</span><input name="name" required /></label>
-              <label class="field span-2"><span>Stable ID</span><input name="id" required pattern="[a-z0-9][a-z0-9-]*" /></label>
+              <label class="field span-2"><span>Stable ID</span><input name="id" required pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label>
               ${numberField('Offset X', 'offsetX', '1')}
               ${numberField('Offset Y', 'offsetY', '1')}
               ${numberField('Seed', 'seed')}

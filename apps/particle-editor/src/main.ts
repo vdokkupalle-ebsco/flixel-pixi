@@ -149,18 +149,31 @@ function clearError(): void {
   shell.error.textContent = '';
 }
 
-function control(name: string): HTMLInputElement | HTMLSelectElement {
+function findControl(
+  name: string,
+): HTMLInputElement | HTMLSelectElement | null {
   const item = shell.form.elements.namedItem(name);
-  if (!(
+  if (
     item instanceof HTMLInputElement || item instanceof HTMLSelectElement
-  )) {
+  ) {
+    return item;
+  }
+  return null;
+}
+
+function control(name: string): HTMLInputElement | HTMLSelectElement {
+  const item = findControl(name);
+  if (item === null) {
     throw new Error(`Missing editor control ${name}.`);
   }
   return item;
 }
 
 function setValue(name: string, value: string | number): void {
-  control(name).value = String(value);
+  const item = findControl(name);
+  if (item !== null) {
+    item.value = String(value);
+  }
 }
 
 function firstCurveValue(
@@ -296,36 +309,6 @@ function syncForm(status: EditorStoreStatus): void {
   );
   shell.addEmitterButton.disabled =
     status.snapshot.document.emitters.length >= MAX_EMITTERS;
-
-  const moveUpBtn = shell.root.querySelector<HTMLButtonElement>(
-    '[data-action="move-emitter-up"]',
-  );
-  const moveDownBtn = shell.root.querySelector<HTMLButtonElement>(
-    '[data-action="move-emitter-down"]',
-  );
-  const duplicateBtn = shell.root.querySelector<HTMLButtonElement>(
-    '[data-action="duplicate-emitter"]',
-  );
-  const deleteBtn = shell.root.querySelector<HTMLButtonElement>(
-    '[data-action="delete-emitter"]',
-  );
-
-  const selectedIndex = status.snapshot.document.emitters.findIndex(
-    (e) => e.layerId === status.snapshot.selectedEmitterId,
-  );
-  if (moveUpBtn !== null) moveUpBtn.disabled = selectedIndex <= 0;
-  if (moveDownBtn !== null) {
-    moveDownBtn.disabled =
-      selectedIndex < 0 ||
-      selectedIndex >= status.snapshot.document.emitters.length - 1;
-  }
-  if (duplicateBtn !== null) {
-    duplicateBtn.disabled =
-      status.snapshot.document.emitters.length >= MAX_EMITTERS;
-  }
-  if (deleteBtn !== null) {
-    deleteBtn.disabled = status.snapshot.document.emitters.length <= 1;
-  }
 
   // Combined capacity warning
   const totalCapacity = status.snapshot.document.emitters
@@ -889,9 +872,9 @@ shell.root.addEventListener('click', async (event) => {
       break;
     }
     case 'move-emitter-up': {
+      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
       const doc = store.status.snapshot.document;
-      const currentId = store.status.snapshot.selectedEmitterId;
-      const index = doc.emitters.findIndex((e) => e.layerId === currentId);
+      const index = doc.emitters.findIndex((e) => e.layerId === layerId);
       if (index > 0) {
         store.update('Moved emitter up', (draft) => {
           const temp = draft.document.emitters[index];
@@ -906,9 +889,9 @@ shell.root.addEventListener('click', async (event) => {
       break;
     }
     case 'move-emitter-down': {
+      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
       const doc = store.status.snapshot.document;
-      const currentId = store.status.snapshot.selectedEmitterId;
-      const index = doc.emitters.findIndex((e) => e.layerId === currentId);
+      const index = doc.emitters.findIndex((e) => e.layerId === layerId);
       if (index >= 0 && index < doc.emitters.length - 1) {
         store.update('Moved emitter down', (draft) => {
           const temp = draft.document.emitters[index];
@@ -924,7 +907,8 @@ shell.root.addEventListener('click', async (event) => {
     }
     case 'duplicate-emitter': {
       if (store.status.snapshot.document.emitters.length >= MAX_EMITTERS) return;
-      const current = selectedEmitter(store.status.snapshot);
+      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
+      const current = store.status.snapshot.document.emitters.find((e) => e.layerId === layerId) ?? selectedEmitter(store.status.snapshot);
       const newLayerId = createLayerId();
       const duplicatePreset = clonePreset(current.preset);
       duplicatePreset.id = `${current.preset.id}-copy-${String(Date.now()).slice(-4)}`;
@@ -947,13 +931,16 @@ shell.root.addEventListener('click', async (event) => {
     }
     case 'delete-emitter': {
       if (store.status.snapshot.document.emitters.length <= 1) return;
-      const current = selectedEmitter(store.status.snapshot);
+      const layerId = actionElement.dataset.layerId ?? store.status.snapshot.selectedEmitterId;
+      const current = store.status.snapshot.document.emitters.find((e) => e.layerId === layerId) ?? selectedEmitter(store.status.snapshot);
       const doc = store.status.snapshot.document;
       const index = doc.emitters.findIndex((e) => e.layerId === current.layerId);
       const nextSelected = doc.emitters[index === 0 ? 1 : index - 1]?.layerId ?? '';
       store.update(`Deleted ${current.name}`, (draft) => {
         draft.document.emitters = draft.document.emitters.filter((e) => e.layerId !== current.layerId);
-        draft.selectedEmitterId = nextSelected;
+        if (draft.selectedEmitterId === current.layerId) {
+          draft.selectedEmitterId = nextSelected;
+        }
       });
       const custom = customTextures.get(current.layerId);
       if (custom !== undefined) {

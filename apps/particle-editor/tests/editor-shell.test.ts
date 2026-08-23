@@ -39,7 +39,7 @@ describe('particle editor shell', () => {
     const html = renderEmitterLayerList(doc, selectedId);
     expect(html).toContain('data-layer-id');
     expect(html).toContain('aria-current="true"');
-    expect(html).toContain('data-action="toggle-emitter"');
+    expect(html).toContain('data-action="select-emitter"');
   });
 
   it('replaces stale host content when mounted again', () => {

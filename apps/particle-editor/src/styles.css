@@ -497,106 +497,45 @@ h3 {
       transparent 59%
     ),
     radial-gradient(circle, #7ff6ff 0 5%, transparent 7%), #070b1c;
+}
 .emitter-list {
   display: grid;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.emitter-row-container {
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  align-items: center;
-  gap: 6px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  transition: border-color 140ms ease, background 140ms ease, opacity 140ms ease;
-}
-.emitter-row-container.is-selected {
-  border-color: color-mix(in srgb, var(--brand-cyan) 60%, var(--line));
-  background: linear-gradient(110deg, var(--cyan-soft), var(--pink-soft));
-}
-.emitter-row-container.is-disabled {
-  opacity: 0.55;
-}
-.emitter-toggle-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 0 0 0 6px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-.toggle-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid var(--text-subtle);
-  transition: background 140ms ease, border-color 140ms ease;
-}
-.toggle-dot.enabled {
-  background: var(--brand-cyan);
-  border-color: var(--brand-cyan);
-  box-shadow: 0 0 8px var(--cyan-soft);
-}
-.toggle-dot.disabled {
-  background: transparent;
+  gap: 8px;
 }
 .emitter-row {
   width: 100%;
-  padding: 8px 10px 8px 0;
+  padding: 11px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   text-align: left;
-  border: none;
-  border-radius: 0 10px 10px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   color: var(--text);
-  background: transparent;
+  background: var(--surface);
   cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
 }
-.emitter-details {
-  min-width: 0;
-  flex: 1;
+.emitter-row:hover {
+  border-color: color-mix(in srgb, var(--brand-cyan) 45%, var(--line));
+  background: color-mix(in srgb, var(--surface) 91%, var(--cyan-soft));
+}
+.emitter-row[aria-current='true'] {
+  border-color: color-mix(in srgb, var(--brand-cyan) 32%, var(--line));
+  background: linear-gradient(110deg, var(--cyan-soft), var(--pink-soft));
 }
 .emitter-row strong {
   display: block;
   font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .emitter-row small {
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
   color: var(--text-muted);
   font-size: 9px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .emitter-icon {
   color: var(--brand-cyan);
-  font-size: 12px;
-}
-.emitter-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-}
-.emitter-actions .button {
-  flex: 1;
-  min-height: 28px;
-  padding: 0 8px;
-  font-size: 10px;
-}
-.capacity-warning {
-  margin: 4px 0 0;
-  color: #ff9800;
-  font-size: 10px;
-  font-weight: 700;
 }
 
 .preview-panel {
