@@ -9,7 +9,7 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
-## 0.1.0-rc.8 — 2026-08-23
+## 0.1.0-rc.9 — 2026-08-23
 
 This release candidate establishes the Particle Editor-to-game pipeline: author
 single or layered effects visually, export a versioned document and textures,
@@ -36,7 +36,7 @@ runtime object.
 
 - Existing `0.1.0-rc.7` games require no source changes. The new particle-effect
   APIs and hosted editor are additive.
-- Particle Editor exports use effect-document version `1`; `0.1.0-rc.8`
+- Particle Editor exports use effect-document version `1`; `0.1.0-rc.9`
   validates and loads that contract through `parseParticleEffect` and
   `FlxParticleEffect`.
 
@@ -45,6 +45,14 @@ runtime object.
 - Raised the raw library bundle ceiling from 650,000 to 655,000 bytes for the
   new particle-effect document and runtime APIs. The 150,000-byte gzip ceiling
   remains unchanged.
+- Build the private runtime workspaces before the isolated mobile browser
+  release gate starts its Vite server on a clean GitHub runner.
+
+## 0.1.0-rc.8 — 2026-08-23
+
+This version was tagged but not published. Its isolated mobile browser gate
+started the Vite server before building the linked private runtime workspaces,
+so application initialization failed and trusted publishing never ran.
 
 ## 0.1.0-rc.7 — 2026-08-20
 
