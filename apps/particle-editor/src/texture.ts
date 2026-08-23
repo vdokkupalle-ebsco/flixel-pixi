@@ -9,9 +9,22 @@ export interface TextureSelection {
   frame: number;
   kind: 'generated' | 'uploaded';
   label: string;
+  originX: number;
+  originY: number;
   rows: number;
   shape: ParticleDrawingShape;
   source?: ImageBitmap;
+  sourceHeight: number;
+  sourceWidth: number;
+  textureHeight: number;
+  textureWidth: number;
+}
+
+export interface TextureRegion {
+  height: number;
+  originX: number;
+  originY: number;
+  width: number;
 }
 
 type TextureStyle =
@@ -176,8 +189,14 @@ export function createPresetTexture(
     frame: 0,
     kind: 'generated',
     label: `${textureLabels[style]} · ${shape}`,
+    originX: 0,
+    originY: 0,
     rows: 1,
     shape,
+    sourceHeight: 32,
+    sourceWidth: 32,
+    textureHeight: 32,
+    textureWidth: 32,
   };
 }
 
@@ -185,34 +204,27 @@ export function createDefaultTexture(): TextureSelection {
   return createPresetTexture('editor-spark');
 }
 
-function frameBuffer(
+function cropBuffer(
   image: CanvasImageSource,
-  width: number,
-  height: number,
-  columns: number,
-  rows: number,
-  frame: number,
+  region: TextureRegion,
 ): PixelBuffer {
-  const frameWidth = Math.max(1, Math.floor(width / columns));
-  const frameHeight = Math.max(1, Math.floor(height / rows));
-  const normalizedFrame = Math.min(frame, columns * rows - 1);
   const canvas = document.createElement('canvas');
-  canvas.width = frameWidth;
-  canvas.height = frameHeight;
+  canvas.width = region.width;
+  canvas.height = region.height;
   const context = canvas.getContext('2d', { willReadFrequently: true });
   if (context === null) throw new Error('Canvas 2D is unavailable.');
   context.drawImage(
     image,
-    (normalizedFrame % columns) * frameWidth,
-    Math.floor(normalizedFrame / columns) * frameHeight,
-    frameWidth,
-    frameHeight,
+    region.originX,
+    region.originY,
+    region.width,
+    region.height,
     0,
     0,
-    frameWidth,
-    frameHeight,
+    region.width,
+    region.height,
   );
-  const pixels = context.getImageData(0, 0, frameWidth, frameHeight);
+  const pixels = context.getImageData(0, 0, region.width, region.height);
   return {
     data: new Uint32Array(
       pixels.data.buffer.slice(
@@ -220,24 +232,69 @@ function frameBuffer(
         pixels.data.byteOffset + pixels.data.byteLength,
       ),
     ),
-    height: frameHeight,
-    width: frameWidth,
+    height: region.height,
+    width: region.width,
   };
+}
+
+export function normalizeTextureRegion(
+  sourceWidth: number,
+  sourceHeight: number,
+  width: number,
+  height: number,
+  originX: number,
+  originY: number,
+): TextureRegion {
+  const region = {
+    height: Math.floor(height),
+    originX: Math.floor(originX),
+    originY: Math.floor(originY),
+    width: Math.floor(width),
+  };
+  if (region.width < 1 || region.height < 1) {
+    throw new RangeError('Texture width and height must be at least 1 pixel.');
+  }
+  if (region.originX < 0 || region.originY < 0) {
+    throw new RangeError('Texture origin cannot be negative.');
+  }
+  if (
+    region.originX + region.width > sourceWidth ||
+    region.originY + region.height > sourceHeight
+  ) {
+    throw new RangeError(
+      `Texture region must fit inside the ${String(sourceWidth)} × ${String(sourceHeight)} source image.`,
+    );
+  }
+  return region;
 }
 
 export async function loadTextureFile(file: File): Promise<TextureSelection> {
   if (!file.type.startsWith('image/'))
     throw new TypeError('Choose a PNG, JPEG, WebP, GIF, or SVG image.');
   const source = await createImageBitmap(file);
+  const region = normalizeTextureRegion(
+    source.width,
+    source.height,
+    source.width,
+    source.height,
+    0,
+    0,
+  );
   return {
-    buffer: frameBuffer(source, source.width, source.height, 1, 1, 0),
+    buffer: cropBuffer(source, region),
     columns: 1,
     frame: 0,
     kind: 'uploaded',
     label: file.name,
+    originX: region.originX,
+    originY: region.originY,
     rows: 1,
     shape: 'circle',
     source,
+    sourceHeight: source.height,
+    sourceWidth: source.width,
+    textureHeight: region.height,
+    textureWidth: region.width,
   };
 }
 
@@ -255,19 +312,63 @@ export function selectTextureFrame(
   );
   if (selection.source === undefined)
     return { ...selection, columns: 1, frame: 0, rows: 1 };
+  const textureWidth = Math.max(
+    1,
+    Math.floor(selection.sourceWidth / safeColumns),
+  );
+  const textureHeight = Math.max(
+    1,
+    Math.floor(selection.sourceHeight / safeRows),
+  );
+  const originX = (safeFrame % safeColumns) * textureWidth;
+  const originY = Math.floor(safeFrame / safeColumns) * textureHeight;
+  const region = normalizeTextureRegion(
+    selection.sourceWidth,
+    selection.sourceHeight,
+    textureWidth,
+    textureHeight,
+    originX,
+    originY,
+  );
   return {
     ...selection,
-    buffer: frameBuffer(
-      selection.source,
-      selection.source.width,
-      selection.source.height,
-      safeColumns,
-      safeRows,
-      safeFrame,
-    ),
+    buffer: cropBuffer(selection.source, region),
     columns: safeColumns,
     frame: safeFrame,
+    originX: region.originX,
+    originY: region.originY,
     rows: safeRows,
+    textureHeight: region.height,
+    textureWidth: region.width,
+  };
+}
+
+export function selectTextureRegion(
+  selection: TextureSelection,
+  width: number,
+  height: number,
+  originX: number,
+  originY: number,
+): TextureSelection {
+  if (selection.source === undefined) return selection;
+  const region = normalizeTextureRegion(
+    selection.sourceWidth,
+    selection.sourceHeight,
+    width,
+    height,
+    originX,
+    originY,
+  );
+  return {
+    ...selection,
+    buffer: cropBuffer(selection.source, region),
+    columns: 1,
+    frame: 0,
+    originX: region.originX,
+    originY: region.originY,
+    rows: 1,
+    textureHeight: region.height,
+    textureWidth: region.width,
   };
 }
 

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { cloneTextureSelection, createPresetTexture } from '../src/texture';
+import {
+  cloneTextureSelection,
+  createPresetTexture,
+  normalizeTextureRegion,
+} from '../src/texture';
 
 describe('particle editor generated textures', () => {
   it.each([
@@ -62,5 +66,26 @@ describe('particle editor generated textures', () => {
     expect(duplicate.buffer).not.toBe(original.buffer);
     expect(duplicate.buffer.data).not.toBe(original.buffer.data);
     expect(duplicate.buffer.data).toEqual(original.buffer.data);
+  });
+
+  it('normalizes a manual texture crop to whole pixels', () => {
+    expect(normalizeTextureRegion(256, 128, 31.9, 24.8, 16.5, 8.2)).toEqual({
+      height: 24,
+      originX: 16,
+      originY: 8,
+      width: 31,
+    });
+  });
+
+  it('rejects manual crops outside the uploaded image', () => {
+    expect(() => normalizeTextureRegion(64, 64, 32, 32, 40, 0)).toThrow(
+      'Texture region must fit inside the 64 × 64 source image.',
+    );
+    expect(() => normalizeTextureRegion(64, 64, 0, 32, 0, 0)).toThrow(
+      'Texture width and height must be at least 1 pixel.',
+    );
+    expect(() => normalizeTextureRegion(64, 64, 32, 32, -1, 0)).toThrow(
+      'Texture origin cannot be negative.',
+    );
   });
 });

@@ -43,6 +43,7 @@ import {
   destroyTexture,
   loadTextureFile,
   selectTextureFrame,
+  selectTextureRegion,
   texturePngBlob,
   type TextureSelection,
 } from './texture';
@@ -273,9 +274,21 @@ function syncForm(status: EditorStoreStatus): void {
   setValue('textureColumns', activeTexture.columns);
   setValue('textureRows', activeTexture.rows);
   setValue('textureFrame', activeTexture.frame);
-  control('textureColumns').disabled = activeTexture.kind === 'generated';
-  control('textureRows').disabled = activeTexture.kind === 'generated';
-  control('textureFrame').disabled = activeTexture.kind === 'generated';
+  setValue('textureWidth', activeTexture.textureWidth);
+  setValue('textureHeight', activeTexture.textureHeight);
+  setValue('textureOriginX', activeTexture.originX);
+  setValue('textureOriginY', activeTexture.originY);
+  for (const name of [
+    'textureColumns',
+    'textureRows',
+    'textureFrame',
+    'textureWidth',
+    'textureHeight',
+    'textureOriginX',
+    'textureOriginY',
+  ]) {
+    control(name).disabled = activeTexture.kind === 'generated';
+  }
   const textureLabel = shell.root.querySelector<HTMLElement>(
     '[data-texture-label]',
   );
@@ -681,23 +694,43 @@ shell.form.addEventListener('change', (event) => {
     return;
   }
   if (
-    ['textureColumns', 'textureRows', 'textureFrame'].includes(element.name)
+    [
+      'textureColumns',
+      'textureRows',
+      'textureFrame',
+      'textureWidth',
+      'textureHeight',
+      'textureOriginX',
+      'textureOriginY',
+    ].includes(element.name)
   ) {
     try {
       const currentLayer = selectedEmitter(store.status.snapshot);
       const existing = getLayerTextureSelection(currentLayer);
-      const next = selectTextureFrame(
-        existing,
-        numberValue(control('textureColumns')),
-        numberValue(control('textureRows')),
-        numberValue(control('textureFrame')),
-      );
+      const next =
+        element.name.startsWith('textureOrigin') ||
+        element.name === 'textureWidth' ||
+        element.name === 'textureHeight'
+          ? selectTextureRegion(
+              existing,
+              numberValue(control('textureWidth')),
+              numberValue(control('textureHeight')),
+              numberValue(control('textureOriginX')),
+              numberValue(control('textureOriginY')),
+            )
+          : selectTextureFrame(
+              existing,
+              numberValue(control('textureColumns')),
+              numberValue(control('textureRows')),
+              numberValue(control('textureFrame')),
+            );
       customTextures.set(currentLayer.layerId, next);
       preview.load(store.status.snapshot.document, getLayerTextureBuffer);
       if (paused) preview.pause();
       syncForm(store.status);
     } catch (error) {
       showError(error);
+      syncForm(store.status);
     }
     return;
   }

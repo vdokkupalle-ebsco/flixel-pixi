@@ -19,6 +19,10 @@ describe('particle editor shell', () => {
     expect(host.querySelector('[data-timeline]')).toBeNull();
     expect(host.querySelector('[name="blendMode"]')).not.toBeNull();
     expect(host.querySelector('[name="textureShape"]')).not.toBeNull();
+    expect(host.querySelector('[name="textureWidth"]')).not.toBeNull();
+    expect(host.querySelector('[name="textureHeight"]')).not.toBeNull();
+    expect(host.querySelector('[name="textureOriginX"]')).not.toBeNull();
+    expect(host.querySelector('[name="textureOriginY"]')).not.toBeNull();
     expect(host.querySelector('[data-pointer-mode]')).not.toBeNull();
     expect(
       host.querySelector('[data-action="restart"]')?.textContent,

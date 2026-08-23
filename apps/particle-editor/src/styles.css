@@ -771,8 +771,17 @@ details[open] summary {
   font-weight: 650;
 }
 .field.span-2,
-.field-help.span-2 {
+.field-help.span-2,
+.texture-subheading.span-2 {
   grid-column: 1 / -1;
+}
+.texture-subheading {
+  margin: 2px 0 -2px;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .field input:not([type='color']):not([type='file']),
 .field select {
