@@ -1,0 +1,186 @@
+{
+  "emitters": [
+    {
+      "enabled": true,
+      "layerId": "outer-flame",
+      "name": "Outer flame",
+      "offset": { "x": 0, "y": 0 },
+      "preset": {
+        "appearance": {
+          "alpha": {
+            "stops": [
+              { "time": 0, "value": 0.85 },
+              { "time": 0.72, "value": 0.65 },
+              { "time": 1, "value": 0 }
+            ]
+          },
+          "blendMode": "add",
+          "colors": [
+            { "color": 4294967295, "time": 0 },
+            { "color": 4293011711, "time": 0.28 },
+            { "color": 4286195968, "time": 1 }
+          ],
+          "rotation": {
+            "initial": { "max": 18, "min": -18 },
+            "velocity": { "max": 24, "min": -24 }
+          },
+          "scale": {
+            "stops": [
+              { "time": 0, "value": 0.72 },
+              { "time": 0.28, "value": 1.12 },
+              { "time": 1, "value": 0.12 }
+            ]
+          },
+          "texture": { "assetId": "campfire-flame" }
+        },
+        "capacity": 180,
+        "emission": { "mode": "continuous", "rate": 66 },
+        "id": "campfire-outer-flame",
+        "kind": "particle-preset",
+        "lifespan": { "max": 1.05, "min": 0.55 },
+        "motion": {
+          "acceleration": {
+            "x": { "max": 9, "min": -9 },
+            "y": { "max": -18, "min": -34 }
+          },
+          "drag": {
+            "x": { "max": 9, "min": 3 },
+            "y": { "max": 5, "min": 1 }
+          },
+          "velocity": {
+            "x": { "max": 38, "min": -38 },
+            "y": { "max": -80, "min": -156 }
+          }
+        },
+        "name": "Campfire outer flame",
+        "schemaVersion": 1,
+        "seed": 24031,
+        "space": "local",
+        "spawn": { "height": 8, "shape": "rectangle", "width": 42 }
+      },
+      "textureShape": "circle"
+    },
+    {
+      "enabled": true,
+      "layerId": "embers",
+      "name": "Rising embers",
+      "offset": { "x": 0, "y": -12 },
+      "preset": {
+        "appearance": {
+          "alpha": {
+            "stops": [
+              { "time": 0, "value": 1 },
+              { "time": 0.72, "value": 0.88 },
+              { "time": 1, "value": 0 }
+            ]
+          },
+          "blendMode": "add",
+          "colors": [
+            { "color": 4294967295, "time": 0 },
+            { "color": 4293279999, "time": 0.35 },
+            { "color": 4281479168, "time": 1 }
+          ],
+          "rotation": {
+            "initial": { "max": 360, "min": 0 },
+            "velocity": { "max": 220, "min": -220 }
+          },
+          "scale": {
+            "stops": [
+              { "time": 0, "value": 0.75 },
+              { "time": 1, "value": 0.16 }
+            ]
+          },
+          "texture": { "assetId": "campfire-ember" }
+        },
+        "capacity": 80,
+        "emission": { "mode": "continuous", "rate": 13 },
+        "id": "campfire-rising-embers",
+        "kind": "particle-preset",
+        "lifespan": { "max": 2.2, "min": 1.05 },
+        "motion": {
+          "acceleration": {
+            "x": { "max": 22, "min": -22 },
+            "y": { "max": -10, "min": -28 }
+          },
+          "drag": {
+            "x": { "max": 2, "min": 0 },
+            "y": { "max": 2, "min": 0 }
+          },
+          "velocity": {
+            "x": { "max": 48, "min": -48 },
+            "y": { "max": -72, "min": -142 }
+          }
+        },
+        "name": "Campfire rising embers",
+        "schemaVersion": 1,
+        "seed": 24032,
+        "space": "local",
+        "spawn": { "innerRadius": 4, "radius": 22, "shape": "circle" }
+      },
+      "textureShape": "square"
+    },
+    {
+      "enabled": true,
+      "layerId": "smoke",
+      "name": "Soft smoke",
+      "offset": { "x": 0, "y": -24 },
+      "preset": {
+        "appearance": {
+          "alpha": {
+            "stops": [
+              { "time": 0, "value": 0.06 },
+              { "time": 0.2, "value": 0.3 },
+              { "time": 1, "value": 0 }
+            ]
+          },
+          "blendMode": "normal",
+          "colors": [
+            { "color": 2207096063, "time": 0 },
+            { "color": 3049115392, "time": 1 }
+          ],
+          "rotation": {
+            "initial": { "max": 360, "min": 0 },
+            "velocity": { "max": 18, "min": -18 }
+          },
+          "scale": {
+            "stops": [
+              { "time": 0, "value": 0.4 },
+              { "time": 0.45, "value": 0.9 },
+              { "time": 1, "value": 1.7 }
+            ]
+          },
+          "texture": { "assetId": "campfire-smoke" }
+        },
+        "capacity": 72,
+        "emission": { "mode": "continuous", "rate": 11 },
+        "id": "campfire-soft-smoke",
+        "kind": "particle-preset",
+        "lifespan": { "max": 3.2, "min": 1.8 },
+        "motion": {
+          "acceleration": {
+            "x": { "max": 8, "min": -8 },
+            "y": { "max": -8, "min": -18 }
+          },
+          "drag": {
+            "x": { "max": 6, "min": 2 },
+            "y": { "max": 4, "min": 1 }
+          },
+          "velocity": {
+            "x": { "max": 24, "min": -24 },
+            "y": { "max": -30, "min": -68 }
+          }
+        },
+        "name": "Campfire soft smoke",
+        "schemaVersion": 1,
+        "seed": 24033,
+        "space": "local",
+        "spawn": { "height": 6, "shape": "rectangle", "width": 22 }
+      },
+      "textureShape": "circle"
+    }
+  ],
+  "id": "campfire-composite",
+  "kind": "flixel-pixi-particle-effect",
+  "name": "Campfire composite",
+  "version": 1
+}

@@ -94,6 +94,19 @@ const examples: ExampleItem[] = [
     icon: '🎞️',
   },
   {
+    id: 'particle-effect',
+    title: 'Composed Particle Effect',
+    description:
+      'Load an exported flame, ember, and smoke composition through FlxAssets and control it as one runtime effect.',
+    category: 'rendering',
+    tags: ['FlxParticleEffect', 'Particle Editor', 'FlxAssets', 'Effects'],
+    demoUrl: '/games/particle-effect/index.html',
+    sourceUrl:
+      'https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/examples/games/particle-effect',
+    docUrl: '/examples/particle-effect/',
+    icon: '🔥',
+  },
+  {
     id: 'tweens',
     title: 'Tweens & Motion Easing',
     description:

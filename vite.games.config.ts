@@ -19,6 +19,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/action/index.html',
         ),
+        'particle-effect': resolve(
+          import.meta.dirname,
+          'examples/games/particle-effect/index.html',
+        ),
         tweens: resolve(
           import.meta.dirname,
           'examples/games/tweens/index.html',
