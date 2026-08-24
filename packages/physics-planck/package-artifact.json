@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist/index.d.ts",
+    "dist/index.d.ts.map",
+    "dist/index.js",
+    "dist/index.js.map",
+    "dist/planck-physics-backend.d.ts",
+    "dist/planck-physics-backend.d.ts.map",
+    "dist/planck-physics-backend.js",
+    "dist/planck-physics-backend.js.map",
+    "package.json"
+  ],
+  "packedBytesMax": 12000,
+  "unpackedBytesMax": 50000
+}
