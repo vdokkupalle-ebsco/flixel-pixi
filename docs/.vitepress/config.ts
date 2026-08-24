@@ -360,6 +360,10 @@ export default defineConfig({
               link: '/examples/physics-playground/',
             },
             {
+              text: 'Portable Physics Joints',
+              link: '/examples/physics-joints/',
+            },
+            {
               text: 'Flx-Invaders (AS3 Port)',
               link: '/examples/flx-invaders/',
             },

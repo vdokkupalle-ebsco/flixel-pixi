@@ -99,6 +99,11 @@ requiring games to install a separate contracts package.
     Fixed-step input replay is guaranteed only when the selected solver and
     adapter declare and test deterministic behavior for the target platforms.
     Non-deterministic adapters remain usable but cannot claim exact replay.
+17. Portable joints connect two existing portable bodies. Version 1 supports
+    distance, revolute, prismatic, weld, and wheel descriptors. Anchors are
+    world-space logical pixels, axes are unitless directions, and angular
+    values use degrees. Removing a body destroys its connected joints before
+    the backend body; world reset and destruction invalidate every joint.
 
 ## Consequences
 
@@ -137,3 +142,9 @@ All acceptance conditions are covered as of 2026-08-24:
    unsupported rather than implied, and repeated boot/destroy checks pass. The
    benchmark and package evidence is recorded in
    `docs/reports/physics-adapter-evaluation.md`.
+5. Portable host tests cover capability rejection, stable IDs, mutation-safe
+   teardown, body-before-joint cleanup, reset, and destruction. Schema fixtures
+   round-trip all five joint descriptors and reject invalid body references,
+   axes, limits, motors, and springs. Planck package tests verify native unit
+   conversion and motor motion. `examples/games/physics-joints` provides the
+   Chromium, Firefox, and WebKit runtime proof.

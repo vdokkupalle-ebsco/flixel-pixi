@@ -464,6 +464,8 @@ Data types, helper interfaces, and utility declarations.
 | [**`FlxPhysicsAabb`**](./flxphysicsaabb.md) | `Interface` | Axis-aligned query bounds in Flixel logical pixels. |
 | [**`FlxPhysicsBackendBody`**](./flxphysicsbackendbody.md) | `TypeAlias` | Opaque body token owned by a physics backend. |
 | [**`FlxPhysicsBackendContact`**](./flxphysicsbackendcontact.md) | `Interface` | Contact emitted by a backend before Flixel object binding. |
+| [**`FlxPhysicsBackendJoint`**](./flxphysicsbackendjoint.md) | `TypeAlias` | Opaque joint token owned by a physics backend. |
+| [**`FlxPhysicsBackendJointDefinition`**](./flxphysicsbackendjointdefinition.md) | `TypeAlias` | Joint descriptor after portable bodies have been mapped to backend handles. |
 | [**`FlxPhysicsBackendQueryHit`**](./flxphysicsbackendqueryhit.md) | `Interface` | Backend query result before Flixel object binding. |
 | [**`FlxPhysicsBackendWorld`**](./flxphysicsbackendworld.md) | `Interface` | Low-level renderer-neutral world implemented by an optional solver adapter. Game code normally uses `FlxPhysicsWorld` instead of backend body handles. |
 | [**`FlxPhysicsBody`**](./flxphysicsbody.md) | `Interface` | Portable body exposed to game code without a solver-native handle. |
@@ -479,21 +481,30 @@ Data types, helper interfaces, and utility declarations.
 | [**`FlxPhysicsContactPhase`**](./flxphysicscontactphase.md) | `TypeAlias` | Portable contact lifecycle phases. |
 | [**`FlxPhysicsContactPoint`**](./flxphysicscontactpoint.md) | `Interface` | One normalized contact point in Flixel logical units. |
 | [**`FlxPhysicsDebugPrimitive`**](./flxphysicsdebugprimitive.md) | `TypeAlias` | Renderer-neutral debug geometry produced by a physics backend. |
+| [**`FlxPhysicsDistanceJointDefinition`**](./flxphysicsdistancejointdefinition.md) | `Interface` | Keeps two world-space anchor points at a configured distance. |
 | [**`FlxPhysicsFilter`**](./flxphysicsfilter.md) | `Interface` | Collision filtering shared by bodies, shapes, contacts, and queries. |
+| [**`FlxPhysicsJoint`**](./flxphysicsjoint.md) | `Interface` | Portable joint exposed without leaking a solver-native handle. |
+| [**`FlxPhysicsJointDefinition`**](./flxphysicsjointdefinition.md) | `TypeAlias` | Portable joint creation descriptor. |
+| [**`FlxPhysicsJointDefinitionBase`**](./flxphysicsjointdefinitionbase.md) | `Interface` | Shared options for every portable joint. |
+| [**`FlxPhysicsJointType`**](./flxphysicsjointtype.md) | `TypeAlias` | Joint constraints available through the portable physics contract. |
 | [**`FlxPhysicsMaterial`**](./flxphysicsmaterial.md) | `Interface` | Portable material properties applied to a physics fixture. |
 | [**`FlxPhysicsObjectDefinition`**](./flxphysicsobjectdefinition.md) | `TypeAlias` | Body descriptor accepted when binding a `FlxObject` to a world. |
 | [**`FlxPhysicsPolygonShape`**](./flxphysicspolygonshape.md) | `Interface` | Convex local-space polygon. Adapter support is capability-gated. |
 | [**`FlxPhysicsPrimitiveShape`**](./flxphysicsprimitiveshape.md) | `TypeAlias` | Shape allowed inside a compound fixture. |
+| [**`FlxPhysicsPrismaticJointDefinition`**](./flxphysicsprismaticjointdefinition.md) | `Interface` | Slider constraint along a world-space axis. |
 | [**`FlxPhysicsQueryCapability`**](./flxphysicsquerycapability.md) | `TypeAlias` | Queries a backend can execute through the portable contract. |
 | [**`FlxPhysicsQueryFilter`**](./flxphysicsqueryfilter.md) | `Interface` | Optional filter applied to portable physics queries. |
 | [**`FlxPhysicsQueryHit`**](./flxphysicsqueryhit.md) | `Interface` | Portable query hit mapped back to a bound Flixel object. |
 | [**`FlxPhysicsRayQuery`**](./flxphysicsrayquery.md) | `Interface` | Portable ray query. Adapter support is capability-gated. |
+| [**`FlxPhysicsRevoluteJointDefinition`**](./flxphysicsrevolutejointdefinition.md) | `Interface` | Hinge constraint around one world-space anchor. |
 | [**`FlxPhysicsShape`**](./flxphysicsshape.md) | `TypeAlias` | Portable physics shape descriptor. |
 | [**`FlxPhysicsShapeBase`**](./flxphysicsshapebase.md) | `Interface` | Properties shared by every portable shape descriptor. |
 | [**`FlxPhysicsShapeCapability`**](./flxphysicsshapecapability.md) | `TypeAlias` | Shapes a backend can create through the portable contract. |
 | [**`FlxPhysicsTransform`**](./flxphysicstransform.md) | `Interface` | Position and clockwise angle in logical pixels and degrees. |
 | [**`FlxPhysicsUnsupportedCapabilityError`**](./flxphysicsunsupportedcapabilityerror.md) | `Class` | Error thrown when portable code requests an unsupported adapter feature. |
 | [**`FlxPhysicsVector`**](./flxphysicsvector.md) | `Interface` | Two-dimensional vector expressed in Flixel logical units. |
+| [**`FlxPhysicsWeldJointDefinition`**](./flxphysicsweldjointdefinition.md) | `Interface` | Attaches two bodies at one world-space anchor. |
+| [**`FlxPhysicsWheelJointDefinition`**](./flxphysicswheeljointdefinition.md) | `Interface` | Vehicle suspension constraint along a world-space axis. |
 | [**`FlxPhysicsWorld`**](./flxphysicsworld.md) | `Class` | State-scoped owner for an optional physics backend.<br><br>Coordinates use Flixel logical pixels, degrees, and seconds. A bound body is positioned at its object's midpoint. Static and kinematic objects push their transforms before each step; dynamic bodies pull solver state afterward. |
 | [**`FlxPhysicsWorldOptions`**](./flxphysicsworldoptions.md) | `Interface` | Construction options owned by the portable world host. |
 | [**`FlxPixiTextNode`**](./flxpixitextnode.md) | `TypeAlias` | Pixi leaf used by a `FlxTextRenderHandle`. |
@@ -553,14 +564,21 @@ Data types, helper interfaces, and utility declarations.
 | [**`PhysicsCapsuleShapeDefinition`**](./physicscapsuleshapedefinition.md) | `Interface` | Serializable capsule fixture. |
 | [**`PhysicsCircleShapeDefinition`**](./physicscircleshapedefinition.md) | `Interface` | Serializable circle fixture. |
 | [**`PhysicsCompoundShapeDefinition`**](./physicscompoundshapedefinition.md) | `Interface` | Serializable compound fixture. |
+| [**`PhysicsDistanceJointDefinition`**](./physicsdistancejointdefinition.md) | `Interface` | Serializable distance joint. Anchors and length use logical pixels. |
 | [**`PhysicsFilterDefinition`**](./physicsfilterdefinition.md) | `Interface` | Serializable fixture collision filter. |
+| [**`PhysicsJointBaseDefinition`**](./physicsjointbasedefinition.md) | `Interface` | Fields shared by every serialized physics joint. |
+| [**`PhysicsJointDefinition`**](./physicsjointdefinition.md) | `TypeAlias` | Serializable portable joint. |
 | [**`PhysicsMaterialDefinition`**](./physicsmaterialdefinition.md) | `Interface` | Serializable fixture material. |
 | [**`PhysicsPolygonShapeDefinition`**](./physicspolygonshapedefinition.md) | `Interface` | Serializable convex polygon fixture. |
 | [**`PhysicsPrimitiveShapeDefinition`**](./physicsprimitiveshapedefinition.md) | `TypeAlias` | Serializable non-compound fixture. |
+| [**`PhysicsPrismaticJointDefinition`**](./physicsprismaticjointdefinition.md) | `Interface` | Serializable prismatic joint. Linear values use logical pixels. |
+| [**`PhysicsRevoluteJointDefinition`**](./physicsrevolutejointdefinition.md) | `Interface` | Serializable revolute joint. Angular values use degrees. |
 | [**`PhysicsShapeBaseDefinition`**](./physicsshapebasedefinition.md) | `Interface` | Fields shared by every serialized physics shape. |
 | [**`PhysicsShapeDefinition`**](./physicsshapedefinition.md) | `TypeAlias` | Serializable portable fixture. |
 | [**`PhysicsValidationError`**](./physicsvalidationerror.md) | `Class` | Structured error thrown while parsing a physics document. |
 | [**`PhysicsVectorDefinition`**](./physicsvectordefinition.md) | `Interface` | Serializable logical-space vector used by physics documents. |
+| [**`PhysicsWeldJointDefinition`**](./physicsweldjointdefinition.md) | `Interface` | Serializable weld joint. Angular values use degrees. |
+| [**`PhysicsWheelJointDefinition`**](./physicswheeljointdefinition.md) | `Interface` | Serializable wheel joint. Linear values use logical pixels. |
 | [**`PhysicsWorldDocumentV1`**](./physicsworlddocumentv1.md) | `Interface` | Version 1 world document containing backend-independent body data. |
 | [**`PhysicsWorldValidationResult`**](./physicsworldvalidationresult.md) | `TypeAlias` | Result of validating one physics world document. |
 | [**`ReplayFileFormat`**](./replayfileformat.md) | `Interface` | Structure of a serialized FlxReplay JSON file. |
