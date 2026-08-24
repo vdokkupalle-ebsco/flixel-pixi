@@ -65,6 +65,8 @@ export class FlxObject extends FlxBasic {
   pathAngle = 0;
 
   #destroyed = false;
+  #physicsOwner: object | null = null;
+  readonly #destroyCallbacks = new Set<() => void>();
   #flickerTimer = 0;
   #pathNodeIndex = 0;
   #pathMode = FlxObject.PATH_FORWARD;
@@ -83,10 +85,52 @@ export class FlxObject extends FlxBasic {
   override destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
+    const callbacks = [...this.#destroyCallbacks];
+    this.#destroyCallbacks.clear();
+    for (const callback of callbacks) callback();
+    this.#physicsOwner = null;
     this.path?.destroy();
     this.path = null;
     this.cameras = null;
     super.destroy();
+  }
+
+  /** Whether this object has released its state-owned resources. @internal */
+  get destroyed(): boolean {
+    return this.#destroyed;
+  }
+
+  /** Claim this object for one external physics body. @internal */
+  attachPhysicsOwner(owner: object): void {
+    if (this.#destroyed) throw new Error('Cannot bind a destroyed FlxObject.');
+    if (this.#physicsOwner !== null && this.#physicsOwner !== owner) {
+      throw new Error('FlxObject is already bound to a physics body.');
+    }
+    this.#physicsOwner = owner;
+  }
+
+  /** Release the external physics claim. @internal */
+  detachPhysicsOwner(owner: object): void {
+    if (this.#physicsOwner === owner) this.#physicsOwner = null;
+  }
+
+  /** Register a state-owned cleanup callback. @internal */
+  addDestroyCallback(callback: () => void): void {
+    if (this.#destroyed) {
+      callback();
+      return;
+    }
+    this.#destroyCallbacks.add(callback);
+  }
+
+  /** Remove a state-owned cleanup callback. @internal */
+  removeDestroyCallback(callback: () => void): void {
+    this.#destroyCallbacks.delete(callback);
+  }
+
+  /** Whether an external physics body owns this object's motion. @internal */
+  isPhysicsManaged(): boolean {
+    return this.#physicsOwner !== null;
   }
 
   override preUpdate(): void {
@@ -264,12 +308,14 @@ export class FlxObject extends FlxBasic {
   }
 
   static separate(first: FlxObject, second: FlxObject): boolean {
+    FlxObject.#assertArcadeAuthority(first, second);
     const separatedX = FlxObject.separateX(first, second);
     const separatedY = FlxObject.separateY(first, second);
     return separatedX || separatedY;
   }
 
   static separateX(first: FlxObject, second: FlxObject): boolean {
+    FlxObject.#assertArcadeAuthority(first, second);
     if (first.immovable && second.immovable) return false;
 
     const firstDelta = first.x - first.last.x;
@@ -326,6 +372,7 @@ export class FlxObject extends FlxBasic {
   }
 
   static separateY(first: FlxObject, second: FlxObject): boolean {
+    FlxObject.#assertArcadeAuthority(first, second);
     if (first.immovable && second.immovable) return false;
 
     const firstDelta = first.y - first.last.y;
@@ -578,6 +625,14 @@ export class FlxObject extends FlxBasic {
       second[axis] += overlap;
       second.velocity[axis] =
         firstVelocity - secondVelocity * second.elasticity;
+    }
+  }
+
+  static #assertArcadeAuthority(first: FlxObject, second: FlxObject): void {
+    if (first.#physicsOwner !== null || second.#physicsOwner !== null) {
+      throw new Error(
+        'A physics-managed FlxObject cannot use arcade collision separation.',
+      );
     }
   }
 }

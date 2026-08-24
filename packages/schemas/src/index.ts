@@ -56,6 +56,36 @@ export {
   validateParticlePreset,
 } from './particle-validation.js';
 export type {
+  PhysicsBodyDocumentV1,
+  PhysicsBodyValidationResult,
+  PhysicsBoxShapeDefinition,
+  PhysicsCapsuleShapeDefinition,
+  PhysicsCircleShapeDefinition,
+  PhysicsCompoundShapeDefinition,
+  PhysicsFilterDefinition,
+  PhysicsMaterialDefinition,
+  PhysicsPolygonShapeDefinition,
+  PhysicsPrimitiveShapeDefinition,
+  PhysicsShapeBaseDefinition,
+  PhysicsShapeDefinition,
+  PhysicsVectorDefinition,
+  PhysicsWorldDocumentV1,
+  PhysicsWorldValidationResult,
+  SerializePhysicsOptions,
+} from './physics-types.js';
+export {
+  isPhysicsValidationError,
+  parsePhysicsBody,
+  parsePhysicsWorld,
+  PhysicsValidationError,
+  validatePhysicsBody,
+  validatePhysicsWorld,
+} from './physics-validation.js';
+export {
+  serializePhysicsBody,
+  serializePhysicsWorld,
+} from './physics-serialization.js';
+export type {
   AssetDefinition,
   AssetKind,
   EntityDefinition,

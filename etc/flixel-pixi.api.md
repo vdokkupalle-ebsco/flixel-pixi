@@ -3519,6 +3519,30 @@ export interface FlxPhysicsBackendWorld {
 }
 
 // @public
+export interface FlxPhysicsBody {
+    // (undocumented)
+    applyForce(force: FlxPhysicsVector, point?: FlxPhysicsVector): void;
+    // (undocumented)
+    applyImpulse(impulse: FlxPhysicsVector, point?: FlxPhysicsVector): void;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    readonly destroyed: boolean;
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly object: FlxObject;
+    // (undocumented)
+    setTransform(transform: FlxPhysicsTransform): void;
+    // (undocumented)
+    setType(type: FlxPhysicsBodyType): void;
+    // (undocumented)
+    setVelocity(velocity: FlxPhysicsVector, angularVelocity?: number): void;
+    // (undocumented)
+    readonly type: FlxPhysicsBodyType;
+}
+
+// @public
 export interface FlxPhysicsBodyDefinition {
     // (undocumented)
     readonly allowSleep?: boolean;
@@ -3620,6 +3644,33 @@ export interface FlxPhysicsCompoundShape extends FlxPhysicsShapeBase {
 }
 
 // @public
+export interface FlxPhysicsContact {
+    // (undocumented)
+    readonly bodyA: FlxPhysicsBody;
+    // (undocumented)
+    readonly bodyB: FlxPhysicsBody;
+    readonly depth: number;
+    // (undocumented)
+    readonly fixtureA?: string;
+    // (undocumented)
+    readonly fixtureB?: string;
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly normal: FlxPhysicsVector;
+    // (undocumented)
+    readonly objectA: FlxObject;
+    // (undocumented)
+    readonly objectB: FlxObject;
+    // (undocumented)
+    readonly phase: FlxPhysicsContactPhase;
+    // (undocumented)
+    readonly points: readonly FlxPhysicsContactPoint[];
+    // (undocumented)
+    readonly sensor: boolean;
+}
+
+// @public
 export type FlxPhysicsContactPhase = 'begin' | 'stay' | 'end';
 
 // @public
@@ -3672,6 +3723,9 @@ export interface FlxPhysicsMaterial {
 }
 
 // @public
+export type FlxPhysicsObjectDefinition = Omit<FlxPhysicsBodyDefinition, 'position' | 'angle' | 'velocity' | 'angularVelocity'>;
+
+// @public
 export interface FlxPhysicsPolygonShape extends FlxPhysicsShapeBase {
     // (undocumented)
     readonly kind: 'polygon';
@@ -3689,6 +3743,22 @@ export type FlxPhysicsQueryCapability = 'point' | 'aabb' | 'ray' | 'shape-cast';
 export interface FlxPhysicsQueryFilter extends FlxPhysicsFilter {
     // (undocumented)
     readonly includeSensors?: boolean;
+}
+
+// @public
+export interface FlxPhysicsQueryHit {
+    // (undocumented)
+    readonly body: FlxPhysicsBody;
+    // (undocumented)
+    readonly fixture?: string;
+    // (undocumented)
+    readonly fraction?: number;
+    // (undocumented)
+    readonly normal?: FlxPhysicsVector;
+    // (undocumented)
+    readonly object: FlxObject;
+    // (undocumented)
+    readonly point?: FlxPhysicsVector;
 }
 
 // @public
@@ -3750,13 +3820,41 @@ export interface FlxPhysicsVector {
 // @public
 export class FlxPhysicsWorld {
     constructor(backend: FlxPhysicsBackendWorld, options?: FlxPhysicsWorldOptions);
+    // (undocumented)
+    addBody(object: FlxObject, definition: FlxPhysicsObjectDefinition): FlxPhysicsBody;
+    // (undocumented)
+    get bodyCount(): number;
+    // (undocumented)
     get capabilities(): FlxPhysicsCapabilities;
+    // (undocumented)
+    readonly contactEnded: FlxSignal<FlxPhysicsContact>;
+    // (undocumented)
+    readonly contactStarted: FlxSignal<FlxPhysicsContact>;
+    // (undocumented)
+    readonly contactStayed: FlxSignal<FlxPhysicsContact>;
+    // (undocumented)
     destroy(): void;
+    // (undocumented)
     get destroyed(): boolean;
     // (undocumented)
+    getBody(idOrObject: string | FlxObject): FlxPhysicsBody | undefined;
+    // (undocumented)
+    getDebugGeometry(): readonly FlxPhysicsDebugPrimitive[];
+    // (undocumented)
     paused: boolean;
+    // (undocumented)
+    queryAabb(bounds: FlxPhysicsAabb, filter?: FlxPhysicsQueryFilter): readonly FlxPhysicsQueryHit[];
+    // (undocumented)
+    queryPoint(point: FlxPhysicsVector, filter?: FlxPhysicsQueryFilter): readonly FlxPhysicsQueryHit[];
+    // (undocumented)
+    queryRay(query: FlxPhysicsRayQuery): readonly FlxPhysicsQueryHit[];
+    // (undocumented)
+    removeBody(bodyOrObject: FlxPhysicsBody | FlxObject): boolean;
+    // (undocumented)
     reset(): void;
+    // (undocumented)
     setGravity(gravity: FlxPhysicsVector): void;
+    // (undocumented)
     step(elapsed: number): void;
 }
 
@@ -5594,6 +5692,9 @@ export function isParticleEffectValidationError(error: unknown): error is Partic
 // @public
 export function isParticlePresetValidationError(error: unknown): error is ParticlePresetValidationError;
 
+// @public
+export function isPhysicsValidationError(value: unknown): value is PhysicsValidationError;
+
 // @public (undocumented)
 export interface JsonObject {
     // (undocumented)
@@ -5950,6 +6051,12 @@ export function parseParticleEffect(value: unknown): ParticleEffectDocumentV1;
 // @public
 export function parseParticlePreset(value: unknown): ParticlePresetV1;
 
+// @public
+export function parsePhysicsBody(value: unknown): PhysicsBodyDocumentV1;
+
+// @public
+export function parsePhysicsWorld(value: unknown): PhysicsWorldDocumentV1;
+
 // @public (undocumented)
 export interface ParticleAppearanceDefinition {
     // (undocumented)
@@ -6224,6 +6331,161 @@ export interface ParticleVectorRange {
 }
 
 // @public
+export interface PhysicsBodyDocumentV1 {
+    // (undocumented)
+    allowSleep?: boolean;
+    // (undocumented)
+    continuousCollision?: boolean;
+    // (undocumented)
+    entityId: string;
+    // (undocumented)
+    extensions?: JsonObject;
+    // (undocumented)
+    filter?: PhysicsFilterDefinition;
+    // (undocumented)
+    fixedRotation?: boolean;
+    // (undocumented)
+    gravityScale?: number;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    kind: 'flixel-pixi-physics-body';
+    // (undocumented)
+    material?: PhysicsMaterialDefinition;
+    // (undocumented)
+    schemaVersion: 1;
+    // (undocumented)
+    shapes: PhysicsShapeDefinition[];
+    // (undocumented)
+    type: 'dynamic' | 'kinematic' | 'static';
+}
+
+// @public
+export type PhysicsBodyValidationResult = ValidationResult<PhysicsBodyDocumentV1>;
+
+// @public
+export interface PhysicsBoxShapeDefinition extends PhysicsShapeBaseDefinition {
+    // (undocumented)
+    height: number;
+    // (undocumented)
+    kind: 'box';
+    // (undocumented)
+    width: number;
+}
+
+// @public
+export interface PhysicsCapsuleShapeDefinition extends PhysicsShapeBaseDefinition {
+    // (undocumented)
+    axis?: 'x' | 'y';
+    // (undocumented)
+    kind: 'capsule';
+    // (undocumented)
+    length: number;
+    // (undocumented)
+    radius: number;
+}
+
+// @public
+export interface PhysicsCircleShapeDefinition extends PhysicsShapeBaseDefinition {
+    // (undocumented)
+    kind: 'circle';
+    // (undocumented)
+    radius: number;
+}
+
+// @public
+export interface PhysicsCompoundShapeDefinition extends PhysicsShapeBaseDefinition {
+    // (undocumented)
+    kind: 'compound';
+    // (undocumented)
+    shapes: PhysicsPrimitiveShapeDefinition[];
+}
+
+// @public
+export interface PhysicsFilterDefinition {
+    // (undocumented)
+    category?: number;
+    // (undocumented)
+    group?: number;
+    // (undocumented)
+    mask?: number;
+}
+
+// @public
+export interface PhysicsMaterialDefinition {
+    // (undocumented)
+    density?: number;
+    // (undocumented)
+    friction?: number;
+    // (undocumented)
+    restitution?: number;
+}
+
+// @public
+export interface PhysicsPolygonShapeDefinition extends PhysicsShapeBaseDefinition {
+    // (undocumented)
+    kind: 'polygon';
+    // (undocumented)
+    vertices: PhysicsVectorDefinition[];
+}
+
+// @public
+export type PhysicsPrimitiveShapeDefinition = PhysicsBoxShapeDefinition | PhysicsCapsuleShapeDefinition | PhysicsCircleShapeDefinition | PhysicsPolygonShapeDefinition;
+
+// @public
+export interface PhysicsShapeBaseDefinition {
+    // (undocumented)
+    angle?: number;
+    // (undocumented)
+    filter?: PhysicsFilterDefinition;
+    // (undocumented)
+    id?: string;
+    // (undocumented)
+    material?: PhysicsMaterialDefinition;
+    // (undocumented)
+    offset?: PhysicsVectorDefinition;
+    // (undocumented)
+    sensor?: boolean;
+}
+
+// @public
+export type PhysicsShapeDefinition = PhysicsCompoundShapeDefinition | PhysicsPrimitiveShapeDefinition;
+
+// @public
+export class PhysicsValidationError extends Error {
+    constructor(issues: ValidationIssue[]);
+    // (undocumented)
+    readonly issues: ValidationIssue[];
+}
+
+// @public
+export interface PhysicsVectorDefinition {
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+}
+
+// @public
+export interface PhysicsWorldDocumentV1 {
+    // (undocumented)
+    bodies: PhysicsBodyDocumentV1[];
+    // (undocumented)
+    extensions?: JsonObject;
+    // (undocumented)
+    gravity: PhysicsVectorDefinition;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    kind: 'flixel-pixi-physics-world';
+    // (undocumented)
+    schemaVersion: 1;
+}
+
+// @public
+export type PhysicsWorldValidationResult = ValidationResult<PhysicsWorldDocumentV1>;
+
+// @public
 export interface PixelBuffer {
     // (undocumented)
     readonly data: Uint32Array;
@@ -6291,6 +6553,18 @@ export interface SerializeParticlePresetOptions {
 }
 
 // @public
+export function serializePhysicsBody(value: PhysicsBodyDocumentV1, options?: SerializePhysicsOptions): string;
+
+// @public
+export interface SerializePhysicsOptions {
+    // (undocumented)
+    space?: number;
+}
+
+// @public
+export function serializePhysicsWorld(value: PhysicsWorldDocumentV1, options?: SerializePhysicsOptions): string;
+
+// @public
 export function syncWorldToRenderer(game: FlxGame, renderer: FlxCameraRenderer): void;
 
 // @public
@@ -6330,6 +6604,12 @@ export function validateParticleEffect(value: unknown): ParticleEffectValidation
 
 // @public
 export function validateParticlePreset(value: unknown): ParticlePresetValidationResult;
+
+// @public
+export function validatePhysicsBody(value: unknown): PhysicsBodyValidationResult;
+
+// @public
+export function validatePhysicsWorld(value: unknown): PhysicsWorldValidationResult;
 
 // @public (undocumented)
 export interface ValidationIssue {

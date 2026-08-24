@@ -1,0 +1,35 @@
+{
+  "kind": "flixel-pixi-physics-world",
+  "schemaVersion": 1,
+  "id": "tutorial-world",
+  "gravity": { "x": 0, "y": 900 },
+  "bodies": [
+    {
+      "kind": "flixel-pixi-physics-body",
+      "schemaVersion": 1,
+      "id": "player-body",
+      "entityId": "player",
+      "type": "dynamic",
+      "fixedRotation": true,
+      "shapes": [
+        {
+          "kind": "box",
+          "id": "player-fixture",
+          "width": 24,
+          "height": 32,
+          "material": { "density": 1, "friction": 0.4, "restitution": 0 }
+        }
+      ],
+      "extensions": { "editor": { "color": "#ff397e" } }
+    },
+    {
+      "kind": "flixel-pixi-physics-body",
+      "schemaVersion": 1,
+      "id": "ground-body",
+      "entityId": "ground",
+      "type": "static",
+      "shapes": [{ "kind": "box", "width": 640, "height": 32 }]
+    }
+  ],
+  "extensions": { "adapterHint": "portable" }
+}
