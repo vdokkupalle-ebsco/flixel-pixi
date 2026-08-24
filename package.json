@@ -61,6 +61,7 @@
     "check:games-imports": "node scripts/check-games-public-imports.mjs",
     "check:package:contract": "node scripts/check-package-contract.mjs",
     "check:physics-adapter": "npm run build:types:root && npm run build:adapters && node scripts/check-physics-adapter-package.mjs",
+    "check:physics-playground": "npm run build:lib && npm run api:check && node scripts/check-physics-playground-package.mjs",
     "check:workspaces": "node scripts/check-workspaces.mjs",
     "clean": "node scripts/clean.mjs",
     "typecheck": "npm run build:workspaces && tsc -p tsconfig.json --noEmit && npm run typecheck:workspaces",
@@ -90,7 +91,7 @@
     "docs:preview": "vitepress preview docs",
     "docs:snapshot": "node scripts/generate-doc-version.mjs",
     "report:bundle": "node scripts/report-bundle-size.mjs",
-    "verify:quality": "npm run format:check && npm run lint && npm run typecheck && npm run check:workspaces && npm run test:coverage && npm run build && npm run api:check && node scripts/check-package-artifact.mjs && npm run check:physics-adapter && npm run bench && npm run check:games-imports",
+    "verify:quality": "npm run format:check && npm run lint && npm run typecheck && npm run check:workspaces && npm run test:coverage && npm run build && npm run api:check && node scripts/check-package-artifact.mjs && npm run check:physics-adapter && node scripts/check-physics-playground-package.mjs && npm run bench && npm run check:games-imports",
     "verify": "npm run verify:quality && npm run test:e2e && npm run test:matrix"
   },
   "peerDependencies": {

@@ -127,9 +127,11 @@ All acceptance conditions are covered as of 2026-08-24:
    filters, queries, capabilities, native access, and repeated reset/destroy.
 3. `examples/games/physics-playground` demonstrates dynamic, kinematic, static,
    sensor, contact, and point-query behavior using only `flixel-pixi` and the
-   optional adapter's public exports. Chromium, Firefox, and WebKit exercise its
-   runtime and teardown; Android and iOS browser profiles exercise the embedded
-   documentation layout.
+   optional adapter's public exports. The packed-playground check installs the
+   root engine, adapter, and solver tarballs into a clean consumer, then
+   typechecks, bundles, boots, simulates, queries, and destroys that exact
+   example. Chromium, Firefox, and WebKit exercise its runtime and teardown;
+   Android and iOS browser profiles exercise the embedded documentation layout.
 4. The root package check confirms that Planck is absent from the core artifact,
    the adapter has its own package-size budget, replay support is reported as
    unsupported rather than implied, and repeated boot/destroy checks pass. The
