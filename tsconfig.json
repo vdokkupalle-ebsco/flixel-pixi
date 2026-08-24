@@ -11,6 +11,7 @@
     "noImplicitOverride": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
+      "@flixel-pixi/physics-planck": ["./packages/physics-planck/src/index.ts"],
       "flixel-pixi": ["./src/index.ts"]
     },
     "resolveJsonModule": true,
