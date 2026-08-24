@@ -5,6 +5,8 @@ import type {
   FlxPhysicsAabb,
   FlxPhysicsBackendBody,
   FlxPhysicsBackendContact,
+  FlxPhysicsBackendJoint,
+  FlxPhysicsBackendJointDefinition,
   FlxPhysicsBackendQueryHit,
   FlxPhysicsBackendWorld,
   FlxPhysicsBodyDefinition,
@@ -21,11 +23,21 @@ interface FakeBody extends FlxPhysicsBackendBody {
   state: FlxPhysicsBodyState;
 }
 
+interface FakeJoint extends FlxPhysicsBackendJoint {
+  definition: FlxPhysicsBackendJointDefinition;
+}
+
 class FakeBackend implements FlxPhysicsBackendWorld {
   readonly capabilities = Object.freeze({
     shapes: Object.freeze(['box', 'circle', 'polygon'] as const),
     queries: Object.freeze(['point', 'aabb', 'ray'] as const),
-    joints: Object.freeze([]),
+    joints: Object.freeze([
+      'distance',
+      'revolute',
+      'prismatic',
+      'weld',
+      'wheel',
+    ] as const),
     sleeping: true,
     continuousCollision: true,
     deterministicReplay: true,
@@ -33,6 +45,8 @@ class FakeBackend implements FlxPhysicsBackendWorld {
   });
   readonly bodies: FakeBody[] = [];
   readonly destroyedBodies: FakeBody[] = [];
+  readonly joints: FakeJoint[] = [];
+  readonly destroyedJoints: FakeJoint[] = [];
   readonly trace: string[] = [];
   contacts: FlxPhysicsBackendContact[] = [];
   queryHits: FlxPhysicsBackendQueryHit[] = [];
@@ -60,6 +74,18 @@ class FakeBackend implements FlxPhysicsBackendWorld {
 
   destroyBody(body: FlxPhysicsBackendBody): void {
     this.destroyedBodies.push(body as FakeBody);
+  }
+
+  createJoint(
+    definition: FlxPhysicsBackendJointDefinition,
+  ): FlxPhysicsBackendJoint {
+    const joint = { definition };
+    this.joints.push(joint);
+    return joint;
+  }
+
+  destroyJoint(joint: FlxPhysicsBackendJoint): void {
+    this.destroyedJoints.push(joint as FakeJoint);
   }
 
   setBodyType(body: FlxPhysicsBackendBody, type: FlxPhysicsBodyType): void {
@@ -415,6 +441,235 @@ describe('FlxPhysicsWorld object bindings', () => {
     world.destroy();
     other.destroy();
     expect(backend.destroyed).toBe(true);
+  });
+
+  it('creates all portable joint types with backend body handles', () => {
+    const backend = new FakeBackend();
+    const world = new FlxPhysicsWorld(backend);
+    const bodyA = world.addBody(new FlxObject(), {
+      id: 'a',
+      type: 'static',
+      shapes: box,
+    });
+    const bodyB = world.addBody(new FlxObject(), {
+      id: 'b',
+      type: 'dynamic',
+      shapes: box,
+    });
+
+    const joints = [
+      world.addJoint({
+        id: 'distance',
+        type: 'distance',
+        bodyA,
+        bodyB,
+        anchorA: { x: 0, y: 0 },
+        anchorB: { x: 20, y: 0 },
+        length: 20,
+        frequencyHz: 3,
+        dampingRatio: 0.5,
+      }),
+      world.addJoint({
+        id: 'revolute',
+        type: 'revolute',
+        bodyA,
+        bodyB,
+        anchor: { x: 10, y: 0 },
+        enableLimit: true,
+        lowerAngle: -45,
+        upperAngle: 45,
+      }),
+      world.addJoint({
+        id: 'prismatic',
+        type: 'prismatic',
+        bodyA,
+        bodyB,
+        anchor: { x: 10, y: 0 },
+        axis: { x: 1, y: 0 },
+        enableMotor: true,
+        motorSpeed: 50,
+        maxMotorForce: 100,
+      }),
+      world.addJoint({
+        id: 'weld',
+        type: 'weld',
+        bodyA,
+        bodyB,
+        anchor: { x: 10, y: 0 },
+        referenceAngle: 5,
+      }),
+      world.addJoint({
+        id: 'wheel',
+        type: 'wheel',
+        bodyA,
+        bodyB,
+        anchor: { x: 10, y: 0 },
+        axis: { x: 0, y: 1 },
+        enableMotor: true,
+        motorSpeed: 180,
+        maxMotorTorque: 20,
+      }),
+    ];
+
+    expect(world.jointCount).toBe(5);
+    expect(joints.map((joint) => joint.type)).toEqual([
+      'distance',
+      'revolute',
+      'prismatic',
+      'weld',
+      'wheel',
+    ]);
+    expect(world.getJoint('wheel')).toBe(joints[4]);
+    expect(backend.joints[0]?.definition).toMatchObject({
+      id: 'distance',
+      bodyA: backend.bodies[0],
+      bodyB: backend.bodies[1],
+      length: 20,
+    });
+  });
+
+  it('destroys attached joints before bodies and keeps cleanup idempotent', () => {
+    const backend = new FakeBackend();
+    const world = new FlxPhysicsWorld(backend);
+    const first = world.addBody(new FlxObject(), {
+      type: 'static',
+      shapes: box,
+    });
+    const secondObject = new FlxObject();
+    const second = world.addBody(secondObject, {
+      type: 'dynamic',
+      shapes: box,
+    });
+    const joint = world.addJoint({
+      type: 'revolute',
+      bodyA: first,
+      bodyB: second,
+      anchor: { x: 0, y: 0 },
+    });
+
+    secondObject.destroy();
+    joint.destroy();
+
+    expect(joint.destroyed).toBe(true);
+    expect(world.jointCount).toBe(0);
+    expect(backend.destroyedJoints).toHaveLength(1);
+    expect(backend.destroyedBodies).toHaveLength(1);
+
+    const replacement = world.addBody(new FlxObject(), {
+      type: 'dynamic',
+      shapes: box,
+    });
+    const resetJoint = world.addJoint({
+      type: 'weld',
+      bodyA: first,
+      bodyB: replacement,
+      anchor: { x: 0, y: 0 },
+    });
+    world.reset();
+    expect(resetJoint.destroyed).toBe(true);
+    expect(world.jointCount).toBe(0);
+    expect(world.bodyCount).toBe(0);
+    expect(backend.destroyedJoints).toHaveLength(1);
+    expect(backend.resets).toBe(1);
+  });
+
+  it('rejects foreign, duplicate, invalid, and unsupported joints', () => {
+    const backend = new FakeBackend();
+    const world = new FlxPhysicsWorld(backend);
+    const bodyA = world.addBody(new FlxObject(), {
+      type: 'static',
+      shapes: box,
+    });
+    const bodyB = world.addBody(new FlxObject(), {
+      type: 'dynamic',
+      shapes: box,
+    });
+    const foreign = new FlxPhysicsWorld(new FakeBackend()).addBody(
+      new FlxObject(),
+      { type: 'dynamic', shapes: box },
+    );
+
+    expect(() =>
+      world.addJoint({
+        type: 'weld',
+        bodyA,
+        bodyB: foreign,
+        anchor: { x: 0, y: 0 },
+      }),
+    ).toThrow('destroyed');
+    expect(() =>
+      world.addJoint({
+        type: 'wheel',
+        bodyA,
+        bodyB,
+        anchor: { x: 0, y: 0 },
+        axis: { x: 0, y: 0 },
+      }),
+    ).toThrow('must not be zero');
+    expect(() =>
+      world.addJoint({
+        type: 'revolute',
+        bodyA,
+        bodyB,
+        anchor: { x: 0, y: 0 },
+        lowerAngle: 10,
+        upperAngle: -10,
+      }),
+    ).toThrow('lower limit');
+    expect(() =>
+      world.addJoint({
+        type: 'distance',
+        bodyA,
+        bodyB,
+        anchorA: { x: 0, y: 0 },
+        anchorB: { x: 1, y: 0 },
+        dampingRatio: 2,
+      }),
+    ).toThrow('damping ratio');
+
+    const first = world.addJoint({
+      id: 'hinge',
+      type: 'revolute',
+      bodyA,
+      bodyB,
+      anchor: { x: 0, y: 0 },
+    });
+    expect(() =>
+      world.addJoint({
+        id: 'hinge',
+        type: 'weld',
+        bodyA,
+        bodyB,
+        anchor: { x: 0, y: 0 },
+      }),
+    ).toThrow('already in use');
+    expect(world.removeJoint(first)).toBe(true);
+    expect(world.removeJoint(first)).toBe(false);
+
+    Object.defineProperty(backend, 'capabilities', {
+      value: Object.freeze({
+        ...backend.capabilities,
+        joints: Object.freeze([]),
+      }),
+    });
+    const limited = new FlxPhysicsWorld(backend);
+    const limitedA = limited.addBody(new FlxObject(), {
+      type: 'static',
+      shapes: box,
+    });
+    const limitedB = limited.addBody(new FlxObject(), {
+      type: 'dynamic',
+      shapes: box,
+    });
+    expect(() =>
+      limited.addJoint({
+        type: 'distance',
+        bodyA: limitedA,
+        bodyB: limitedB,
+        anchorA: { x: 0, y: 0 },
+        anchorB: { x: 1, y: 0 },
+      }),
+    ).toThrow('joint:distance');
   });
 
   it('rejects invalid and unsupported portable definitions', () => {

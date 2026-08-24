@@ -3465,6 +3465,27 @@ export interface FlxPhysicsBackendContact {
 }
 
 // @public
+export type FlxPhysicsBackendJoint = object;
+
+// @public
+export type FlxPhysicsBackendJointDefinition = (Omit<FlxPhysicsDistanceJointDefinition, 'bodyA' | 'bodyB'> & {
+    readonly bodyA: FlxPhysicsBackendBody;
+    readonly bodyB: FlxPhysicsBackendBody;
+}) | (Omit<FlxPhysicsRevoluteJointDefinition, 'bodyA' | 'bodyB'> & {
+    readonly bodyA: FlxPhysicsBackendBody;
+    readonly bodyB: FlxPhysicsBackendBody;
+}) | (Omit<FlxPhysicsPrismaticJointDefinition, 'bodyA' | 'bodyB'> & {
+    readonly bodyA: FlxPhysicsBackendBody;
+    readonly bodyB: FlxPhysicsBackendBody;
+}) | (Omit<FlxPhysicsWeldJointDefinition, 'bodyA' | 'bodyB'> & {
+    readonly bodyA: FlxPhysicsBackendBody;
+    readonly bodyB: FlxPhysicsBackendBody;
+}) | (Omit<FlxPhysicsWheelJointDefinition, 'bodyA' | 'bodyB'> & {
+    readonly bodyA: FlxPhysicsBackendBody;
+    readonly bodyB: FlxPhysicsBackendBody;
+});
+
+// @public
 export interface FlxPhysicsBackendQueryHit {
     // (undocumented)
     readonly body: FlxPhysicsBackendBody;
@@ -3489,9 +3510,13 @@ export interface FlxPhysicsBackendWorld {
     // (undocumented)
     createBody(definition: FlxPhysicsBodyDefinition): FlxPhysicsBackendBody;
     // (undocumented)
+    createJoint?(definition: FlxPhysicsBackendJointDefinition): FlxPhysicsBackendJoint;
+    // (undocumented)
     destroy(): void;
     // (undocumented)
     destroyBody(body: FlxPhysicsBackendBody): void;
+    // (undocumented)
+    destroyJoint?(joint: FlxPhysicsBackendJoint): void;
     // (undocumented)
     drainContacts(): readonly FlxPhysicsBackendContact[];
     // (undocumented)
@@ -3606,7 +3631,7 @@ export interface FlxPhysicsCapabilities {
     // (undocumented)
     readonly deterministicReplay: boolean;
     // (undocumented)
-    readonly joints: readonly string[];
+    readonly joints: readonly FlxPhysicsJointType[];
     // (undocumented)
     readonly queries: readonly FlxPhysicsQueryCapability[];
     // (undocumented)
@@ -3706,11 +3731,61 @@ export type FlxPhysicsDebugPrimitive = {
 };
 
 // @public
+export interface FlxPhysicsDistanceJointDefinition extends FlxPhysicsJointDefinitionBase {
+    // (undocumented)
+    readonly anchorA: FlxPhysicsVector;
+    // (undocumented)
+    readonly anchorB: FlxPhysicsVector;
+    // (undocumented)
+    readonly dampingRatio?: number;
+    // (undocumented)
+    readonly frequencyHz?: number;
+    // (undocumented)
+    readonly length?: number;
+    // (undocumented)
+    readonly type: 'distance';
+}
+
+// @public
 export interface FlxPhysicsFilter {
     readonly category?: number;
     readonly group?: number;
     readonly mask?: number;
 }
+
+// @public
+export interface FlxPhysicsJoint {
+    // (undocumented)
+    readonly bodyA: FlxPhysicsBody;
+    // (undocumented)
+    readonly bodyB: FlxPhysicsBody;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    readonly destroyed: boolean;
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly type: FlxPhysicsJointType;
+}
+
+// @public
+export type FlxPhysicsJointDefinition = FlxPhysicsDistanceJointDefinition | FlxPhysicsRevoluteJointDefinition | FlxPhysicsPrismaticJointDefinition | FlxPhysicsWeldJointDefinition | FlxPhysicsWheelJointDefinition;
+
+// @public
+export interface FlxPhysicsJointDefinitionBase {
+    // (undocumented)
+    readonly bodyA: FlxPhysicsBody;
+    // (undocumented)
+    readonly bodyB: FlxPhysicsBody;
+    // (undocumented)
+    readonly collideConnected?: boolean;
+    // (undocumented)
+    readonly id?: string;
+}
+
+// @public
+export type FlxPhysicsJointType = 'distance' | 'revolute' | 'prismatic' | 'weld' | 'wheel';
 
 // @public
 export interface FlxPhysicsMaterial {
@@ -3735,6 +3810,28 @@ export interface FlxPhysicsPolygonShape extends FlxPhysicsShapeBase {
 
 // @public
 export type FlxPhysicsPrimitiveShape = FlxPhysicsBoxShape | FlxPhysicsCircleShape | FlxPhysicsCapsuleShape | FlxPhysicsPolygonShape;
+
+// @public
+export interface FlxPhysicsPrismaticJointDefinition extends FlxPhysicsJointDefinitionBase {
+    // (undocumented)
+    readonly anchor: FlxPhysicsVector;
+    // (undocumented)
+    readonly axis: FlxPhysicsVector;
+    // (undocumented)
+    readonly enableLimit?: boolean;
+    // (undocumented)
+    readonly enableMotor?: boolean;
+    // (undocumented)
+    readonly lowerTranslation?: number;
+    // (undocumented)
+    readonly maxMotorForce?: number;
+    // (undocumented)
+    readonly motorSpeed?: number;
+    // (undocumented)
+    readonly type: 'prismatic';
+    // (undocumented)
+    readonly upperTranslation?: number;
+}
 
 // @public
 export type FlxPhysicsQueryCapability = 'point' | 'aabb' | 'ray' | 'shape-cast';
@@ -3771,6 +3868,26 @@ export interface FlxPhysicsRayQuery {
     readonly mode?: 'closest' | 'all';
     // (undocumented)
     readonly to: FlxPhysicsVector;
+}
+
+// @public
+export interface FlxPhysicsRevoluteJointDefinition extends FlxPhysicsJointDefinitionBase {
+    // (undocumented)
+    readonly anchor: FlxPhysicsVector;
+    // (undocumented)
+    readonly enableLimit?: boolean;
+    // (undocumented)
+    readonly enableMotor?: boolean;
+    // (undocumented)
+    readonly lowerAngle?: number;
+    // (undocumented)
+    readonly maxMotorTorque?: number;
+    // (undocumented)
+    readonly motorSpeed?: number;
+    // (undocumented)
+    readonly type: 'revolute';
+    // (undocumented)
+    readonly upperAngle?: number;
 }
 
 // @public
@@ -3818,10 +3935,46 @@ export interface FlxPhysicsVector {
 }
 
 // @public
+export interface FlxPhysicsWeldJointDefinition extends FlxPhysicsJointDefinitionBase {
+    // (undocumented)
+    readonly anchor: FlxPhysicsVector;
+    // (undocumented)
+    readonly dampingRatio?: number;
+    // (undocumented)
+    readonly frequencyHz?: number;
+    // (undocumented)
+    readonly referenceAngle?: number;
+    // (undocumented)
+    readonly type: 'weld';
+}
+
+// @public
+export interface FlxPhysicsWheelJointDefinition extends FlxPhysicsJointDefinitionBase {
+    // (undocumented)
+    readonly anchor: FlxPhysicsVector;
+    // (undocumented)
+    readonly axis: FlxPhysicsVector;
+    // (undocumented)
+    readonly dampingRatio?: number;
+    // (undocumented)
+    readonly enableMotor?: boolean;
+    // (undocumented)
+    readonly frequencyHz?: number;
+    // (undocumented)
+    readonly maxMotorTorque?: number;
+    // (undocumented)
+    readonly motorSpeed?: number;
+    // (undocumented)
+    readonly type: 'wheel';
+}
+
+// @public
 export class FlxPhysicsWorld {
     constructor(backend: FlxPhysicsBackendWorld, options?: FlxPhysicsWorldOptions);
     // (undocumented)
     addBody(object: FlxObject, definition: FlxPhysicsObjectDefinition): FlxPhysicsBody;
+    // (undocumented)
+    addJoint(definition: FlxPhysicsJointDefinition): FlxPhysicsJoint;
     // (undocumented)
     get bodyCount(): number;
     // (undocumented)
@@ -3841,6 +3994,10 @@ export class FlxPhysicsWorld {
     // (undocumented)
     getDebugGeometry(): readonly FlxPhysicsDebugPrimitive[];
     // (undocumented)
+    getJoint(id: string): FlxPhysicsJoint | undefined;
+    // (undocumented)
+    get jointCount(): number;
+    // (undocumented)
     paused: boolean;
     // (undocumented)
     queryAabb(bounds: FlxPhysicsAabb, filter?: FlxPhysicsQueryFilter): readonly FlxPhysicsQueryHit[];
@@ -3850,6 +4007,8 @@ export class FlxPhysicsWorld {
     queryRay(query: FlxPhysicsRayQuery): readonly FlxPhysicsQueryHit[];
     // (undocumented)
     removeBody(bodyOrObject: FlxPhysicsBody | FlxObject): boolean;
+    // (undocumented)
+    removeJoint(jointOrId: FlxPhysicsJoint | string): boolean;
     // (undocumented)
     reset(): void;
     // (undocumented)
