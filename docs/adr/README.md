@@ -40,3 +40,4 @@ and storage backends with gesture-unlock queuing and versioned save slots.
 | [0022](0022-revisioned-camera-local-strip-geometry.md)    | Revisioned camera-local strip geometry                     | Accepted |
 | [0023](0023-stable-camera-local-vector-graphics.md)       | Stable camera-local vector graphics                        | Accepted |
 | [0024](0024-explicit-asynchronous-renderer-readback.md)   | Explicit asynchronous renderer readback                    | Accepted |
+| [0025](0025-state-scoped-pluggable-physics.md)            | State-scoped optional physics with adapter-owned solvers   | Proposed |
