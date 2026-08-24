@@ -420,21 +420,169 @@ describe('FlxPhysicsWorld object bindings', () => {
   it('rejects invalid and unsupported portable definitions', () => {
     const backend = new FakeBackend();
     const world = new FlxPhysicsWorld(backend);
+    const add = (definition: FlxPhysicsBodyDefinition) =>
+      world.addBody(new FlxObject(), definition);
+
     expect(() =>
-      world.addBody(new FlxObject(), {
+      add({
+        type: 'arcade' as FlxPhysicsBodyType,
+        shapes: box,
+      }),
+    ).toThrow('body type');
+    expect(() => add({ type: 'dynamic', shapes: [] })).toThrow(
+      'at least one shape',
+    );
+    expect(() =>
+      add({
         type: 'dynamic',
         shapes: [{ kind: 'box', width: 0, height: 10 }],
       }),
     ).toThrow('width');
     expect(() =>
-      world.addBody(new FlxObject(), {
+      add({
         type: 'dynamic',
         shapes: [{ kind: 'capsule', radius: 2, length: 4 }],
       }),
     ).toThrow('shape:capsule');
+    expect(() =>
+      add({
+        type: 'dynamic',
+        shapes: [{ kind: 'circle', radius: Number.NaN }],
+      }),
+    ).toThrow('circle radius');
+    expect(() =>
+      add({
+        type: 'dynamic',
+        shapes: [{ kind: 'polygon', vertices: [{ x: 0, y: 0 }] }],
+      }),
+    ).toThrow('at least 3 vertices');
+    expect(() =>
+      add({
+        type: 'dynamic',
+        shapes: [
+          {
+            kind: 'polygon',
+            vertices: [
+              { x: 0, y: 0 },
+              { x: 1, y: Number.NaN },
+              { x: 2, y: 0 },
+            ],
+          },
+        ],
+      }),
+    ).toThrow('polygon vertex');
+    expect(() =>
+      add({
+        gravityScale: Number.POSITIVE_INFINITY,
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('gravity scale');
+    expect(() =>
+      add({
+        filter: { category: -1 },
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('category');
+    expect(() =>
+      add({
+        filter: { group: 0x8000 },
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('group');
+    expect(() =>
+      add({
+        material: { density: -1 },
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('density');
+    expect(() =>
+      add({
+        material: { friction: -1 },
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('friction');
+    expect(() =>
+      add({
+        material: { restitution: 2 },
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('restitution');
+    expect(() =>
+      add({
+        material: { density: Number.NaN },
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('material value');
+    expect(() =>
+      add({
+        type: 'dynamic',
+        shapes: [{ kind: 'box', width: 10, height: 20, angle: Number.NaN }],
+      }),
+    ).toThrow('shape angle');
+    expect(() =>
+      add({
+        type: 'dynamic',
+        shapes: [
+          {
+            kind: 'box',
+            width: 10,
+            height: 20,
+            offset: { x: Number.NaN, y: 0 },
+          },
+        ],
+      }),
+    ).toThrow('shape offset');
+
+    const limitedBackend = new FakeBackend();
+    Object.defineProperty(limitedBackend, 'capabilities', {
+      value: Object.freeze({
+        ...limitedBackend.capabilities,
+        continuousCollision: false,
+        sleeping: false,
+      }),
+    });
+    const limitedWorld = new FlxPhysicsWorld(limitedBackend);
+    expect(() =>
+      limitedWorld.addBody(new FlxObject(), {
+        continuousCollision: true,
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('continuous-collision');
+    expect(() =>
+      limitedWorld.addBody(new FlxObject(), {
+        allowSleep: true,
+        type: 'dynamic',
+        shapes: box,
+      }),
+    ).toThrow('sleeping');
+
     expect(() => world.queryPoint({ x: 0, y: 0 }, { mask: 1.5 })).toThrow(
       '16-bit integer',
     );
+    expect(() => world.queryAabb({ x: 0, y: 0, width: 0, height: 10 })).toThrow(
+      'width',
+    );
+
+    const body = add({ type: 'dynamic', shapes: box });
+    expect(() =>
+      body.setTransform({
+        angle: Number.NaN,
+        position: { x: 0, y: 0 },
+      }),
+    ).toThrow('transform angle');
+    expect(() => body.setVelocity({ x: Number.NaN, y: 0 })).toThrow('velocity');
+    expect(() => body.applyForce({ x: 0, y: Number.NaN })).toThrow('force');
+    expect(() =>
+      body.applyImpulse({ x: 0, y: 0 }, { x: Number.NaN, y: 0 }),
+    ).toThrow('point');
   });
 });
 
