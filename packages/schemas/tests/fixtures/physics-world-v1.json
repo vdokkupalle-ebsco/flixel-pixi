@@ -31,5 +31,68 @@
       "shapes": [{ "kind": "box", "width": 640, "height": 32 }]
     }
   ],
+  "joints": [
+    {
+      "id": "distance-joint",
+      "type": "distance",
+      "bodyA": "ground-body",
+      "bodyB": "player-body",
+      "anchorA": { "x": 100, "y": 100 },
+      "anchorB": { "x": 140, "y": 100 },
+      "length": 40,
+      "frequencyHz": 3,
+      "dampingRatio": 0.4
+    },
+    {
+      "id": "revolute-joint",
+      "type": "revolute",
+      "bodyA": "ground-body",
+      "bodyB": "player-body",
+      "anchor": { "x": 200, "y": 100 },
+      "enableLimit": true,
+      "lowerAngle": -45,
+      "upperAngle": 45,
+      "enableMotor": true,
+      "motorSpeed": 90,
+      "maxMotorTorque": 120
+    },
+    {
+      "id": "prismatic-joint",
+      "type": "prismatic",
+      "bodyA": "ground-body",
+      "bodyB": "player-body",
+      "anchor": { "x": 300, "y": 100 },
+      "axis": { "x": 1, "y": 0 },
+      "enableLimit": true,
+      "lowerTranslation": -40,
+      "upperTranslation": 40,
+      "enableMotor": true,
+      "motorSpeed": 20,
+      "maxMotorForce": 200
+    },
+    {
+      "id": "weld-joint",
+      "type": "weld",
+      "bodyA": "ground-body",
+      "bodyB": "player-body",
+      "anchor": { "x": 400, "y": 100 },
+      "referenceAngle": 10,
+      "frequencyHz": 2,
+      "dampingRatio": 0.5
+    },
+    {
+      "id": "wheel-joint",
+      "type": "wheel",
+      "bodyA": "ground-body",
+      "bodyB": "player-body",
+      "anchor": { "x": 500, "y": 100 },
+      "axis": { "x": 0, "y": 1 },
+      "enableMotor": true,
+      "motorSpeed": 180,
+      "maxMotorTorque": 240,
+      "frequencyHz": 4,
+      "dampingRatio": 0.7
+    }
+  ],
   "extensions": { "adapterHint": "portable" }
 }

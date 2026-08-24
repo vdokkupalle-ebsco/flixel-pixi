@@ -91,12 +91,86 @@ export interface PhysicsBodyDocumentV1 {
   type: 'dynamic' | 'kinematic' | 'static';
 }
 
+/** Fields shared by every serialized physics joint. @public */
+export interface PhysicsJointBaseDefinition {
+  bodyA: string;
+  bodyB: string;
+  collideConnected?: boolean;
+  extensions?: JsonObject;
+  id: string;
+}
+
+/** Serializable distance joint. Anchors and length use logical pixels. @public */
+export interface PhysicsDistanceJointDefinition extends PhysicsJointBaseDefinition {
+  anchorA: PhysicsVectorDefinition;
+  anchorB: PhysicsVectorDefinition;
+  dampingRatio?: number;
+  frequencyHz?: number;
+  length?: number;
+  type: 'distance';
+}
+
+/** Serializable revolute joint. Angular values use degrees. @public */
+export interface PhysicsRevoluteJointDefinition extends PhysicsJointBaseDefinition {
+  anchor: PhysicsVectorDefinition;
+  enableLimit?: boolean;
+  enableMotor?: boolean;
+  lowerAngle?: number;
+  maxMotorTorque?: number;
+  motorSpeed?: number;
+  type: 'revolute';
+  upperAngle?: number;
+}
+
+/** Serializable prismatic joint. Linear values use logical pixels. @public */
+export interface PhysicsPrismaticJointDefinition extends PhysicsJointBaseDefinition {
+  anchor: PhysicsVectorDefinition;
+  axis: PhysicsVectorDefinition;
+  enableLimit?: boolean;
+  enableMotor?: boolean;
+  lowerTranslation?: number;
+  maxMotorForce?: number;
+  motorSpeed?: number;
+  type: 'prismatic';
+  upperTranslation?: number;
+}
+
+/** Serializable weld joint. Angular values use degrees. @public */
+export interface PhysicsWeldJointDefinition extends PhysicsJointBaseDefinition {
+  anchor: PhysicsVectorDefinition;
+  dampingRatio?: number;
+  frequencyHz?: number;
+  referenceAngle?: number;
+  type: 'weld';
+}
+
+/** Serializable wheel joint. Linear values use logical pixels. @public */
+export interface PhysicsWheelJointDefinition extends PhysicsJointBaseDefinition {
+  anchor: PhysicsVectorDefinition;
+  axis: PhysicsVectorDefinition;
+  dampingRatio?: number;
+  enableMotor?: boolean;
+  frequencyHz?: number;
+  maxMotorTorque?: number;
+  motorSpeed?: number;
+  type: 'wheel';
+}
+
+/** Serializable portable joint. @public */
+export type PhysicsJointDefinition =
+  | PhysicsDistanceJointDefinition
+  | PhysicsPrismaticJointDefinition
+  | PhysicsRevoluteJointDefinition
+  | PhysicsWeldJointDefinition
+  | PhysicsWheelJointDefinition;
+
 /** Version 1 world document containing backend-independent body data. @public */
 export interface PhysicsWorldDocumentV1 {
   bodies: PhysicsBodyDocumentV1[];
   extensions?: JsonObject;
   gravity: PhysicsVectorDefinition;
   id: string;
+  joints?: PhysicsJointDefinition[];
   kind: 'flixel-pixi-physics-world';
   schemaVersion: 1;
 }
