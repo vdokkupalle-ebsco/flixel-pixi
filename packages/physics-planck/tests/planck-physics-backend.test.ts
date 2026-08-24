@@ -1,4 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import {
+  DistanceJoint,
+  PrismaticJoint,
+  RevoluteJoint,
+  WeldJoint,
+  WheelJoint,
+} from 'planck';
 
 import { FlxObject, FlxPhysicsWorld } from 'flixel-pixi';
 
@@ -140,6 +147,149 @@ describe('PlanckPhysicsBackend', () => {
     expect(nativeBody?.getAngle()).toBeCloseTo(Math.PI);
   });
 
+  it('creates and converts every portable joint type', () => {
+    const backend = new PlanckPhysicsBackend({ metresPerPixel: 0.01 });
+    const world = new FlxPhysicsWorld(backend);
+    const bodies = Array.from({ length: 6 }, (_, index) => {
+      const object = new FlxObject(index * 50, 0, 10, 10);
+      return world.addBody(object, {
+        id: `body-${String(index)}`,
+        type: index === 0 ? 'static' : 'dynamic',
+        shapes: box(10, 10),
+      });
+    });
+    const ground = bodies[0];
+    if (ground === undefined) throw new Error('Expected a ground body.');
+    const body = (index: number) => {
+      const value = bodies[index];
+      if (value === undefined) throw new Error('Expected a test body.');
+      return value;
+    };
+
+    world.addJoint({
+      id: 'distance',
+      type: 'distance',
+      bodyA: ground,
+      bodyB: body(1),
+      anchorA: { x: 5, y: 5 },
+      anchorB: { x: 55, y: 5 },
+      length: 40,
+      frequencyHz: 3,
+      dampingRatio: 0.4,
+    });
+    world.addJoint({
+      id: 'revolute',
+      type: 'revolute',
+      bodyA: ground,
+      bodyB: body(2),
+      anchor: { x: 105, y: 5 },
+      enableLimit: true,
+      lowerAngle: -45,
+      upperAngle: 45,
+      enableMotor: true,
+      motorSpeed: 90,
+      maxMotorTorque: 200,
+    });
+    world.addJoint({
+      id: 'prismatic',
+      type: 'prismatic',
+      bodyA: ground,
+      bodyB: body(3),
+      anchor: { x: 155, y: 5 },
+      axis: { x: 2, y: 0 },
+      enableLimit: true,
+      lowerTranslation: -20,
+      upperTranslation: 30,
+      enableMotor: true,
+      motorSpeed: 25,
+      maxMotorForce: 300,
+    });
+    world.addJoint({
+      id: 'weld',
+      type: 'weld',
+      bodyA: ground,
+      bodyB: body(4),
+      anchor: { x: 205, y: 5 },
+      referenceAngle: 30,
+      frequencyHz: 2,
+      dampingRatio: 0.5,
+    });
+    world.addJoint({
+      id: 'wheel',
+      type: 'wheel',
+      bodyA: ground,
+      bodyB: body(5),
+      anchor: { x: 255, y: 5 },
+      axis: { x: 0, y: 4 },
+      enableMotor: true,
+      motorSpeed: 180,
+      maxMotorTorque: 400,
+      frequencyHz: 4,
+      dampingRatio: 0.7,
+    });
+
+    const distance = backend.native.getJoint('distance');
+    const revolute = backend.native.getJoint('revolute');
+    const prismatic = backend.native.getJoint('prismatic');
+    const weld = backend.native.getJoint('weld');
+    const wheel = backend.native.getJoint('wheel');
+    expect(distance).toBeInstanceOf(DistanceJoint);
+    expect(revolute).toBeInstanceOf(RevoluteJoint);
+    expect(prismatic).toBeInstanceOf(PrismaticJoint);
+    expect(weld).toBeInstanceOf(WeldJoint);
+    expect(wheel).toBeInstanceOf(WheelJoint);
+    if (!(distance instanceof DistanceJoint)) throw new Error('Wrong joint.');
+    if (!(revolute instanceof RevoluteJoint)) throw new Error('Wrong joint.');
+    if (!(prismatic instanceof PrismaticJoint)) throw new Error('Wrong joint.');
+    if (!(weld instanceof WeldJoint)) throw new Error('Wrong joint.');
+    if (!(wheel instanceof WheelJoint)) throw new Error('Wrong joint.');
+    expect(distance.getLength()).toBeCloseTo(0.4);
+    expect(distance.getFrequency()).toBe(3);
+    expect(revolute.getMotorSpeed()).toBeCloseTo(Math.PI / 2);
+    expect(revolute.getLowerLimit()).toBeCloseTo(-Math.PI / 4);
+    expect(prismatic.getMotorSpeed()).toBeCloseTo(0.25);
+    expect(prismatic.getUpperLimit()).toBeCloseTo(0.3);
+    expect(weld.getReferenceAngle()).toBeCloseTo(Math.PI / 6);
+    expect(wheel.getMotorSpeed()).toBeCloseTo(Math.PI);
+    expect(wheel.getSpringFrequencyHz()).toBe(4);
+    expect(backend.native.world.getJointCount()).toBe(5);
+  });
+
+  it('simulates motors and destroys joints before connected bodies', () => {
+    const backend = new PlanckPhysicsBackend({ metresPerPixel: 0.01 });
+    const world = new FlxPhysicsWorld(backend);
+    const pivot = world.addBody(new FlxObject(95, 95, 10, 10), {
+      id: 'pivot',
+      type: 'static',
+      shapes: box(10, 10),
+    });
+    const wheelObject = new FlxObject(95, 115, 10, 10);
+    const wheelBody = world.addBody(wheelObject, {
+      id: 'motor-body',
+      type: 'dynamic',
+      shapes: [{ kind: 'circle', radius: 5 }],
+    });
+    const joint = world.addJoint({
+      id: 'motor',
+      type: 'revolute',
+      bodyA: pivot,
+      bodyB: wheelBody,
+      anchor: { x: 100, y: 100 },
+      enableMotor: true,
+      motorSpeed: 180,
+      maxMotorTorque: 10_000,
+    });
+
+    for (let index = 0; index < 30; index += 1) world.step(1 / 60);
+
+    expect(Math.abs(wheelObject.angle)).toBeGreaterThan(30);
+    expect(backend.native.world.getJointCount()).toBe(1);
+    wheelBody.destroy();
+    expect(joint.destroyed).toBe(true);
+    expect(backend.native.getJoint('motor')).toBeUndefined();
+    expect(backend.native.world.getJointCount()).toBe(0);
+  });
+
   it('supports polygon and compound fixtures through the portable API', () => {
     const world = new FlxPhysicsWorld(new PlanckPhysicsBackend());
     const object = new FlxObject(20, 20, 40, 40);
@@ -230,5 +380,12 @@ describe('PlanckPhysicsBackend', () => {
       'compound',
     ]);
     expect(backend.capabilities.queries).toEqual(['point', 'aabb', 'ray']);
+    expect(backend.capabilities.joints).toEqual([
+      'distance',
+      'revolute',
+      'prismatic',
+      'weld',
+      'wheel',
+    ]);
   });
 });

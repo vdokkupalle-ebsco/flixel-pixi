@@ -45,10 +45,10 @@ export function validatePhysicsWorld(
   string(value.id, '$.id', issues);
   vector(value.gravity, '$.gravity', issues);
   jsonObject(value.extensions, '$.extensions', issues);
+  const bodyIds = new Set<string>();
   if (!Array.isArray(value.bodies)) {
     add(issues, '$.bodies', 'invalid_type', 'Expected an array.');
   } else {
-    const bodyIds = new Set<string>();
     const entityIds = new Set<string>();
     value.bodies.forEach((body, index) => {
       const path = `$.bodies[${String(index)}]`;
@@ -58,9 +58,168 @@ export function validatePhysicsWorld(
       duplicate(body.entityId, `${path}.entityId`, 'entity', entityIds, issues);
     });
   }
+  if (value.joints !== undefined) {
+    if (!Array.isArray(value.joints)) {
+      add(issues, '$.joints', 'invalid_type', 'Expected an array.');
+    } else {
+      const jointIds = new Set<string>();
+      value.joints.forEach((joint, index) => {
+        const path = `$.joints[${String(index)}]`;
+        validateJoint(joint, path, bodyIds, issues);
+        if (isRecord(joint)) {
+          duplicate(joint.id, `${path}.id`, 'joint', jointIds, issues);
+        }
+      });
+    }
+  }
   return issues.length > 0
     ? { issues, success: false }
     : { data: clone(value) as PhysicsWorldDocumentV1, success: true };
+}
+
+function validateJoint(
+  value: unknown,
+  path: string,
+  bodyIds: ReadonlySet<string>,
+  issues: ValidationIssue[],
+): void {
+  if (!isRecord(value)) {
+    add(issues, path, 'invalid_type', 'Expected an object.');
+    return;
+  }
+  string(value.id, `${path}.id`, issues);
+  bodyReference(value.bodyA, `${path}.bodyA`, bodyIds, issues);
+  bodyReference(value.bodyB, `${path}.bodyB`, bodyIds, issues);
+  if (
+    typeof value.bodyA === 'string' &&
+    value.bodyA.length > 0 &&
+    value.bodyA === value.bodyB
+  ) {
+    add(
+      issues,
+      `${path}.bodyB`,
+      'invalid_value',
+      'A joint must connect two different bodies.',
+    );
+  }
+  optionalBoolean(value.collideConnected, `${path}.collideConnected`, issues);
+  jsonObject(value.extensions, `${path}.extensions`, issues);
+
+  if (value.type === 'distance') {
+    vector(value.anchorA, `${path}.anchorA`, issues);
+    vector(value.anchorB, `${path}.anchorB`, issues);
+    if (value.length !== undefined)
+      positive(value.length, `${path}.length`, issues);
+    spring(value, path, issues);
+  } else if (value.type === 'revolute') {
+    vector(value.anchor, `${path}.anchor`, issues);
+    optionalBoolean(value.enableLimit, `${path}.enableLimit`, issues);
+    optionalBoolean(value.enableMotor, `${path}.enableMotor`, issues);
+    optionalFinite(value.lowerAngle, `${path}.lowerAngle`, issues);
+    optionalFinite(value.upperAngle, `${path}.upperAngle`, issues);
+    ordered(value.lowerAngle, value.upperAngle, `${path}.upperAngle`, issues);
+    optionalFinite(value.motorSpeed, `${path}.motorSpeed`, issues);
+    nonNegative(value.maxMotorTorque, `${path}.maxMotorTorque`, issues);
+  } else if (value.type === 'prismatic') {
+    vector(value.anchor, `${path}.anchor`, issues);
+    axis(value.axis, `${path}.axis`, issues);
+    optionalBoolean(value.enableLimit, `${path}.enableLimit`, issues);
+    optionalBoolean(value.enableMotor, `${path}.enableMotor`, issues);
+    optionalFinite(value.lowerTranslation, `${path}.lowerTranslation`, issues);
+    optionalFinite(value.upperTranslation, `${path}.upperTranslation`, issues);
+    ordered(
+      value.lowerTranslation,
+      value.upperTranslation,
+      `${path}.upperTranslation`,
+      issues,
+    );
+    optionalFinite(value.motorSpeed, `${path}.motorSpeed`, issues);
+    nonNegative(value.maxMotorForce, `${path}.maxMotorForce`, issues);
+  } else if (value.type === 'weld') {
+    vector(value.anchor, `${path}.anchor`, issues);
+    optionalFinite(value.referenceAngle, `${path}.referenceAngle`, issues);
+    spring(value, path, issues);
+  } else if (value.type === 'wheel') {
+    vector(value.anchor, `${path}.anchor`, issues);
+    axis(value.axis, `${path}.axis`, issues);
+    optionalBoolean(value.enableMotor, `${path}.enableMotor`, issues);
+    optionalFinite(value.motorSpeed, `${path}.motorSpeed`, issues);
+    nonNegative(value.maxMotorTorque, `${path}.maxMotorTorque`, issues);
+    spring(value, path, issues);
+  } else {
+    add(
+      issues,
+      `${path}.type`,
+      'invalid_value',
+      'Expected distance, revolute, prismatic, weld, or wheel.',
+    );
+  }
+}
+
+function bodyReference(
+  value: unknown,
+  path: string,
+  bodyIds: ReadonlySet<string>,
+  issues: ValidationIssue[],
+): void {
+  string(value, path, issues);
+  if (
+    typeof value === 'string' &&
+    value.trim().length > 0 &&
+    !bodyIds.has(value)
+  ) {
+    add(issues, path, 'missing_value', `Unknown body id: "${value}".`);
+  }
+}
+
+function axis(value: unknown, path: string, issues: ValidationIssue[]): void {
+  vector(value, path, issues);
+  if (
+    isRecord(value) &&
+    finite(value.x) &&
+    finite(value.y) &&
+    value.x === 0 &&
+    value.y === 0
+  ) {
+    add(issues, path, 'invalid_value', 'Expected a non-zero axis.');
+  }
+}
+
+function spring(
+  value: RecordValue,
+  path: string,
+  issues: ValidationIssue[],
+): void {
+  nonNegative(value.frequencyHz, `${path}.frequencyHz`, issues);
+  if (
+    value.dampingRatio !== undefined &&
+    (!finite(value.dampingRatio) ||
+      value.dampingRatio < 0 ||
+      value.dampingRatio > 1)
+  ) {
+    add(
+      issues,
+      `${path}.dampingRatio`,
+      'invalid_value',
+      'Expected a number from 0 to 1.',
+    );
+  }
+}
+
+function ordered(
+  lower: unknown,
+  upper: unknown,
+  path: string,
+  issues: ValidationIssue[],
+): void {
+  if (finite(lower) && finite(upper) && lower > upper) {
+    add(
+      issues,
+      path,
+      'invalid_value',
+      'Expected the upper limit to be greater than or equal to the lower limit.',
+    );
+  }
 }
 
 /** Parse or throw for a version 1 physics world. @public */

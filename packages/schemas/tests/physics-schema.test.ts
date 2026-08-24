@@ -65,6 +65,89 @@ describe('physics schemas', () => {
     }
   });
 
+  it('validates all portable joint variants and preserves them on round-trip', async () => {
+    const document = await fixture();
+
+    const parsed = parsePhysicsWorld(document);
+
+    expect(parsed.joints?.map(({ type }) => type)).toEqual([
+      'distance',
+      'revolute',
+      'prismatic',
+      'weld',
+      'wheel',
+    ]);
+    expect(JSON.parse(serializePhysicsWorld(document))).toEqual(document);
+  });
+
+  it('reports invalid joint references and type-specific options', async () => {
+    const document = await fixture();
+    const result = validatePhysicsWorld({
+      ...document,
+      joints: [
+        {
+          id: 'bad-joint',
+          type: 'prismatic',
+          bodyA: 'missing-body',
+          bodyB: 'player-body',
+          anchor: { x: 0, y: 0 },
+          axis: { x: 0, y: 0 },
+          enableLimit: 'yes',
+          lowerTranslation: 10,
+          upperTranslation: -10,
+          maxMotorForce: -1,
+        },
+        {
+          id: 'bad-joint',
+          type: 'distance',
+          bodyA: 'player-body',
+          bodyB: 'player-body',
+          anchorA: null,
+          anchorB: { x: 1, y: 2 },
+          length: 0,
+          frequencyHz: -1,
+          dampingRatio: 2,
+        },
+        {
+          id: 'unknown-joint',
+          type: 'rope',
+          bodyA: 'ground-body',
+          bodyB: 'player-body',
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues.map(({ path }) => path)).toEqual(
+        expect.arrayContaining([
+          '$.joints[0].bodyA',
+          '$.joints[0].axis',
+          '$.joints[0].enableLimit',
+          '$.joints[0].upperTranslation',
+          '$.joints[0].maxMotorForce',
+          '$.joints[1].id',
+          '$.joints[1].bodyB',
+          '$.joints[1].anchorA',
+          '$.joints[1].length',
+          '$.joints[1].frequencyHz',
+          '$.joints[1].dampingRatio',
+          '$.joints[2].type',
+        ]),
+      );
+    }
+  });
+
+  it('keeps version 1 worlds without joints backward-compatible', async () => {
+    const legacyWorld = { ...(await fixture()) };
+    delete legacyWorld.joints;
+
+    expect(validatePhysicsWorld(legacyWorld).success).toBe(true);
+    expect(
+      validatePhysicsWorld({ ...legacyWorld, joints: 'not-an-array' }).success,
+    ).toBe(false);
+  });
+
   it('rejects unsupported versions, malformed bodies, and non-JSON extensions', () => {
     const body = validatePhysicsBody({
       entityId: '',

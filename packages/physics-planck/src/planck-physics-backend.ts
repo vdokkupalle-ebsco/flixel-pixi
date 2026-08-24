@@ -1,12 +1,18 @@
 import {
   Box,
   Circle,
+  DistanceJoint,
   Polygon,
+  PrismaticJoint,
+  RevoluteJoint,
+  WeldJoint,
+  WheelJoint,
   World,
   type Body,
   type Contact,
   type Fixture,
   type FixtureOpt,
+  type Joint,
   type Shape,
 } from 'planck';
 
@@ -14,6 +20,8 @@ import type {
   FlxPhysicsAabb,
   FlxPhysicsBackendBody,
   FlxPhysicsBackendContact,
+  FlxPhysicsBackendJoint,
+  FlxPhysicsBackendJointDefinition,
   FlxPhysicsBackendQueryHit,
   FlxPhysicsBackendWorld,
   FlxPhysicsBodyDefinition,
@@ -43,6 +51,13 @@ interface FixtureRecord {
   readonly order: number;
 }
 
+interface JointRecord {
+  readonly bodyA: BodyRecord;
+  readonly bodyB: BodyRecord;
+  readonly id: string;
+  readonly joint: Joint;
+}
+
 /** Construction options for the Planck adapter. @public */
 export interface PlanckPhysicsBackendOptions {
   /** Solver metres per Flixel logical pixel. Defaults to `0.01`. */
@@ -55,6 +70,7 @@ export interface PlanckPhysicsBackendOptions {
 export interface PlanckNativeAccess {
   readonly world: World;
   getBody(id: string): Body | undefined;
+  getJoint(id: string): Joint | undefined;
 }
 
 /** Create a synchronous Planck.js implementation of the portable backend. @public */
@@ -69,7 +85,13 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
   readonly capabilities = Object.freeze({
     shapes: Object.freeze(['box', 'circle', 'polygon', 'compound'] as const),
     queries: Object.freeze(['point', 'aabb', 'ray'] as const),
-    joints: Object.freeze([]),
+    joints: Object.freeze([
+      'distance',
+      'revolute',
+      'prismatic',
+      'weld',
+      'wheel',
+    ] as const),
     sleeping: true,
     continuousCollision: true,
     deterministicReplay: false,
@@ -84,6 +106,8 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
   readonly #bodies = new Map<FlxPhysicsBackendBody, BodyRecord>();
   readonly #bodiesById = new Map<string, BodyRecord>();
   readonly #fixtures = new Map<Fixture, FixtureRecord>();
+  readonly #joints = new Map<FlxPhysicsBackendJoint, JointRecord>();
+  readonly #jointsById = new Map<string, JointRecord>();
   #activeContacts = new Map<string, FlxPhysicsBackendContact>();
   #contactQueue: FlxPhysicsBackendContact[] = [];
   #destroyed = false;
@@ -102,6 +126,7 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
     this.native = Object.freeze({
       world: this.#world,
       getBody: (id: string) => this.#bodiesById.get(id)?.body,
+      getJoint: (id: string) => this.#jointsById.get(id)?.joint,
     });
   }
 
@@ -153,6 +178,11 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
 
   destroyBody(handle: FlxPhysicsBackendBody): void {
     const record = this.#requireBody(handle);
+    for (const joint of [...this.#joints.values()]) {
+      if (joint.bodyA === record || joint.bodyB === record) {
+        this.#destroyJointRecord(joint);
+      }
+    }
     for (
       let fixture = record.body.getFixtureList();
       fixture !== null;
@@ -163,6 +193,29 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
     this.#world.destroyBody(record.body);
     this.#bodies.delete(handle);
     this.#bodiesById.delete(record.id);
+  }
+
+  createJoint(
+    definition: FlxPhysicsBackendJointDefinition,
+  ): FlxPhysicsBackendJoint {
+    this.#assertUsable();
+    const bodyA = this.#requireBody(definition.bodyA);
+    const bodyB = this.#requireBody(definition.bodyB);
+    const joint = this.#createPlanckJoint(definition, bodyA, bodyB);
+    this.#world.createJoint(joint);
+    const record: JointRecord = {
+      bodyA,
+      bodyB,
+      id: definition.id ?? '',
+      joint,
+    };
+    this.#joints.set(joint, record);
+    if (record.id.length > 0) this.#jointsById.set(record.id, record);
+    return joint;
+  }
+
+  destroyJoint(handle: FlxPhysicsBackendJoint): void {
+    this.#destroyJointRecord(this.#requireJoint(handle));
   }
 
   setBodyType(handle: FlxPhysicsBackendBody, type: FlxPhysicsBodyType): void {
@@ -333,6 +386,11 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
 
   reset(): void {
     this.#assertUsable();
+    for (const record of [...this.#joints.values()]) {
+      this.#world.destroyJoint(record.joint);
+    }
+    this.#joints.clear();
+    this.#jointsById.clear();
     for (const record of [...this.#bodies.values()]) {
       this.#world.destroyBody(record.body);
     }
@@ -376,6 +434,152 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
       return;
     }
     this.#createPrimitiveFixture(body, shape, definition, {});
+  }
+
+  #createPlanckJoint(
+    definition: FlxPhysicsBackendJointDefinition,
+    bodyA: BodyRecord,
+    bodyB: BodyRecord,
+  ): Joint {
+    const common = {
+      ...(definition.collideConnected === undefined
+        ? {}
+        : { collideConnected: definition.collideConnected }),
+    };
+    if (definition.type === 'distance') {
+      return new DistanceJoint(
+        {
+          ...common,
+          ...(definition.length === undefined
+            ? {}
+            : { length: this.#toSolverLength(definition.length) }),
+          ...(definition.frequencyHz === undefined
+            ? {}
+            : { frequencyHz: definition.frequencyHz }),
+          ...(definition.dampingRatio === undefined
+            ? {}
+            : { dampingRatio: definition.dampingRatio }),
+        },
+        bodyA.body,
+        bodyB.body,
+        this.#toSolverVector(definition.anchorA),
+        this.#toSolverVector(definition.anchorB),
+      );
+    }
+    if (definition.type === 'revolute') {
+      return new RevoluteJoint(
+        {
+          ...common,
+          ...(definition.enableLimit === undefined
+            ? {}
+            : { enableLimit: definition.enableLimit }),
+          ...(definition.lowerAngle === undefined
+            ? {}
+            : { lowerAngle: definition.lowerAngle * DEG_TO_RAD }),
+          ...(definition.upperAngle === undefined
+            ? {}
+            : { upperAngle: definition.upperAngle * DEG_TO_RAD }),
+          ...(definition.enableMotor === undefined
+            ? {}
+            : { enableMotor: definition.enableMotor }),
+          ...(definition.motorSpeed === undefined
+            ? {}
+            : { motorSpeed: definition.motorSpeed * DEG_TO_RAD }),
+          ...(definition.maxMotorTorque === undefined
+            ? {}
+            : {
+                maxMotorTorque: this.#toSolverTorque(definition.maxMotorTorque),
+              }),
+        },
+        bodyA.body,
+        bodyB.body,
+        this.#toSolverVector(definition.anchor),
+      );
+    }
+    if (definition.type === 'prismatic') {
+      return new PrismaticJoint(
+        {
+          ...common,
+          ...(definition.enableLimit === undefined
+            ? {}
+            : { enableLimit: definition.enableLimit }),
+          ...(definition.lowerTranslation === undefined
+            ? {}
+            : {
+                lowerTranslation: this.#toSolverLength(
+                  definition.lowerTranslation,
+                ),
+              }),
+          ...(definition.upperTranslation === undefined
+            ? {}
+            : {
+                upperTranslation: this.#toSolverLength(
+                  definition.upperTranslation,
+                ),
+              }),
+          ...(definition.enableMotor === undefined
+            ? {}
+            : { enableMotor: definition.enableMotor }),
+          ...(definition.motorSpeed === undefined
+            ? {}
+            : { motorSpeed: this.#toSolverLength(definition.motorSpeed) }),
+          ...(definition.maxMotorForce === undefined
+            ? {}
+            : {
+                maxMotorForce: this.#toSolverForce(definition.maxMotorForce),
+              }),
+        },
+        bodyA.body,
+        bodyB.body,
+        this.#toSolverVector(definition.anchor),
+        normalized(definition.axis),
+      );
+    }
+    if (definition.type === 'weld') {
+      return new WeldJoint(
+        {
+          ...common,
+          ...(definition.referenceAngle === undefined
+            ? {}
+            : { referenceAngle: definition.referenceAngle * DEG_TO_RAD }),
+          ...(definition.frequencyHz === undefined
+            ? {}
+            : { frequencyHz: definition.frequencyHz }),
+          ...(definition.dampingRatio === undefined
+            ? {}
+            : { dampingRatio: definition.dampingRatio }),
+        },
+        bodyA.body,
+        bodyB.body,
+        this.#toSolverVector(definition.anchor),
+      );
+    }
+    return new WheelJoint(
+      {
+        ...common,
+        ...(definition.enableMotor === undefined
+          ? {}
+          : { enableMotor: definition.enableMotor }),
+        ...(definition.motorSpeed === undefined
+          ? {}
+          : { motorSpeed: definition.motorSpeed * DEG_TO_RAD }),
+        ...(definition.maxMotorTorque === undefined
+          ? {}
+          : {
+              maxMotorTorque: this.#toSolverTorque(definition.maxMotorTorque),
+            }),
+        ...(definition.frequencyHz === undefined
+          ? {}
+          : { frequencyHz: definition.frequencyHz }),
+        ...(definition.dampingRatio === undefined
+          ? {}
+          : { dampingRatio: definition.dampingRatio }),
+      },
+      bodyA.body,
+      bodyB.body,
+      this.#toSolverVector(definition.anchor),
+      normalized(definition.axis),
+    );
   }
 
   #createPrimitiveFixture(
@@ -493,6 +697,32 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
     return body;
   }
 
+  #requireJoint(handle: FlxPhysicsBackendJoint): JointRecord {
+    this.#assertUsable();
+    const joint = this.#joints.get(handle);
+    if (joint === undefined)
+      throw new Error('Planck physics joint has been destroyed.');
+    return joint;
+  }
+
+  #destroyJointRecord(record: JointRecord): void {
+    this.#world.destroyJoint(record.joint);
+    this.#joints.delete(record.joint);
+    this.#jointsById.delete(record.id);
+  }
+
+  #toSolverLength(value: number): number {
+    return value * this.#metresPerPixel;
+  }
+
+  #toSolverForce(value: number): number {
+    return value * this.#metresPerPixel;
+  }
+
+  #toSolverTorque(value: number): number {
+    return value * this.#metresPerPixel * this.#metresPerPixel;
+  }
+
   #toSolverVector(vector: FlxPhysicsVector): FlxPhysicsVector {
     return {
       x: vector.x * this.#metresPerPixel,
@@ -560,4 +790,9 @@ function validateIterations(value: number, label: string): void {
   if (!Number.isInteger(value) || value <= 0) {
     throw new RangeError(`${label} must be a positive integer.`);
   }
+}
+
+function normalized(vector: FlxPhysicsVector): FlxPhysicsVector {
+  const length = Math.hypot(vector.x, vector.y);
+  return { x: vector.x / length, y: vector.y / length };
 }

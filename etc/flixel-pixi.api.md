@@ -6561,6 +6561,22 @@ export interface PhysicsCompoundShapeDefinition extends PhysicsShapeBaseDefiniti
 }
 
 // @public
+export interface PhysicsDistanceJointDefinition extends PhysicsJointBaseDefinition {
+    // (undocumented)
+    anchorA: PhysicsVectorDefinition;
+    // (undocumented)
+    anchorB: PhysicsVectorDefinition;
+    // (undocumented)
+    dampingRatio?: number;
+    // (undocumented)
+    frequencyHz?: number;
+    // (undocumented)
+    length?: number;
+    // (undocumented)
+    type: 'distance';
+}
+
+// @public
 export interface PhysicsFilterDefinition {
     // (undocumented)
     category?: number;
@@ -6569,6 +6585,23 @@ export interface PhysicsFilterDefinition {
     // (undocumented)
     mask?: number;
 }
+
+// @public
+export interface PhysicsJointBaseDefinition {
+    // (undocumented)
+    bodyA: string;
+    // (undocumented)
+    bodyB: string;
+    // (undocumented)
+    collideConnected?: boolean;
+    // (undocumented)
+    extensions?: JsonObject;
+    // (undocumented)
+    id: string;
+}
+
+// @public
+export type PhysicsJointDefinition = PhysicsDistanceJointDefinition | PhysicsPrismaticJointDefinition | PhysicsRevoluteJointDefinition | PhysicsWeldJointDefinition | PhysicsWheelJointDefinition;
 
 // @public
 export interface PhysicsMaterialDefinition {
@@ -6590,6 +6623,48 @@ export interface PhysicsPolygonShapeDefinition extends PhysicsShapeBaseDefinitio
 
 // @public
 export type PhysicsPrimitiveShapeDefinition = PhysicsBoxShapeDefinition | PhysicsCapsuleShapeDefinition | PhysicsCircleShapeDefinition | PhysicsPolygonShapeDefinition;
+
+// @public
+export interface PhysicsPrismaticJointDefinition extends PhysicsJointBaseDefinition {
+    // (undocumented)
+    anchor: PhysicsVectorDefinition;
+    // (undocumented)
+    axis: PhysicsVectorDefinition;
+    // (undocumented)
+    enableLimit?: boolean;
+    // (undocumented)
+    enableMotor?: boolean;
+    // (undocumented)
+    lowerTranslation?: number;
+    // (undocumented)
+    maxMotorForce?: number;
+    // (undocumented)
+    motorSpeed?: number;
+    // (undocumented)
+    type: 'prismatic';
+    // (undocumented)
+    upperTranslation?: number;
+}
+
+// @public
+export interface PhysicsRevoluteJointDefinition extends PhysicsJointBaseDefinition {
+    // (undocumented)
+    anchor: PhysicsVectorDefinition;
+    // (undocumented)
+    enableLimit?: boolean;
+    // (undocumented)
+    enableMotor?: boolean;
+    // (undocumented)
+    lowerAngle?: number;
+    // (undocumented)
+    maxMotorTorque?: number;
+    // (undocumented)
+    motorSpeed?: number;
+    // (undocumented)
+    type: 'revolute';
+    // (undocumented)
+    upperAngle?: number;
+}
 
 // @public
 export interface PhysicsShapeBaseDefinition {
@@ -6626,6 +6701,40 @@ export interface PhysicsVectorDefinition {
 }
 
 // @public
+export interface PhysicsWeldJointDefinition extends PhysicsJointBaseDefinition {
+    // (undocumented)
+    anchor: PhysicsVectorDefinition;
+    // (undocumented)
+    dampingRatio?: number;
+    // (undocumented)
+    frequencyHz?: number;
+    // (undocumented)
+    referenceAngle?: number;
+    // (undocumented)
+    type: 'weld';
+}
+
+// @public
+export interface PhysicsWheelJointDefinition extends PhysicsJointBaseDefinition {
+    // (undocumented)
+    anchor: PhysicsVectorDefinition;
+    // (undocumented)
+    axis: PhysicsVectorDefinition;
+    // (undocumented)
+    dampingRatio?: number;
+    // (undocumented)
+    enableMotor?: boolean;
+    // (undocumented)
+    frequencyHz?: number;
+    // (undocumented)
+    maxMotorTorque?: number;
+    // (undocumented)
+    motorSpeed?: number;
+    // (undocumented)
+    type: 'wheel';
+}
+
+// @public
 export interface PhysicsWorldDocumentV1 {
     // (undocumented)
     bodies: PhysicsBodyDocumentV1[];
@@ -6635,6 +6744,8 @@ export interface PhysicsWorldDocumentV1 {
     gravity: PhysicsVectorDefinition;
     // (undocumented)
     id: string;
+    // (undocumented)
+    joints?: PhysicsJointDefinition[];
     // (undocumented)
     kind: 'flixel-pixi-physics-world';
     // (undocumented)
