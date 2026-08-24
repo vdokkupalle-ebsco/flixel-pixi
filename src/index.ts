@@ -64,6 +64,39 @@ export type { FlxBasicConstructor } from './core/flx-group';
 export { FlxContainer } from './core/flx-container';
 export { FlxState } from './core/flx-state';
 export type { FlxStateConstructor } from './core/flx-state';
+export { FlxPhysicsWorld } from './physics/flx-physics-world';
+export { FlxPhysicsUnsupportedCapabilityError } from './physics/flx-physics-types';
+export type {
+  FlxPhysicsAabb,
+  FlxPhysicsBackendBody,
+  FlxPhysicsBackendContact,
+  FlxPhysicsBackendQueryHit,
+  FlxPhysicsBackendWorld,
+  FlxPhysicsBodyDefinition,
+  FlxPhysicsBodyState,
+  FlxPhysicsBodyType,
+  FlxPhysicsBoxShape,
+  FlxPhysicsCapabilities,
+  FlxPhysicsCapsuleShape,
+  FlxPhysicsCircleShape,
+  FlxPhysicsCompoundShape,
+  FlxPhysicsContactPhase,
+  FlxPhysicsContactPoint,
+  FlxPhysicsDebugPrimitive,
+  FlxPhysicsFilter,
+  FlxPhysicsMaterial,
+  FlxPhysicsPolygonShape,
+  FlxPhysicsPrimitiveShape,
+  FlxPhysicsQueryCapability,
+  FlxPhysicsQueryFilter,
+  FlxPhysicsRayQuery,
+  FlxPhysicsShape,
+  FlxPhysicsShapeBase,
+  FlxPhysicsShapeCapability,
+  FlxPhysicsTransform,
+  FlxPhysicsVector,
+  FlxPhysicsWorldOptions,
+} from './physics/flx-physics-types';
 export { FlxSubState } from './core/flx-sub-state';
 export type { FlxSubStateCallback } from './core/flx-sub-state';
 export { FlxSignal } from './core/flx-signal';
