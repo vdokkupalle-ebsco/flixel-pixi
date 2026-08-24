@@ -26,6 +26,7 @@ export interface PhysicsWorldDocumentV1
 | **`extensions`** | - | `JsonObject` | - |
 | **`gravity`** | - | `PhysicsVectorDefinition` | - |
 | **`id`** | - | `string` | - |
+| **`joints`** | - | `PhysicsJointDefinition[]` | - |
 | **`kind`** | - | `'flixel-pixi-physics-world'` | - |
 | **`schemaVersion`** | - | `1` | - |
 

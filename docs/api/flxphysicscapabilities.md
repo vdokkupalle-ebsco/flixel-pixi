@@ -25,7 +25,7 @@ export interface FlxPhysicsCapabilities
 | **`continuousCollision`** | `readonly` | `boolean` | - |
 | **`debugGeometry`** | `readonly` | `boolean` | - |
 | **`deterministicReplay`** | `readonly` | `boolean` | - |
-| **`joints`** | `readonly` | `readonly string[]` | - |
+| **`joints`** | `readonly` | `readonly FlxPhysicsJointType[]` | - |
 | **`queries`** | `readonly` | `readonly FlxPhysicsQueryCapability[]` | - |
 | **`shapes`** | `readonly` | `readonly FlxPhysicsShapeCapability[]` | - |
 | **`sleeping`** | `readonly` | `boolean` | - |

@@ -43,6 +43,7 @@ Constructs a new instance of the `FlxPhysicsWorld` class
 | **`contactStarted`** | `readonly` | `FlxSignal<FlxPhysicsContact>` | - |
 | **`contactStayed`** | `readonly` | `FlxSignal<FlxPhysicsContact>` | - |
 | **`destroyed`** | `readonly` | `boolean` | - |
+| **`jointCount`** | `readonly` | `number` | - |
 | **`paused`** | - | `boolean` | - |
 
 ## Methods
@@ -61,6 +62,20 @@ addBody(object: FlxObject, definition: FlxPhysicsObjectDefinition): FlxPhysicsBo
 | `definition` | `FlxPhysicsObjectDefinition` | - |
 
 **Returns:** `FlxPhysicsBody`
+
+### `addJoint()`
+
+```ts
+addJoint(definition: FlxPhysicsJointDefinition): FlxPhysicsJoint
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `definition` | `FlxPhysicsJointDefinition` | - |
+
+**Returns:** `FlxPhysicsJoint`
 
 ### `destroy()`
 
@@ -91,6 +106,20 @@ getDebugGeometry(): readonly FlxPhysicsDebugPrimitive[]
 ```
 
 **Returns:** `readonly FlxPhysicsDebugPrimitive[]`
+
+### `getJoint()`
+
+```ts
+getJoint(id: string): FlxPhysicsJoint | undefined
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `string` | - |
+
+**Returns:** `FlxPhysicsJoint | undefined`
 
 ### `queryAabb()`
 
@@ -147,6 +176,20 @@ removeBody(bodyOrObject: FlxPhysicsBody | FlxObject): boolean
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `bodyOrObject` | `FlxPhysicsBody \| FlxObject` | - |
+
+**Returns:** `boolean`
+
+### `removeJoint()`
+
+```ts
+removeJoint(jointOrId: FlxPhysicsJoint | string): boolean
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `jointOrId` | `FlxPhysicsJoint \| string` | - |
 
 **Returns:** `boolean`
 

@@ -1496,6 +1496,14 @@
         "link": "/api/flxphysicsbackendcontact"
       },
       {
+        "text": "FlxPhysicsBackendJoint",
+        "link": "/api/flxphysicsbackendjoint"
+      },
+      {
+        "text": "FlxPhysicsBackendJointDefinition",
+        "link": "/api/flxphysicsbackendjointdefinition"
+      },
+      {
         "text": "FlxPhysicsBackendQueryHit",
         "link": "/api/flxphysicsbackendqueryhit"
       },
@@ -1556,8 +1564,28 @@
         "link": "/api/flxphysicsdebugprimitive"
       },
       {
+        "text": "FlxPhysicsDistanceJointDefinition",
+        "link": "/api/flxphysicsdistancejointdefinition"
+      },
+      {
         "text": "FlxPhysicsFilter",
         "link": "/api/flxphysicsfilter"
+      },
+      {
+        "text": "FlxPhysicsJoint",
+        "link": "/api/flxphysicsjoint"
+      },
+      {
+        "text": "FlxPhysicsJointDefinition",
+        "link": "/api/flxphysicsjointdefinition"
+      },
+      {
+        "text": "FlxPhysicsJointDefinitionBase",
+        "link": "/api/flxphysicsjointdefinitionbase"
+      },
+      {
+        "text": "FlxPhysicsJointType",
+        "link": "/api/flxphysicsjointtype"
       },
       {
         "text": "FlxPhysicsMaterial",
@@ -1576,6 +1604,10 @@
         "link": "/api/flxphysicsprimitiveshape"
       },
       {
+        "text": "FlxPhysicsPrismaticJointDefinition",
+        "link": "/api/flxphysicsprismaticjointdefinition"
+      },
+      {
         "text": "FlxPhysicsQueryCapability",
         "link": "/api/flxphysicsquerycapability"
       },
@@ -1590,6 +1622,10 @@
       {
         "text": "FlxPhysicsRayQuery",
         "link": "/api/flxphysicsrayquery"
+      },
+      {
+        "text": "FlxPhysicsRevoluteJointDefinition",
+        "link": "/api/flxphysicsrevolutejointdefinition"
       },
       {
         "text": "FlxPhysicsShape",
@@ -1614,6 +1650,14 @@
       {
         "text": "FlxPhysicsVector",
         "link": "/api/flxphysicsvector"
+      },
+      {
+        "text": "FlxPhysicsWeldJointDefinition",
+        "link": "/api/flxphysicsweldjointdefinition"
+      },
+      {
+        "text": "FlxPhysicsWheelJointDefinition",
+        "link": "/api/flxphysicswheeljointdefinition"
       },
       {
         "text": "FlxPhysicsWorld",
@@ -1852,8 +1896,20 @@
         "link": "/api/physicscompoundshapedefinition"
       },
       {
+        "text": "PhysicsDistanceJointDefinition",
+        "link": "/api/physicsdistancejointdefinition"
+      },
+      {
         "text": "PhysicsFilterDefinition",
         "link": "/api/physicsfilterdefinition"
+      },
+      {
+        "text": "PhysicsJointBaseDefinition",
+        "link": "/api/physicsjointbasedefinition"
+      },
+      {
+        "text": "PhysicsJointDefinition",
+        "link": "/api/physicsjointdefinition"
       },
       {
         "text": "PhysicsMaterialDefinition",
@@ -1866,6 +1922,14 @@
       {
         "text": "PhysicsPrimitiveShapeDefinition",
         "link": "/api/physicsprimitiveshapedefinition"
+      },
+      {
+        "text": "PhysicsPrismaticJointDefinition",
+        "link": "/api/physicsprismaticjointdefinition"
+      },
+      {
+        "text": "PhysicsRevoluteJointDefinition",
+        "link": "/api/physicsrevolutejointdefinition"
       },
       {
         "text": "PhysicsShapeBaseDefinition",
@@ -1882,6 +1946,14 @@
       {
         "text": "PhysicsVectorDefinition",
         "link": "/api/physicsvectordefinition"
+      },
+      {
+        "text": "PhysicsWeldJointDefinition",
+        "link": "/api/physicsweldjointdefinition"
+      },
+      {
+        "text": "PhysicsWheelJointDefinition",
+        "link": "/api/physicswheeljointdefinition"
       },
       {
         "text": "PhysicsWorldDocumentV1",

@@ -72,6 +72,20 @@ createBody(definition: FlxPhysicsBodyDefinition): FlxPhysicsBackendBody
 
 **Returns:** `FlxPhysicsBackendBody`
 
+### `createJoint()`
+
+```ts
+createJoint?(definition: FlxPhysicsBackendJointDefinition): FlxPhysicsBackendJoint
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `definition` | `FlxPhysicsBackendJointDefinition` | - |
+
+**Returns:** `FlxPhysicsBackendJoint`
+
 ### `destroy()`
 
 ```ts
@@ -91,6 +105,20 @@ destroyBody(body: FlxPhysicsBackendBody): void
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `body` | `FlxPhysicsBackendBody` | - |
+
+**Returns:** `void`
+
+### `destroyJoint()`
+
+```ts
+destroyJoint?(joint: FlxPhysicsBackendJoint): void
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `joint` | `FlxPhysicsBackendJoint` | - |
 
 **Returns:** `void`
 

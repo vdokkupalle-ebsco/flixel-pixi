@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Interactive Flixel-Pixi distance, revolute, prismatic, weld, and wheel joint showcase."
+    />
+    <title>Flixel-Pixi — Portable physics joints</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="showcase-shell">
+      <header>
+        <div>
+          <p class="eyebrow">FLIXEL-PIXI / PLANCK ADAPTER</p>
+          <h1>Constraints that stay portable.</h1>
+          <p class="lede">
+            Distance, revolute, prismatic, weld, and wheel joints run through
+            the same engine-level API. The Planck solver remains replaceable.
+          </p>
+        </div>
+        <div class="actions">
+          <p data-testid="status" data-state="loading" aria-live="polite">
+            Starting joints…
+          </p>
+          <button type="button" data-action="reset" disabled>
+            Reset scene
+          </button>
+        </div>
+      </header>
+      <section
+        class="simulation-card"
+        aria-label="Portable physics joint showcase"
+      >
+        <div class="canvas-host" data-testid="canvas-host"></div>
+        <p class="caption">
+          All coordinates use logical pixels; angular options use degrees. The
+          adapter handles solver-unit conversion.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

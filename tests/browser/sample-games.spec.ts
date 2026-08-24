@@ -175,6 +175,34 @@ test.describe('Rigid-body physics playground', () => {
   });
 });
 
+test.describe('Portable physics joints showcase', () => {
+  test('boots all five joints and demonstrates solver motion @cross-browser', async ({
+    page,
+  }) => {
+    await page.goto(`${GAMES}/physics-joints/`);
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 20_000 },
+    );
+
+    const initial = await page.evaluate(() =>
+      window.__FLIXEL_PIXI_JOINTS__?.snapshot?.(),
+    );
+    expect(initial?.jointCount).toBe(5);
+    expect(Number.isFinite(initial?.revoluteAngle)).toBe(true);
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          Math.abs(window.__FLIXEL_PIXI_JOINTS__?.snapshot?.().wheelAngle ?? 0),
+        ),
+      )
+      .toBeGreaterThan(10);
+    await expect(page.locator('canvas')).toBeVisible();
+  });
+});
+
 test.describe('Action sample', () => {
   test('boots with two cameras, burst increments, VCR record/stop, destroys', async ({
     page,

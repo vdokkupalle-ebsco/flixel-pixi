@@ -55,6 +55,19 @@ const examples: ExampleItem[] = [
     icon: '⚙️',
   },
   {
+    id: 'physics-joints',
+    title: 'Portable Physics Joints',
+    description:
+      'Distance, revolute, prismatic, weld, and wheel constraints through the optional Planck adapter.',
+    category: 'gameplay',
+    tags: ['FlxPhysicsWorld', 'Joints', 'Planck', 'Motors'],
+    demoUrl: '/games/physics-joints/index.html',
+    sourceUrl:
+      'https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/examples/games/physics-joints',
+    docUrl: '/examples/physics-joints/',
+    icon: '🔗',
+  },
+  {
     id: 'flx-invaders',
     title: 'Flx-Invaders (AS3 Port)',
     description:

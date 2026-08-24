@@ -1,6 +1,6 @@
 # Pluggable physics implementation plan
 
-- Status: Active design
+- Status: Complete
 - Owner: Flixel-Pixi maintainers
 - Started: 2026-08-24
 - Decision:
@@ -207,6 +207,22 @@ Portable code must branch on capabilities before requesting optional behavior.
 The host throws a typed unsupported-capability error when it cannot honor a
 descriptor.
 
+## Follow-up checkpoint — portable joints
+
+Completed on 2026-08-24 as three independently mergeable, stacked branches:
+
+1. `feature/physics-joint-contracts` added portable definitions, capability
+   checks, stable handles, and deterministic body/world cleanup.
+2. `feature/physics-joints-planck` added backward-compatible serialized joint
+   documents and implemented distance, revolute, prismatic, weld, and wheel
+   joints in the Planck adapter with logical-unit conversion.
+3. `feature/physics-joints-showcase` added the playable cross-browser proof and
+   author documentation.
+
+The schema keeps `joints` optional so existing version 1 world documents remain
+valid. New joint documents refer to stable body IDs and never serialize runtime
+or backend handles.
+
 ## Lifecycle contract
 
 For each active state and substate:
@@ -257,9 +273,9 @@ the engine rather than a separate schemas package.
 | Cleanup leaks                  | State ownership, idempotent destruction, repeated teardown tests.                  |
 | Premature API breadth          | Mandatory box/circle baseline; advanced features remain optional.                  |
 
-## Completion criteria
+## Completion evidence
 
-The checkpoint is complete when all four pull requests are merged, one real
-adapter passes the portable suite, the playground works from packed public
-exports, the root artifact still excludes solver code, cleanup checks pass, and
-ADR-0025 is Accepted.
+All four original pull requests and the portable-joints follow-up satisfy the
+criteria: the Planck adapter passes the portable suite, packed examples work
+from public exports, the root artifact excludes solver code, cleanup checks
+pass, and ADR-0025 is Accepted.

@@ -25,6 +25,13 @@ the engine depend on it.
   height="760px"
 />
 
+<DemoEmbed
+  src="/games/physics-joints/index.html"
+  title="Portable physics joints"
+  controlsHint="Watch all five constraints run together. Click or tap the scene to kick the distance-joint pendulum."
+  height="760px"
+/>
+
 ## Choose the collision system by gameplay need
 
 | Need                           | Arcade collision      | Rigid-body adapter                                  |
@@ -185,10 +192,55 @@ if (physics.capabilities.shapes.includes('polygon')) {
 ```
 
 The Planck adapter currently supports boxes, circles, convex polygons, compound
-fixtures, point/AABB/ray queries, sleeping, and continuous collision detection.
-It deliberately reports no capsules, joints, debug geometry, or deterministic
-replay support. Requesting an unsupported feature throws
+fixtures, point/AABB/ray queries, sleeping, continuous collision detection, and
+distance, revolute, prismatic, weld, and wheel joints. It deliberately reports
+no capsules, debug geometry, or deterministic replay support. Requesting an unsupported feature throws
 `FlxPhysicsUnsupportedCapabilityError` before backend creation.
+
+## Connect bodies with portable joints
+
+Create bodies first, then pass their portable handles to `addJoint()`. Anchors
+are world-space logical pixels. Angular limits and motor speeds use degrees and
+degrees per second; linear limits and speeds use pixels and pixels per second.
+
+```ts
+const chassisBody = physics.addBody(chassis, {
+  id: 'chassis',
+  type: 'dynamic',
+  shapes: [{ kind: 'box', width: 120, height: 28 }],
+});
+const wheelBody = physics.addBody(wheel, {
+  id: 'front-wheel',
+  type: 'dynamic',
+  shapes: [{ kind: 'circle', radius: 22 }],
+});
+
+const suspension = physics.addJoint({
+  id: 'front-suspension',
+  type: 'wheel',
+  bodyA: chassisBody,
+  bodyB: wheelBody,
+  anchor: { x: 420, y: 310 },
+  axis: { x: 0, y: 1 },
+  frequencyHz: 4,
+  dampingRatio: 0.65,
+  enableMotor: true,
+  motorSpeed: 180,
+  maxMotorTorque: 32_000,
+});
+```
+
+| Type        | Constraint                                                 |
+| ----------- | ---------------------------------------------------------- |
+| `distance`  | Keeps two world anchors at a fixed or springy distance     |
+| `revolute`  | Shares one pivot, with optional angular limits and motor   |
+| `prismatic` | Restricts motion to one axis, with linear limits and motor |
+| `weld`      | Locks relative position and angle                          |
+| `wheel`     | Combines suspension travel with a rotary motor             |
+
+`physics.capabilities.joints` reports the supported set. Destroying a joint is
+idempotent. Removing either connected body destroys its joints first, and
+resetting or destroying the world invalidates all body and joint handles.
 
 ## Units and solver differences
 
@@ -260,7 +312,9 @@ Migrate in this order:
 The original [arcade platformer example](/examples/platformer/) remains the
 recommended starting point for classic Flixel movement. The
 [rigid-body playground](/examples/physics-playground/) demonstrates the opt-in
-path rather than replacing it.
+path rather than replacing it. The
+[portable joints showcase](/examples/physics-joints/) demonstrates all five
+joint descriptors side by side.
 
 ## Related architecture
 

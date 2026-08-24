@@ -87,6 +87,10 @@ export default defineConfig({
           import.meta.dirname,
           'examples/games/physics-playground/index.html',
         ),
+        'physics-joints': resolve(
+          import.meta.dirname,
+          'examples/games/physics-joints/index.html',
+        ),
         'kenney-platformer': resolve(
           import.meta.dirname,
           'examples/games/kenney-platformer/index.html',
