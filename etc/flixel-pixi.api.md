@@ -3428,6 +3428,347 @@ export class FlxPath {
 }
 
 // @public
+export interface FlxPhysicsAabb {
+    // (undocumented)
+    readonly height: number;
+    // (undocumented)
+    readonly width: number;
+    // (undocumented)
+    readonly x: number;
+    // (undocumented)
+    readonly y: number;
+}
+
+// @public
+export type FlxPhysicsBackendBody = object;
+
+// @public
+export interface FlxPhysicsBackendContact {
+    // (undocumented)
+    readonly bodyA: FlxPhysicsBackendBody;
+    // (undocumented)
+    readonly bodyB: FlxPhysicsBackendBody;
+    // (undocumented)
+    readonly fixtureA?: string;
+    // (undocumented)
+    readonly fixtureB?: string;
+    // (undocumented)
+    readonly id: string;
+    // (undocumented)
+    readonly normal: FlxPhysicsVector;
+    // (undocumented)
+    readonly phase: FlxPhysicsContactPhase;
+    // (undocumented)
+    readonly points: readonly FlxPhysicsContactPoint[];
+    // (undocumented)
+    readonly sensor: boolean;
+}
+
+// @public
+export interface FlxPhysicsBackendQueryHit {
+    // (undocumented)
+    readonly body: FlxPhysicsBackendBody;
+    // (undocumented)
+    readonly fixture?: string;
+    // (undocumented)
+    readonly fraction?: number;
+    // (undocumented)
+    readonly normal?: FlxPhysicsVector;
+    // (undocumented)
+    readonly point?: FlxPhysicsVector;
+}
+
+// @public
+export interface FlxPhysicsBackendWorld {
+    // (undocumented)
+    applyForce(body: FlxPhysicsBackendBody, force: FlxPhysicsVector, point?: FlxPhysicsVector): void;
+    // (undocumented)
+    applyImpulse(body: FlxPhysicsBackendBody, impulse: FlxPhysicsVector, point?: FlxPhysicsVector): void;
+    // (undocumented)
+    readonly capabilities: FlxPhysicsCapabilities;
+    // (undocumented)
+    createBody(definition: FlxPhysicsBodyDefinition): FlxPhysicsBackendBody;
+    // (undocumented)
+    destroy(): void;
+    // (undocumented)
+    destroyBody(body: FlxPhysicsBackendBody): void;
+    // (undocumented)
+    drainContacts(): readonly FlxPhysicsBackendContact[];
+    // (undocumented)
+    getBodyState(body: FlxPhysicsBackendBody): FlxPhysicsBodyState;
+    // (undocumented)
+    getDebugGeometry?(): readonly FlxPhysicsDebugPrimitive[];
+    // (undocumented)
+    queryAabb(bounds: FlxPhysicsAabb, filter?: FlxPhysicsQueryFilter): readonly FlxPhysicsBackendQueryHit[];
+    // (undocumented)
+    queryPoint(point: FlxPhysicsVector, filter?: FlxPhysicsQueryFilter): readonly FlxPhysicsBackendQueryHit[];
+    // (undocumented)
+    queryRay?(query: FlxPhysicsRayQuery): readonly FlxPhysicsBackendQueryHit[];
+    // (undocumented)
+    reset(): void;
+    // (undocumented)
+    setBodyTransform(body: FlxPhysicsBackendBody, transform: FlxPhysicsTransform): void;
+    // (undocumented)
+    setBodyType(body: FlxPhysicsBackendBody, type: FlxPhysicsBodyType): void;
+    // (undocumented)
+    setBodyVelocity(body: FlxPhysicsBackendBody, velocity: FlxPhysicsVector, angularVelocity: number): void;
+    // (undocumented)
+    setGravity(gravity: FlxPhysicsVector): void;
+    // (undocumented)
+    step(elapsed: number): void;
+}
+
+// @public
+export interface FlxPhysicsBodyDefinition {
+    // (undocumented)
+    readonly allowSleep?: boolean;
+    // (undocumented)
+    readonly angle?: number;
+    // (undocumented)
+    readonly angularVelocity?: number;
+    // (undocumented)
+    readonly awake?: boolean;
+    // (undocumented)
+    readonly continuousCollision?: boolean;
+    // (undocumented)
+    readonly filter?: FlxPhysicsFilter;
+    // (undocumented)
+    readonly fixedRotation?: boolean;
+    // (undocumented)
+    readonly gravityScale?: number;
+    // (undocumented)
+    readonly id?: string;
+    // (undocumented)
+    readonly material?: FlxPhysicsMaterial;
+    // (undocumented)
+    readonly position?: FlxPhysicsVector;
+    // (undocumented)
+    readonly shapes: readonly FlxPhysicsShape[];
+    // (undocumented)
+    readonly type: FlxPhysicsBodyType;
+    // (undocumented)
+    readonly velocity?: FlxPhysicsVector;
+}
+
+// @public
+export interface FlxPhysicsBodyState extends FlxPhysicsTransform {
+    // (undocumented)
+    readonly angularVelocity: number;
+    // (undocumented)
+    readonly awake: boolean;
+    // (undocumented)
+    readonly velocity: FlxPhysicsVector;
+}
+
+// @public
+export type FlxPhysicsBodyType = 'static' | 'kinematic' | 'dynamic';
+
+// @public
+export interface FlxPhysicsBoxShape extends FlxPhysicsShapeBase {
+    // (undocumented)
+    readonly height: number;
+    // (undocumented)
+    readonly kind: 'box';
+    // (undocumented)
+    readonly width: number;
+}
+
+// @public
+export interface FlxPhysicsCapabilities {
+    // (undocumented)
+    readonly continuousCollision: boolean;
+    // (undocumented)
+    readonly debugGeometry: boolean;
+    // (undocumented)
+    readonly deterministicReplay: boolean;
+    // (undocumented)
+    readonly joints: readonly string[];
+    // (undocumented)
+    readonly queries: readonly FlxPhysicsQueryCapability[];
+    // (undocumented)
+    readonly shapes: readonly FlxPhysicsShapeCapability[];
+    // (undocumented)
+    readonly sleeping: boolean;
+}
+
+// @public
+export interface FlxPhysicsCapsuleShape extends FlxPhysicsShapeBase {
+    // (undocumented)
+    readonly axis?: 'x' | 'y';
+    // (undocumented)
+    readonly kind: 'capsule';
+    // (undocumented)
+    readonly length: number;
+    // (undocumented)
+    readonly radius: number;
+}
+
+// @public
+export interface FlxPhysicsCircleShape extends FlxPhysicsShapeBase {
+    // (undocumented)
+    readonly kind: 'circle';
+    // (undocumented)
+    readonly radius: number;
+}
+
+// @public
+export interface FlxPhysicsCompoundShape extends FlxPhysicsShapeBase {
+    // (undocumented)
+    readonly kind: 'compound';
+    // (undocumented)
+    readonly shapes: readonly FlxPhysicsPrimitiveShape[];
+}
+
+// @public
+export type FlxPhysicsContactPhase = 'begin' | 'stay' | 'end';
+
+// @public
+export interface FlxPhysicsContactPoint {
+    // (undocumented)
+    readonly point: FlxPhysicsVector;
+    // (undocumented)
+    readonly separation: number;
+}
+
+// @public
+export type FlxPhysicsDebugPrimitive = {
+    readonly kind: 'line';
+    readonly from: FlxPhysicsVector;
+    readonly to: FlxPhysicsVector;
+    readonly color: number;
+} | {
+    readonly kind: 'polygon';
+    readonly vertices: readonly FlxPhysicsVector[];
+    readonly color: number;
+    readonly filled?: boolean;
+} | {
+    readonly kind: 'circle';
+    readonly center: FlxPhysicsVector;
+    readonly radius: number;
+    readonly color: number;
+    readonly filled?: boolean;
+} | {
+    readonly kind: 'point';
+    readonly point: FlxPhysicsVector;
+    readonly color: number;
+    readonly size?: number;
+};
+
+// @public
+export interface FlxPhysicsFilter {
+    readonly category?: number;
+    readonly group?: number;
+    readonly mask?: number;
+}
+
+// @public
+export interface FlxPhysicsMaterial {
+    // (undocumented)
+    readonly density?: number;
+    // (undocumented)
+    readonly friction?: number;
+    // (undocumented)
+    readonly restitution?: number;
+}
+
+// @public
+export interface FlxPhysicsPolygonShape extends FlxPhysicsShapeBase {
+    // (undocumented)
+    readonly kind: 'polygon';
+    // (undocumented)
+    readonly vertices: readonly FlxPhysicsVector[];
+}
+
+// @public
+export type FlxPhysicsPrimitiveShape = FlxPhysicsBoxShape | FlxPhysicsCircleShape | FlxPhysicsCapsuleShape | FlxPhysicsPolygonShape;
+
+// @public
+export type FlxPhysicsQueryCapability = 'point' | 'aabb' | 'ray' | 'shape-cast';
+
+// @public
+export interface FlxPhysicsQueryFilter extends FlxPhysicsFilter {
+    // (undocumented)
+    readonly includeSensors?: boolean;
+}
+
+// @public
+export interface FlxPhysicsRayQuery {
+    // (undocumented)
+    readonly filter?: FlxPhysicsQueryFilter;
+    // (undocumented)
+    readonly from: FlxPhysicsVector;
+    // (undocumented)
+    readonly mode?: 'closest' | 'all';
+    // (undocumented)
+    readonly to: FlxPhysicsVector;
+}
+
+// @public
+export type FlxPhysicsShape = FlxPhysicsPrimitiveShape | FlxPhysicsCompoundShape;
+
+// @public
+export interface FlxPhysicsShapeBase {
+    // (undocumented)
+    readonly angle?: number;
+    // (undocumented)
+    readonly filter?: FlxPhysicsFilter;
+    readonly id?: string;
+    // (undocumented)
+    readonly material?: FlxPhysicsMaterial;
+    // (undocumented)
+    readonly offset?: FlxPhysicsVector;
+    // (undocumented)
+    readonly sensor?: boolean;
+}
+
+// @public
+export type FlxPhysicsShapeCapability = FlxPhysicsShape['kind'];
+
+// @public
+export interface FlxPhysicsTransform {
+    // (undocumented)
+    readonly angle: number;
+    // (undocumented)
+    readonly position: FlxPhysicsVector;
+}
+
+// @public
+export class FlxPhysicsUnsupportedCapabilityError extends Error {
+    constructor(capability: string);
+    // (undocumented)
+    readonly capability: string;
+}
+
+// @public
+export interface FlxPhysicsVector {
+    // (undocumented)
+    readonly x: number;
+    // (undocumented)
+    readonly y: number;
+}
+
+// @public
+export class FlxPhysicsWorld {
+    constructor(backend: FlxPhysicsBackendWorld, options?: FlxPhysicsWorldOptions);
+    get capabilities(): FlxPhysicsCapabilities;
+    destroy(): void;
+    get destroyed(): boolean;
+    // (undocumented)
+    paused: boolean;
+    reset(): void;
+    setGravity(gravity: FlxPhysicsVector): void;
+    step(elapsed: number): void;
+}
+
+// @public
+export interface FlxPhysicsWorldOptions {
+    // (undocumented)
+    readonly gravity?: FlxPhysicsVector;
+    // (undocumented)
+    readonly paused?: boolean;
+}
+
+// @public
 export type FlxPixiTextNode = BitmapText | Text_2;
 
 // @public
@@ -4140,7 +4481,10 @@ export class FlxState extends FlxGroup {
     persistentDraw: boolean;
     // (undocumented)
     persistentUpdate: boolean;
+    get physicsWorld(): FlxPhysicsWorld | null;
+    removePhysicsWorld(destroy?: boolean): FlxPhysicsWorld | null;
     resetSubState(): void;
+    setPhysicsWorld(world: FlxPhysicsWorld | null, destroyPrevious?: boolean): FlxPhysicsWorld | null;
     // (undocumented)
     subState: FlxSubState | null;
     get subStateClosed(): FlxSignal<FlxSubState>;
