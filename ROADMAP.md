@@ -25,6 +25,17 @@ real games validate the API.
 - Public browser bootstrap, playable samples, stress benchmarks, and soak tests.
 - A compatibility ledger covering all 43 upstream classes and 766 public members.
 
+## Ecosystem expansion
+
+The particle runtime and Particle Editor proved the optional-workspace model.
+The next active checkpoint is pluggable physics: portable contracts remain in
+`flixel-pixi`, concrete solvers remain optional adapter packages, and built-in
+arcade collision stays the default. The work is split into contracts/lifecycle,
+bindings/schemas, one reference adapter, and a playable proof.
+
+See [ADR-0025](https://github.com/vdokkupalle-ebsco/flixel-pixi/blob/main/docs/adr/0025-state-scoped-pluggable-physics.md) and the
+[implementation plan](/plans/2026-08-24-pluggable-physics).
+
 ## External compatibility validation
 
 - Complete: AdamAtomic's MIT-licensed Flx-Invaders is pinned and ported through
