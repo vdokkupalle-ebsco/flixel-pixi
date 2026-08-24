@@ -25,6 +25,7 @@ export declare class FlxState extends FlxGroup
 | **`destroySubStates`** | - | `boolean` | - |
 | **`persistentDraw`** | - | `boolean` | - |
 | **`persistentUpdate`** | - | `boolean` | - |
+| **`physicsWorld`** | `readonly` | `FlxPhysicsWorld \| null` | Optional state-owned physics world, advanced after ordinary members. |
 | **`subState`** | - | `FlxSubState \| null` | - |
 | **`subStateClosed`** | `readonly` | `FlxSignal<FlxSubState>` | Dispatched after the current substate has closed. |
 | **`subStateOpened`** | `readonly` | `FlxSignal<FlxSubState>` | Dispatched after a requested substate has opened. |
@@ -77,6 +78,22 @@ openSubState(subState: FlxSubState): void
 
 **Returns:** `void`
 
+### `removePhysicsWorld()`
+
+```ts
+removePhysicsWorld(destroy?: boolean): FlxPhysicsWorld | null
+```
+
+Remove the current physics world and optionally release it.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `destroy` | `boolean` | - |
+
+**Returns:** `FlxPhysicsWorld | null`
+
 ### `resetSubState()`
 
 ```ts
@@ -86,4 +103,21 @@ resetSubState(): void
 Applies a deferred substate request. Normally called by the game loop.
 
 **Returns:** `void`
+
+### `setPhysicsWorld()`
+
+```ts
+setPhysicsWorld(world: FlxPhysicsWorld | null, destroyPrevious?: boolean): FlxPhysicsWorld | null
+```
+
+Install a physics world and optionally destroy the previous one. The same world may be installed repeatedly without resetting it.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `world` | `FlxPhysicsWorld \| null` | - |
+| `destroyPrevious` | `boolean` | - |
+
+**Returns:** `FlxPhysicsWorld | null`
 

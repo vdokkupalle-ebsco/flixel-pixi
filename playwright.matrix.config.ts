@@ -15,12 +15,20 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4174',
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command: 'npm run dev:games -- --host 127.0.0.1 --port 4174',
-    reuseExistingServer: process.env.CI === undefined,
-    timeout: 120_000,
-    url: 'http://127.0.0.1:4174',
-  },
+  webServer: [
+    {
+      command: 'npm run dev:games -- --host 127.0.0.1 --port 4174',
+      reuseExistingServer: process.env.CI === undefined,
+      timeout: 120_000,
+      url: 'http://127.0.0.1:4174',
+    },
+    {
+      command: 'npm run docs:dev -- --host 127.0.0.1 --port 4175 --strictPort',
+      reuseExistingServer: process.env.CI === undefined,
+      timeout: 180_000,
+      url: 'http://127.0.0.1:4175/flixel-pixi/',
+    },
+  ],
   projects: [
     {
       name: 'chromium-android',

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Interactive Flixel-Pixi rigid-body physics playground powered by the optional Planck adapter."
+    />
+    <title>Flixel-Pixi — Rigid-body physics playground</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="playground-shell">
+      <header class="playground-header">
+        <div>
+          <p class="eyebrow">FLIXEL-PIXI / OPTIONAL PHYSICS</p>
+          <h1>Rigid bodies, without locking in a solver.</h1>
+          <p class="lede">
+            Planck powers this scene through the portable engine contract. Click
+            a body to run a point query and give it a small impulse.
+          </p>
+        </div>
+        <div class="header-actions">
+          <p
+            class="status"
+            data-testid="status"
+            data-state="loading"
+            aria-live="polite"
+          >
+            Starting simulation…
+          </p>
+          <button type="button" data-action="destroy" disabled>
+            Destroy world
+          </button>
+        </div>
+      </header>
+
+      <section class="simulation-card" aria-label="Physics simulation">
+        <div class="canvas-host" data-testid="canvas-host"></div>
+        <div class="legend" aria-label="Body type legend">
+          <span><i class="legend-dot dynamic"></i>Dynamic bodies</span>
+          <span><i class="legend-dot kinematic"></i>Kinematic obstacle</span>
+          <span><i class="legend-dot sensor"></i>Sensor zone</span>
+          <span><i class="legend-dot static"></i>Static geometry</span>
+        </div>
+      </section>
+
+      <section class="telemetry" aria-label="Live physics telemetry">
+        <article>
+          <span class="metric-label">Active contacts</span>
+          <strong data-stat="contacts">0</strong>
+          <small>solid contact pairs</small>
+        </article>
+        <article>
+          <span class="metric-label">Sensor entries</span>
+          <strong data-stat="sensor">0</strong>
+          <small>begin events observed</small>
+        </article>
+        <article class="wide">
+          <span class="metric-label">Latest contact</span>
+          <strong data-stat="event">waiting for first contact</strong>
+          <small>stable begin / stay / end stream</small>
+        </article>
+        <article class="wide">
+          <span class="metric-label">Point query</span>
+          <strong data-stat="query">click a body to query + nudge it</strong>
+          <small>portable hit → body id</small>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

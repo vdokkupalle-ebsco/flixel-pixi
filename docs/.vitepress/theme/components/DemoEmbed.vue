@@ -119,6 +119,7 @@ function toggleFullscreen() {
         :src="resolvedSrc"
         :title="title"
         class="game-iframe"
+        :style="{ height }"
         allow="autoplay; fullscreen; gamepad"
         loading="lazy"
       ></iframe>

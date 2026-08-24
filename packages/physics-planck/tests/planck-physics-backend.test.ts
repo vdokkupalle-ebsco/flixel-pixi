@@ -97,6 +97,30 @@ describe('PlanckPhysicsBackend', () => {
     expect(ray[0]?.normal).toEqual({ x: -1, y: 0 });
   });
 
+  it('reports overlapping sensors even when Planck has no contact manifold', () => {
+    const world = new FlxPhysicsWorld(new PlanckPhysicsBackend());
+    const zone = new FlxObject(0, 0, 40, 40);
+    const visitor = new FlxObject(10, 10, 10, 10);
+    world.addBody(zone, {
+      id: 'zone',
+      type: 'static',
+      shapes: [{ kind: 'box', width: 40, height: 40, sensor: true }],
+    });
+    world.addBody(visitor, {
+      id: 'visitor',
+      type: 'dynamic',
+      shapes: box(10, 10),
+    });
+    const contacts: { sensor: boolean; points: number }[] = [];
+    world.contactStarted.add((contact) =>
+      contacts.push({ sensor: contact.sensor, points: contact.points.length }),
+    );
+
+    world.step(1 / 60);
+
+    expect(contacts).toEqual([{ sensor: true, points: 0 }]);
+  });
+
   it('converts degrees and exposes explicit native access', () => {
     const backend = new PlanckPhysicsBackend({ metresPerPixel: 0.02 });
     const world = new FlxPhysicsWorld(backend);

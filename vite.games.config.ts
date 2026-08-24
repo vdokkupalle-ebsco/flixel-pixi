@@ -5,6 +5,15 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: './',
   root: resolve(import.meta.dirname, 'examples/games'),
+  resolve: {
+    alias: {
+      'flixel-pixi': resolve(import.meta.dirname, 'src/index.ts'),
+      '@flixel-pixi/physics-planck': resolve(
+        import.meta.dirname,
+        'packages/physics-planck/src/index.ts',
+      ),
+    },
+  },
   build: {
     emptyOutDir: true,
     outDir: resolve(import.meta.dirname, 'dist/games'),
@@ -73,6 +82,10 @@ export default defineConfig({
         'dino-runner': resolve(
           import.meta.dirname,
           'examples/games/dino-runner/index.html',
+        ),
+        'physics-playground': resolve(
+          import.meta.dirname,
+          'examples/games/physics-playground/index.html',
         ),
         'kenney-platformer': resolve(
           import.meta.dirname,

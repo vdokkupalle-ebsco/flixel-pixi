@@ -289,6 +289,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'QuadTree & Collision', link: '/guide/collision' },
+            { text: 'Rigid-body Physics', link: '/guide/physics' },
             { text: 'Math & Deterministic RNG', link: '/guide/math' },
           ],
         },
@@ -354,6 +355,10 @@ export default defineConfig({
           text: 'Gameplay & Physics',
           items: [
             { text: 'Retro Platformer', link: '/examples/platformer/' },
+            {
+              text: 'Rigid-body Physics',
+              link: '/examples/physics-playground/',
+            },
             {
               text: 'Flx-Invaders (AS3 Port)',
               link: '/examples/flx-invaders/',

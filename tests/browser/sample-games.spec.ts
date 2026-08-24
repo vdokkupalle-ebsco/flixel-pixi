@@ -131,6 +131,50 @@ test.describe('Platformer sample', () => {
   });
 });
 
+test.describe('Rigid-body physics playground', () => {
+  test('steps portable bodies, reports sensors and queries, then destroys @cross-browser', async ({
+    page,
+  }) => {
+    await page.goto(`${GAMES}/physics-playground/`);
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'ready',
+      { timeout: 20_000 },
+    );
+
+    const initial = await page.evaluate(() =>
+      window.__FLIXEL_PIXI_PHYSICS__?.snapshot?.(),
+    );
+    expect(initial?.bodies).toBe(12);
+    expect(Number.isFinite(initial?.dynamicY)).toBe(true);
+
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => window.__FLIXEL_PIXI_PHYSICS__?.snapshot?.().sensorEntries ?? 0,
+        ),
+      )
+      .toBeGreaterThan(0);
+
+    const query = await page.evaluate(() =>
+      window.__FLIXEL_PIXI_PHYSICS__?.queryAt?.(100, 440),
+    );
+    expect(query).toContain('floor');
+    await expect(page.locator('[data-stat="query"]')).toContainText('floor');
+
+    await page.locator('[data-action="destroy"]').click();
+    await expect(page.locator('[data-testid="status"]')).toHaveAttribute(
+      'data-state',
+      'destroyed',
+    );
+    expect(
+      await page.evaluate(
+        () => window.__FLIXEL_PIXI_PHYSICS__?.destroyed ?? false,
+      ),
+    ).toBe(true);
+  });
+});
+
 test.describe('Action sample', () => {
   test('boots with two cameras, burst increments, VCR record/stop, destroys', async ({
     page,

@@ -42,6 +42,19 @@ const examples: ExampleItem[] = [
     icon: '🏃',
   },
   {
+    id: 'physics-playground',
+    title: 'Rigid-body Physics',
+    description:
+      'Optional Planck adapter with static, kinematic, dynamic, and sensor bodies plus portable contacts and queries.',
+    category: 'gameplay',
+    tags: ['FlxPhysicsWorld', 'Planck', 'Sensors', 'Queries'],
+    demoUrl: '/games/physics-playground/index.html',
+    sourceUrl:
+      'https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/examples/games/physics-playground',
+    docUrl: '/examples/physics-playground/',
+    icon: '⚙️',
+  },
+  {
     id: 'flx-invaders',
     title: 'Flx-Invaders (AS3 Port)',
     description:
