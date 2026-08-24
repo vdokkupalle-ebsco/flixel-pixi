@@ -201,8 +201,19 @@ function filter(value: unknown, path: string, issues: ValidationIssue[]): void {
   }
   for (const key of ['category', 'mask', 'group'] as const) {
     const candidate = value[key];
-    if (candidate !== undefined && !Number.isSafeInteger(candidate)) {
-      add(issues, `${path}.${key}`, 'invalid_value', 'Expected an integer.');
+    if (
+      candidate !== undefined &&
+      (!Number.isSafeInteger(candidate) ||
+        (key === 'group'
+          ? Number(candidate) < -0x8000 || Number(candidate) > 0x7fff
+          : Number(candidate) < 0 || Number(candidate) > 0xffff))
+    ) {
+      add(
+        issues,
+        `${path}.${key}`,
+        'invalid_value',
+        `Expected a ${key === 'group' ? 'signed' : 'unsigned'} 16-bit integer.`,
+      );
     }
   }
 }

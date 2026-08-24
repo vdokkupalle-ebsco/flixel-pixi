@@ -629,10 +629,13 @@ function validateFilter(
     if (
       value !== undefined &&
       (!Number.isSafeInteger(value) ||
-        value < -0x80000000 ||
-        value > 0xffffffff)
+        (name === 'group'
+          ? value < -0x8000 || value > 0x7fff
+          : value < 0 || value > 0xffff))
     ) {
-      throw new RangeError(`Physics filter ${name} must be a 32-bit integer.`);
+      throw new RangeError(
+        `Physics filter ${name} must be a ${name === 'group' ? 'signed' : 'unsigned'} 16-bit integer.`,
+      );
     }
   }
 }

@@ -433,7 +433,7 @@ describe('FlxPhysicsWorld object bindings', () => {
       }),
     ).toThrow('shape:capsule');
     expect(() => world.queryPoint({ x: 0, y: 0 }, { mask: 1.5 })).toThrow(
-      '32-bit integer',
+      '16-bit integer',
     );
   });
 });

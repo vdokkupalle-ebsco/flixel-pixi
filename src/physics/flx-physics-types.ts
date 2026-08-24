@@ -19,7 +19,7 @@ export type FlxPhysicsBodyType = 'static' | 'kinematic' | 'dynamic';
 export interface FlxPhysicsFilter {
   /** Category bits owned by this fixture. Defaults to `1`. */
   readonly category?: number;
-  /** Category bits this fixture accepts. Defaults to all 32 bits. */
+  /** Category bits this fixture accepts. Defaults to all 16 bits. */
   readonly mask?: number;
   /** Optional solver collision group. Defaults to `0`. */
   readonly group?: number;
