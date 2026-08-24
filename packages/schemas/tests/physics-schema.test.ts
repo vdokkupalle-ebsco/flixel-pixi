@@ -96,6 +96,115 @@ describe('physics schemas', () => {
     } catch (error) {
       expect(isPhysicsValidationError(error)).toBe(true);
     }
+    expect(isPhysicsValidationError(new Error('different error'))).toBe(false);
+    expect(() => parsePhysicsBody(null)).toThrow(/Expected an object/);
+  });
+
+  it('accepts every portable shape and optional body property', () => {
+    const result = validatePhysicsBody({
+      kind: 'flixel-pixi-physics-body',
+      schemaVersion: 1,
+      id: 'all-shapes',
+      entityId: 'entity',
+      type: 'kinematic',
+      gravityScale: 0,
+      fixedRotation: false,
+      continuousCollision: true,
+      allowSleep: false,
+      filter: { category: 1, mask: 0xffff, group: -1 },
+      material: { density: 0, friction: 0.5, restitution: 1 },
+      extensions: { nested: [null, true, 'portable', 3] },
+      shapes: [
+        { kind: 'box', id: 'box', width: 10, height: 20 },
+        { kind: 'circle', id: 'circle', radius: 4 },
+        { kind: 'capsule', id: 'capsule', radius: 3, length: 12, axis: 'y' },
+        {
+          kind: 'polygon',
+          id: 'polygon',
+          vertices: [
+            { x: 0, y: 0 },
+            { x: 10, y: 0 },
+            { x: 0, y: 10 },
+          ],
+        },
+        {
+          kind: 'compound',
+          id: 'compound',
+          offset: { x: 2, y: 3 },
+          angle: 15,
+          sensor: true,
+          shapes: [{ kind: 'circle', radius: 2 }],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('reports malformed filters, materials, vectors, and nested shapes', () => {
+    const result = validatePhysicsWorld({
+      kind: 'wrong-world',
+      schemaVersion: 9,
+      id: ' ',
+      gravity: { x: Number.POSITIVE_INFINITY, y: 'down' },
+      extensions: [],
+      bodies: [
+        null,
+        {
+          kind: 'flixel-pixi-physics-body',
+          schemaVersion: 1,
+          id: 'bad-body',
+          entityId: 'bad-entity',
+          type: 'dynamic',
+          gravityScale: Number.NaN,
+          fixedRotation: 'yes',
+          continuousCollision: 1,
+          allowSleep: null,
+          filter: { category: -1, mask: 0x1_0000, group: 0x8000 },
+          material: { density: -1, friction: Number.NaN, restitution: 2 },
+          shapes: [
+            'not-a-shape',
+            { kind: 'box', id: 'duplicate', width: 0, height: -1 },
+            { kind: 'circle', id: 'duplicate', radius: 0 },
+            { kind: 'capsule', radius: -1, length: 0, axis: 'z' },
+            { kind: 'polygon', vertices: [{ x: 0, y: 0 }] },
+            { kind: 'compound', shapes: [] },
+            {
+              kind: 'compound',
+              shapes: [{ kind: 'compound', shapes: [] }],
+            },
+            { kind: 'unknown', offset: { x: 'left', y: null } },
+          ],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.issues.map(({ path }) => path);
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          '$.kind',
+          '$.gravity.x',
+          '$.bodies[0]',
+          '$.bodies[1].filter.category',
+          '$.bodies[1].material.restitution',
+          '$.bodies[1].shapes[2].id',
+          '$.bodies[1].shapes[5].shapes',
+          '$.bodies[1].shapes[6].shapes[0].kind',
+        ]),
+      );
+    }
+
+    expect(
+      validatePhysicsWorld({
+        kind: 'flixel-pixi-physics-world',
+        schemaVersion: 1,
+        id: 'missing-bodies',
+        gravity: { x: 0, y: 0 },
+        bodies: {},
+      }).success,
+    ).toBe(false);
   });
 
   it('accepts every portable shape and optional body property', () => {

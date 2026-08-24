@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import budgets from '../../performance-budgets.json' with { type: 'json' };
 
 const VIEWPORT_DEMO = 'http://127.0.0.1:4174/viewport/';
+const PHYSICS_GUIDE = 'http://127.0.0.1:4175/flixel-pixi/guide/physics';
 const matrix = budgets.browser.deviceMatrix;
 
 async function openViewportDemo(page: Page): Promise<void> {
@@ -32,6 +33,54 @@ async function waitForRenderedFrame(page: Page): Promise<void> {
     )
     .toBeGreaterThan(before);
 }
+
+test('keeps the physics guide iframe usable at mobile widths', async ({
+  page,
+}) => {
+  await page.goto(PHYSICS_GUIDE);
+  await page.getByRole('button', { name: 'Run Interactive Game' }).click();
+  const frame = page.frameLocator(
+    'iframe[title="Rigid-body physics playground"]',
+  );
+  await expect(frame.locator('[data-testid="status"]')).toHaveAttribute(
+    'data-state',
+    'ready',
+    { timeout: matrix.readyTimeoutMs },
+  );
+
+  const layout = await page.evaluate(() => {
+    const iframe = document.querySelector<HTMLIFrameElement>(
+      'iframe[title="Rigid-body physics playground"]',
+    );
+    if (iframe === null) return null;
+    const cabinet = iframe.closest('.cabinet-card');
+    if (cabinet === null) return null;
+    return {
+      cabinetRight: cabinet.getBoundingClientRect().right,
+      documentWidth: document.documentElement.scrollWidth,
+      iframeHeight: iframe.getBoundingClientRect().height,
+      iframeRight: iframe.getBoundingClientRect().right,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  expect(layout).not.toBeNull();
+  expect(layout?.documentWidth).toBeLessThanOrEqual(layout?.viewportWidth ?? 0);
+  expect(layout?.cabinetRight ?? Infinity).toBeLessThanOrEqual(
+    layout?.viewportWidth ?? 0,
+  );
+  expect(layout?.iframeRight ?? Infinity).toBeLessThanOrEqual(
+    layout?.viewportWidth ?? 0,
+  );
+  expect(layout?.iframeHeight ?? 0).toBeGreaterThanOrEqual(700);
+
+  const gameLayout = await frame.locator('body').evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: window.innerWidth,
+  }));
+  expect(gameLayout.documentWidth).toBeLessThanOrEqual(
+    gameLayout.viewportWidth,
+  );
+});
 
 test('keeps layout, DPR, and semantic HUD controls valid across orientation changes', async ({
   page,

@@ -450,7 +450,6 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
       const second = this.#fixtures.get(contact.getFixtureB());
       if (first === undefined || second === undefined) continue;
       const manifold = contact.getWorldManifold(null);
-      if (manifold === undefined) continue;
       const id = contactId(first, second);
       contacts.set(id, {
         id,
@@ -460,14 +459,20 @@ export class PlanckPhysicsBackend implements FlxPhysicsBackendWorld {
         ...(first.id === undefined ? {} : { fixtureA: first.id }),
         ...(second.id === undefined ? {} : { fixtureB: second.id }),
         sensor: first.fixture.isSensor() || second.fixture.isSensor(),
-        normal: { x: manifold.normal.x, y: manifold.normal.y },
-        points: manifold.points
-          .slice(0, manifold.pointCount)
-          .map((point, index) => ({
-            point: this.#fromSolverVector(point),
-            separation:
-              (manifold.separations[index] ?? 0) / this.#metresPerPixel,
-          })),
+        normal:
+          manifold == null
+            ? { x: 0, y: 0 }
+            : { x: manifold.normal.x, y: manifold.normal.y },
+        points:
+          manifold == null
+            ? []
+            : manifold.points
+                .slice(0, manifold.pointCount)
+                .map((point, index) => ({
+                  point: this.#fromSolverVector(point),
+                  separation:
+                    (manifold.separations[index] ?? 0) / this.#metresPerPixel,
+                })),
       });
     }
     return contacts;

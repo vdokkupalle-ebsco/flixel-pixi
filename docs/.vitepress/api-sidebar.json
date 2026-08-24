@@ -1484,6 +1484,146 @@
         "link": "/api/flxoverlapcallback"
       },
       {
+        "text": "FlxPhysicsAabb",
+        "link": "/api/flxphysicsaabb"
+      },
+      {
+        "text": "FlxPhysicsBackendBody",
+        "link": "/api/flxphysicsbackendbody"
+      },
+      {
+        "text": "FlxPhysicsBackendContact",
+        "link": "/api/flxphysicsbackendcontact"
+      },
+      {
+        "text": "FlxPhysicsBackendQueryHit",
+        "link": "/api/flxphysicsbackendqueryhit"
+      },
+      {
+        "text": "FlxPhysicsBackendWorld",
+        "link": "/api/flxphysicsbackendworld"
+      },
+      {
+        "text": "FlxPhysicsBody",
+        "link": "/api/flxphysicsbody"
+      },
+      {
+        "text": "FlxPhysicsBodyDefinition",
+        "link": "/api/flxphysicsbodydefinition"
+      },
+      {
+        "text": "FlxPhysicsBodyState",
+        "link": "/api/flxphysicsbodystate"
+      },
+      {
+        "text": "FlxPhysicsBodyType",
+        "link": "/api/flxphysicsbodytype"
+      },
+      {
+        "text": "FlxPhysicsBoxShape",
+        "link": "/api/flxphysicsboxshape"
+      },
+      {
+        "text": "FlxPhysicsCapabilities",
+        "link": "/api/flxphysicscapabilities"
+      },
+      {
+        "text": "FlxPhysicsCapsuleShape",
+        "link": "/api/flxphysicscapsuleshape"
+      },
+      {
+        "text": "FlxPhysicsCircleShape",
+        "link": "/api/flxphysicscircleshape"
+      },
+      {
+        "text": "FlxPhysicsCompoundShape",
+        "link": "/api/flxphysicscompoundshape"
+      },
+      {
+        "text": "FlxPhysicsContact",
+        "link": "/api/flxphysicscontact"
+      },
+      {
+        "text": "FlxPhysicsContactPhase",
+        "link": "/api/flxphysicscontactphase"
+      },
+      {
+        "text": "FlxPhysicsContactPoint",
+        "link": "/api/flxphysicscontactpoint"
+      },
+      {
+        "text": "FlxPhysicsDebugPrimitive",
+        "link": "/api/flxphysicsdebugprimitive"
+      },
+      {
+        "text": "FlxPhysicsFilter",
+        "link": "/api/flxphysicsfilter"
+      },
+      {
+        "text": "FlxPhysicsMaterial",
+        "link": "/api/flxphysicsmaterial"
+      },
+      {
+        "text": "FlxPhysicsObjectDefinition",
+        "link": "/api/flxphysicsobjectdefinition"
+      },
+      {
+        "text": "FlxPhysicsPolygonShape",
+        "link": "/api/flxphysicspolygonshape"
+      },
+      {
+        "text": "FlxPhysicsPrimitiveShape",
+        "link": "/api/flxphysicsprimitiveshape"
+      },
+      {
+        "text": "FlxPhysicsQueryCapability",
+        "link": "/api/flxphysicsquerycapability"
+      },
+      {
+        "text": "FlxPhysicsQueryFilter",
+        "link": "/api/flxphysicsqueryfilter"
+      },
+      {
+        "text": "FlxPhysicsQueryHit",
+        "link": "/api/flxphysicsqueryhit"
+      },
+      {
+        "text": "FlxPhysicsRayQuery",
+        "link": "/api/flxphysicsrayquery"
+      },
+      {
+        "text": "FlxPhysicsShape",
+        "link": "/api/flxphysicsshape"
+      },
+      {
+        "text": "FlxPhysicsShapeBase",
+        "link": "/api/flxphysicsshapebase"
+      },
+      {
+        "text": "FlxPhysicsShapeCapability",
+        "link": "/api/flxphysicsshapecapability"
+      },
+      {
+        "text": "FlxPhysicsTransform",
+        "link": "/api/flxphysicstransform"
+      },
+      {
+        "text": "FlxPhysicsUnsupportedCapabilityError",
+        "link": "/api/flxphysicsunsupportedcapabilityerror"
+      },
+      {
+        "text": "FlxPhysicsVector",
+        "link": "/api/flxphysicsvector"
+      },
+      {
+        "text": "FlxPhysicsWorld",
+        "link": "/api/flxphysicsworld"
+      },
+      {
+        "text": "FlxPhysicsWorldOptions",
+        "link": "/api/flxphysicsworldoptions"
+      },
+      {
         "text": "FlxPixiTextNode",
         "link": "/api/flxpixitextnode"
       },
@@ -1540,6 +1680,10 @@
         "link": "/api/isparticlepresetvalidationerror"
       },
       {
+        "text": "isPhysicsValidationError",
+        "link": "/api/isphysicsvalidationerror"
+      },
+      {
         "text": "JsonObject",
         "link": "/api/jsonobject"
       },
@@ -1562,6 +1706,14 @@
       {
         "text": "parseParticlePreset",
         "link": "/api/parseparticlepreset"
+      },
+      {
+        "text": "parsePhysicsBody",
+        "link": "/api/parsephysicsbody"
+      },
+      {
+        "text": "parsePhysicsWorld",
+        "link": "/api/parsephysicsworld"
       },
       {
         "text": "ParticleAppearanceDefinition",
@@ -1676,6 +1828,70 @@
         "link": "/api/particlevectorrange"
       },
       {
+        "text": "PhysicsBodyDocumentV1",
+        "link": "/api/physicsbodydocumentv1"
+      },
+      {
+        "text": "PhysicsBodyValidationResult",
+        "link": "/api/physicsbodyvalidationresult"
+      },
+      {
+        "text": "PhysicsBoxShapeDefinition",
+        "link": "/api/physicsboxshapedefinition"
+      },
+      {
+        "text": "PhysicsCapsuleShapeDefinition",
+        "link": "/api/physicscapsuleshapedefinition"
+      },
+      {
+        "text": "PhysicsCircleShapeDefinition",
+        "link": "/api/physicscircleshapedefinition"
+      },
+      {
+        "text": "PhysicsCompoundShapeDefinition",
+        "link": "/api/physicscompoundshapedefinition"
+      },
+      {
+        "text": "PhysicsFilterDefinition",
+        "link": "/api/physicsfilterdefinition"
+      },
+      {
+        "text": "PhysicsMaterialDefinition",
+        "link": "/api/physicsmaterialdefinition"
+      },
+      {
+        "text": "PhysicsPolygonShapeDefinition",
+        "link": "/api/physicspolygonshapedefinition"
+      },
+      {
+        "text": "PhysicsPrimitiveShapeDefinition",
+        "link": "/api/physicsprimitiveshapedefinition"
+      },
+      {
+        "text": "PhysicsShapeBaseDefinition",
+        "link": "/api/physicsshapebasedefinition"
+      },
+      {
+        "text": "PhysicsShapeDefinition",
+        "link": "/api/physicsshapedefinition"
+      },
+      {
+        "text": "PhysicsValidationError",
+        "link": "/api/physicsvalidationerror"
+      },
+      {
+        "text": "PhysicsVectorDefinition",
+        "link": "/api/physicsvectordefinition"
+      },
+      {
+        "text": "PhysicsWorldDocumentV1",
+        "link": "/api/physicsworlddocumentv1"
+      },
+      {
+        "text": "PhysicsWorldValidationResult",
+        "link": "/api/physicsworldvalidationresult"
+      },
+      {
         "text": "ReplayFileFormat",
         "link": "/api/replayfileformat"
       },
@@ -1696,12 +1912,32 @@
         "link": "/api/serializeparticlepresetoptions"
       },
       {
+        "text": "serializePhysicsBody",
+        "link": "/api/serializephysicsbody"
+      },
+      {
+        "text": "SerializePhysicsOptions",
+        "link": "/api/serializephysicsoptions"
+      },
+      {
+        "text": "serializePhysicsWorld",
+        "link": "/api/serializephysicsworld"
+      },
+      {
         "text": "validateParticleEffect",
         "link": "/api/validateparticleeffect"
       },
       {
         "text": "validateParticlePreset",
         "link": "/api/validateparticlepreset"
+      },
+      {
+        "text": "validatePhysicsBody",
+        "link": "/api/validatephysicsbody"
+      },
+      {
+        "text": "validatePhysicsWorld",
+        "link": "/api/validatephysicsworld"
       },
       {
         "text": "ValidationIssue",
