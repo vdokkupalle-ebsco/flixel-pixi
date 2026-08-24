@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "flixel-pixi": ["./temp/types/index.d.ts"]
+    },
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "types": []
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["tests/**/*.ts"]
+}

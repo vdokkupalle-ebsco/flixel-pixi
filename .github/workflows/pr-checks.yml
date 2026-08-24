@@ -63,6 +63,9 @@ jobs:
       - name: Verify npm package contract
         run: npm run check:package:contract
 
+      - name: Verify optional physics adapter contract
+        run: npm run check:physics-adapter
+
   node-22-compatibility:
     name: Node 22 compatibility
     runs-on: ubuntu-latest

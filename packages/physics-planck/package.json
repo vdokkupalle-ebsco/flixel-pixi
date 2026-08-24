@@ -1,0 +1,50 @@
+{
+  "name": "@flixel-pixi/physics-planck",
+  "version": "0.0.0",
+  "description": "Optional Planck.js rigid-body adapter for Flixel-Pixi.",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vdokkupalle-ebsco/flixel-pixi.git",
+    "directory": "packages/physics-planck"
+  },
+  "keywords": [
+    "flixel",
+    "pixi",
+    "physics",
+    "planck",
+    "box2d"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "test:coverage": "vitest run --coverage --config vitest.config.ts"
+  },
+  "dependencies": {
+    "planck": "1.4.2"
+  },
+  "peerDependencies": {
+    "flixel-pixi": ">=0.1.0-rc.10 <0.2.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
