@@ -1,3 +1,5 @@
+import type { FlxObject } from '../objects/flx-object';
+
 /** Two-dimensional vector expressed in Flixel logical units. @public */
 export interface FlxPhysicsVector {
   readonly x: number;
@@ -17,7 +19,7 @@ export type FlxPhysicsBodyType = 'static' | 'kinematic' | 'dynamic';
 export interface FlxPhysicsFilter {
   /** Category bits owned by this fixture. Defaults to `1`. */
   readonly category?: number;
-  /** Category bits this fixture accepts. Defaults to all 32 bits. */
+  /** Category bits this fixture accepts. Defaults to all 16 bits. */
   readonly mask?: number;
   /** Optional solver collision group. Defaults to `0`. */
   readonly group?: number;
@@ -214,6 +216,53 @@ export type FlxPhysicsDebugPrimitive =
 export interface FlxPhysicsWorldOptions {
   readonly gravity?: FlxPhysicsVector;
   readonly paused?: boolean;
+}
+
+/** Body descriptor accepted when binding a `FlxObject` to a world. @public */
+export type FlxPhysicsObjectDefinition = Omit<
+  FlxPhysicsBodyDefinition,
+  'position' | 'angle' | 'velocity' | 'angularVelocity'
+>;
+
+/** Portable body exposed to game code without a solver-native handle. @public */
+export interface FlxPhysicsBody {
+  readonly id: string;
+  readonly object: FlxObject;
+  readonly type: FlxPhysicsBodyType;
+  readonly destroyed: boolean;
+  setType(type: FlxPhysicsBodyType): void;
+  setTransform(transform: FlxPhysicsTransform): void;
+  setVelocity(velocity: FlxPhysicsVector, angularVelocity?: number): void;
+  applyForce(force: FlxPhysicsVector, point?: FlxPhysicsVector): void;
+  applyImpulse(impulse: FlxPhysicsVector, point?: FlxPhysicsVector): void;
+  destroy(): void;
+}
+
+/** Normalized contact published after body synchronization. @public */
+export interface FlxPhysicsContact {
+  readonly id: string;
+  readonly phase: FlxPhysicsContactPhase;
+  readonly bodyA: FlxPhysicsBody;
+  readonly bodyB: FlxPhysicsBody;
+  readonly objectA: FlxObject;
+  readonly objectB: FlxObject;
+  /** Maximum penetration depth in logical pixels. */
+  readonly depth: number;
+  readonly fixtureA?: string;
+  readonly fixtureB?: string;
+  readonly sensor: boolean;
+  readonly normal: FlxPhysicsVector;
+  readonly points: readonly FlxPhysicsContactPoint[];
+}
+
+/** Portable query hit mapped back to a bound Flixel object. @public */
+export interface FlxPhysicsQueryHit {
+  readonly body: FlxPhysicsBody;
+  readonly object: FlxObject;
+  readonly fixture?: string;
+  readonly point?: FlxPhysicsVector;
+  readonly normal?: FlxPhysicsVector;
+  readonly fraction?: number;
 }
 
 /**
