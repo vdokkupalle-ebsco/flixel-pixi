@@ -124,6 +124,9 @@ export interface FlxPhysicsContactPoint {
 /** Opaque body token owned by a physics backend. @public */
 export type FlxPhysicsBackendBody = object;
 
+/** Opaque joint token owned by a physics backend. @public */
+export type FlxPhysicsBackendJoint = object;
+
 /** Contact emitted by a backend before Flixel object binding. @public */
 export interface FlxPhysicsBackendContact {
   readonly id: string;
@@ -173,11 +176,110 @@ export type FlxPhysicsShapeCapability = FlxPhysicsShape['kind'];
 /** Queries a backend can execute through the portable contract. @public */
 export type FlxPhysicsQueryCapability = 'point' | 'aabb' | 'ray' | 'shape-cast';
 
+/** Joint constraints available through the portable physics contract. @public */
+export type FlxPhysicsJointType =
+  'distance' | 'revolute' | 'prismatic' | 'weld' | 'wheel';
+
+/** Shared options for every portable joint. @public */
+export interface FlxPhysicsJointDefinitionBase {
+  readonly id?: string;
+  readonly bodyA: FlxPhysicsBody;
+  readonly bodyB: FlxPhysicsBody;
+  readonly collideConnected?: boolean;
+}
+
+/** Keeps two world-space anchor points at a configured distance. @public */
+export interface FlxPhysicsDistanceJointDefinition extends FlxPhysicsJointDefinitionBase {
+  readonly type: 'distance';
+  readonly anchorA: FlxPhysicsVector;
+  readonly anchorB: FlxPhysicsVector;
+  readonly length?: number;
+  readonly frequencyHz?: number;
+  readonly dampingRatio?: number;
+}
+
+/** Hinge constraint around one world-space anchor. @public */
+export interface FlxPhysicsRevoluteJointDefinition extends FlxPhysicsJointDefinitionBase {
+  readonly type: 'revolute';
+  readonly anchor: FlxPhysicsVector;
+  readonly enableLimit?: boolean;
+  readonly lowerAngle?: number;
+  readonly upperAngle?: number;
+  readonly enableMotor?: boolean;
+  readonly motorSpeed?: number;
+  readonly maxMotorTorque?: number;
+}
+
+/** Slider constraint along a world-space axis. @public */
+export interface FlxPhysicsPrismaticJointDefinition extends FlxPhysicsJointDefinitionBase {
+  readonly type: 'prismatic';
+  readonly anchor: FlxPhysicsVector;
+  readonly axis: FlxPhysicsVector;
+  readonly enableLimit?: boolean;
+  readonly lowerTranslation?: number;
+  readonly upperTranslation?: number;
+  readonly enableMotor?: boolean;
+  readonly motorSpeed?: number;
+  readonly maxMotorForce?: number;
+}
+
+/** Attaches two bodies at one world-space anchor. @public */
+export interface FlxPhysicsWeldJointDefinition extends FlxPhysicsJointDefinitionBase {
+  readonly type: 'weld';
+  readonly anchor: FlxPhysicsVector;
+  readonly referenceAngle?: number;
+  readonly frequencyHz?: number;
+  readonly dampingRatio?: number;
+}
+
+/** Vehicle suspension constraint along a world-space axis. @public */
+export interface FlxPhysicsWheelJointDefinition extends FlxPhysicsJointDefinitionBase {
+  readonly type: 'wheel';
+  readonly anchor: FlxPhysicsVector;
+  readonly axis: FlxPhysicsVector;
+  readonly enableMotor?: boolean;
+  readonly motorSpeed?: number;
+  readonly maxMotorTorque?: number;
+  readonly frequencyHz?: number;
+  readonly dampingRatio?: number;
+}
+
+/** Portable joint creation descriptor. @public */
+export type FlxPhysicsJointDefinition =
+  | FlxPhysicsDistanceJointDefinition
+  | FlxPhysicsRevoluteJointDefinition
+  | FlxPhysicsPrismaticJointDefinition
+  | FlxPhysicsWeldJointDefinition
+  | FlxPhysicsWheelJointDefinition;
+
+/** Joint descriptor after portable bodies have been mapped to backend handles. @public */
+export type FlxPhysicsBackendJointDefinition =
+  | (Omit<FlxPhysicsDistanceJointDefinition, 'bodyA' | 'bodyB'> & {
+      readonly bodyA: FlxPhysicsBackendBody;
+      readonly bodyB: FlxPhysicsBackendBody;
+    })
+  | (Omit<FlxPhysicsRevoluteJointDefinition, 'bodyA' | 'bodyB'> & {
+      readonly bodyA: FlxPhysicsBackendBody;
+      readonly bodyB: FlxPhysicsBackendBody;
+    })
+  | (Omit<FlxPhysicsPrismaticJointDefinition, 'bodyA' | 'bodyB'> & {
+      readonly bodyA: FlxPhysicsBackendBody;
+      readonly bodyB: FlxPhysicsBackendBody;
+    })
+  | (Omit<FlxPhysicsWeldJointDefinition, 'bodyA' | 'bodyB'> & {
+      readonly bodyA: FlxPhysicsBackendBody;
+      readonly bodyB: FlxPhysicsBackendBody;
+    })
+  | (Omit<FlxPhysicsWheelJointDefinition, 'bodyA' | 'bodyB'> & {
+      readonly bodyA: FlxPhysicsBackendBody;
+      readonly bodyB: FlxPhysicsBackendBody;
+    });
+
 /** Immutable feature report for one physics backend. @public */
 export interface FlxPhysicsCapabilities {
   readonly shapes: readonly FlxPhysicsShapeCapability[];
   readonly queries: readonly FlxPhysicsQueryCapability[];
-  readonly joints: readonly string[];
+  readonly joints: readonly FlxPhysicsJointType[];
   readonly sleeping: boolean;
   readonly continuousCollision: boolean;
   readonly deterministicReplay: boolean;
@@ -238,6 +340,16 @@ export interface FlxPhysicsBody {
   destroy(): void;
 }
 
+/** Portable joint exposed without leaking a solver-native handle. @public */
+export interface FlxPhysicsJoint {
+  readonly id: string;
+  readonly type: FlxPhysicsJointType;
+  readonly bodyA: FlxPhysicsBody;
+  readonly bodyB: FlxPhysicsBody;
+  readonly destroyed: boolean;
+  destroy(): void;
+}
+
 /** Normalized contact published after body synchronization. @public */
 export interface FlxPhysicsContact {
   readonly id: string;
@@ -276,6 +388,10 @@ export interface FlxPhysicsBackendWorld {
   setGravity(gravity: FlxPhysicsVector): void;
   createBody(definition: FlxPhysicsBodyDefinition): FlxPhysicsBackendBody;
   destroyBody(body: FlxPhysicsBackendBody): void;
+  createJoint?(
+    definition: FlxPhysicsBackendJointDefinition,
+  ): FlxPhysicsBackendJoint;
+  destroyJoint?(joint: FlxPhysicsBackendJoint): void;
   setBodyType(body: FlxPhysicsBackendBody, type: FlxPhysicsBodyType): void;
   setBodyTransform(
     body: FlxPhysicsBackendBody,

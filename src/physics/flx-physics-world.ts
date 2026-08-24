@@ -4,6 +4,8 @@ import type {
   FlxPhysicsAabb,
   FlxPhysicsBackendBody,
   FlxPhysicsBackendContact,
+  FlxPhysicsBackendJoint,
+  FlxPhysicsBackendJointDefinition,
   FlxPhysicsBackendQueryHit,
   FlxPhysicsBackendWorld,
   FlxPhysicsBody,
@@ -13,6 +15,9 @@ import type {
   FlxPhysicsContact,
   FlxPhysicsDebugPrimitive,
   FlxPhysicsFilter,
+  FlxPhysicsJoint,
+  FlxPhysicsJointDefinition,
+  FlxPhysicsJointType,
   FlxPhysicsMaterial,
   FlxPhysicsObjectDefinition,
   FlxPhysicsQueryFilter,
@@ -37,6 +42,14 @@ interface PhysicsBinding {
   type: FlxPhysicsBodyType;
 }
 
+interface PhysicsJointRecord {
+  readonly backendJoint: FlxPhysicsBackendJoint;
+  readonly bodyA: PhysicsBinding;
+  readonly bodyB: PhysicsBinding;
+  readonly joint: PhysicsJointBinding;
+  readonly order: number;
+}
+
 /**
  * State-scoped owner for an optional physics backend.
  *
@@ -56,8 +69,10 @@ export class FlxPhysicsWorld {
   readonly #byBackend = new Map<FlxPhysicsBackendBody, PhysicsBinding>();
   readonly #byId = new Map<string, PhysicsBinding>();
   readonly #byObject = new Map<FlxObject, PhysicsBinding>();
+  readonly #jointsById = new Map<string, PhysicsJointRecord>();
   #destroyed = false;
   #nextBodyId = 1;
+  #nextJointId = 1;
   #nextOrder = 1;
   #owner: object | null = null;
 
@@ -80,6 +95,10 @@ export class FlxPhysicsWorld {
 
   get bodyCount(): number {
     return this.#byId.size;
+  }
+
+  get jointCount(): number {
+    return this.#jointsById.size;
   }
 
   get destroyed(): boolean {
@@ -154,7 +173,73 @@ export class FlxPhysicsWorld {
     if (binding === undefined || (!byObject && binding.body !== bodyOrObject)) {
       return false;
     }
+    this.#releaseJointsForBody(binding, true);
     this.#releaseBinding(binding, true);
+    return true;
+  }
+
+  addJoint(definition: FlxPhysicsJointDefinition): FlxPhysicsJoint {
+    this.#assertUsable();
+    validateJointDefinition(definition, this.#capabilities);
+    const bodyA = this.#requireBinding(definition.bodyA);
+    const bodyB = this.#requireBinding(definition.bodyB);
+    if (bodyA === bodyB) {
+      throw new Error('Physics joint bodies must be different.');
+    }
+    if (
+      this.#backend.createJoint === undefined ||
+      this.#backend.destroyJoint === undefined
+    ) {
+      throw new FlxPhysicsUnsupportedCapabilityError(
+        `joint:${definition.type}`,
+      );
+    }
+    const id = definition.id ?? `physics-joint-${this.#nextJointId++}`;
+    if (id.length === 0) throw new Error('Physics joint id must not be empty.');
+    if (this.#jointsById.has(id)) {
+      throw new Error(`Physics joint id "${id}" is already in use.`);
+    }
+    const joint = new PhysicsJointBinding(
+      this,
+      id,
+      definition.type,
+      bodyA.body,
+      bodyB.body,
+    );
+    const backendDefinition: FlxPhysicsBackendJointDefinition = {
+      ...definition,
+      id,
+      bodyA: bodyA.backendBody,
+      bodyB: bodyB.backendBody,
+    };
+    const backendJoint = this.#backend.createJoint(backendDefinition);
+    this.#jointsById.set(id, {
+      backendJoint,
+      bodyA,
+      bodyB,
+      joint,
+      order: this.#nextOrder++,
+    });
+    return joint;
+  }
+
+  getJoint(id: string): FlxPhysicsJoint | undefined {
+    this.#assertUsable();
+    return this.#jointsById.get(id)?.joint;
+  }
+
+  removeJoint(jointOrId: FlxPhysicsJoint | string): boolean {
+    if (this.#destroyed) return false;
+    const binding = this.#jointsById.get(
+      typeof jointOrId === 'string' ? jointOrId : jointOrId.id,
+    );
+    if (
+      binding === undefined ||
+      (typeof jointOrId !== 'string' && binding.joint !== jointOrId)
+    ) {
+      return false;
+    }
+    this.#releaseJoint(binding, true);
     return true;
   }
 
@@ -226,6 +311,9 @@ export class FlxPhysicsWorld {
 
   reset(): void {
     this.#assertUsable();
+    for (const binding of this.#orderedJoints()) {
+      this.#releaseJoint(binding, false);
+    }
     for (const binding of this.#orderedBindings()) {
       this.#releaseBinding(binding, false);
     }
@@ -234,6 +322,9 @@ export class FlxPhysicsWorld {
 
   destroy(): void {
     if (this.#destroyed) return;
+    for (const binding of this.#orderedJoints()) {
+      this.#releaseJoint(binding, false);
+    }
     for (const binding of this.#orderedBindings()) {
       this.#releaseBinding(binding, false);
     }
@@ -342,7 +433,7 @@ export class FlxPhysicsWorld {
     if (this.#destroyed) throw new Error('Physics world has been destroyed.');
   }
 
-  #requireBinding(body: PhysicsBodyBinding): PhysicsBinding {
+  #requireBinding(body: FlxPhysicsBody): PhysicsBinding {
     this.#assertUsable();
     const binding = this.#byId.get(body.id);
     if (binding === undefined || binding.body !== body) {
@@ -353,6 +444,10 @@ export class FlxPhysicsWorld {
 
   #orderedBindings(): PhysicsBinding[] {
     return [...this.#byId.values()].sort((a, b) => a.order - b.order);
+  }
+
+  #orderedJoints(): PhysicsJointRecord[] {
+    return [...this.#jointsById.values()].sort((a, b) => a.order - b.order);
   }
 
   #pushObject(binding: PhysicsBinding): void {
@@ -386,6 +481,21 @@ export class FlxPhysicsWorld {
     binding.object.moves = binding.previousMoves;
     binding.body.markDestroyed();
     if (destroyBackend) this.#backend.destroyBody(binding.backendBody);
+  }
+
+  #releaseJointsForBody(body: PhysicsBinding, destroyBackend: boolean): void {
+    for (const joint of this.#orderedJoints()) {
+      if (joint.bodyA === body || joint.bodyB === body) {
+        this.#releaseJoint(joint, destroyBackend);
+      }
+    }
+  }
+
+  #releaseJoint(binding: PhysicsJointRecord, destroyBackend: boolean): void {
+    if (!this.#jointsById.has(binding.joint.id)) return;
+    this.#jointsById.delete(binding.joint.id);
+    binding.joint.markDestroyed();
+    if (destroyBackend) this.#backend.destroyJoint?.(binding.backendJoint);
   }
 
   #normalizeHits(
@@ -542,6 +652,30 @@ class PhysicsBodyBinding implements FlxPhysicsBody {
   }
 }
 
+class PhysicsJointBinding implements FlxPhysicsJoint {
+  #destroyed = false;
+
+  constructor(
+    readonly world: FlxPhysicsWorld,
+    readonly id: string,
+    readonly type: FlxPhysicsJointType,
+    readonly bodyA: FlxPhysicsBody,
+    readonly bodyB: FlxPhysicsBody,
+  ) {}
+
+  get destroyed(): boolean {
+    return this.#destroyed;
+  }
+
+  destroy(): void {
+    this.world.removeJoint(this);
+  }
+
+  markDestroyed(): void {
+    this.#destroyed = true;
+  }
+}
+
 function freezeCapabilities(
   capabilities: FlxPhysicsCapabilities,
 ): FlxPhysicsCapabilities {
@@ -578,6 +712,132 @@ function validateBodyDefinition(
     throw new FlxPhysicsUnsupportedCapabilityError('sleeping');
   }
   for (const shape of definition.shapes) validateShape(shape, capabilities);
+}
+
+function validateJointDefinition(
+  definition: FlxPhysicsJointDefinition,
+  capabilities: FlxPhysicsCapabilities,
+): void {
+  if (!capabilities.joints.includes(definition.type)) {
+    throw new FlxPhysicsUnsupportedCapabilityError(`joint:${definition.type}`);
+  }
+  if (definition.id !== undefined && definition.id.length === 0) {
+    throw new Error('Physics joint id must not be empty.');
+  }
+
+  if (definition.type === 'distance') {
+    validateVector(definition.anchorA, 'Physics distance anchor A');
+    validateVector(definition.anchorB, 'Physics distance anchor B');
+    if (definition.length !== undefined) {
+      validatePositive(definition.length, 'Physics distance length');
+    }
+    validateSpring(definition.frequencyHz, definition.dampingRatio, 'distance');
+    return;
+  }
+
+  validateVector(definition.anchor, `Physics ${definition.type} anchor`);
+  if (definition.type === 'revolute') {
+    validateAngularMotorAndLimits(definition);
+    return;
+  }
+  if (definition.type === 'prismatic') {
+    validateAxis(definition.axis, 'Physics prismatic axis');
+    validateLinearMotorAndLimits(definition);
+    return;
+  }
+  if (definition.type === 'weld') {
+    if (definition.referenceAngle !== undefined) {
+      validateFinite(definition.referenceAngle, 'Physics weld reference angle');
+    }
+    validateSpring(definition.frequencyHz, definition.dampingRatio, 'weld');
+    return;
+  }
+
+  validateAxis(definition.axis, 'Physics wheel axis');
+  validateMotor(
+    definition.motorSpeed,
+    definition.maxMotorTorque,
+    'Physics wheel motor torque',
+  );
+  validateSpring(definition.frequencyHz, definition.dampingRatio, 'wheel');
+}
+
+function validateAngularMotorAndLimits(
+  definition: Extract<FlxPhysicsJointDefinition, { type: 'revolute' }>,
+): void {
+  validateMotor(
+    definition.motorSpeed,
+    definition.maxMotorTorque,
+    'Physics revolute motor torque',
+  );
+  validateLimits(
+    definition.lowerAngle,
+    definition.upperAngle,
+    'Physics revolute angle',
+  );
+}
+
+function validateLinearMotorAndLimits(
+  definition: Extract<FlxPhysicsJointDefinition, { type: 'prismatic' }>,
+): void {
+  validateMotor(
+    definition.motorSpeed,
+    definition.maxMotorForce,
+    'Physics prismatic motor force',
+  );
+  validateLimits(
+    definition.lowerTranslation,
+    definition.upperTranslation,
+    'Physics prismatic translation',
+  );
+}
+
+function validateMotor(
+  speed: number | undefined,
+  maximum: number | undefined,
+  maximumLabel: string,
+): void {
+  if (speed !== undefined) validateFinite(speed, 'Physics joint motor speed');
+  if (maximum !== undefined) validateNonNegative(maximum, maximumLabel);
+}
+
+function validateLimits(
+  lower: number | undefined,
+  upper: number | undefined,
+  label: string,
+): void {
+  if (lower !== undefined) validateFinite(lower, `${label} lower limit`);
+  if (upper !== undefined) validateFinite(upper, `${label} upper limit`);
+  if (lower !== undefined && upper !== undefined && lower > upper) {
+    throw new RangeError(
+      `${label} lower limit must not exceed its upper limit.`,
+    );
+  }
+}
+
+function validateSpring(
+  frequencyHz: number | undefined,
+  dampingRatio: number | undefined,
+  type: string,
+): void {
+  if (frequencyHz !== undefined) {
+    validateNonNegative(frequencyHz, `Physics ${type} frequency`);
+  }
+  if (
+    dampingRatio !== undefined &&
+    (!Number.isFinite(dampingRatio) || dampingRatio < 0 || dampingRatio > 1)
+  ) {
+    throw new RangeError(
+      `Physics ${type} damping ratio must be between 0 and 1.`,
+    );
+  }
+}
+
+function validateAxis(axis: FlxPhysicsVector, label: string): void {
+  validateVector(axis, label);
+  if (axis.x === 0 && axis.y === 0) {
+    throw new RangeError(`${label} must not be zero.`);
+  }
 }
 
 function validateShape(
@@ -690,6 +950,12 @@ function validateVector(vector: FlxPhysicsVector, label: string): void {
 function validatePositive(value: number, label: string): void {
   if (!Number.isFinite(value) || value <= 0) {
     throw new RangeError(`${label} must be positive and finite.`);
+  }
+}
+
+function validateNonNegative(value: number, label: string): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError(`${label} must be non-negative and finite.`);
   }
 }
 
