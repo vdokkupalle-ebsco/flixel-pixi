@@ -40,6 +40,10 @@ createBrowserGame({
       ready: true,
       snapshot: () =>
         currentState()?.snapshot() ?? {
+          distanceX: Number.NaN,
+          distanceY: Number.NaN,
+          draggableCount: 0,
+          draggingId: null,
           jointCount: 0,
           prismaticX: Number.NaN,
           revoluteAngle: Number.NaN,

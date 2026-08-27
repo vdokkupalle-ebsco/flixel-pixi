@@ -190,7 +190,59 @@ test.describe('Portable physics joints showcase', () => {
       window.__FLIXEL_PIXI_JOINTS__?.snapshot?.(),
     );
     expect(initial?.jointCount).toBe(5);
+    expect(initial?.draggableCount).toBe(5);
     expect(Number.isFinite(initial?.revoluteAngle)).toBe(true);
+
+    const canvas = page.locator('canvas');
+    const bounds = await canvas.boundingBox();
+    if (bounds === null || initial === undefined) {
+      throw new Error('Joint showcase canvas or snapshot is unavailable.');
+    }
+    const gameToPage = (x: number, y: number) => ({
+      x: bounds.x + (x / 900) * bounds.width,
+      y: bounds.y + (y / 540) * bounds.height,
+    });
+    let doorStart = gameToPage(initial.prismaticX + 21, 192);
+    let draggingId: string | null | undefined;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const current = await page.evaluate(() =>
+        window.__FLIXEL_PIXI_JOINTS__?.snapshot?.(),
+      );
+      if (current === undefined) break;
+      doorStart = gameToPage(current.prismaticX + 21, 192);
+      await page.mouse.move(doorStart.x, doorStart.y);
+      await page.mouse.down();
+      await page.waitForTimeout(100);
+      draggingId = await page.evaluate(
+        () => window.__FLIXEL_PIXI_JOINTS__?.snapshot?.().draggingId,
+      );
+      if (draggingId === 'prismatic-door') break;
+      await page.mouse.up();
+    }
+    expect(draggingId).toBe('prismatic-door');
+    const beforeDragX = await page.evaluate(
+      () => window.__FLIXEL_PIXI_JOINTS__?.snapshot?.().prismaticX,
+    );
+    const dragDirection = (beforeDragX ?? 730) < 730 ? 1 : -1;
+    await page.mouse.move(doorStart.x + dragDirection * 70, doorStart.y, {
+      steps: 8,
+    });
+    await expect
+      .poll(async () => {
+        const currentX = await page.evaluate(
+          () => window.__FLIXEL_PIXI_JOINTS__?.snapshot?.().prismaticX,
+        );
+        return Math.abs((currentX ?? beforeDragX ?? 0) - (beforeDragX ?? 0));
+      })
+      .toBeGreaterThan(15);
+    await page.mouse.up();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => window.__FLIXEL_PIXI_JOINTS__?.snapshot?.().draggingId,
+        ),
+      )
+      .toBeNull();
 
     await expect
       .poll(() =>
@@ -199,7 +251,7 @@ test.describe('Portable physics joints showcase', () => {
         ),
       )
       .toBeGreaterThan(10);
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(canvas).toBeVisible();
   });
 });
 
