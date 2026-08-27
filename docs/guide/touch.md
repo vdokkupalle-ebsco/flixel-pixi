@@ -7,16 +7,16 @@ Mobile web games require responsive multi-touch input and directional swipe dete
 ## 1. Multi-Touch Tracking
 
 ```ts
-const touchManager = this.context.input.touch;
+import { FlxG } from 'flixel-pixi';
+
+const touchManager = FlxG.touches;
 
 // Active touches on screen
-const touches = touchManager.listTouches();
+const touches = touchManager.active;
 
 for (const touch of touches) {
-  if (touch.justPressed()) {
-    console.log(
-      `Touch #${touch.touchPointID} tapped at (${touch.x}, ${touch.y})`,
-    );
+  if (touch.justPressed) {
+    console.log(`Touch #${touch.pointerId} tapped at (${touch.x}, ${touch.y})`);
   }
 }
 ```
@@ -32,16 +32,16 @@ for (const touch of touches) {
 const swipes = touchManager.swipes;
 
 for (const swipe of swipes) {
-  console.log(`Swipe direction: ${swipe.direction}`); // 'UP', 'DOWN', 'LEFT', 'RIGHT'
+  console.log(`Swipe direction: ${swipe.direction}`); // 'up', 'down', 'left', 'right'
   console.log(
     `Swipe distance: ${swipe.distance}px, duration: ${swipe.duration}s`,
   );
 
-  if (swipe.direction === 'UP') {
+  if (swipe.direction === 'up') {
     player.jump();
-  } else if (swipe.direction === 'LEFT') {
+  } else if (swipe.direction === 'left') {
     player.dashLeft();
-  } else if (swipe.direction === 'RIGHT') {
+  } else if (swipe.direction === 'right') {
     player.dashRight();
   }
 }

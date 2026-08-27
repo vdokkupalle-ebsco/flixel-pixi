@@ -81,7 +81,7 @@ In `index.html`, ensure there is a container element for the canvas:
 ### 3. Initialize your game in `src/main.ts`
 
 ```ts
-import { createBrowserGame, FlxSprite, FlxState } from 'flixel-pixi';
+import { createBrowserGame, FlxG, FlxSprite, FlxState } from 'flixel-pixi';
 
 class PlayState extends FlxState {
   private player!: FlxSprite;
@@ -95,45 +95,57 @@ class PlayState extends FlxState {
     this.add(this.player);
   }
 
-  override update(elapsed: number): void {
-    super.update(elapsed);
+  override update(): void {
+    super.update();
 
     // Simple keyboard movement
     const speed = 200;
     this.player.velocity.x = 0;
     this.player.velocity.y = 0;
 
-    if (this.context.input.keyboard.pressed('LEFT', 'A')) {
+    if (FlxG.keys.pressed('LEFT', 'A')) {
       this.player.velocity.x = -speed;
     }
-    if (this.context.input.keyboard.pressed('RIGHT', 'D')) {
+    if (FlxG.keys.pressed('RIGHT', 'D')) {
       this.player.velocity.x = speed;
     }
-    if (this.context.input.keyboard.pressed('UP', 'W')) {
+    if (FlxG.keys.pressed('UP', 'W')) {
       this.player.velocity.y = -speed;
     }
-    if (this.context.input.keyboard.pressed('DOWN', 'S')) {
+    if (FlxG.keys.pressed('DOWN', 'S')) {
       this.player.velocity.y = speed;
     }
   }
 }
 
-const host = document.querySelector<HTMLElement>('#game-container');
-if (!host) {
-  throw new Error('Host element #game-container not found.');
+async function init(): Promise<void> {
+  const host = document.querySelector<HTMLElement>('#game-container');
+  if (!host) {
+    throw new Error('Host element #game-container not found.');
+  }
+
+  const app = await createBrowserGame({
+    host,
+    initialState: PlayState,
+    width: 640,
+    height: 480,
+    scaling: 'fit',
+  });
+
+  const destroy = (): void => {
+    window.removeEventListener('pagehide', destroy);
+    app.destroy();
+  };
+  window.addEventListener('pagehide', destroy, { once: true });
+  import.meta.hot?.dispose(destroy);
 }
 
-const app = await createBrowserGame({
-  host,
-  initialState: PlayState,
-  width: 640,
-  height: 480,
-  scaleMode: 'letterbox',
-});
-
-// Teardown cleanly on page unload
-window.addEventListener('pagehide', () => app.destroy(), { once: true });
+void init();
 ```
+
+`createBrowserGame` installs the engine's keyboard listeners before the first
+state update. The HMR disposer prevents a Vite hot reload from leaving an old
+game loop and its listeners alive.
 
 ### 4. Start Development Server
 

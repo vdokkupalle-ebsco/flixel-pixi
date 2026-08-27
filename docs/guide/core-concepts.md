@@ -51,7 +51,7 @@ export class FlxBasic {
   public visible: boolean = true;
   public alive: boolean = true;
 
-  public update(elapsed: number): void {}
+  public update(): void {}
   public destroy(): void {}
   public kill(): void {}
   public revive(): void {}
@@ -71,14 +71,12 @@ export class FlxBasic {
 
 ## Global Access vs. `FlxContext`
 
-Flixel-Pixi supports both the classic static `FlxG` helper and modern modular dependency injection via `FlxContext`:
+Flixel-Pixi keeps services in a modular `FlxContext` and exposes the active
+game's common services through the `FlxG` gameplay facade:
 
 ```ts
-// Method 1: Using FlxContext inside an FlxState or FlxObject
-this.context.input.keyboard.pressed('SPACE');
-this.context.audio.playMusic('assets/bgm.ogg');
-
-// Method 2: Global FlxG (delegates to the active runtime context)
+// FlxG delegates to services owned by the active FlxContext.
+FlxG.keys.pressed('SPACE');
 FlxG.keys.SPACE;
 FlxG.camera.shake(0.02, 0.3);
 ```

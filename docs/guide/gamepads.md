@@ -7,7 +7,9 @@ Flixel-Pixi supports physical controllers via the standard HTML5 Gamepad API (`F
 ## 1. Physical Gamepads with `FlxGamepad`
 
 ```ts
-const pad = this.context.input.gamepad.getGamepad(0);
+import { FlxG } from 'flixel-pixi';
+
+const pad = FlxG.gamepads.getByIndex(0);
 
 if (pad && pad.connected) {
   // Digital Buttons

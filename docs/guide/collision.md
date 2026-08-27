@@ -18,8 +18,8 @@ Collision in Flixel-Pixi is fast, deterministic, and built on spatial partitioni
 ```ts
 import { FlxObject } from 'flixel-pixi';
 
-override update(elapsed: number): void {
-  super.update(elapsed);
+override update(): void {
+  super.update();
 
   // 1. Separate player from all level platforms
   FlxObject.separate(this.player, this.platforms);

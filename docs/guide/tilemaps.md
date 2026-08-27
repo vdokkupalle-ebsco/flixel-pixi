@@ -50,8 +50,8 @@ tilemap.setTileProperties(8, FlxObject.FLOOR);
 In `update()`:
 
 ```ts
-override update(elapsed: number): void {
-  super.update(elapsed);
+override update(): void {
+  super.update();
 
   // Separate player from solid tiles
   FlxObject.separate(this.player, this.tilemap);

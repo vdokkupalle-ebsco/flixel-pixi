@@ -6,15 +6,17 @@ Flixel-Pixi uses `FlxContext` as a dependency-injected service registry. This de
 
 ## Accessing Context Services
 
-Inside any `FlxBasic`, `FlxObject`, `FlxState`, or `FlxSubState`, `this.context` provides access to core engine services:
+`FlxG` is the gameplay-facing facade for services owned by the active
+`FlxContext`:
 
 ```ts
-// In your state or sprite:
-const input = this.context.input;
-const audio = this.context.audio;
-const storage = this.context.storage;
-const cameraHost = this.context.cameras;
-const atlasRegistry = this.context.atlas;
+import { FlxG } from 'flixel-pixi';
+
+const keyboard = FlxG.keys;
+const mouse = FlxG.mouse;
+const gamepads = FlxG.gamepads;
+const touches = FlxG.touches;
+const atlasRegistry = FlxG.atlas;
 ```
 
 ---
@@ -23,15 +25,18 @@ const atlasRegistry = this.context.atlas;
 
 Services are registered under well-defined symbols:
 
-| Service Token             | Property          | Description                                                            |
-| :------------------------ | :---------------- | :--------------------------------------------------------------------- |
-| `FLX_INPUT_SERVICE`       | `context.input`   | Access to Keyboard, Mouse, Touch, Gamepad, Actions, and Virtual Input. |
-| `FLX_AUDIO_SERVICE`       | `context.audio`   | WebAudio manager, sound effects, BGM, and sound groups.                |
-| `FLX_STORAGE_SERVICE`     | `context.storage` | LocalStorage, IndexedDB, and FlxSave backend.                          |
-| `FLX_CAMERA_HOST_SERVICE` | `context.cameras` | Primary and auxiliary camera hosts.                                    |
-| `FLX_ATLAS_SERVICE`       | `context.atlas`   | Shared JSON spritesheet and atlas registry.                            |
-| `FLX_LOG_SERVICE`         | `context.log`     | Structured debugging and developer log channel.                        |
-| `FLX_WATCH_SERVICE`       | `context.watch`   | In-game real-time variable watch inspector.                            |
+| Service Token             | Gameplay facade                             | Description                                     |
+| :------------------------ | :------------------------------------------ | :---------------------------------------------- |
+| `FLX_INPUT_SERVICE`       | `FlxG.keys`, `mouse`, `gamepads`, `touches` | Deterministic browser and controller input.     |
+| `FLX_AUDIO_SERVICE`       | `FlxG.play(...)`, `playMusic(...)`          | WebAudio sound effects, BGM, and sound groups.  |
+| `FLX_STORAGE_SERVICE`     | `FlxG.save`, `saves`                        | Primary and registered save slots.              |
+| `FLX_CAMERA_HOST_SERVICE` | `FlxG.camera` / `cameras`                   | Primary and auxiliary cameras.                  |
+| `FLX_ATLAS_SERVICE`       | `FlxG.atlas`                                | Shared JSON spritesheet and atlas registry.     |
+| `FLX_LOG_SERVICE`         | `FlxG.log`                                  | Structured debugging and developer log channel. |
+| `FLX_WATCH_SERVICE`       | `FlxG.watch`                                | In-game real-time variable watch inspector.     |
+
+For custom or adapter-level services, retrieve the token from
+`FlxG.context.getService(...)`.
 
 ---
 
@@ -40,7 +45,7 @@ Services are registered under well-defined symbols:
 You can inject custom services (e.g. networking, achievements, localization) into `FlxContext`:
 
 ```ts
-import { FlxContext } from 'flixel-pixi';
+import { FlxG } from 'flixel-pixi';
 
 const MY_NETWORK_SERVICE = Symbol('MY_NETWORK_SERVICE');
 
@@ -49,7 +54,7 @@ interface NetworkService {
 }
 
 // Register service on context
-context.registerService(MY_NETWORK_SERVICE, {
+FlxG.context.setService(MY_NETWORK_SERVICE, {
   async sendScore(player, score) {
     await fetch('/api/score', {
       method: 'POST',
@@ -59,6 +64,6 @@ context.registerService(MY_NETWORK_SERVICE, {
 });
 
 // Retrieve service elsewhere
-const net = context.getService<NetworkService>(MY_NETWORK_SERVICE);
+const net = FlxG.context.getService<NetworkService>(MY_NETWORK_SERVICE);
 net?.sendScore('Hero', 9990);
 ```

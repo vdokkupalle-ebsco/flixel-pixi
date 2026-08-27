@@ -55,8 +55,8 @@ export class PlatformerState extends FlxState {
     this.camera.setBounds(0, 0, this.map.width, this.map.height);
   }
 
-  override update(elapsed: number): void {
-    super.update(elapsed);
+  override update(): void {
+    super.update();
 
     // Separate from tiles
     FlxObject.separate(this.player, this.map);

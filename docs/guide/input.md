@@ -6,10 +6,13 @@ Input management in Flixel-Pixi provides deterministic frame-by-frame state trac
 
 ## 1. Keyboard Input
 
-Access the keyboard via `this.context.input.keyboard` or `FlxG.keys`:
+Access the active game's keyboard through `FlxG.keys`. Browser games created by
+`createBrowserGame` attach the DOM listeners automatically:
 
 ```ts
-const kb = this.context.input.keyboard;
+import { FlxG } from 'flixel-pixi';
+
+const kb = FlxG.keys;
 
 // Pressed: true while key is held down
 if (kb.pressed('LEFT', 'A')) {
@@ -35,10 +38,10 @@ if (kb.justReleased('SPACE')) {
 
 ## 2. Mouse Input
 
-Access the mouse via `this.context.input.mouse` or `FlxG.mouse`:
+Access the active game's mouse through `FlxG.mouse`:
 
 ```ts
-const mouse = this.context.input.mouse;
+const mouse = FlxG.mouse;
 
 // World coordinates (accounting for camera scroll)
 const worldX = mouse.x;

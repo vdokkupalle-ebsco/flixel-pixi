@@ -32,8 +32,8 @@ actions
 ## Querying Actions in Gameplay
 
 ```ts
-override update(elapsed: number): void {
-  super.update(elapsed);
+override update(): void {
+  super.update();
 
   // Digital query
   if (actions.justPressed('jump')) {
