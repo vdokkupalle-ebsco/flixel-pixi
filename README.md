@@ -41,16 +41,32 @@ Add a host element to the page:
 <div id="game"></div>
 ```
 
-Create a state and boot the browser application:
+Create a state, read deterministic input through `FlxG`, and boot the browser
+application:
 
 ```ts
-import { createBrowserGame, FlxSprite, FlxState } from 'flixel-pixi';
+import { createBrowserGame, FlxG, FlxSprite, FlxState } from 'flixel-pixi';
 
 class PlayState extends FlxState {
+  private player!: FlxSprite;
+
   override create(): void {
-    const player = new FlxSprite(304, 224);
-    player.makeGraphic(32, 32, 0x22c55e);
-    this.add(player);
+    super.create();
+
+    this.player = new FlxSprite(304, 224);
+    this.player.makeGraphic(32, 32, 0x22c55e);
+    this.add(this.player);
+  }
+
+  override update(): void {
+    const speed = 200;
+    this.player.velocity.set(0, 0);
+    if (FlxG.keys.pressed('LEFT', 'A')) this.player.velocity.x = -speed;
+    if (FlxG.keys.pressed('RIGHT', 'D')) this.player.velocity.x = speed;
+    if (FlxG.keys.pressed('UP', 'W')) this.player.velocity.y = -speed;
+    if (FlxG.keys.pressed('DOWN', 'S')) this.player.velocity.y = speed;
+
+    super.update();
   }
 }
 
@@ -63,6 +79,7 @@ async function init(): Promise<void> {
     initialState: PlayState,
     width: 640,
     height: 480,
+    scaling: 'fit',
   });
 
   const destroy = (): void => {
@@ -85,6 +102,8 @@ is unmounted.
 
 - Deterministic states, groups, motion, collision, timers, tweens, paths, and
   replay.
+- Portable physics contracts with an optional Planck adapter for rigid bodies,
+  collision events, queries, and joints.
 - PixiJS sprites, animation, text, tilemaps, cameras, filters, meshes, particles,
   and responsive viewports.
 - A hosted Particle Editor for layered effects, generated or uploaded textures,
@@ -99,6 +118,10 @@ is unmounted.
 ## Documentation
 
 - [Documentation index](docs/README.md)
+- [Installation and first game](docs/guide/getting-started.md)
+- [Keyboard and mouse input](docs/guide/input.md)
+- [Touch and gestures](docs/guide/touch.md)
+- [Gamepads and virtual controls](docs/guide/gamepads.md)
 - [Lifecycle and browser boot](docs/guides/lifecycle.md)
 - [Making games](docs/guides/making-games.md)
 - [Browser support](docs/browser-support.md)
@@ -110,6 +133,18 @@ is unmounted.
 
 Import public APIs only from `flixel-pixi`; internal `src/**` paths and deep
 `dist/**` imports are unsupported.
+
+## Development
+
+```bash
+npm install
+npm run typecheck
+npm test
+npm run dev:games
+```
+
+Before opening a pull request, run `npm run verify:quality`. Browser and device
+coverage is available through `npm run test:e2e` and `npm run test:matrix`.
 
 ## License
 
