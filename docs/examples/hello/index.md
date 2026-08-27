@@ -14,7 +14,7 @@ A minimal game boot demonstration showing how to create a basic state, add a spr
 ## Source Code
 
 ```ts
-import { createBrowserGame, FlxSprite, FlxState } from 'flixel-pixi';
+import { createBrowserGame, FlxG, FlxSprite, FlxState } from 'flixel-pixi';
 
 class PlayState extends FlxState {
   private player!: FlxSprite;
@@ -27,13 +27,13 @@ class PlayState extends FlxState {
     this.add(this.player);
   }
 
-  override update(elapsed: number): void {
-    super.update(elapsed);
+  override update(): void {
+    super.update();
 
     const speed = 200;
     this.player.velocity.set(0, 0);
 
-    const kb = this.context.input.keyboard;
+    const kb = FlxG.keys;
     if (kb.pressed('LEFT', 'A')) this.player.velocity.x = -speed;
     if (kb.pressed('RIGHT', 'D')) this.player.velocity.x = speed;
     if (kb.pressed('UP', 'W')) this.player.velocity.y = -speed;
@@ -41,8 +41,10 @@ class PlayState extends FlxState {
   }
 }
 
-const host = document.getElementById('game');
-if (host) {
+async function init(): Promise<void> {
+  const host = document.getElementById('game');
+  if (!host) throw new Error('Host element #game not found.');
+
   const app = await createBrowserGame({
     host,
     initialState: PlayState,
@@ -50,8 +52,15 @@ if (host) {
     height: 480,
   });
 
-  window.addEventListener('pagehide', () => app.destroy(), { once: true });
+  const destroy = (): void => {
+    window.removeEventListener('pagehide', destroy);
+    app.destroy();
+  };
+  window.addEventListener('pagehide', destroy, { once: true });
+  import.meta.hot?.dispose(destroy);
 }
+
+void init();
 ```
 
 [View Source on GitHub](https://github.com/vdokkupalle-ebsco/flixel-pixi/tree/main/examples/games/hello)

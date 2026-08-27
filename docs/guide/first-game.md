@@ -19,6 +19,7 @@ Create a new file `src/PlayState.ts`:
 ```ts
 import {
   FlxGroup,
+  FlxG,
   FlxObject,
   FlxPoint,
   FlxSprite,
@@ -88,14 +89,14 @@ export class PlayState extends FlxState {
     this.coins.add(coin);
   }
 
-  override update(elapsed: number): void {
-    super.update(elapsed);
+  override update(): void {
+    super.update();
 
     // Player Controls
     const speed = 200;
     const jumpPower = 420;
 
-    const keyboard = this.context.input.keyboard;
+    const keyboard = FlxG.keys;
 
     if (keyboard.pressed('LEFT', 'A')) {
       this.player.velocity.x = -speed;
@@ -134,8 +135,10 @@ In `src/main.ts`:
 import { createBrowserGame } from 'flixel-pixi';
 import { PlayState } from './PlayState';
 
-const host = document.getElementById('game-container');
-if (host) {
+async function init(): Promise<void> {
+  const host = document.getElementById('game-container');
+  if (!host) throw new Error('Host element #game-container not found.');
+
   const app = await createBrowserGame({
     host,
     initialState: PlayState,
@@ -143,8 +146,15 @@ if (host) {
     height: 480,
   });
 
-  window.addEventListener('pagehide', () => app.destroy(), { once: true });
+  const destroy = (): void => {
+    window.removeEventListener('pagehide', destroy);
+    app.destroy();
+  };
+  window.addEventListener('pagehide', destroy, { once: true });
+  import.meta.hot?.dispose(destroy);
 }
+
+void init();
 ```
 
 ---

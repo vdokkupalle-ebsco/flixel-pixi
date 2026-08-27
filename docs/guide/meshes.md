@@ -30,8 +30,8 @@ this.add(strip);
 In `update()`:
 
 ```ts
-override update(elapsed: number): void {
-  super.update(elapsed);
+override update(): void {
+  super.update();
 
   // Deform vertex Y positions dynamically for wave animation
   for (let i = 0; i < strip.vertices.length; i += 2) {

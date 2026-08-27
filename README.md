@@ -54,19 +54,26 @@ class PlayState extends FlxState {
   }
 }
 
-const host = document.querySelector<HTMLElement>('#game');
-if (!host) throw new Error('Missing #game host.');
+async function init(): Promise<void> {
+  const host = document.querySelector<HTMLElement>('#game');
+  if (!host) throw new Error('Missing #game host.');
 
-const application = await createBrowserGame({
-  host,
-  initialState: PlayState,
-  width: 640,
-  height: 480,
-});
+  const application = await createBrowserGame({
+    host,
+    initialState: PlayState,
+    width: 640,
+    height: 480,
+  });
 
-window.addEventListener('pagehide', () => application.destroy(), {
-  once: true,
-});
+  const destroy = (): void => {
+    window.removeEventListener('pagehide', destroy);
+    application.destroy();
+  };
+  window.addEventListener('pagehide', destroy, { once: true });
+  import.meta.hot?.dispose(destroy);
+}
+
+void init();
 ```
 
 `createBrowserGame` owns Pixi initialization, fixed simulation updates,

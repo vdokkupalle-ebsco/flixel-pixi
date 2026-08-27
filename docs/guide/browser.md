@@ -15,7 +15,7 @@ const app = await createBrowserGame({
   initialState: PlayState,
   width: 640,
   height: 480,
-  scaleMode: 'letterbox', // 'letterbox' | 'stretch' | 'fit-width' | 'fit-height' | 'none'
+  scaling: 'fit', // 'fit' | 'fill' | 'fixed' | 'integer'
   renderer: {
     preference: 'webgl', // 'webgl' | 'webgpu'
     antialias: false, // Pixel art crispness
@@ -30,7 +30,7 @@ const app = await createBrowserGame({
 `FlxBrowserViewport` automatically calculates letterbox bars (pillarbox/letterbox) and respects iOS notch / dynamic island safe area insets:
 
 ```ts
-const viewport = this.context.getService(FlxBrowserViewport);
-console.log(`Current Scale Factor: ${viewport.scale}`);
-console.log(`Safe Area Insets:`, viewport.safeInsets);
+const snapshot = app.viewport.snapshot;
+console.log(`Current Scale Factor: ${snapshot.scale}`);
+console.log('Safe Area Insets:', snapshot.safeAreaInsets);
 ```
