@@ -21,6 +21,7 @@ export default tseslint.config(
       'docs/.vitepress/dist/**',
       'docs/.vitepress/cache/**',
       'docs/public/games/**',
+      'docs/public/level-editor/**',
       'docs/public/particle-editor/**',
     ],
   },

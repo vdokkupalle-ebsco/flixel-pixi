@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flixel-Pixi Level Preview</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+        background: #070b12;
+        color: #f7f9fc;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body,
+      #preview-host {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+      #preview-host {
+        display: grid;
+        place-items: center;
+      }
+      #preview-host canvas {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      #preview-status {
+        position: fixed;
+        left: 12px;
+        bottom: 10px;
+        padding: 5px 8px;
+        border-radius: 5px;
+        background: rgba(7, 11, 18, 0.82);
+        color: #9eacbc;
+        font-size: 11px;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="preview-host"></div>
+    <div id="preview-status" role="status" aria-live="polite">
+      Waiting for scene…
+    </div>
+    <script type="module" src="/src/preview-main.ts"></script>
+  </body>
+</html>

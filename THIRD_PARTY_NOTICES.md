@@ -32,3 +32,14 @@ PixiJS is consumed as an npm peer dependency and is distributed under the MIT
 license. Its package supplies its own license and notices.
 
 Source: <https://github.com/pixijs/pixijs>
+
+## Font Awesome Free
+
+The Level Editor uses icons from Font Awesome Free through the
+`@fortawesome/fontawesome-svg-core` and `@fortawesome/free-solid-svg-icons`
+packages. Font Awesome Free icons are licensed under CC BY 4.0 and its source
+code is licensed under the MIT License.
+
+Copyright Fonticons, Inc.
+
+Source and license: <https://fontawesome.com/license/free>

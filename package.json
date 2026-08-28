@@ -55,7 +55,7 @@
     "build:lib:root": "vite build --config vite.lib.config.ts",
     "build:smoke": "vite build --config vite.smoke.config.ts",
     "build:games": "vite build --config vite.games.config.ts",
-    "build:apps": "npm run build --workspace @flixel-pixi/particle-editor",
+    "build:apps": "npm run build --workspace @flixel-pixi/particle-editor && npm run build --workspace @flixel-pixi/level-editor",
     "build:adapters": "npm run build --workspace @flixel-pixi/physics-planck",
     "build:workspaces": "npm run build --workspace @flixel-pixi/schemas && npm run build --workspace @flixel-pixi/particles && npm run build --workspace @flixel-pixi/editor-protocol",
     "check:games-imports": "node scripts/check-games-public-imports.mjs",
