@@ -85,9 +85,40 @@ it is enlarged; tools operate only on full cells within the current canvas.
 
 This pass supports finite orthogonal maps, up to 4,096 source tiles or cells in a
 stamp, and up to 262,144 cells per fill operation. Preview currently uses sprites
-for tile rendering. Terrain rules, tile flips/rotation, tile selections with
-copy/paste, optimized tilemap rendering, and Tiled file interchange are follow-up
+for tile rendering. Terrain rules, optimized tilemap rendering, and Tiled file interchange are follow-up
 work. A collision layer’s purpose label does not generate tile collision bodies.
+
+### Selections, clipboard, and stamp transforms
+
+Press **R** or choose **Select tiles**, then drag a rectangular selection.
+The selection toolbar shows its dimensions and offers Copy, Cut, Paste, Delete,
+and Deselect. Brush, eraser, rectangle fill, and bucket fill affect only cells
+inside the active selection. Press Escape to clear it. Selecting another layer
+clears the selection; hidden or locked layers remain protected from edits.
+
+- **Command/Ctrl+C** copies the selected rectangle, including empty cells.
+- **Command/Ctrl+X** copies and deletes it in one undoable edit.
+- **Command/Ctrl+V** shows a floating paste preview. Click to place it once,
+  or press Escape to cancel. Empty copied cells erase destination cells.
+- **Delete / Backspace** removes selected tiles when the canvas has focus.
+- **Command/Ctrl+A** selects all full cells of the active layer.
+
+The tile clipboard is internal to the current editor session and is independent
+of undo history. It supports rectangles of up to 4,096 cells; it does not read or
+write the operating system clipboard. Paste rejects clipboard images that are
+missing or different in the current project.
+
+Use the **Active stamp** controls to flip horizontally (**X**), flip vertically
+(**Y**), rotate clockwise (**Z**), or rotate counterclockwise (**Shift+Z**).
+Transforms change both the stamp arrangement and the artwork inside each tile.
+They affect future painting or the pending paste, and do not modify already
+painted tiles. The miniature stamp preview and canvas preview show the result.
+To transform an existing area, cut it, paste it, transform the floating stamp,
+and click to place it. Object rotation now uses **O**, leaving **R** for tiles.
+
+Per-tile `rotation` (0–3 clockwise quarter turns) and `flipX` flags are optional
+in the version 1 extension. Existing files load with their original orientation;
+new transforms survive export/import and render in the playable preview.
 
 ## Physics bodies and joints
 

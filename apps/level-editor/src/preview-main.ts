@@ -211,6 +211,15 @@ class LevelPreviewState extends FlxState {
       (width / Math.max(1, frameWidth || graphic.width)) * entityScaleX;
     sprite.scale.y =
       (height / Math.max(1, frameHeight || graphic.height)) * entityScaleY;
+    if (typeof properties.tileRotation === 'number') {
+      const frameW = frameWidth || graphic.width,
+        frameH = frameHeight || graphic.height;
+      sprite.origin.make(frameW / 2, frameH / 2);
+      sprite.x = entity.position.x + width / 2 - frameW / 2;
+      sprite.y = entity.position.y + height / 2 - frameH / 2;
+      sprite.angle = properties.tileRotation * 90;
+      if (properties.tileFlipX === true) sprite.scale.x *= -1;
+    }
     this.add(sprite);
     return sprite;
   }

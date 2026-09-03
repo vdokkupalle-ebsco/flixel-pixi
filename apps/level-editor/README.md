@@ -25,3 +25,9 @@ for a rectangular stamp), and paint on the active layer. Brush (`B`), eraser
 undoable operations; right-drag captures a stamp and Escape cancels a stroke.
 Tile grids and source image regions are saved in the editor extension and shown
 in the playable preview. See the [tile authoring guide](../../docs/guide/level-editor.md).
+
+The next editing phase adds rectangular selections (`R`), an internal tile
+clipboard (Command/Ctrl+C/X/V), Delete and Select All, plus stamp flips (`X`/`Y`)
+and quarter-turn rotations (`Z`/Shift+`Z`). Paste has a floating preview and
+commits once on click. Painting respects the active selection. Object rotation
+uses `O` to keep `R` consistent with Tiled.

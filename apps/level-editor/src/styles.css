@@ -1398,3 +1398,124 @@ select:focus-visible {
 .editor-app:has(.tile-mode) .empty-state .button {
   margin-top: 8px;
 }
+.selection-toolbar {
+  position: absolute;
+  bottom: 43px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  max-width: calc(100% - 24px);
+  overflow: auto;
+  white-space: nowrap;
+}
+.selection-toolbar > span {
+  color: var(--muted);
+  font-size: 10px;
+  padding: 0 7px;
+}
+.selection-toolbar button,
+.stamp-transforms button {
+  border: 0;
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.selection-toolbar button:hover,
+.stamp-transforms button:hover {
+  background: var(--surface-3);
+  color: var(--cyan);
+}
+.stamp-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.stamp-heading {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.stamp-scroll {
+  overflow: auto;
+  max-height: 100px;
+  padding: 3px;
+}
+.stamp-preview {
+  display: grid;
+  width: max-content;
+}
+.stamp-cell {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: repeating-conic-gradient(#1b2636 0 25%, #142030 0 50%) 0 / 8px 8px;
+}
+.stamp-art {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.stamp-art img {
+  position: absolute;
+  image-rendering: pixelated;
+  max-width: none;
+}
+.stamp-transforms {
+  display: flex;
+  gap: 4px;
+  margin-top: 7px;
+}
+.stamp-transforms button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  height: 29px;
+  font-size: 17px;
+}
+.stamp-transforms svg {
+  width: 13px;
+  height: 13px;
+}
+.stamp-transforms kbd {
+  font-size: 9px;
+  color: var(--muted);
+}
+@media (max-width: 1350px) {
+  .tile-toolstrip button span {
+    display: none;
+  }
+}
+.tile-toolstrip button[aria-pressed='true'] span {
+  display: inline;
+}
+.stamp-transforms {
+  margin: 4px 0 6px;
+}
+.stamp-section {
+  margin-top: 8px;
+  padding-top: 6px;
+}
+.stamp-scroll {
+  max-height: 72px;
+}
+@media (min-width: 761px) {
+  .tileset-dock {
+    max-height: 60%;
+  }
+}

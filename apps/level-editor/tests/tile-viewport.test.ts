@@ -3,6 +3,7 @@ import { LevelEditorStore } from '../src/editor-store';
 import { activeLayer, createInitialProject } from '../src/model';
 import { SceneViewport } from '../src/viewport';
 import { paletteTiles } from '../src/tile-palette';
+import { TileEditing } from '../src/tile-editing';
 import { starterTileset } from '../src/tiles';
 
 const cleanups: (() => void)[] = [];
@@ -131,5 +132,61 @@ describe('tile viewport interactions', () => {
     });
     pointer('pointerup', 4, 3);
     expect(cells()).toEqual({});
+  });
+  it('selects without painting, previews paste, commits once and can undo it', () => {
+    const { store, pointer, cells } = editor();
+    pointer('pointerdown', 2, 3);
+    pointer('pointermove', 4, 3);
+    pointer('pointerup', 4, 3);
+    store.update(
+      'Select tool',
+      (draft) => {
+        draft.tool = 'tile-select';
+      },
+      false,
+    );
+    pointer('pointerdown', 2, 3);
+    pointer('pointermove', 4, 3);
+    pointer('pointerup', 4, 3);
+    expect(store.status.snapshot.tileSelection).toMatchObject({
+      x: 2,
+      y: 3,
+      width: 3,
+      height: 1,
+    });
+    expect(Object.keys(cells())).toHaveLength(3);
+    const editing = new TileEditing(store, vi.fn());
+    editing.copy();
+    editing.paste();
+    pointer('pointerdown', 7, 5);
+    pointer('pointermove', 8, 5);
+    expect(Object.keys(cells())).toHaveLength(3);
+    pointer('pointerup', 8, 5);
+    expect(Object.keys(cells())).toHaveLength(6);
+    expect(store.status.snapshot.tool).toBe('tile-select');
+    expect(store.status.snapshot.tileSelection).toMatchObject({
+      x: 8,
+      y: 5,
+      width: 3,
+    });
+    store.undo();
+    expect(Object.keys(cells())).toHaveLength(3);
+    store.redo();
+    expect(Object.keys(cells())).toHaveLength(6);
+  });
+
+  it('Escape cancels a pending paste without modifying tiles', () => {
+    const { store, cells } = editor();
+    store.update(
+      'Pending paste',
+      (draft) => {
+        draft.tool = 'paste';
+      },
+      false,
+    );
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(cells()).toEqual({});
+    expect(store.status.canUndo).toBe(false);
+    expect(store.status.snapshot.tool).toBe('tile-select');
   });
 });

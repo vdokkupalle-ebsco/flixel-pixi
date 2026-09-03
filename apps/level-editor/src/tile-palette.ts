@@ -2,6 +2,7 @@ import type { AssetDefinition } from '@flixel-pixi/schemas';
 import type { LevelEditorStatus, LevelEditorStore } from './editor-store';
 import { activeLayer, activeSceneSettings, createId } from './model';
 import { atlasFramesForAsset } from './atlas-assets';
+import { activeTileSelection } from './tile-editing';
 import { icon } from './icons';
 import { isTileTool, sameTile, starterTileset, type TileRegion } from './tiles';
 
@@ -121,16 +122,32 @@ export function mountTilePalette(
       .map((tile, index) => {
         const selected =
           snapshot.tileStamp?.tiles.some((selected) =>
-            sameTile(selected, tile),
+            sameTile(
+              selected ? { ...selected, rotation: 0, flipX: false } : null,
+              tile,
+            ),
           ) ?? false;
         const label = frames[index]?.name ?? `Tile ${index + 1}`;
         return `<button type="button" class="palette-tile" data-tile-index="${index}" aria-label="${escapeHtml(label)}" aria-pressed="${selected}" title="${escapeHtml(label)} · ${tile.width} × ${tile.height}"><span style="aspect-ratio:${tile.width}/${tile.height}"><img alt="" draggable="false" src="${escapeHtml(asset?.src)}" style="width:${(Number(asset?.metadata?.width) / tile.width) * 100}%;height:${(Number(asset?.metadata?.height) / tile.height) * 100}%;left:${(-tile.x / tile.width) * 100}%;top:${(-tile.y / tile.height) * 100}%"/></span></button>`;
       })
       .join('');
+    const stamp = snapshot.tileStamp;
+    const stampPreview = stamp
+      ? `<div class="stamp-section"><div class="stamp-heading"><strong>Active stamp</strong><span>${stamp.width} × ${stamp.height}</span></div>
+      <div class="stamp-transforms" role="toolbar" aria-label="Stamp transforms"><button type="button" data-action="tile-flip-horizontal" aria-label="Flip stamp horizontally" title="Flip horizontally (X)">↔ <kbd>X</kbd></button><button type="button" data-action="tile-flip-vertical" aria-label="Flip stamp vertically" title="Flip vertically (Y)">↕ <kbd>Y</kbd></button><button type="button" data-action="tile-rotate-ccw" aria-label="Rotate stamp counterclockwise" title="Rotate counterclockwise (Shift+Z)">${icon('undo')}</button><button type="button" data-action="tile-rotate-cw" aria-label="Rotate stamp clockwise" title="Rotate clockwise (Z)">${icon('redo')}<kbd>Z</kbd></button></div>
+<div class="stamp-scroll"><div class="stamp-preview" aria-label="Active stamp preview" style="grid-template-columns:repeat(${stamp.width}, 24px)">${stamp.tiles
+          .map((tile) => {
+            const source = assets.find((asset) => asset.id === tile?.assetId);
+            if (!tile || !source) return '<span class="stamp-cell"></span>';
+            return `<span class="stamp-cell"><span class="stamp-art" style="transform:rotate(${(tile.rotation ?? 0) * 90}deg) scaleX(${tile.flipX ? -1 : 1})"><img alt="" src="${escapeHtml(source.src)}" style="width:${(Number(source.metadata?.width) / tile.width) * 100}%;height:${(Number(source.metadata?.height) / tile.height) * 100}%;left:${(-tile.x / tile.width) * 100}%;top:${(-tile.y / tile.height) * 100}%" /></span></span>`;
+          })
+          .join('')}</div></div>
+      </div>`
+      : '';
     host.innerHTML = `<div class="panel-heading"><div><small>Tile painting</small><strong>Tilesets</strong></div><button class="small-icon" type="button" data-tile-upload aria-label="Import tileset" title="Import tileset image or image + atlas XML">${icon('add')}</button></div>
       <div class="tileset-content"><label class="tileset-label">Source image<select aria-label="Tileset" data-tileset><option value=""${!assetId ? ' selected' : ''} disabled>Choose an image…</option>${options}</select></label>${fields}
-      ${asset ? `<div class="tile-palette-scroll"><div class="tile-palette" role="group" aria-label="Tile palette" style="grid-template-columns:repeat(${palette.columns}, 36px)">${cards}</div></div>${palette.tiles.length === 0 ? '<p class="field-help">No tiles fit these settings. Adjust the tile size, margin or spacing. Up to 4,096 tiles per sheet.</p>' : `<p class="tile-caption">${palette.tiles.length} tiles · ${snapshot.tileStamp?.width ?? 1} × ${snapshot.tileStamp?.height ?? 1} stamp</p><p class="field-help">Click a tile to paint. Shift-click another tile to select a rectangular stamp.</p>`}` : '<div class="tile-empty"><span class="tile-empty-icon">▦</span><strong>Build your world, tile by tile</strong><p>Choose an image above, import a tileset, or try the starter terrain.</p><button class="button primary full" type="button" data-starter-tiles>Use starter tiles</button></div>'}
-      </div>`;
+      ${asset ? `<div class="tile-palette-scroll"><div class="tile-palette" role="group" aria-label="Tile palette" style="grid-template-columns:repeat(${palette.columns}, 36px)">${cards}</div></div>${palette.tiles.length === 0 ? '<p class="field-help">No tiles fit these settings. Adjust the tile size, margin or spacing. Up to 4,096 tiles per sheet.</p>' : `<p class="tile-caption">${palette.tiles.length} tiles · ${snapshot.tileStamp?.width ?? 1} × ${snapshot.tileStamp?.height ?? 1} stamp</p><p class="field-help">Shift-click selects a multi-tile stamp.</p>`}` : '<div class="tile-empty"><span class="tile-empty-icon">▦</span><strong>Build your world, tile by tile</strong><p>Choose an image above, import a tileset, or try the starter terrain.</p><button class="button primary full" type="button" data-starter-tiles>Use starter tiles</button></div>'}
+      ${stampPreview}</div>`;
   };
   const click = (event: MouseEvent): void => {
     const target = (event.target as HTMLElement).closest<HTMLElement>('button');
@@ -192,7 +209,9 @@ export function mountTilePalette(
         if (
           !isTileTool(draft.tool) ||
           draft.tool === 'eraser' ||
-          draft.tool === 'eyedropper'
+          draft.tool === 'eyedropper' ||
+          draft.tool === 'tile-select' ||
+          draft.tool === 'paste'
         )
           draft.tool = 'brush';
         draft.selectedEntityIds = [];
@@ -254,6 +273,13 @@ export function tileContext(status: LevelEditorStatus): string {
     layer = activeLayer(snapshot);
   const size =
     layer.tilemap?.tileSize ?? activeSceneSettings(snapshot).gridSize;
+  if (snapshot.tool === 'tile-select')
+    return 'Drag to select a rectangular area · Copy, cut, paste or delete tiles';
+  if (snapshot.tool === 'paste')
+    return 'Click to place copied tiles · Empty cells replace destination tiles · Escape cancels';
+  const selection = activeTileSelection(snapshot);
+  if (selection)
+    return `${layer.name} · Editing inside ${selection.width} × ${selection.height} selection · Escape clears`;
   if (layer.locked) return `${layer.name} is locked · unlock it to paint`;
   if (!layer.visible) return `${layer.name} is hidden · show it to paint`;
   if (!snapshot.tileStamp && !['eraser', 'eyedropper'].includes(snapshot.tool))

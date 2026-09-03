@@ -12,6 +12,7 @@ import {
   validateTileMap,
   type TileMap,
   type TileStamp,
+  type TileSelection,
   type TileTool,
 } from './tiles';
 
@@ -55,6 +56,7 @@ export interface LevelEditorSnapshot {
   selectedEntityIds: string[];
   snapToGrid: boolean;
   tileStamp?: TileStamp;
+  tileSelection?: TileSelection;
   showGrid?: boolean;
   tool: EditorTool;
 }

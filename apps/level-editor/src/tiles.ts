@@ -1,6 +1,9 @@
 import type { AssetDefinition, EntityDefinition } from '@flixel-pixi/schemas';
 
 export interface TileRegion {
+  /** Clockwise quarter turns, applied after a local horizontal flip. */
+  rotation?: number;
+  flipX?: boolean;
   assetId: string;
   x: number;
   y: number;
@@ -27,9 +30,30 @@ export interface TileBounds {
   columns: number;
   rows: number;
 }
-export type TileTool = 'brush' | 'eraser' | 'fill' | 'rectangle' | 'eyedropper';
+export interface TileSelection extends Cell {
+  width: number;
+  height: number;
+  sceneId: string;
+  layerId: string;
+}
+export type TileTool =
+  | 'brush'
+  | 'eraser'
+  | 'fill'
+  | 'rectangle'
+  | 'eyedropper'
+  | 'tile-select'
+  | 'paste';
 export const isTileTool = (tool: string): tool is TileTool =>
-  ['brush', 'eraser', 'fill', 'rectangle', 'eyedropper'].includes(tool);
+  [
+    'brush',
+    'eraser',
+    'fill',
+    'rectangle',
+    'eyedropper',
+    'tile-select',
+    'paste',
+  ].includes(tool);
 export const cellKey = ({ x, y }: Cell): string => `${x},${y}`;
 export const inBounds = (cell: Cell, bounds: TileBounds): boolean =>
   cell.x >= 0 && cell.y >= 0 && cell.x < bounds.columns && cell.y < bounds.rows;
@@ -72,6 +96,11 @@ export function validateTileMap(
       key.split(',').some((n) => !Number.isSafeInteger(Number(n))) ||
       !tile ||
       !asset ||
+      (tile.rotation !== undefined &&
+        (!Number.isInteger(tile.rotation) ||
+          tile.rotation < 0 ||
+          tile.rotation > 3)) ||
+      (tile.flipX !== undefined && typeof tile.flipX !== 'boolean') ||
       ![tile.x, tile.y, tile.width, tile.height].every(Number.isSafeInteger) ||
       tile.x < 0 ||
       tile.y < 0 ||
@@ -139,7 +168,9 @@ export function sameTile(
         a.x === b.x &&
         a.y === b.y &&
         a.width === b.width &&
-        a.height === b.height;
+        a.height === b.height &&
+        (a.rotation ?? 0) === (b.rotation ?? 0) &&
+        (a.flipX ?? false) === (b.flipX ?? false);
 }
 
 /** Iterative, four-connected flood fill; membership is read before any edits. */
@@ -147,8 +178,9 @@ export function floodCells(
   map: TileMap,
   start: Cell,
   bounds: TileBounds,
+  selection?: TileSelection,
 ): Cell[] {
-  if (!inBounds(start, bounds)) return [];
+  if (!inBounds(start, bounds) || !insideSelection(start, selection)) return [];
   if (bounds.columns * bounds.rows > 262144)
     throw new Error(
       'Fill supports maps up to 262,144 cells. Increase the cell size or use the brush.',
@@ -167,7 +199,11 @@ export function floodCells(
       { x: cell.x, y: cell.y + 1 },
     ]) {
       const key = cellKey(next);
-      if (inBounds(next, bounds) && !visited.has(key)) {
+      if (
+        inBounds(next, bounds) &&
+        insideSelection(next, selection) &&
+        !visited.has(key)
+      ) {
         visited.add(key);
         queue.push(next);
       }
@@ -181,13 +217,17 @@ export function paintStamp(
   stamp: TileStamp,
   at: Cell,
   bounds: TileBounds,
+  selection?: TileSelection,
+  replaceEmpty = false,
 ): void {
   for (let y = 0; y < stamp.height; y++)
     for (let x = 0; x < stamp.width; x++) {
       const cell = { x: at.x + x, y: at.y + y };
-      if (!inBounds(cell, bounds)) continue;
+      if (!inBounds(cell, bounds) || !insideSelection(cell, selection))
+        continue;
       const tile = stamp.tiles[y * stamp.width + x];
       if (tile) map.cells[cellKey(cell)] = { ...tile };
+      else if (replaceEmpty) Reflect.deleteProperty(map.cells, cellKey(cell));
     }
 }
 
@@ -196,14 +236,97 @@ export function fillPattern(
   stamp: TileStamp,
   cells: readonly Cell[],
   origin: Cell,
+  selection?: TileSelection,
 ): void {
   for (const cell of cells) {
+    if (!insideSelection(cell, selection)) continue;
     const x = (((cell.x - origin.x) % stamp.width) + stamp.width) % stamp.width;
     const y =
       (((cell.y - origin.y) % stamp.height) + stamp.height) % stamp.height;
     const tile = stamp.tiles[y * stamp.width + x];
     if (tile) map.cells[cellKey(cell)] = { ...tile };
   }
+}
+
+export function insideSelection(
+  cell: Cell,
+  selection?: TileSelection,
+): boolean {
+  return (
+    !selection ||
+    (cell.x >= selection.x &&
+      cell.y >= selection.y &&
+      cell.x < selection.x + selection.width &&
+      cell.y < selection.y + selection.height)
+  );
+}
+
+export function captureStamp(
+  map: TileMap,
+  area: Pick<TileSelection, 'x' | 'y' | 'width' | 'height'>,
+): TileStamp {
+  if (area.width * area.height > 4096)
+    throw new Error('Copy a selection of up to 4,096 cells.');
+  const tiles: (TileRegion | null)[] = [];
+  for (let y = 0; y < area.height; y++)
+    for (let x = 0; x < area.width; x++) {
+      const tile = map.cells[cellKey({ x: area.x + x, y: area.y + y })];
+      tiles.push(tile ? { ...tile } : null);
+    }
+  return { width: area.width, height: area.height, tiles };
+}
+
+export type StampTransform =
+  'flip-horizontal' | 'flip-vertical' | 'rotate-cw' | 'rotate-ccw';
+export function transformStamp(
+  stamp: TileStamp,
+  operation: StampTransform,
+): TileStamp {
+  const rotate = operation === 'rotate-cw' || operation === 'rotate-ccw';
+  const width = rotate ? stamp.height : stamp.width,
+    height = rotate ? stamp.width : stamp.height;
+  const result: TileStamp = {
+    width,
+    height,
+    tiles: Array.from({ length: width * height }, () => null),
+  };
+  stamp.tiles.forEach((tile, index) => {
+    const x = index % stamp.width,
+      y = Math.floor(index / stamp.width);
+    const nextX =
+      operation === 'flip-horizontal'
+        ? width - 1 - x
+        : operation === 'rotate-cw'
+          ? width - 1 - y
+          : operation === 'rotate-ccw'
+            ? y
+            : x;
+    const nextY =
+      operation === 'flip-vertical'
+        ? height - 1 - y
+        : operation === 'rotate-cw'
+          ? x
+          : operation === 'rotate-ccw'
+            ? height - 1 - x
+            : y;
+    if (!tile) return;
+    const next = { ...tile },
+      r = tile.rotation ?? 0;
+    const rotation =
+      operation === 'rotate-cw'
+        ? r + 1
+        : operation === 'rotate-ccw'
+          ? r + 3
+          : operation === 'flip-horizontal'
+            ? -r
+            : 2 - r;
+    next.rotation = ((rotation % 4) + 4) % 4;
+    next.flipX = rotate ? (tile.flipX ?? false) : !(tile.flipX ?? false);
+    if (next.rotation === 0) delete next.rotation;
+    if (!next.flipX) delete next.flipX;
+    result.tiles[nextY * width + nextX] = next;
+  });
+  return result;
 }
 
 /** Preview-only sprite descriptions; the saved project stays a compact tile grid. */
@@ -218,6 +341,8 @@ export function tileEntities(
       type: 'sprite',
       position: { x: x * map.tileSize, y: y * map.tileSize },
       properties: {
+        tileRotation: tile.rotation ?? 0,
+        tileFlipX: tile.flipX ?? false,
         assetId: tile.assetId,
         layerId,
         frameX: tile.x,

@@ -12,6 +12,7 @@ import {
 
 import type { LevelEditorStatus, LevelEditorStore } from './editor-store';
 import { icon } from './icons';
+import { TileEditing, activeTileSelection } from './tile-editing';
 import { isTileTool } from './tiles';
 import { mountTilePalette, tileContext } from './tile-palette';
 import { getEditorExtension } from './model';
@@ -223,7 +224,7 @@ export function mountEditor(
             <button type="button" data-tool="select" aria-label="Select tool" aria-pressed="true">${icon('select')}<kbd>V</kbd></button>
             <button type="button" data-tool="pan" aria-label="Pan stage" aria-pressed="false">${icon('pan')}<kbd>H</kbd></button>
             <button type="button" data-tool="move" aria-label="Move tool" aria-pressed="false">${icon('move')}<kbd>G</kbd></button>
-            <button type="button" data-tool="rotate" aria-label="Rotate tool" aria-pressed="false">${icon('rotate')}<kbd>R</kbd></button>
+            <button type="button" data-tool="rotate" aria-label="Rotate tool" aria-pressed="false">${icon('rotate')}<kbd>O</kbd></button>
             <button type="button" data-tool="scale" aria-label="Scale tool" aria-pressed="false">${icon('zoomIn')}<kbd>S</kbd></button>
           </div>
           <div class="tile-toolstrip" role="toolbar" aria-label="Tile tools">
@@ -235,6 +236,7 @@ export function mountEditor(
                 ['fill', 'Bucket fill', 'F'],
                 ['rectangle', 'Rectangle fill', 'P'],
                 ['eyedropper', 'Pick tile', 'I'],
+                ['tile-select', 'Select tiles', 'R'],
               ] as const
             )
               .map(
@@ -244,6 +246,14 @@ export function mountEditor(
               .join('')}
           </div>
           <div class="tile-context" data-tile-context hidden></div>
+          <div class="selection-toolbar" role="toolbar" aria-label="Tile selection actions" data-selection-actions hidden>
+            <span data-selection-size>No selection</span>
+            <button type="button" data-action="tile-copy" title="Copy tiles (Command/Ctrl+C)">Copy</button>
+            <button type="button" data-action="tile-cut" title="Cut tiles (Command/Ctrl+X)">Cut</button>
+            <button type="button" data-action="tile-paste" title="Paste tiles (Command/Ctrl+V)">Paste</button>
+            <button type="button" data-action="tile-delete" title="Delete selected tiles">Delete</button>
+            <button type="button" data-action="tile-deselect" title="Clear selection (Escape)">Deselect</button>
+          </div>
           <div class="stage-toolbar" role="toolbar" aria-label="Canvas controls">
             <button class="toolbar-toggle" type="button" data-action="toggle-grid" aria-pressed="true">${icon('grid')} Snap <kbd>⌘'</kbd></button>
             <button class="toolbar-toggle" type="button" data-action="show-grid" aria-label="Show grid" aria-pressed="true" title="Show grid">${icon('grid')}</button>
@@ -253,7 +263,7 @@ export function mountEditor(
             ${button('zoom-in', 'Zoom in', 'zoomIn')}
             <button class="text-button" type="button" data-action="zoom-fit">Fit</button>
           </div>
-          <canvas id="editor-canvas" tabindex="0" aria-label="Scene canvas. B brush, E eraser, F fill, P rectangle, I pick tile. Right-drag captures a stamp. Escape cancels a stroke."></canvas>
+          <canvas id="editor-canvas" tabindex="0" aria-label="Scene canvas. B brush, E eraser, F fill, P rectangle, I pick tile, R select tiles. Command or Control C, X, V copies, cuts, pastes. X/Y flips the stamp; Z rotates it. Right-drag captures a stamp. Escape cancels a stroke."></canvas>
           <div class="canvas-hint">Space + drag pans · wheel scrolls · ⌘/Ctrl + wheel zooms · ⌘/Ctrl + D duplicates</div>
         </section>
         <aside class="right-panel panel" aria-label="Inspector">
@@ -319,6 +329,8 @@ export function mountEditor(
       3200,
     );
   };
+
+  const tileEditing = new TileEditing(store, (message) => announce(message));
 
   const sendProjectToPreview = (): void => {
     if (!previewReady || previewPeer === undefined) return;
@@ -853,6 +865,37 @@ export function mountEditor(
 
   function render(status: LevelEditorStatus): void {
     const tileMode = isTileTool(status.snapshot.tool);
+    const selection = activeTileSelection(status.snapshot),
+      layer = activeLayer(status.snapshot);
+    const selectionBar = host.querySelector<HTMLElement>(
+      '[data-selection-actions]',
+    );
+    if (selectionBar) selectionBar.hidden = !tileMode;
+    const selectionSize = host.querySelector<HTMLElement>(
+      '[data-selection-size]',
+    );
+    if (selectionSize)
+      selectionSize.textContent = selection
+        ? `${selection.width} × ${selection.height} selected`
+        : status.snapshot.tool === 'paste'
+          ? 'Click to place'
+          : 'R to select';
+    for (const action of ['copy', 'cut', 'delete', 'deselect']) {
+      const button = host.querySelector<HTMLButtonElement>(
+        `[data-action="tile-${action}"]`,
+      );
+      if (button)
+        button.disabled =
+          !selection ||
+          (['cut', 'delete'].includes(action) &&
+            (layer.locked || !layer.visible));
+    }
+    const pasteButton = host.querySelector<HTMLButtonElement>(
+      '[data-action="tile-paste"]',
+    );
+    if (pasteButton)
+      pasteButton.disabled =
+        !tileEditing.canPaste || layer.locked || !layer.visible;
     host.querySelector('.stage')?.classList.toggle('tile-mode', tileMode);
     const contextNode = host.querySelector<HTMLElement>('[data-tile-context]');
     if (contextNode) {
@@ -862,7 +905,11 @@ export function mountEditor(
     const hint = host.querySelector<HTMLElement>('.canvas-hint');
     if (hint)
       hint.textContent = tileMode
-        ? 'Drag to paint · Shift-click draws a line · Right-drag captures a stamp · Space pans · Esc cancels'
+        ? status.snapshot.tool === 'paste'
+          ? 'Click to paste once · X/Y flip · Z rotates · Escape cancels'
+          : status.snapshot.tool === 'tile-select'
+            ? 'Drag a tile selection · Command/Ctrl+C copies · V pastes with Command/Ctrl · Escape clears'
+            : 'Drag to paint · R selects tiles · X/Y flip stamp · Z rotates · Space pans'
         : 'Space + drag pans · wheel scrolls · ⌘/Ctrl + wheel zooms · ⌘/Ctrl + D duplicates';
     const tileCount = host.querySelector<HTMLElement>('[data-tile-count]');
     if (tileCount)
@@ -972,6 +1019,23 @@ export function mountEditor(
       return;
     }
     const action = target.dataset.action;
+    if (action?.startsWith('tile-')) {
+      if (action === 'tile-copy') tileEditing.copy();
+      else if (action === 'tile-cut') tileEditing.copy(true);
+      else if (action === 'tile-paste') tileEditing.paste();
+      else if (action === 'tile-delete') tileEditing.deleteSelection();
+      else if (action === 'tile-deselect') tileEditing.deselect();
+      else if (action === 'tile-flip-horizontal')
+        tileEditing.transform('flip-horizontal');
+      else if (action === 'tile-flip-vertical')
+        tileEditing.transform('flip-vertical');
+      else if (action === 'tile-rotate-cw') tileEditing.transform('rotate-cw');
+      else if (action === 'tile-rotate-ccw')
+        tileEditing.transform('rotate-ccw');
+      render(store.status);
+      canvas.focus();
+      return;
+    }
     if (action === 'show-grid') {
       store.update(
         'Toggled grid visibility',
@@ -1067,6 +1131,7 @@ export function mountEditor(
         (draft) => {
           activeSceneSettings(draft).activeLayerId = layerId;
           draft.selectedEntityIds = [];
+          delete draft.tileSelection;
         },
         false,
       );
@@ -1293,24 +1358,42 @@ export function mountEditor(
       f: 'fill',
       p: 'rectangle',
       i: 'eyedropper',
+      r: 'tile-select',
     } as const;
     if (key in tileTools) {
       setTool(tileTools[key as keyof typeof tileTools]);
       event.preventDefault();
       return;
     }
-    if (['v', 'h', 'g', 'r', 's'].includes(key)) {
+    if (
+      isTileTool(store.status.snapshot.tool) &&
+      ['x', 'y', 'z'].includes(key)
+    ) {
+      tileEditing.transform(
+        key === 'x'
+          ? 'flip-horizontal'
+          : key === 'y'
+            ? 'flip-vertical'
+            : event.shiftKey
+              ? 'rotate-ccw'
+              : 'rotate-cw',
+      );
+      event.preventDefault();
+      return;
+    }
+    if (['v', 'h', 'g', 'o', 's'].includes(key)) {
       setTool(
         (
-          { v: 'select', h: 'pan', g: 'move', r: 'rotate', s: 'scale' } as const
-        )[key as 'v' | 'h' | 'g' | 'r' | 's'],
+          { v: 'select', h: 'pan', g: 'move', o: 'rotate', s: 'scale' } as const
+        )[key as 'v' | 'h' | 'g' | 'o' | 's'],
       );
       event.preventDefault();
       return;
     }
     if (event.target !== canvas) return;
     if (event.key === 'Delete' || event.key === 'Backspace') {
-      deleteSelected();
+      if (isTileTool(store.status.snapshot.tool)) tileEditing.deleteSelection();
+      else deleteSelected();
       event.preventDefault();
       return;
     }
@@ -1358,6 +1441,19 @@ export function mountEditor(
       runtimeDialog.open
     )
       return;
+    const key = event.key.toLowerCase();
+    if (
+      isTileTool(store.status.snapshot.tool) &&
+      ['c', 'x', 'v', 'a'].includes(key)
+    ) {
+      if (key === 'c') tileEditing.copy();
+      else if (key === 'x') tileEditing.copy(true);
+      else if (key === 'v') tileEditing.paste();
+      else tileEditing.selectAll();
+      render(store.status);
+      event.preventDefault();
+      return;
+    }
     if (event.key.toLowerCase() === 'z') {
       if (event.shiftKey) store.redo();
       else store.undo();

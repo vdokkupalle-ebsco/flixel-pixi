@@ -34,6 +34,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 const icons = {
+  'tile-select': faBorderAll,
   brush: faPaintBrush,
   eraser: faEraser,
   fill: faFillDrip,

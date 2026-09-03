@@ -27,6 +27,8 @@ import {
   type TileTool,
   type TileRegion,
 } from './tiles';
+import { activeTileSelection } from './tile-editing';
+import { insideSelection, type TileSelection } from './tiles';
 import { bodyForEntity, updateBodyShape } from './physics-authoring';
 
 interface ViewTransform {
@@ -54,6 +56,7 @@ interface PanPointerInteraction {
 }
 
 interface TileInteraction {
+  selection: TileSelection | undefined;
   kind: 'tiles';
   pointerId: number;
   layerId: string;
@@ -238,6 +241,7 @@ export class SceneViewport {
       }
     }
     this.#drawGrid(snapshot);
+    this.#drawTileSelection();
     this.#drawTileCursor();
     this.#drawPhysics(snapshot);
     context.restore();
@@ -318,18 +322,61 @@ export class SceneViewport {
     );
     if (!asset) return;
     const image = this.#getImage(asset.id, asset.src);
-    if (image.complete && image.naturalWidth > 0)
-      this.#context.drawImage(
+    if (image.complete && image.naturalWidth > 0) {
+      const context = this.#context;
+      context.save();
+      context.translate(x + size / 2, y + size / 2);
+      context.rotate(((tile.rotation ?? 0) * Math.PI) / 2);
+      context.scale(tile.flipX ? -1 : 1, 1);
+      context.drawImage(
         image,
         tile.x,
         tile.y,
         tile.width,
         tile.height,
-        x,
-        y,
+        -size / 2,
+        -size / 2,
         size,
         size,
       );
+      context.restore();
+    }
+  }
+
+  #drawTileSelection(): void {
+    const snapshot = this.#status.snapshot,
+      selection = activeTileSelection(snapshot);
+    if (!selection || !isTileTool(snapshot.tool)) return;
+    const size =
+      activeLayer(snapshot).tilemap?.tileSize ??
+      activeSceneSettings(snapshot).gridSize;
+    const context = this.#context,
+      scale = this.#viewTransform(snapshot).scale;
+    context.save();
+    context.fillStyle = 'rgba(29, 232, 241, 0.10)';
+    context.fillRect(
+      selection.x * size,
+      selection.y * size,
+      selection.width * size,
+      selection.height * size,
+    );
+    context.lineWidth = 2 / scale;
+    context.strokeStyle = '#07131b';
+    context.strokeRect(
+      selection.x * size,
+      selection.y * size,
+      selection.width * size,
+      selection.height * size,
+    );
+    context.setLineDash([5 / scale, 4 / scale]);
+    context.strokeStyle = '#9dfaff';
+    context.strokeRect(
+      selection.x * size,
+      selection.y * size,
+      selection.width * size,
+      selection.height * size,
+    );
+    context.restore();
   }
 
   #drawTileCursor(): void {
@@ -345,6 +392,7 @@ export class SceneViewport {
     const context = this.#context,
       interaction = this.#interaction;
     const stamp = snapshot.tileStamp;
+    const selection = activeTileSelection(snapshot);
     context.save();
     context.beginPath();
     context.rect(0, 0, bounds.columns * size, bounds.rows * size);
@@ -352,13 +400,23 @@ export class SceneViewport {
     if (
       !interaction &&
       stamp &&
-      snapshot.tool === 'brush' &&
+      (snapshot.tool === 'brush' || snapshot.tool === 'paste') &&
       layer.visible &&
       !layer.locked
     ) {
       context.globalAlpha = 0.55;
       stamp.tiles.forEach((tile, index) => {
-        if (tile)
+        if (
+          tile &&
+          (snapshot.tool === 'paste' ||
+            insideSelection(
+              {
+                x: cell.x + (index % stamp.width),
+                y: cell.y + Math.floor(index / stamp.width),
+              },
+              selection,
+            ))
+        )
           this.#drawTile(
             tile,
             (cell.x + (index % stamp.width)) * size,
@@ -375,7 +433,9 @@ export class SceneViewport {
     context.lineWidth = 1.5 / this.#viewTransform(snapshot).scale;
     if (
       interaction?.kind === 'tiles' &&
-      (interaction.tool === 'rectangle' || interaction.tool === 'capture')
+      (interaction.tool === 'rectangle' ||
+        interaction.tool === 'capture' ||
+        interaction.tool === 'tile-select')
     ) {
       context.strokeRect(
         Math.min(interaction.start.x, cell.x) * size,
@@ -387,8 +447,14 @@ export class SceneViewport {
       context.strokeRect(
         cell.x * size,
         cell.y * size,
-        size * (snapshot.tool === 'brush' ? (stamp?.width ?? 1) : 1),
-        size * (snapshot.tool === 'brush' ? (stamp?.height ?? 1) : 1),
+        size *
+          (['brush', 'paste'].includes(snapshot.tool)
+            ? (stamp?.width ?? 1)
+            : 1),
+        size *
+          (['brush', 'paste'].includes(snapshot.tool)
+            ? (stamp?.height ?? 1)
+            : 1),
       );
     context.restore();
   }
@@ -427,11 +493,20 @@ export class SceneViewport {
         );
       return;
     }
-    if (tool !== 'capture' && (layer.locked || !layer.visible)) {
+    if (
+      tool !== 'capture' &&
+      tool !== 'tile-select' &&
+      (layer.locked || !layer.visible)
+    ) {
       this.#tileMessage('Unlock and show the active layer to paint.');
       return;
     }
-    if (!snapshot.tileStamp && tool !== 'eraser' && tool !== 'capture') {
+    if (
+      !snapshot.tileStamp &&
+      tool !== 'eraser' &&
+      tool !== 'capture' &&
+      tool !== 'tile-select'
+    ) {
       this.#tileMessage('Choose a tile in the Tilesets panel first.');
       return;
     }
@@ -440,6 +515,7 @@ export class SceneViewport {
     );
     const interaction: TileInteraction = {
       kind: 'tiles',
+      selection: activeTileSelection(snapshot),
       pointerId: event.pointerId,
       layerId: layer.id,
       tool,
@@ -457,8 +533,9 @@ export class SceneViewport {
         fillPattern(
           interaction.map,
           interaction.stamp,
-          floodCells(original, cell, bounds),
+          floodCells(original, cell, bounds, interaction.selection),
           cell,
+          interaction.selection,
         );
       else {
         if (tool === 'brush' && event.shiftKey && this.#lastBrushCell)
@@ -478,7 +555,17 @@ export class SceneViewport {
       x: Math.max(0, Math.min(interaction.bounds.columns - 1, cell.x)),
       y: Math.max(0, Math.min(interaction.bounds.rows - 1, cell.y)),
     };
-    if (interaction.tool === 'rectangle' && interaction.stamp) {
+    if (interaction.tool === 'paste' && interaction.stamp) {
+      interaction.map = structuredClone(interaction.original);
+      paintStamp(
+        interaction.map,
+        interaction.stamp,
+        cell,
+        interaction.bounds,
+        undefined,
+        true,
+      );
+    } else if (interaction.tool === 'rectangle' && interaction.stamp) {
       interaction.map = structuredClone(interaction.original);
       const origin = {
         x: Math.min(interaction.start.x, cell.x),
@@ -497,17 +584,20 @@ export class SceneViewport {
         interaction.stamp,
         rectangleCells(interaction.start, cell, interaction.bounds),
         origin,
+        interaction.selection,
       );
     } else if (interaction.tool === 'brush' || interaction.tool === 'eraser') {
       for (const at of lineCells(interaction.last, cell)) {
-        if (interaction.tool === 'eraser')
-          Reflect.deleteProperty(interaction.map.cells, cellKey(at));
-        else if (interaction.stamp)
+        if (interaction.tool === 'eraser') {
+          if (insideSelection(at, interaction.selection))
+            Reflect.deleteProperty(interaction.map.cells, cellKey(at));
+        } else if (interaction.stamp)
           paintStamp(
             interaction.map,
             interaction.stamp,
             at,
             interaction.bounds,
+            interaction.selection,
           );
       }
     }
@@ -517,6 +607,24 @@ export class SceneViewport {
 
   #finishTiles(interaction: TileInteraction): void {
     this.#cancelInteraction();
+    if (interaction.tool === 'tile-select') {
+      this.#store.update(
+        'Selected tile area',
+        (draft) => {
+          draft.tileSelection = {
+            x: Math.min(interaction.start.x, interaction.last.x),
+            y: Math.min(interaction.start.y, interaction.last.y),
+            width: Math.abs(interaction.start.x - interaction.last.x) + 1,
+            height: Math.abs(interaction.start.y - interaction.last.y) + 1,
+            layerId: interaction.layerId,
+            sceneId: activeScene(draft).id,
+          };
+          draft.selectedEntityIds = [];
+        },
+        false,
+      );
+      return;
+    }
     if (interaction.tool === 'capture') {
       const area =
         (Math.abs(interaction.start.x - interaction.last.x) + 1) *
@@ -554,13 +662,16 @@ export class SceneViewport {
       return;
     }
     if (interaction.tool === 'brush') this.#lastBrushCell = interaction.last;
-    if (
-      JSON.stringify(interaction.map.cells) ===
-      JSON.stringify(interaction.original.cells)
-    )
-      return;
+    const changed =
+      JSON.stringify(interaction.map.cells) !==
+      JSON.stringify(interaction.original.cells);
+    if (!changed && interaction.tool !== 'paste') return;
     this.#store.update(
-      interaction.tool === 'eraser' ? 'Erased tiles' : 'Painted tiles',
+      interaction.tool === 'eraser'
+        ? 'Erased tiles'
+        : interaction.tool === 'paste'
+          ? 'Pasted tiles'
+          : 'Painted tiles',
       (draft) => {
         const settings = activeSceneSettings(draft);
         settings.layers ??= sceneLayers(draft).map((layer) => ({ ...layer }));
@@ -569,7 +680,24 @@ export class SceneViewport {
         );
         if (!layer || layer.locked || !layer.visible) return;
         layer.tilemap = interaction.map;
+        if (interaction.tool === 'paste' && interaction.stamp) {
+          draft.tileSelection = {
+            ...interaction.last,
+            width: Math.min(
+              interaction.stamp.width,
+              interaction.bounds.columns - interaction.last.x,
+            ),
+            height: Math.min(
+              interaction.stamp.height,
+              interaction.bounds.rows - interaction.last.y,
+            ),
+            sceneId: activeScene(draft).id,
+            layerId: layer.id,
+          };
+          draft.tool = 'tile-select';
+        }
       },
+      changed,
     );
   }
 
@@ -1120,8 +1248,24 @@ export class SceneViewport {
   };
 
   #onWindowKeyDown = (event: KeyboardEvent): void => {
+    if (event.target instanceof Element && event.target.closest('dialog'))
+      return;
     if (event.key === 'Escape') {
+      const interacting = this.#interaction !== undefined;
       this.#cancelInteraction();
+      if (
+        !interacting &&
+        isTileTool(this.#status.snapshot.tool) &&
+        !(event.target instanceof HTMLInputElement)
+      )
+        this.#store.update(
+          'Cancelled tile selection or paste',
+          (draft) => {
+            delete draft.tileSelection;
+            if (draft.tool === 'paste') draft.tool = 'tile-select';
+          },
+          false,
+        );
       return;
     }
     if (event.code !== 'Space' || event.repeat || event.target !== this.#canvas)
