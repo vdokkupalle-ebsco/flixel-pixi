@@ -34,6 +34,19 @@ describe('parseTextureAtlasXml', () => {
     });
   });
 
+  it('supports TexturePacker sprite entries and short frame names', () => {
+    const frames = parseTextureAtlasXml(
+      `<TextureAtlas image="tiles.png"><sprite n="platform" x="4" y="6" w="32" h="16"/></TextureAtlas>`,
+    );
+    expect(frames[0]).toEqual({
+      height: 16,
+      name: 'platform',
+      width: 32,
+      x: 4,
+      y: 6,
+    });
+  });
+
   it('throws when empty', () => {
     expect(() => parseTextureAtlasXml('<TextureAtlas></TextureAtlas>')).toThrow(
       /SubTexture/i,

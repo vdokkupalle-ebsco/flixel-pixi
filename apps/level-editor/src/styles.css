@@ -267,6 +267,7 @@ svg {
 .workspace {
   display: grid;
   grid-template-columns: 248px minmax(420px, 1fr) 286px;
+  grid-template-rows: minmax(0, 1fr);
   min-height: 0;
 }
 .panel {
@@ -274,6 +275,8 @@ svg {
   background: var(--surface);
 }
 .left-panel {
+  min-height: 0;
+  overflow: hidden;
   border-right: 1px solid var(--border);
 }
 .right-panel {
@@ -328,6 +331,10 @@ svg {
 .panel-heading strong {
   font-size: 13px;
 }
+.heading-actions {
+  display: flex !important;
+  grid-auto-flow: column;
+}
 .panel-help {
   margin: 0;
   padding: 12px;
@@ -338,6 +345,62 @@ svg {
 
 .hierarchy {
   padding: 6px;
+}
+.layer-group {
+  margin-bottom: 6px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.layer-group.active {
+  border-color: rgba(29, 232, 241, 0.35);
+}
+.layer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px 28px;
+  align-items: center;
+  min-height: 39px;
+  background: var(--surface-2);
+}
+.layer-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+.layer-main > span {
+  display: grid;
+  min-width: 0;
+}
+.layer-main strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.layer-main small,
+.layer-empty {
+  color: var(--faint);
+  font-size: 9px;
+  text-transform: capitalize;
+}
+.layer-main svg {
+  width: 14px;
+  color: var(--cyan);
+}
+.layer-empty {
+  margin: 0;
+  padding: 7px 12px 8px 39px;
+}
+.layer-group .tree-row {
+  margin: 2px 4px;
 }
 .tree-row {
   display: grid;
@@ -456,6 +519,36 @@ svg {
   gap: 7px;
   padding: 8px;
 }
+.asset-group-title {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  margin-top: 4px;
+  padding: 8px 4px 4px;
+  border-top: 1px solid var(--border-soft);
+}
+.asset-group-title > span {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+}
+.asset-group-title strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.asset-group-title small {
+  color: var(--faint);
+  font-size: 9px;
+}
+.asset-delete.inline {
+  position: static;
+  opacity: 1;
+}
 .asset-card {
   position: relative;
   min-width: 0;
@@ -475,6 +568,7 @@ svg {
   cursor: pointer;
 }
 .asset-preview {
+  position: relative;
   display: grid;
   place-items: center;
   width: calc(100% + 14px);
@@ -485,9 +579,15 @@ svg {
   overflow: hidden;
 }
 .asset-preview img {
+  position: absolute;
   width: 72%;
   height: 72%;
   object-fit: contain;
+}
+.atlas-frame .asset-preview img {
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
 }
 .asset-card strong {
   overflow: hidden;
@@ -572,6 +672,13 @@ svg {
   height: 100%;
   cursor: default;
   touch-action: none;
+}
+#editor-canvas.can-pan,
+.stage:has([data-tool='pan'][aria-pressed='true']) #editor-canvas {
+  cursor: grab;
+}
+#editor-canvas.is-panning {
+  cursor: grabbing;
 }
 .toolrail {
   position: absolute;
@@ -1033,4 +1140,261 @@ dialog iframe {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Tile authoring keeps the palette visible beside the canvas and layer stack. */
+.tile-toolstrip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 10px;
+  min-height: 46px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  overflow-x: auto;
+}
+.toolstrip-label {
+  color: var(--faint);
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-right: 8px;
+}
+.tile-toolstrip button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  flex: none;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+.tile-toolstrip svg {
+  width: 14px;
+  height: 14px;
+}
+.tile-toolstrip button:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.tile-toolstrip button[aria-pressed='true'] {
+  border-color: var(--cyan-dark);
+  background: #123139;
+  color: var(--cyan);
+}
+.tile-toolstrip kbd {
+  color: var(--faint);
+  font-size: 9px;
+}
+.stage-toolbar {
+  top: 58px;
+}
+.tile-context {
+  position: absolute;
+  top: 106px;
+  left: 72px;
+  right: 20px;
+  z-index: 1;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.tile-mode #editor-canvas {
+  cursor: crosshair;
+}
+.tile-mode #editor-canvas.can-pan {
+  cursor: grab;
+}
+.tile-mode #editor-canvas.is-panning {
+  cursor: grabbing;
+}
+.canvas-hint {
+  width: max-content;
+  max-width: calc(100% - 100px);
+  text-align: center;
+  line-height: 1.6;
+}
+.tileset-dock {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.tileset-dock .panel-heading {
+  min-height: 50px;
+}
+.tileset-content {
+  padding: 0 12px 14px;
+}
+.tileset-label,
+.tileset-settings label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.tileset-label {
+  margin-bottom: 10px;
+}
+.tileset-content select,
+.tileset-content input {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.tileset-settings {
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.tileset-settings summary {
+  cursor: pointer;
+  padding-bottom: 8px;
+}
+.tileset-settings .field-pair {
+  row-gap: 8px;
+}
+.tile-palette-scroll {
+  max-height: 260px;
+  overflow: auto;
+  padding: 4px;
+  background: #080e16;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+.tile-palette {
+  display: grid;
+  width: max-content;
+  gap: 0;
+}
+.palette-tile {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid transparent;
+  background: repeating-conic-gradient(#1b2636 0 25%, #142030 0 50%) 0 / 8px 8px;
+  cursor: pointer;
+}
+.palette-tile > span {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+.palette-tile img {
+  position: absolute;
+  image-rendering: pixelated;
+  max-width: none;
+  pointer-events: none;
+}
+.palette-tile:hover {
+  border-color: var(--muted);
+}
+.palette-tile[aria-pressed='true'] {
+  position: relative;
+  border: 2px solid var(--cyan);
+  padding: 1px;
+  box-shadow: inset 0 0 0 1px #081119;
+}
+.palette-tile:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline-offset: -2px;
+}
+.tile-caption {
+  color: var(--muted);
+  font-size: 10px;
+  margin: 9px 0 0;
+}
+.tile-empty {
+  display: grid;
+  justify-items: center;
+  padding: 8px 0;
+  text-align: center;
+}
+.tile-empty-icon {
+  color: var(--cyan);
+  font-size: 35px;
+}
+.tile-empty strong {
+  font-size: 12px;
+  margin: 8px 0 0;
+}
+.tile-empty p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+@media (min-width: 761px) {
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .right-panel > .inspector-heading {
+    order: 2;
+    flex: none;
+  }
+  .tileset-dock {
+    order: 0;
+    flex: 0 1 auto;
+    max-height: 55%;
+    min-height: 170px;
+    overflow: auto;
+  }
+  .right-panel > .inspector {
+    order: 3;
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+  }
+}
+@media (max-width: 1200px) {
+  .tile-toolstrip button span {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .tileset-dock {
+    border-top: 1px solid var(--border);
+  }
+  .tile-toolstrip button span {
+    display: inline;
+  }
+  .statusbar [data-tile-position] {
+    display: none;
+  }
+}
+.editor-app:has(.tile-mode) .empty-inspector {
+  display: none;
+}
+.editor-app:has(.tile-mode) .empty-state {
+  padding: 18px 14px;
+}
+.editor-app:has(.tile-mode) .empty-state > svg {
+  display: none;
+}
+.editor-app:has(.tile-mode) .empty-state .button {
+  margin-top: 8px;
 }

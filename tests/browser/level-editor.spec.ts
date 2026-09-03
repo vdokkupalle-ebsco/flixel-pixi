@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 const LEVEL_EDITOR_URL = 'http://127.0.0.1:4176';
 
@@ -54,7 +55,83 @@ test.describe('Level Editor', () => {
       page.getByRole('spinbutton', { name: 'X', exact: true }),
     ).toHaveValue('153.0');
     await page.getByRole('button', { name: /Move Sprite 1 forward/ }).click();
-    await expect(page.getByLabel('Layer')).toHaveValue('2');
+    await expect(page.getByLabel('Order within layer')).toHaveValue('2');
+  });
+
+  test('imports XML spritesheet frames, places them, and duplicates them', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') errors.push(message.text());
+    });
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(LEVEL_EDITOR_URL);
+    await page.getByRole('tab', { name: 'Assets' }).click();
+    await page.locator('[data-asset-input]').setInputFiles([
+      {
+        buffer: readFileSync('examples/games/atlas/atlas.png'),
+        mimeType: 'image/png',
+        name: 'atlas.png',
+      },
+      {
+        buffer: Buffer.from(
+          `<TextureAtlas image="atlas.png"><sprite n="player-idle" x="0" y="0" w="64" h="64"/><sprite n="platform" x="64" y="0" w="96" h="32"/></TextureAtlas>`,
+        ),
+        mimeType: 'application/xml',
+        name: 'atlas.xml',
+      },
+    ]);
+    await expect(page.getByText('2 frames', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Place platform in scene' }).click();
+    await page.getByRole('tab', { name: 'Scene' }).click();
+    await expect(page.getByRole('treeitem')).toHaveCount(1);
+    await expect(page.getByLabel('Frame width')).toHaveValue('96');
+    await expect(page.getByLabel('Pixel X')).toHaveValue('64');
+    await page.getByRole('button', { name: 'Duplicate selection' }).click();
+    await expect(page.getByRole('treeitem')).toHaveCount(2);
+    await expect(page.getByLabel('Purpose layer')).toHaveValue(
+      'layer-gameplay',
+    );
+    await page.getByRole('button', { name: 'Preview' }).click();
+    await expect(
+      page.frameLocator('[data-preview-frame]').getByRole('status'),
+    ).toContainText('Main scene · 2 objects', { timeout: 15_000 });
+    expect(errors).toEqual([]);
+  });
+
+  test('keeps the stage visible while a large atlas scrolls in Assets', async ({
+    page,
+  }) => {
+    await page.goto(LEVEL_EDITOR_URL);
+    const stage = page.getByLabel('Scene workspace');
+    const heightBefore = await stage.evaluate(
+      (element) => element.getBoundingClientRect().height,
+    );
+    await page.getByRole('tab', { name: 'Assets' }).click();
+    await page
+      .locator('[data-asset-input]')
+      .setInputFiles([
+        'examples/games/kenney-platformer/assets/spritesheet_ground.png',
+        'examples/games/kenney-platformer/assets/spritesheet_ground.xml',
+      ]);
+    await expect(page.getByText(/frames$/).first()).toBeVisible();
+    const layout = await page.evaluate(() => {
+      const panel = document.querySelector<HTMLElement>(
+        '[data-panel="assets"]',
+      );
+      const stageElement = document.querySelector<HTMLElement>('.stage');
+      if (panel === null || stageElement === null)
+        throw new Error('Level Editor layout is missing.');
+      return {
+        panelClientHeight: panel.clientHeight,
+        panelScrollHeight: panel.scrollHeight,
+        stageHeight: stageElement.getBoundingClientRect().height,
+      };
+    });
+    expect(layout.stageHeight).toBeCloseTo(heightBefore, 0);
+    expect(layout.panelScrollHeight).toBeGreaterThan(layout.panelClientHeight);
+    await expect(stage).toBeVisible();
   });
 
   test('authors a joint between two hierarchy selections', async ({ page }) => {

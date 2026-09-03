@@ -2,11 +2,31 @@ import type { EntityDefinition } from '@flixel-pixi/schemas';
 
 import type { LevelEditorStatus, LevelEditorStore } from './editor-store';
 import {
+  activeLayer,
+  sceneLayers,
   activeScene,
   activeSceneSettings,
   entityProperties,
+  layerForEntity,
   type LevelEditorSnapshot,
 } from './model';
+import {
+  cellKey,
+  fillPattern,
+  floodCells,
+  inBounds,
+  isTileTool,
+  lineCells,
+  paintStamp,
+  rectangleCells,
+  tileBounds,
+  type Cell,
+  type TileBounds,
+  type TileMap,
+  type TileStamp,
+  type TileTool,
+  type TileRegion,
+} from './tiles';
 import { bodyForEntity, updateBodyShape } from './physics-authoring';
 
 interface ViewTransform {
@@ -15,7 +35,7 @@ interface ViewTransform {
   scale: number;
 }
 
-interface PointerInteraction {
+interface EntityPointerInteraction {
   entityId: string;
   kind: 'move' | 'rotate' | 'scale';
   original: EntityDefinition;
@@ -23,6 +43,30 @@ interface PointerInteraction {
   startWorldX: number;
   startWorldY: number;
 }
+
+interface PanPointerInteraction {
+  kind: 'pan';
+  pointerId: number;
+  startClientX: number;
+  startClientY: number;
+  startPanX: number;
+  startPanY: number;
+}
+
+interface TileInteraction {
+  kind: 'tiles';
+  pointerId: number;
+  layerId: string;
+  tool: TileTool | 'capture';
+  map: TileMap;
+  original: TileMap;
+  start: Cell;
+  last: Cell;
+  bounds: TileBounds;
+  stamp: TileStamp | undefined;
+}
+type PointerInteraction =
+  EntityPointerInteraction | PanPointerInteraction | TileInteraction;
 
 interface EntityVisual {
   entity: EntityDefinition;
@@ -55,7 +99,13 @@ export class SceneViewport {
   #status: LevelEditorStatus;
   #interaction: PointerInteraction | undefined;
   #previewEntity: EntityDefinition | undefined;
+  #hoverCell: Cell | undefined;
+  #lastBrushCell: Cell | undefined;
+  #unsubscribe: () => void;
   #zoom = 1;
+  #panX = 0;
+  #panY = 0;
+  #spacePressed = false;
   #animationFrame = 0;
   #resizeFrame = 0;
 
@@ -72,9 +122,21 @@ export class SceneViewport {
     canvas.addEventListener('pointermove', this.#onPointerMove);
     canvas.addEventListener('pointerup', this.#onPointerUp);
     canvas.addEventListener('pointercancel', this.#cancelInteraction);
-    canvas.addEventListener('dblclick', () => this.focusSelection());
+    canvas.addEventListener('pointerleave', this.#onPointerLeave);
+    canvas.addEventListener('contextmenu', this.#onContextMenu);
     canvas.addEventListener('wheel', this.#onWheel, { passive: false });
-    store.subscribe((status) => {
+    window.addEventListener('keydown', this.#onWindowKeyDown);
+    window.addEventListener('keyup', this.#onWindowKeyUp);
+    window.addEventListener('blur', this.#onWindowBlur);
+    this.#unsubscribe = store.subscribe((status) => {
+      this.#cancelInteraction();
+      if (
+        activeLayer(this.#status.snapshot).id !==
+          activeLayer(status.snapshot).id ||
+        this.#status.snapshot.document.project.id !==
+          status.snapshot.document.project.id
+      )
+        this.#lastBrushCell = undefined;
       this.#status = status;
       this.#queueRender();
     });
@@ -82,7 +144,10 @@ export class SceneViewport {
   }
 
   destroy(): void {
+    this.#unsubscribe();
     this.#resizeObserver.disconnect();
+    this.#canvas.removeEventListener('pointerleave', this.#onPointerLeave);
+    this.#canvas.removeEventListener('contextmenu', this.#onContextMenu);
     cancelAnimationFrame(this.#animationFrame);
     cancelAnimationFrame(this.#resizeFrame);
     this.#canvas.removeEventListener('pointerdown', this.#onPointerDown);
@@ -90,6 +155,9 @@ export class SceneViewport {
     this.#canvas.removeEventListener('pointerup', this.#onPointerUp);
     this.#canvas.removeEventListener('pointercancel', this.#cancelInteraction);
     this.#canvas.removeEventListener('wheel', this.#onWheel);
+    window.removeEventListener('keydown', this.#onWindowKeyDown);
+    window.removeEventListener('keyup', this.#onWindowKeyUp);
+    window.removeEventListener('blur', this.#onWindowBlur);
   }
 
   get zoom(): number {
@@ -103,6 +171,8 @@ export class SceneViewport {
 
   focusSelection(): void {
     this.#zoom = 1;
+    this.#panX = 0;
+    this.#panY = 0;
     this.#queueRender();
   }
 
@@ -122,20 +192,53 @@ export class SceneViewport {
     context.scale(transform.scale, transform.scale);
     context.fillStyle = settings.background;
     context.fillRect(0, 0, settings.width, settings.height);
-    this.#drawGrid(snapshot);
+    context.imageSmoothingEnabled = false;
 
     const scene = activeScene(snapshot);
-    const entities = [...scene.entities].sort(
-      (a, b) =>
-        numberProperty(entityProperties(a), 'zIndex', 0) -
-        numberProperty(entityProperties(b), 'zIndex', 0),
-    );
-    for (const entity of entities) {
-      this.#drawEntity(
-        this.#previewEntity?.id === entity.id ? this.#previewEntity : entity,
-        snapshot,
+    const entities = [...scene.entities]
+      .filter((entity) => layerForEntity(snapshot, entity).visible)
+      .sort(
+        (a, b) =>
+          layerForEntity(snapshot, a).order -
+            layerForEntity(snapshot, b).order ||
+          numberProperty(entityProperties(a), 'zIndex', 0) -
+            numberProperty(entityProperties(b), 'zIndex', 0),
       );
+    for (const layer of [...sceneLayers(snapshot)].sort(
+      (a, b) => a.order - b.order,
+    )) {
+      if (!layer.visible) continue;
+      const interaction = this.#interaction;
+      const map =
+        interaction?.kind === 'tiles' && interaction.layerId === layer.id
+          ? interaction.map
+          : layer.tilemap;
+      if (map)
+        for (const [key, tile] of Object.entries(map.cells)) {
+          const [x = 0, y = 0] = key.split(',').map(Number);
+          if (
+            (x + 1) * map.tileSize > settings.width ||
+            (y + 1) * map.tileSize > settings.height
+          )
+            continue;
+          this.#drawTile(
+            tile,
+            x * map.tileSize,
+            y * map.tileSize,
+            map.tileSize,
+          );
+        }
+      for (const entity of entities.filter(
+        (entity) => layerForEntity(snapshot, entity).id === layer.id,
+      )) {
+        this.#drawEntity(
+          this.#previewEntity?.id === entity.id ? this.#previewEntity : entity,
+          snapshot,
+        );
+      }
     }
+    this.#drawGrid(snapshot);
+    this.#drawTileCursor();
     this.#drawPhysics(snapshot);
     context.restore();
   }
@@ -172,23 +275,27 @@ export class SceneViewport {
     );
     const scale = Math.max(0.05, fit) * this.#zoom;
     return {
-      offsetX: (rect.width - settings.width * scale) / 2,
-      offsetY: (rect.height - settings.height * scale) / 2,
+      offsetX: (rect.width - settings.width * scale) / 2 + this.#panX,
+      offsetY: (rect.height - settings.height * scale) / 2 + this.#panY,
       scale,
     };
   }
 
   #drawGrid(snapshot: LevelEditorSnapshot): void {
+    if (snapshot.showGrid === false) return;
     const settings = activeSceneSettings(snapshot);
+    const gridSize = isTileTool(snapshot.tool)
+      ? (activeLayer(snapshot).tilemap?.tileSize ?? settings.gridSize)
+      : settings.gridSize;
     const context = this.#context;
     context.beginPath();
     context.strokeStyle = 'rgba(177, 189, 202, 0.12)';
     context.lineWidth = 1 / this.#viewTransform(snapshot).scale;
-    for (let x = 0; x <= settings.width; x += settings.gridSize) {
+    for (let x = 0; x <= settings.width; x += gridSize) {
       context.moveTo(x, 0);
       context.lineTo(x, settings.height);
     }
-    for (let y = 0; y <= settings.height; y += settings.gridSize) {
+    for (let y = 0; y <= settings.height; y += gridSize) {
       context.moveTo(0, y);
       context.lineTo(settings.width, y);
     }
@@ -204,6 +311,280 @@ export class SceneViewport {
       width: numberProperty(properties, 'width', 64) * scale.x,
     };
   }
+
+  #drawTile(tile: TileRegion, x: number, y: number, size: number): void {
+    const asset = this.#status.snapshot.document.assets.find(
+      (asset) => asset.id === tile.assetId,
+    );
+    if (!asset) return;
+    const image = this.#getImage(asset.id, asset.src);
+    if (image.complete && image.naturalWidth > 0)
+      this.#context.drawImage(
+        image,
+        tile.x,
+        tile.y,
+        tile.width,
+        tile.height,
+        x,
+        y,
+        size,
+        size,
+      );
+  }
+
+  #drawTileCursor(): void {
+    const snapshot = this.#status.snapshot;
+    if (!isTileTool(snapshot.tool) || !this.#hoverCell || this.#spacePressed)
+      return;
+    const layer = activeLayer(snapshot),
+      settings = activeSceneSettings(snapshot);
+    const size = layer.tilemap?.tileSize ?? settings.gridSize;
+    const cell = this.#hoverCell,
+      bounds = tileBounds(settings.width, settings.height, size);
+    if (!inBounds(cell, bounds)) return;
+    const context = this.#context,
+      interaction = this.#interaction;
+    const stamp = snapshot.tileStamp;
+    context.save();
+    context.beginPath();
+    context.rect(0, 0, bounds.columns * size, bounds.rows * size);
+    context.clip();
+    if (
+      !interaction &&
+      stamp &&
+      snapshot.tool === 'brush' &&
+      layer.visible &&
+      !layer.locked
+    ) {
+      context.globalAlpha = 0.55;
+      stamp.tiles.forEach((tile, index) => {
+        if (tile)
+          this.#drawTile(
+            tile,
+            (cell.x + (index % stamp.width)) * size,
+            (cell.y + Math.floor(index / stamp.width)) * size,
+            size,
+          );
+      });
+      context.globalAlpha = 1;
+    }
+    context.strokeStyle =
+      layer.locked || !layer.visible || snapshot.tool === 'eraser'
+        ? '#ff647c'
+        : '#1de8f1';
+    context.lineWidth = 1.5 / this.#viewTransform(snapshot).scale;
+    if (
+      interaction?.kind === 'tiles' &&
+      (interaction.tool === 'rectangle' || interaction.tool === 'capture')
+    ) {
+      context.strokeRect(
+        Math.min(interaction.start.x, cell.x) * size,
+        Math.min(interaction.start.y, cell.y) * size,
+        (Math.abs(interaction.start.x - cell.x) + 1) * size,
+        (Math.abs(interaction.start.y - cell.y) + 1) * size,
+      );
+    } else
+      context.strokeRect(
+        cell.x * size,
+        cell.y * size,
+        size * (snapshot.tool === 'brush' ? (stamp?.width ?? 1) : 1),
+        size * (snapshot.tool === 'brush' ? (stamp?.height ?? 1) : 1),
+      );
+    context.restore();
+  }
+
+  #beginTiles(event: PointerEvent): void {
+    if (event.button !== 0 && event.button !== 2) return;
+    event.preventDefault();
+    const snapshot = this.#status.snapshot,
+      layer = activeLayer(snapshot),
+      settings = activeSceneSettings(snapshot);
+    const size =
+      layer.tilemap?.tileSize ??
+      Math.min(1024, Math.max(1, Math.round(settings.gridSize)));
+    const point = this.#worldPoint(event),
+      cell = { x: Math.floor(point.x / size), y: Math.floor(point.y / size) };
+    const bounds = tileBounds(settings.width, settings.height, size);
+    if (!inBounds(cell, bounds)) return;
+    this.#hoverCell = cell;
+    const tool =
+      event.button === 2
+        ? 'capture'
+        : event.altKey
+          ? 'eyedropper'
+          : snapshot.tool;
+    if (!isTileTool(tool) && tool !== 'capture') return;
+    if (tool === 'eyedropper') {
+      const tile = layer.tilemap?.cells[cellKey(cell)];
+      if (tile)
+        this.#store.update(
+          'Picked tile',
+          (draft) => {
+            draft.tileStamp = { width: 1, height: 1, tiles: [{ ...tile }] };
+            draft.tool = 'brush';
+          },
+          false,
+        );
+      return;
+    }
+    if (tool !== 'capture' && (layer.locked || !layer.visible)) {
+      this.#tileMessage('Unlock and show the active layer to paint.');
+      return;
+    }
+    if (!snapshot.tileStamp && tool !== 'eraser' && tool !== 'capture') {
+      this.#tileMessage('Choose a tile in the Tilesets panel first.');
+      return;
+    }
+    const original = structuredClone(
+      layer.tilemap ?? { tileSize: size, cells: {} },
+    );
+    const interaction: TileInteraction = {
+      kind: 'tiles',
+      pointerId: event.pointerId,
+      layerId: layer.id,
+      tool,
+      original,
+      map: structuredClone(original),
+      start: cell,
+      last: cell,
+      bounds,
+      stamp: snapshot.tileStamp,
+    };
+    this.#interaction = interaction;
+    this.#canvas.setPointerCapture(event.pointerId);
+    try {
+      if (tool === 'fill' && interaction.stamp)
+        fillPattern(
+          interaction.map,
+          interaction.stamp,
+          floodCells(original, cell, bounds),
+          cell,
+        );
+      else {
+        if (tool === 'brush' && event.shiftKey && this.#lastBrushCell)
+          interaction.last = this.#lastBrushCell;
+        this.#updateTiles(interaction, cell);
+      }
+    } catch (error) {
+      this.#tileMessage(error instanceof Error ? error.message : String(error));
+      this.#cancelInteraction();
+    }
+    this.#queueRender();
+  }
+
+  #updateTiles(interaction: TileInteraction, cell: Cell): void {
+    // Clamp captured movement so a drag outside the canvas cannot create unbounded work.
+    cell = {
+      x: Math.max(0, Math.min(interaction.bounds.columns - 1, cell.x)),
+      y: Math.max(0, Math.min(interaction.bounds.rows - 1, cell.y)),
+    };
+    if (interaction.tool === 'rectangle' && interaction.stamp) {
+      interaction.map = structuredClone(interaction.original);
+      const origin = {
+        x: Math.min(interaction.start.x, cell.x),
+        y: Math.min(interaction.start.y, cell.y),
+      };
+      if (
+        (Math.abs(interaction.start.x - cell.x) + 1) *
+          (Math.abs(interaction.start.y - cell.y) + 1) >
+        262144
+      ) {
+        this.#tileMessage('A rectangle can contain up to 262,144 cells.');
+        return;
+      }
+      fillPattern(
+        interaction.map,
+        interaction.stamp,
+        rectangleCells(interaction.start, cell, interaction.bounds),
+        origin,
+      );
+    } else if (interaction.tool === 'brush' || interaction.tool === 'eraser') {
+      for (const at of lineCells(interaction.last, cell)) {
+        if (interaction.tool === 'eraser')
+          Reflect.deleteProperty(interaction.map.cells, cellKey(at));
+        else if (interaction.stamp)
+          paintStamp(
+            interaction.map,
+            interaction.stamp,
+            at,
+            interaction.bounds,
+          );
+      }
+    }
+    interaction.last = cell;
+    this.#queueRender();
+  }
+
+  #finishTiles(interaction: TileInteraction): void {
+    this.#cancelInteraction();
+    if (interaction.tool === 'capture') {
+      const area =
+        (Math.abs(interaction.start.x - interaction.last.x) + 1) *
+        (Math.abs(interaction.start.y - interaction.last.y) + 1);
+      if (area > 4096) {
+        this.#tileMessage('Select a stamp of up to 4,096 tiles.');
+        return;
+      }
+      const cells = rectangleCells(
+        interaction.start,
+        interaction.last,
+        interaction.bounds,
+      );
+      if (cells.length === 0) {
+        this.#tileMessage('Select a stamp of up to 4,096 tiles.');
+        return;
+      }
+      const tiles = cells.map(
+        (cell) => interaction.original.cells[cellKey(cell)] ?? null,
+      );
+      if (!tiles.some(Boolean)) return;
+      this.#store.update(
+        'Captured tile stamp',
+        (draft) => {
+          draft.tileStamp = {
+            width: Math.abs(interaction.start.x - interaction.last.x) + 1,
+            height: Math.abs(interaction.start.y - interaction.last.y) + 1,
+            tiles,
+          };
+          draft.tool = 'brush';
+          draft.selectedEntityIds = [];
+        },
+        false,
+      );
+      return;
+    }
+    if (interaction.tool === 'brush') this.#lastBrushCell = interaction.last;
+    if (
+      JSON.stringify(interaction.map.cells) ===
+      JSON.stringify(interaction.original.cells)
+    )
+      return;
+    this.#store.update(
+      interaction.tool === 'eraser' ? 'Erased tiles' : 'Painted tiles',
+      (draft) => {
+        const settings = activeSceneSettings(draft);
+        settings.layers ??= sceneLayers(draft).map((layer) => ({ ...layer }));
+        const layer = settings.layers.find(
+          (layer) => layer.id === interaction.layerId,
+        );
+        if (!layer || layer.locked || !layer.visible) return;
+        layer.tilemap = interaction.map;
+      },
+    );
+  }
+
+  #tileMessage(message: string): void {
+    this.#canvas.dispatchEvent(
+      new CustomEvent('tile-message', { detail: message }),
+    );
+  }
+  #onPointerLeave = (): void => {
+    this.#hoverCell = undefined;
+    this.#queueRender();
+  };
+  #onContextMenu = (event: Event): void => {
+    if (isTileTool(this.#status.snapshot.tool)) event.preventDefault();
+  };
 
   #drawEntity(entity: EntityDefinition, snapshot: LevelEditorSnapshot): void {
     const context = this.#context;
@@ -240,21 +621,26 @@ export class SceneViewport {
           numberProperty(properties, 'frameHeight', 0),
         );
         if (frameWidth > 0 && frameHeight > 0) {
-          const column = Math.max(
-            0,
-            Math.floor(numberProperty(properties, 'frameColumn', 0)),
-          );
-          const row = Math.max(
-            0,
-            Math.floor(numberProperty(properties, 'frameRow', 0)),
-          );
+          const exactRegion =
+            typeof properties.frameX === 'number' ||
+            typeof properties.frameY === 'number';
           const sourceX = Math.min(
             Math.max(0, image.naturalWidth - frameWidth),
-            column * frameWidth,
+            exactRegion
+              ? Math.max(0, Math.floor(numberProperty(properties, 'frameX', 0)))
+              : Math.max(
+                  0,
+                  Math.floor(numberProperty(properties, 'frameColumn', 0)),
+                ) * frameWidth,
           );
           const sourceY = Math.min(
             Math.max(0, image.naturalHeight - frameHeight),
-            row * frameHeight,
+            exactRegion
+              ? Math.max(0, Math.floor(numberProperty(properties, 'frameY', 0)))
+              : Math.max(
+                  0,
+                  Math.floor(numberProperty(properties, 'frameRow', 0)),
+                ) * frameHeight,
           );
           context.drawImage(
             image,
@@ -456,7 +842,13 @@ export class SceneViewport {
       )
       .find((entity) => {
         const properties = entityProperties(entity);
-        if (properties.visible === false || properties.locked === true)
+        const layer = layerForEntity(this.#status.snapshot, entity);
+        if (
+          properties.visible === false ||
+          properties.locked === true ||
+          !layer.visible ||
+          layer.locked
+        )
           return false;
         const { width, height } = this.#visual(entity);
         const dx = x - entity.position.x;
@@ -479,7 +871,7 @@ export class SceneViewport {
     entity: EntityDefinition,
     x: number,
     y: number,
-  ): PointerInteraction['kind'] {
+  ): EntityPointerInteraction['kind'] {
     const tool = this.#status.snapshot.tool;
     if (tool === 'rotate') return 'rotate';
     if (tool === 'scale') return 'scale';
@@ -497,6 +889,30 @@ export class SceneViewport {
   }
 
   #onPointerDown = (event: PointerEvent): void => {
+    if (this.#interaction) return;
+    this.#canvas.focus();
+    const shouldPan =
+      event.button === 1 ||
+      (event.button === 0 &&
+        (this.#spacePressed || this.#status.snapshot.tool === 'pan'));
+    if (shouldPan) {
+      event.preventDefault();
+      this.#interaction = {
+        kind: 'pan',
+        pointerId: event.pointerId,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        startPanX: this.#panX,
+        startPanY: this.#panY,
+      };
+      this.#canvas.classList.add('is-panning');
+      this.#canvas.setPointerCapture(event.pointerId);
+      return;
+    }
+    if (isTileTool(this.#status.snapshot.tool)) {
+      this.#beginTiles(event);
+      return;
+    }
     if (event.button !== 0) return;
     const point = this.#worldPoint(event);
     const entity = this.#hitTest(point.x, point.y);
@@ -533,9 +949,33 @@ export class SceneViewport {
   };
 
   #onPointerMove = (event: PointerEvent): void => {
+    const tileSize =
+      activeLayer(this.#status.snapshot).tilemap?.tileSize ??
+      activeSceneSettings(this.#status.snapshot).gridSize;
+    const world = this.#worldPoint(event);
+    this.#hoverCell = {
+      x: Math.floor(world.x / tileSize),
+      y: Math.floor(world.y / tileSize),
+    };
+    this.#canvas.dispatchEvent(
+      new CustomEvent('tile-hover', { detail: this.#hoverCell }),
+    );
+    if (isTileTool(this.#status.snapshot.tool)) this.#queueRender();
     const interaction = this.#interaction;
     if (interaction === undefined || interaction.pointerId !== event.pointerId)
       return;
+    if (interaction.kind === 'tiles') {
+      this.#updateTiles(interaction, this.#hoverCell);
+      return;
+    }
+    if (interaction.kind === 'pan') {
+      this.#panX =
+        interaction.startPanX + event.clientX - interaction.startClientX;
+      this.#panY =
+        interaction.startPanY + event.clientY - interaction.startClientY;
+      this.#queueRender();
+      return;
+    }
     const point = this.#worldPoint(event);
     const preview = cloneEntity(interaction.original);
     const dx = point.x - interaction.startWorldX;
@@ -592,9 +1032,32 @@ export class SceneViewport {
 
   #onPointerUp = (event: PointerEvent): void => {
     const interaction = this.#interaction;
+    if (
+      interaction?.kind === 'tiles' &&
+      interaction.pointerId === event.pointerId
+    ) {
+      const point = this.#worldPoint(event);
+      this.#updateTiles(interaction, {
+        x: Math.floor(point.x / interaction.map.tileSize),
+        y: Math.floor(point.y / interaction.map.tileSize),
+      });
+      this.#finishTiles(interaction);
+      return;
+    }
+    if (
+      interaction?.kind === 'pan' &&
+      interaction.pointerId === event.pointerId
+    ) {
+      this.#canvas.releasePointerCapture(event.pointerId);
+      this.#canvas.classList.remove('is-panning');
+      this.#interaction = undefined;
+      return;
+    }
     const preview = this.#previewEntity;
     if (
       interaction === undefined ||
+      interaction.kind === 'pan' ||
+      interaction.kind === 'tiles' ||
       preview === undefined ||
       interaction.pointerId !== event.pointerId
     )
@@ -634,14 +1097,56 @@ export class SceneViewport {
   };
 
   #cancelInteraction = (): void => {
+    if (
+      this.#interaction &&
+      this.#canvas.hasPointerCapture(this.#interaction.pointerId)
+    )
+      this.#canvas.releasePointerCapture(this.#interaction.pointerId);
+    this.#canvas.classList.remove('is-panning');
     this.#interaction = undefined;
     this.#previewEntity = undefined;
     this.#queueRender();
   };
 
   #onWheel = (event: WheelEvent): void => {
-    if (!(event.ctrlKey || event.metaKey)) return;
     event.preventDefault();
-    this.setZoom(this.#zoom * (event.deltaY < 0 ? 1.1 : 0.9));
+    if (event.ctrlKey || event.metaKey) {
+      this.setZoom(this.#zoom * (event.deltaY < 0 ? 1.1 : 0.9));
+      return;
+    }
+    this.#panX -= event.shiftKey ? event.deltaY : event.deltaX;
+    this.#panY -= event.shiftKey ? 0 : event.deltaY;
+    this.#queueRender();
+  };
+
+  #onWindowKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape') {
+      this.#cancelInteraction();
+      return;
+    }
+    if (event.code !== 'Space' || event.repeat || event.target !== this.#canvas)
+      return;
+    event.preventDefault();
+    const target = event.target;
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLSelectElement ||
+      target instanceof HTMLTextAreaElement
+    )
+      return;
+    this.#spacePressed = true;
+    this.#canvas.classList.add('can-pan');
+  };
+
+  #onWindowBlur = (): void => {
+    this.#spacePressed = false;
+    this.#canvas.classList.remove('can-pan');
+    this.#cancelInteraction();
+  };
+
+  #onWindowKeyUp = (event: KeyboardEvent): void => {
+    if (event.code !== 'Space') return;
+    this.#spacePressed = false;
+    this.#canvas.classList.remove('can-pan');
   };
 }

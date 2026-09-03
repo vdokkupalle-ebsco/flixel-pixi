@@ -11,23 +11,83 @@ into a portable, playable scene without requiring a custom editor integration.
    **Assets** panel.
 2. Select the asset to place it in the scene. Use the canvas tools or Inspector
    fields to move, rotate, scale, size, and set its normalized origin.
-3. Arrange draw order with **Layer** or the up/down controls in the Hierarchy.
-   Visibility and locking are stored per object.
+3. Place objects in purpose-aware **Background**, **Gameplay**, **Collision**,
+   **Foreground**, or **UI / HUD** layers. Layers and objects can each be hidden
+   or locked, and draw order can be adjusted within a layer.
 4. Set the scene size, background, and grid size. Snap is enabled by default;
    hold <kbd>Alt</kbd> while dragging to bypass it.
 5. Open **Preview** to run the current document through the same public engine
    APIs used by a game.
 
-Keyboard controls include <kbd>V</kbd>, <kbd>G</kbd>, <kbd>R</kbd>, and
-<kbd>S</kbd> for tools, arrow keys for precise movement, <kbd>Shift</kbd> for
+Keyboard controls include <kbd>V</kbd>, <kbd>H</kbd>, <kbd>G</kbd>, <kbd>R</kbd>,
+and <kbd>S</kbd> for tools, arrow keys for precise movement, <kbd>Shift</kbd> for
 larger steps or rotation increments, and the platform undo/redo shortcuts.
+Hold <kbd>Space</kbd> and drag (or use the Pan tool) to move the stage. The mouse
+wheel scrolls the stage, and <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + wheel zooms.
+Duplicate selected objects with <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>D</kbd>;
+their physics bodies and fully selected joints are copied too.
 
 ## Spritesheets and texture regions
+
+For a TextureAtlas spritesheet, select the image and its XML file in the same
+upload. The editor matches the XML image reference, validates both `SubTexture`
+and TexturePacker `sprite` regions against the image bounds, and presents each
+named frame as an individual asset item. Placing a frame stores its exact pixel region while keeping only one copy
+of the spritesheet image in the project. The playable preview rebuilds the
+region with Flixel-Pixi's atlas and frame APIs.
 
 For a regular grid spritesheet, expand **Texture region** in the Sprite
 Inspector. Set the frame width and height, then choose its zero-based column and
 row. A zero frame dimension restores the full image. Editor and playable
 preview use the same grid calculation.
+
+## Tile painting
+
+The tile workflow follows [Tiled’s stamp, fill, and eraser tools](https://doc.mapeditor.org/en/stable/manual/editing-tile-layers/).
+The layer stack stays on the left, tile tools sit above the canvas, and the
+**Tilesets** dock stays visible above the Inspector.
+
+1. Select a layer. Hidden and locked layers cannot be painted.
+2. Choose **Use starter tiles**, select a source image, or use **Import tileset**
+   to upload a sheet. An image and TextureAtlas XML can be imported together.
+3. For a regular sheet, expand **Slice settings** and set source tile width,
+   height, margin, and spacing. Atlas frames use their exact source rectangles.
+4. Set **Tile cell size** in the active layer’s properties before painting.
+   Source regions scale to these square map cells. Cell size stays fixed while
+   the layer contains tiles. Changing the scene’s snap grid does not resize tiles.
+5. Click a palette tile to paint. Shift-click a second tile to select a rectangular
+   multi-tile stamp. Empty cells in captured stamps leave existing tiles untouched.
+
+| Action         | Shortcut / interaction                                                |
+| -------------- | --------------------------------------------------------------------- |
+| Stamp brush    | `B`; drag to paint, Shift-click to connect to the last brush endpoint |
+| Eraser         | `E`; drag to erase cells on the active layer                          |
+| Bucket fill    | `F`; fill the four-connected area matching the clicked tile           |
+| Rectangle fill | `P`; drag a rectangle with a live preview                             |
+| Pick tile      | `I`, or Alt-click with a tile tool                                    |
+| Capture stamp  | Right-click or right-drag on the active layer                         |
+| Cancel stroke  | Escape; cancellation leaves the document unchanged                    |
+| Pan            | Hold Space and drag, middle-drag, or use `H`                          |
+| Undo / redo    | Command/Ctrl+Z and Command/Ctrl+Shift+Z                               |
+
+Fill tools repeat the active stamp. Fast brush movements interpolate the cells
+between pointer events, and each stroke is a single undo step. Grid visibility
+is separate from snapping. The footer shows cell coordinates and tile counts.
+Tool shortcuts work in the workspace and palette without intercepting text fields.
+
+Tiles are stored as `tilemap: { tileSize, cells }` on each scene layer, with
+`"column,row"` cell keys and source image rectangles. They do not become objects
+in the scene hierarchy. Export/import preserves tile grids and validates their
+asset references. Assets used by tiles cannot be deleted. The playable preview
+renders tiles below objects within each layer and respects layer visibility/order.
+Tiles outside a resized canvas are retained in the document and reappear when
+it is enlarged; tools operate only on full cells within the current canvas.
+
+This pass supports finite orthogonal maps, up to 4,096 source tiles or cells in a
+stamp, and up to 262,144 cells per fill operation. Preview currently uses sprites
+for tile rendering. Terrain rules, tile flips/rotation, tile selections with
+copy/paste, optimized tilemap rendering, and Tiled file interchange are follow-up
+work. A collision layer’s purpose label does not generate tile collision bodies.
 
 ## Physics bodies and joints
 
@@ -58,7 +118,8 @@ that demonstrates the pipeline.
 
 **Export** downloads deterministic JSON built on `ProjectDocumentV1`. Image
 assets and particle documents are embedded as data URLs, while the
-`flixelPixiLevelEditor` extension stores scene canvas and physics settings.
+`flixelPixiLevelEditor` extension stores scene canvas, semantic layers, and
+physics settings, and sparse tile grids.
 **Import** rejects malformed projects, unsupported extension versions, missing
 active scenes, and invalid physics documents with a visible diagnostic.
 
@@ -70,6 +131,6 @@ effects with `FlxParticleEffect.fromAssets`, and runs physics through
 ## Current scope
 
 The first release deliberately excludes soft bodies, collaborative editing,
-user scripts, animation timelines, and full tilemap painting. It focuses on a
+user scripts, animation timelines, terrain auto-tiling, and Tiled TMX/JSON interchange. It focuses on a
 stable asset-to-scene-to-preview loop that future editor features can extend
 without changing the version `1` document contract.

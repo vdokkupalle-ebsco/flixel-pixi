@@ -8,15 +8,38 @@ import {
   type ProjectDocumentV1,
 } from '@flixel-pixi/schemas';
 
+import {
+  validateTileMap,
+  type TileMap,
+  type TileStamp,
+  type TileTool,
+} from './tiles';
+
 export const LEVEL_EDITOR_EXTENSION = 'flixelPixiLevelEditor';
 export const LEVEL_EDITOR_VERSION = 1 as const;
 
-export type EditorTool = 'select' | 'move' | 'rotate' | 'scale';
+export type EditorTool =
+  'select' | 'pan' | 'move' | 'rotate' | 'scale' | TileTool;
+
+export type LayerPurpose =
+  'background' | 'gameplay' | 'collision' | 'foreground' | 'ui';
+
+export interface SceneLayerDefinition {
+  tilemap?: TileMap;
+  id: string;
+  locked: boolean;
+  name: string;
+  order: number;
+  purpose: LayerPurpose;
+  visible: boolean;
+}
 
 export interface SceneEditorSettings {
+  activeLayerId?: string;
   background: string;
   gridSize: number;
   height: number;
+  layers?: SceneLayerDefinition[];
   physics: PhysicsWorldDocumentV1;
   width: number;
 }
@@ -31,6 +54,8 @@ export interface LevelEditorSnapshot {
   document: ProjectDocumentV1;
   selectedEntityIds: string[];
   snapToGrid: boolean;
+  tileStamp?: TileStamp;
+  showGrid?: boolean;
   tool: EditorTool;
 }
 
@@ -38,9 +63,13 @@ export interface SpriteProperties extends JsonObject {
   assetId: string;
   frameColumn?: number;
   frameHeight?: number;
+  frameName?: string;
   frameRow?: number;
   frameWidth?: number;
+  frameX?: number;
+  frameY?: number;
   height: number;
+  layerId?: string;
   locked: boolean;
   originX: number;
   originY: number;
@@ -52,6 +81,7 @@ export interface SpriteProperties extends JsonObject {
 export interface ParticleEntityProperties extends JsonObject {
   assetId: string;
   height: number;
+  layerId?: string;
   locked: boolean;
   visible: boolean;
   width: number;
@@ -166,9 +196,52 @@ export function createInitialProject(): ProjectDocumentV1 {
         activeSceneId: sceneId,
         scenes: {
           [sceneId]: {
+            activeLayerId: 'layer-gameplay',
             background: '#0b1320',
             gridSize: 16,
             height: 540,
+            layers: [
+              {
+                id: 'layer-background',
+                locked: false,
+                name: 'Background',
+                order: 0,
+                purpose: 'background',
+                visible: true,
+              },
+              {
+                id: 'layer-gameplay',
+                locked: false,
+                name: 'Gameplay',
+                order: 100,
+                purpose: 'gameplay',
+                visible: true,
+              },
+              {
+                id: 'layer-collision',
+                locked: false,
+                name: 'Collision',
+                order: 200,
+                purpose: 'collision',
+                visible: true,
+              },
+              {
+                id: 'layer-foreground',
+                locked: false,
+                name: 'Foreground',
+                order: 300,
+                purpose: 'foreground',
+                visible: true,
+              },
+              {
+                id: 'layer-ui',
+                locked: false,
+                name: 'UI / HUD',
+                order: 400,
+                purpose: 'ui',
+                visible: true,
+              },
+            ],
             physics: createPhysicsWorld(sceneId),
             width: 960,
           },
@@ -218,6 +291,28 @@ export function getEditorExtension(
     ) {
       throw new Error(`Scene settings for ${sceneId} are invalid.`);
     }
+    if (settings.layers !== undefined) {
+      if (!Array.isArray(settings.layers) || settings.layers.length === 0)
+        throw new Error(`Layers for ${sceneId} are invalid.`);
+      for (const rawLayer of settings.layers) {
+        const layer = asRecord(rawLayer, `Layer for ${sceneId}`);
+        if (
+          typeof layer.id !== 'string' ||
+          typeof layer.name !== 'string' ||
+          typeof layer.order !== 'number' ||
+          typeof layer.visible !== 'boolean' ||
+          typeof layer.locked !== 'boolean' ||
+          !['background', 'gameplay', 'collision', 'foreground', 'ui'].includes(
+            String(layer.purpose),
+          )
+        )
+          throw new Error(`Layer settings for ${sceneId} are invalid.`);
+      }
+      for (const layer of settings.layers) {
+        if (layer.tilemap !== undefined)
+          validateTileMap(layer.tilemap, document.assets);
+      }
+    }
     parsePhysicsWorld(settings.physics);
   }
   return value as unknown as LevelEditorExtensionV1;
@@ -251,6 +346,48 @@ export function activeSceneSettings(
   return settings;
 }
 
+const fallbackLayer: SceneLayerDefinition = {
+  id: 'layer-gameplay',
+  locked: false,
+  name: 'Gameplay',
+  order: 100,
+  purpose: 'gameplay',
+  visible: true,
+};
+
+export function sceneLayers(
+  snapshot: LevelEditorSnapshot,
+): SceneLayerDefinition[] {
+  const layers = activeSceneSettings(snapshot).layers;
+  return layers === undefined || layers.length === 0 ? [fallbackLayer] : layers;
+}
+
+export function activeLayer(
+  snapshot: LevelEditorSnapshot,
+): SceneLayerDefinition {
+  const settings = activeSceneSettings(snapshot);
+  const layers = sceneLayers(snapshot);
+  return (
+    layers.find((layer) => layer.id === settings.activeLayerId) ??
+    layers[0] ??
+    fallbackLayer
+  );
+}
+
+export function layerForEntity(
+  snapshot: LevelEditorSnapshot,
+  entity: EntityDefinition,
+): SceneLayerDefinition {
+  const layerId = entityProperties(entity).layerId;
+  const layers = sceneLayers(snapshot);
+  return (
+    layers.find((layer) => layer.id === layerId) ??
+    layers.find((layer) => layer.purpose === 'gameplay') ??
+    layers[0] ??
+    fallbackLayer
+  );
+}
+
 export function entityProperties(
   entity: EntityDefinition,
 ): SpriteProperties | ParticleEntityProperties {
@@ -269,6 +406,7 @@ export function createSpriteEntity(
       assetId,
       height: 96,
       locked: false,
+      layerId: 'layer-gameplay',
       originX: 0.5,
       originY: 0.5,
       visible: true,

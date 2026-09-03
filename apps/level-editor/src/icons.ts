@@ -3,10 +3,19 @@ import {
   type IconDefinition,
 } from '@fortawesome/fontawesome-svg-core';
 import {
+  faPaintBrush,
+  faEraser,
+  faFillDrip,
+  faEyeDropper,
   faArrowPointer,
   faArrowDown,
   faArrowUp,
   faBorderAll,
+  faClone,
+  faHand,
+  faLayerGroup,
+  faLock,
+  faLockOpen,
   faEye,
   faEyeSlash,
   faFileExport,
@@ -25,6 +34,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 const icons = {
+  brush: faPaintBrush,
+  eraser: faEraser,
+  fill: faFillDrip,
+  rectangle: faBorderAll,
+  eyedropper: faEyeDropper,
   add: faPlus,
   arrowDown: faArrowDown,
   arrowUp: faArrowUp,
@@ -33,6 +47,11 @@ const icons = {
   export: faFileExport,
   hide: faEyeSlash,
   grid: faBorderAll,
+  duplicate: faClone,
+  layers: faLayerGroup,
+  lock: faLock,
+  unlock: faLockOpen,
+  pan: faHand,
   move: faUpDownLeftRight,
   particle: faWandMagicSparkles,
   play: faPlay,

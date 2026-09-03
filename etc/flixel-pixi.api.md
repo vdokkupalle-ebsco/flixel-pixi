@@ -6216,6 +6216,9 @@ export function parsePhysicsBody(value: unknown): PhysicsBodyDocumentV1;
 // @public
 export function parsePhysicsWorld(value: unknown): PhysicsWorldDocumentV1;
 
+// @public
+export function parseTextureAtlasXml(xmlText: string): FlxAtlasFrameRect[];
+
 // @public (undocumented)
 export interface ParticleAppearanceDefinition {
     // (undocumented)
