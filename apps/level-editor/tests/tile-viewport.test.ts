@@ -5,6 +5,7 @@ import { SceneViewport } from '../src/viewport';
 import { paletteTiles } from '../src/tile-palette';
 import { TileEditing } from '../src/tile-editing';
 import { starterTileset } from '../src/tiles';
+import { starterTerrainTileset } from '../src/terrain';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
@@ -188,5 +189,91 @@ describe('tile viewport interactions', () => {
     expect(cells()).toEqual({});
     expect(store.status.canUndo).toBe(false);
     expect(store.status.snapshot.tool).toBe('tile-select');
+  });
+});
+
+describe('terrain viewport interactions', () => {
+  const terrainEditor = () => {
+    const result = editor();
+    const asset = starterTerrainTileset();
+    result.store.update(
+      'Set terrain tool',
+      (draft) => {
+        draft.document.assets.push(asset);
+        draft.tool = 'terrain';
+        draft.terrain = { assetId: asset.id, setId: 'grass' };
+        delete draft.tileStamp;
+      },
+      false,
+    );
+    return result;
+  };
+  it('previews an interpolated stroke, commits all neighbors once and restores them through undo/redo', () => {
+    const { store, pointer, cells } = terrainEditor();
+    pointer('pointerdown', 2, 3);
+    pointer('pointermove', 6, 3);
+    expect(cells()).toEqual({});
+    pointer('pointerup', 6, 3);
+    expect(Object.keys(cells())).toHaveLength(21);
+    const painted = structuredClone(cells());
+    store.undo();
+    expect(cells()).toEqual({});
+    store.redo();
+    expect(cells()).toEqual(painted);
+    store.update(
+      'Erase terrain tool',
+      (draft) => {
+        draft.tool = 'terrain-erase';
+      },
+      false,
+    );
+    pointer('pointerdown', 4, 3);
+    pointer('pointerup', 4, 3);
+    expect(cells()['4,3']).toBeUndefined();
+    store.undo();
+    expect(cells()).toEqual(painted);
+  });
+  it('cancels a terrain stroke on Escape and respects locked layers', () => {
+    const { store, pointer, cells, captures } = terrainEditor();
+    pointer('pointerdown', 3, 3);
+    pointer('pointermove', 7, 3);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    pointer('pointerup', 7, 3);
+    expect(cells()).toEqual({});
+    expect(store.status.canUndo).toBe(false);
+    store.update(
+      'Lock layer',
+      (draft) => {
+        activeLayer(draft).locked = true;
+      },
+      false,
+    );
+    pointer('pointerdown', 3, 3);
+    pointer('pointerup', 3, 3);
+    expect(cells()).toEqual({});
+    expect(captures.size).toBe(0);
+  });
+  it('discards the entire stroke if release encounters an unsupported neighboring tile', () => {
+    const { store, pointer, cells, captures, canvas } = terrainEditor();
+    const tile = paletteTiles(starterTileset()).tiles[0];
+    if (!tile) throw new Error('Missing test fixture');
+    store.update(
+      'Place decoration',
+      (draft) => {
+        activeLayer(draft).tilemap = { tileSize: 16, cells: { '8,3': tile } };
+      },
+      false,
+    );
+    const messages: string[] = [];
+    canvas.addEventListener('tile-message', (event) =>
+      messages.push((event as CustomEvent<string>).detail),
+    );
+    pointer('pointerdown', 2, 3);
+    pointer('pointermove', 5, 3);
+    pointer('pointerup', 7, 3);
+    expect(cells()).toEqual({ '8,3': tile });
+    expect(store.status.canUndo).toBe(false);
+    expect(captures.size).toBe(0);
+    expect(messages.at(-1)).toContain('outside this set');
   });
 });

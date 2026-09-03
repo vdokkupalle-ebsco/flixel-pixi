@@ -34,6 +34,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 const icons = {
+  terrain: faWandMagicSparkles,
+  'terrain-erase': faEraser,
   'tile-select': faBorderAll,
   brush: faPaintBrush,
   eraser: faEraser,

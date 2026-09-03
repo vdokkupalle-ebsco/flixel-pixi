@@ -237,6 +237,7 @@ export function mountEditor(
                 ['rectangle', 'Rectangle fill', 'P'],
                 ['eyedropper', 'Pick tile', 'I'],
                 ['tile-select', 'Select tiles', 'R'],
+                ['terrain', 'Terrain brush', 'T'],
               ] as const
             )
               .map(
@@ -263,7 +264,7 @@ export function mountEditor(
             ${button('zoom-in', 'Zoom in', 'zoomIn')}
             <button class="text-button" type="button" data-action="zoom-fit">Fit</button>
           </div>
-          <canvas id="editor-canvas" tabindex="0" aria-label="Scene canvas. B brush, E eraser, F fill, P rectangle, I pick tile, R select tiles. Command or Control C, X, V copies, cuts, pastes. X/Y flips the stamp; Z rotates it. Right-drag captures a stamp. Escape cancels a stroke."></canvas>
+          <canvas id="editor-canvas" tabindex="0" aria-label="Scene canvas. B brush, E eraser, F fill, P rectangle, I pick tile, R select tiles, T terrain brush. Command or Control C, X, V copies, cuts, pastes. X/Y flips the stamp; Z rotates it. Right-drag captures a stamp. Escape cancels a stroke."></canvas>
           <div class="canvas-hint">Space + drag pans · wheel scrolls · ⌘/Ctrl + wheel zooms · ⌘/Ctrl + D duplicates</div>
         </section>
         <aside class="right-panel panel" aria-label="Inspector">
@@ -909,7 +910,9 @@ export function mountEditor(
           ? 'Click to paste once · X/Y flip · Z rotates · Escape cancels'
           : status.snapshot.tool === 'tile-select'
             ? 'Drag a tile selection · Command/Ctrl+C copies · V pastes with Command/Ctrl · Escape clears'
-            : 'Drag to paint · R selects tiles · X/Y flip stamp · Z rotates · Space pans'
+            : status.snapshot.tool.startsWith('terrain')
+              ? 'Drag to shape terrain · Neighbors connect automatically · Escape cancels · Space pans'
+              : 'Drag to paint · R selects tiles · X/Y flip stamp · Z rotates · Space pans'
         : 'Space + drag pans · wheel scrolls · ⌘/Ctrl + wheel zooms · ⌘/Ctrl + D duplicates';
     const tileCount = host.querySelector<HTMLElement>('[data-tile-count]');
     if (tileCount)
@@ -1359,6 +1362,7 @@ export function mountEditor(
       p: 'rectangle',
       i: 'eyedropper',
       r: 'tile-select',
+      t: 'terrain',
     } as const;
     if (key in tileTools) {
       setTool(tileTools[key as keyof typeof tileTools]);
@@ -1367,6 +1371,7 @@ export function mountEditor(
     }
     if (
       isTileTool(store.status.snapshot.tool) &&
+      !store.status.snapshot.tool.startsWith('terrain') &&
       ['x', 'y', 'z'].includes(key)
     ) {
       tileEditing.transform(

@@ -28,6 +28,7 @@ import {
   type TileRegion,
 } from './tiles';
 import { activeTileSelection } from './tile-editing';
+import { paintTerrain, selectedTerrain, type TerrainSet } from './terrain';
 import { insideSelection, type TileSelection } from './tiles';
 import { bodyForEntity, updateBodyShape } from './physics-authoring';
 
@@ -56,6 +57,7 @@ interface PanPointerInteraction {
 }
 
 interface TileInteraction {
+  terrain?: TerrainSet;
   selection: TileSelection | undefined;
   kind: 'tiles';
   pointerId: number;
@@ -103,6 +105,8 @@ export class SceneViewport {
   #interaction: PointerInteraction | undefined;
   #previewEntity: EntityDefinition | undefined;
   #hoverCell: Cell | undefined;
+  #terrainPreviewCells: Cell[] = [];
+  #terrainPreviewBlocked = false;
   #lastBrushCell: Cell | undefined;
   #unsubscribe: () => void;
   #zoom = 1;
@@ -207,6 +211,8 @@ export class SceneViewport {
           numberProperty(entityProperties(a), 'zIndex', 0) -
             numberProperty(entityProperties(b), 'zIndex', 0),
       );
+    const terrainPreview = this.#terrainHoverPreview();
+    const activeLayerId = activeLayer(snapshot).id;
     for (const layer of [...sceneLayers(snapshot)].sort(
       (a, b) => a.order - b.order,
     )) {
@@ -215,7 +221,9 @@ export class SceneViewport {
       const map =
         interaction?.kind === 'tiles' && interaction.layerId === layer.id
           ? interaction.map
-          : layer.tilemap;
+          : layer.id === activeLayerId && terrainPreview
+            ? terrainPreview
+            : layer.tilemap;
       if (map)
         for (const [key, tile] of Object.entries(map.cells)) {
           const [x = 0, y = 0] = key.split(',').map(Number);
@@ -379,6 +387,73 @@ export class SceneViewport {
     context.restore();
   }
 
+  #terrainHoverPreview(): TileMap | undefined {
+    this.#terrainPreviewCells = [];
+    this.#terrainPreviewBlocked = false;
+    const snapshot = this.#status.snapshot,
+      cell = this.#hoverCell;
+    if (
+      this.#interaction ||
+      this.#spacePressed ||
+      !cell ||
+      !snapshot.tool.startsWith('terrain')
+    )
+      return;
+    const layer = activeLayer(snapshot),
+      settings = activeSceneSettings(snapshot);
+    if (layer.locked || !layer.visible) return;
+    const original = layer.tilemap ?? {
+      tileSize: settings.gridSize,
+      cells: {},
+    };
+    const bounds = tileBounds(
+      settings.width,
+      settings.height,
+      original.tileSize,
+    );
+    if (!inBounds(cell, bounds)) return;
+    const terrain = selectedTerrain(snapshot.document.assets, snapshot.terrain);
+    if (!terrain) {
+      this.#terrainPreviewBlocked = true;
+      return;
+    }
+    const preview: TileMap = {
+      tileSize: original.tileSize,
+      cells: { ...original.cells },
+    };
+    try {
+      paintTerrain(
+        preview,
+        terrain,
+        [cell],
+        bounds,
+        snapshot.tool === 'terrain-erase',
+        activeTileSelection(snapshot),
+      );
+      for (
+        let y = Math.max(0, cell.y - 1);
+        y <= Math.min(bounds.rows - 1, cell.y + 1);
+        y++
+      )
+        for (
+          let x = Math.max(0, cell.x - 1);
+          x <= Math.min(bounds.columns - 1, cell.x + 1);
+          x++
+        ) {
+          const key = cellKey({ x, y });
+          if (
+            JSON.stringify(preview.cells[key]) !==
+            JSON.stringify(original.cells[key])
+          )
+            this.#terrainPreviewCells.push({ x, y });
+        }
+      return preview;
+    } catch {
+      this.#terrainPreviewBlocked = true;
+      return;
+    }
+  }
+
   #drawTileCursor(): void {
     const snapshot = this.#status.snapshot;
     if (!isTileTool(snapshot.tool) || !this.#hoverCell || this.#spacePressed)
@@ -397,6 +472,11 @@ export class SceneViewport {
     context.beginPath();
     context.rect(0, 0, bounds.columns * size, bounds.rows * size);
     context.clip();
+    for (const at of this.#terrainPreviewCells) {
+      context.strokeStyle = '#9ddc7a';
+      context.lineWidth = 1 / this.#viewTransform(snapshot).scale;
+      context.strokeRect(at.x * size, at.y * size, size, size);
+    }
     if (
       !interaction &&
       stamp &&
@@ -427,7 +507,11 @@ export class SceneViewport {
       context.globalAlpha = 1;
     }
     context.strokeStyle =
-      layer.locked || !layer.visible || snapshot.tool === 'eraser'
+      this.#terrainPreviewBlocked ||
+      layer.locked ||
+      !layer.visible ||
+      snapshot.tool === 'eraser' ||
+      snapshot.tool === 'terrain-erase'
         ? '#ff647c'
         : '#1de8f1';
     context.lineWidth = 1.5 / this.#viewTransform(snapshot).scale;
@@ -503,11 +587,19 @@ export class SceneViewport {
     }
     if (
       !snapshot.tileStamp &&
+      !tool.startsWith('terrain') &&
       tool !== 'eraser' &&
       tool !== 'capture' &&
       tool !== 'tile-select'
     ) {
       this.#tileMessage('Choose a tile in the Tilesets panel first.');
+      return;
+    }
+    const terrain = selectedTerrain(snapshot.document.assets, snapshot.terrain);
+    if (tool.startsWith('terrain') && !terrain) {
+      this.#tileMessage(
+        'Choose a terrain set in Tilesets, or add the sample terrain.',
+      );
       return;
     }
     const original = structuredClone(
@@ -525,6 +617,7 @@ export class SceneViewport {
       last: cell,
       bounds,
       stamp: snapshot.tileStamp,
+      ...(terrain ? { terrain } : {}),
     };
     this.#interaction = interaction;
     this.#canvas.setPointerCapture(event.pointerId);
@@ -555,7 +648,24 @@ export class SceneViewport {
       x: Math.max(0, Math.min(interaction.bounds.columns - 1, cell.x)),
       y: Math.max(0, Math.min(interaction.bounds.rows - 1, cell.y)),
     };
-    if (interaction.tool === 'paste' && interaction.stamp) {
+    if (interaction.tool.startsWith('terrain') && interaction.terrain) {
+      try {
+        paintTerrain(
+          interaction.map,
+          interaction.terrain,
+          lineCells(interaction.last, cell),
+          interaction.bounds,
+          interaction.tool === 'terrain-erase',
+          interaction.selection,
+        );
+      } catch (error) {
+        this.#tileMessage(
+          error instanceof Error ? error.message : String(error),
+        );
+        this.#cancelInteraction();
+        return;
+      }
+    } else if (interaction.tool === 'paste' && interaction.stamp) {
       interaction.map = structuredClone(interaction.original);
       paintStamp(
         interaction.map,
@@ -667,11 +777,15 @@ export class SceneViewport {
       JSON.stringify(interaction.original.cells);
     if (!changed && interaction.tool !== 'paste') return;
     this.#store.update(
-      interaction.tool === 'eraser'
-        ? 'Erased tiles'
-        : interaction.tool === 'paste'
-          ? 'Pasted tiles'
-          : 'Painted tiles',
+      interaction.tool === 'terrain'
+        ? 'Painted terrain'
+        : interaction.tool === 'terrain-erase'
+          ? 'Erased terrain'
+          : interaction.tool === 'eraser'
+            ? 'Erased tiles'
+            : interaction.tool === 'paste'
+              ? 'Pasted tiles'
+              : 'Painted tiles',
       (draft) => {
         const settings = activeSceneSettings(draft);
         settings.layers ??= sceneLayers(draft).map((layer) => ({ ...layer }));
@@ -1169,6 +1283,7 @@ export class SceneViewport {
         x: Math.floor(point.x / interaction.map.tileSize),
         y: Math.floor(point.y / interaction.map.tileSize),
       });
+      if (this.#interaction !== interaction) return;
       this.#finishTiles(interaction);
       return;
     }

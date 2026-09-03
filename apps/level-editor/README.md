@@ -26,8 +26,18 @@ undoable operations; right-drag captures a stamp and Escape cancels a stroke.
 Tile grids and source image regions are saved in the editor extension and shown
 in the playable preview. See the [tile authoring guide](../../docs/guide/level-editor.md).
 
-The next editing phase adds rectangular selections (`R`), an internal tile
+Tile editing includes rectangular selections (`R`), an internal tile
 clipboard (Command/Ctrl+C/X/V), Delete and Select All, plus stamp flips (`X`/`Y`)
 and quarter-turn rotations (`Z`/Shift+`Z`). Paste has a floating preview and
 commits once on click. Painting respects the active selection. Object rotation
 uses `O` to keep `R` consistent with Tiled.
+
+Terrain auto-tiling uses **Tilesets → Terrains**. Choose **Add sample terrain**
+for a complete grass-to-empty corner set, then paint with **T** or choose
+**Erase terrain**. Neighboring transitions update in the live preview and each
+stroke is one undo step. In **Terrain rules**, choose a source tile, mark its
+four corners, and assign it to a pattern. Missing patterns are shown explicitly.
+Rules save with the image asset; copied and transformed terrain tiles remain
+recognizable. This phase supports one terrain transitioning to empty per corner
+set; edge/mixed sets, multiple interacting terrains and weighted variants are
+future work.

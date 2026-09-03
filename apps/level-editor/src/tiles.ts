@@ -43,6 +43,8 @@ export type TileTool =
   | 'rectangle'
   | 'eyedropper'
   | 'tile-select'
+  | 'terrain'
+  | 'terrain-erase'
   | 'paste';
 export const isTileTool = (tool: string): tool is TileTool =>
   [
@@ -52,6 +54,8 @@ export const isTileTool = (tool: string): tool is TileTool =>
     'rectangle',
     'eyedropper',
     'tile-select',
+    'terrain',
+    'terrain-erase',
     'paste',
   ].includes(tool);
 export const cellKey = ({ x, y }: Cell): string => `${x},${y}`;

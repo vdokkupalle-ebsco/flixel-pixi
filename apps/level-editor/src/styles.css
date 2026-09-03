@@ -1519,3 +1519,163 @@ select:focus-visible {
     max-height: 60%;
   }
 }
+
+/* Terrain tools share the tileset dock and its keyboard/focus conventions. */
+.tileset-modes,
+.terrain-tools {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.tileset-modes button,
+.terrain-tools button {
+  flex: 1;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.tileset-modes button[aria-pressed='true'],
+.terrain-tools button[aria-pressed='true'] {
+  border-color: var(--focus);
+  background: rgba(29, 232, 241, 0.1);
+}
+.terrain-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 12px 0 10px;
+}
+.terrain-heading strong {
+  font-size: 12px;
+}
+.terrain-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+.terrain-rules {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 10px;
+  font-size: 11px;
+}
+.terrain-rules summary {
+  cursor: pointer;
+  padding-bottom: 10px;
+}
+.terrain-rules summary span {
+  float: right;
+  color: var(--muted);
+}
+.terrain-rules label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+}
+.terrain-rule-editor {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 4px;
+}
+.terrain-tile-preview {
+  position: relative;
+  flex: 0 0 88px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: repeating-conic-gradient(#1b2636 0 25%, #142030 0 50%) 0 / 12px
+    12px;
+}
+.terrain-art {
+  display: block;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.terrain-art img {
+  position: absolute;
+  max-width: none;
+  image-rendering: pixelated;
+}
+.terrain-corner,
+.terrain-dot {
+  position: absolute;
+  z-index: 1;
+  border: 2px solid #e4f0e0;
+  background: #13201c;
+}
+.terrain-corner {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.terrain-corner[aria-pressed='true'],
+.terrain-dot.is-filled {
+  background: var(--terrain-color, #84d15e);
+}
+.corner-0 {
+  top: 0;
+  left: 0;
+}
+.corner-1 {
+  top: 0;
+  right: 0;
+}
+.corner-2 {
+  bottom: 0;
+  right: 0;
+}
+.corner-3 {
+  bottom: 0;
+  left: 0;
+}
+.terrain-patterns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 4px;
+}
+.terrain-pattern {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  background: #101c29;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.terrain-pattern.is-missing {
+  border-style: dashed;
+}
+.terrain-pattern[aria-pressed='true'] {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.terrain-dot {
+  width: 9px;
+  height: 9px;
+  border-width: 1px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.pattern-number {
+  font-size: 11px;
+}
+.terrain-sample {
+  margin-top: 12px;
+}

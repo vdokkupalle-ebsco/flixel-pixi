@@ -19,7 +19,7 @@ into a portable, playable scene without requiring a custom editor integration.
 5. Open **Preview** to run the current document through the same public engine
    APIs used by a game.
 
-Keyboard controls include <kbd>V</kbd>, <kbd>H</kbd>, <kbd>G</kbd>, <kbd>R</kbd>,
+Keyboard controls include <kbd>V</kbd>, <kbd>H</kbd>, <kbd>G</kbd>, <kbd>O</kbd>,
 and <kbd>S</kbd> for tools, arrow keys for precise movement, <kbd>Shift</kbd> for
 larger steps or rotation increments, and the platform undo/redo shortcuts.
 Hold <kbd>Space</kbd> and drag (or use the Pan tool) to move the stage. The mouse
@@ -85,8 +85,7 @@ it is enlarged; tools operate only on full cells within the current canvas.
 
 This pass supports finite orthogonal maps, up to 4,096 source tiles or cells in a
 stamp, and up to 262,144 cells per fill operation. Preview currently uses sprites
-for tile rendering. Terrain rules, optimized tilemap rendering, and Tiled file interchange are follow-up
-work. A collision layer’s purpose label does not generate tile collision bodies.
+for tile rendering. Optimized tilemap rendering and Tiled file interchange are follow-up work. A collision layer’s purpose label does not generate tile collision bodies.
 
 ### Selections, clipboard, and stamp transforms
 
@@ -119,6 +118,61 @@ and click to place it. Object rotation now uses **O**, leaving **R** for tiles.
 Per-tile `rotation` (0–3 clockwise quarter turns) and `flipX` flags are optional
 in the version 1 extension. Existing files load with their original orientation;
 new transforms survive export/import and render in the playable preview.
+
+## Terrain auto-tiling
+
+The terrain workflow follows [Tiled’s corner terrain sets](https://doc.mapeditor.org/en/stable/manual/terrain/).
+A corner set marks each tile’s four corners as terrain or empty. Painting changes
+the corners and chooses matching tiles for the surrounding cells automatically.
+
+### Try terrain painting
+
+1. Open **Tilesets → Terrains** (or press **T**).
+2. Choose **Add sample terrain**. This adds a complete **Grass** corner set.
+3. Drag on an empty, visible, unlocked layer. Each painted cell fills all four
+   corners and updates its neighboring transitions. Fast strokes interpolate.
+4. Choose **Erase terrain** to clear corners and rebuild the surrounding edges.
+   The ordinary **Eraser (E)** still removes whole tiles without reconnecting them.
+5. Hover to preview the affected cells. A stroke is committed only on release,
+   with all neighbor changes in a single undo step. Escape cancels the stroke.
+
+Terrain painting respects tile selections. A selection must include every
+neighbor whose transition would change; otherwise the entire stroke is cancelled
+with an explanation. The brush also protects tiles that are not in the active
+set. Use a separate layer for different terrain sets or unrelated artwork.
+
+### Define your own corner set
+
+Select an imported sheet or atlas, open **Terrains**, and choose **+ New set**.
+Expand **Terrain rules** to name the set, choose its identifying color and assign
+source regions:
+
+1. Choose a source tile in the palette.
+2. Toggle the four corner markers over the tile preview. Filled markers mean
+   terrain; unfilled markers mean empty.
+3. Choose **Assign tile**. The pattern grid shows assigned artwork and dashed
+   outlines for missing patterns. Click any pattern to edit that corner layout.
+
+The 16 patterns use clockwise corner bits: top left = 1, top right = 2,
+bottom right = 4, bottom left = 8. Pattern 0 always clears the cell and needs no
+tile. A complete set has 15 assigned patterns. Partial sets are allowed, but an
+operation needing a missing pattern cancels the whole stroke and reports its
+number. Each source tile can describe only one pattern within a set; assigning
+it again moves it from the previous pattern. Rule edits and set removal support
+undo. Removing a set preserves the painted artwork.
+
+Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
+`kind: "corner"`, name, color and `{ mask, tile }` rules. They use exact source
+regions, so grid sheets and atlas images both work. Export/import validates and
+preserves the definitions without changing the version 1 document contract.
+Terrain tiles remain ordinary sparse tile cells. Copy/paste and stamp transforms
+continue to work, and terrain editing recognizes flipped and rotated artwork.
+The playable preview uses the already resolved tiles.
+
+This phase supports up to 64 sets per image, with **one terrain transitioning to
+empty per set**. It does not yet implement transitions between different terrain
+types, edge/mixed sets, random variants, automatic tile rotation to fill missing
+rules, or Tiled file interchange.
 
 ## Physics bodies and joints
 
@@ -162,6 +216,6 @@ effects with `FlxParticleEffect.fromAssets`, and runs physics through
 ## Current scope
 
 The first release deliberately excludes soft bodies, collaborative editing,
-user scripts, animation timelines, terrain auto-tiling, and Tiled TMX/JSON interchange. It focuses on a
+user scripts, animation timelines, edge/mixed terrain sets, and Tiled TMX/JSON interchange. It focuses on a
 stable asset-to-scene-to-preview loop that future editor features can extend
 without changing the version `1` document contract.

@@ -15,6 +15,7 @@ import {
   type TileSelection,
   type TileTool,
 } from './tiles';
+import { validateTerrains, type TerrainChoice } from './terrain';
 
 export const LEVEL_EDITOR_EXTENSION = 'flixelPixiLevelEditor';
 export const LEVEL_EDITOR_VERSION = 1 as const;
@@ -57,6 +58,7 @@ export interface LevelEditorSnapshot {
   snapToGrid: boolean;
   tileStamp?: TileStamp;
   tileSelection?: TileSelection;
+  terrain?: TerrainChoice;
   showGrid?: boolean;
   tool: EditorTool;
 }
@@ -322,6 +324,7 @@ export function getEditorExtension(
 
 export function parseLevelProject(value: unknown): ProjectDocumentV1 {
   const document = parseProjectDocument(value);
+  validateTerrains(document.assets);
   const extension = getEditorExtension(document);
   if (!document.scenes.some((scene) => scene.id === extension.activeSceneId)) {
     throw new Error('The active scene does not exist.');

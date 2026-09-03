@@ -1,0 +1,104 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { LevelEditorStore } from '../src/editor-store';
+import { createInitialProject } from '../src/model';
+import { mountTilePalette } from '../src/tile-palette';
+import { terrainSets } from '../src/terrain';
+
+function required<T>(value: T | null | undefined): T {
+  if (value == null) throw new Error('Missing test fixture');
+  return value;
+}
+let cleanup: () => void = vi.fn();
+afterEach(() => {
+  cleanup();
+  document.body.innerHTML = '';
+});
+
+describe('terrain rules dock', () => {
+  it('adds a sample, edits corner assignments, renames and removes sets with undo', () => {
+    const store = new LevelEditorStore({
+      document: createInitialProject(),
+      selectedEntityIds: [],
+      tool: 'brush',
+      snapToGrid: true,
+    });
+    const host = document.createElement('section');
+    document.body.append(host);
+    cleanup = mountTilePalette(host, store, vi.fn());
+    const click = (selector: string) => {
+      const button = host.querySelector<HTMLButtonElement>(selector);
+      expect(button, selector).not.toBeNull();
+      required(button).click();
+    };
+    click('[data-palette-mode="terrain"]');
+    click('[data-terrain-sample]');
+    const assetId = required(store.status.snapshot.terrain).assetId;
+    const set = () =>
+      required(
+        terrainSets(
+          required(
+            store.status.snapshot.document.assets.find(
+              (asset) => asset.id === assetId,
+            ),
+          ),
+        )[0],
+      );
+    expect(set().rules).toHaveLength(15);
+    expect(store.status.snapshot.tool).toBe('terrain');
+    click('[data-tile-index="1"]');
+    expect(
+      host
+        .querySelector('[data-terrain-corner="0"]')
+        ?.getAttribute('aria-pressed'),
+    ).toBe('true');
+    click('[data-terrain-clear]');
+    expect(set().rules).toHaveLength(14);
+    click('[data-terrain-assign]');
+    expect(set().rules).toHaveLength(15);
+    const input = required(
+      host.querySelector<HTMLInputElement>('[data-terrain-name]'),
+    );
+    input.value = 'Meadow';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(set().name).toBe('Meadow');
+    click('[data-terrain-remove]');
+    expect(store.status.snapshot.terrain).toBeUndefined();
+    store.undo();
+    expect(set().name).toBe('Meadow');
+    expect(
+      host.querySelector('[data-terrain-name]')?.getAttribute('value'),
+    ).toBe('Meadow');
+  });
+  it('creates a custom set and moves a tile assignment between patterns without ambiguity', () => {
+    const store = new LevelEditorStore({
+      document: createInitialProject(),
+      selectedEntityIds: [],
+      tool: 'terrain',
+      snapToGrid: true,
+    });
+    const host = document.createElement('section');
+    document.body.append(host);
+    cleanup = mountTilePalette(host, store, vi.fn());
+    const click = (selector: string) =>
+      required(host.querySelector<HTMLButtonElement>(selector)).click();
+    click('[data-terrain-sample]');
+    click('[data-terrain-add]');
+    click('[data-tile-index="1"]');
+    click('[data-terrain-pattern="1"]');
+    click('[data-terrain-assign]');
+    click('[data-terrain-corner="1"]');
+    click('[data-terrain-assign]');
+    const snapshot = store.status.snapshot;
+    const sets = terrainSets(
+      required(
+        snapshot.document.assets.find(
+          (a) => a.id === required(snapshot.terrain).assetId,
+        ),
+      ),
+    );
+    expect(required(sets[1]).rules).toHaveLength(1);
+    expect(required(required(sets[1]).rules[0]).mask).toBe(3);
+    click('[data-palette-mode="tiles"]');
+    expect(store.status.snapshot.tool).toBe('brush');
+  });
+});
