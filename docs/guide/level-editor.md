@@ -473,3 +473,30 @@ selected objects and their layers/groups must be unlocked; the entire action
 is disabled otherwise. Each action is one Undo/Redo step, preserves selection,
 and saves the resulting positions in the project. Properties below the selection
 controls continue to describe the last selected object.
+
+### Layer opacity and offsets
+
+Select a layer or group in the hierarchy, then use **Layer appearance** in the
+Inspector:
+
+- **Opacity (%)** controls visual transparency from 0 to 100.
+- **Offset X / Offset Y** shift the layer in scene pixels, including its tiles,
+  objects, and collision shapes. Negative offsets are supported.
+
+Group offsets add to each descendant's local offset. Group opacity multiplies
+child opacity: a 50% group containing a 50% layer displays that layer at 25%.
+For nested layers, the Inspector also shows the combined appearance. Locked
+layers and layers inside locked groups cannot change appearance.
+
+Offsets leave the stored tile cells and object coordinates unchanged. Painting,
+picking, object manipulation, marquee selection, and alignment account for the
+shifted positions. Object coordinates in the Inspector remain local to the
+layer. Moving an object to another layer keeps those local coordinates, so its
+scene position follows the destination's offsets. Tile bounds remain local to
+the map; offsets do not resize it.
+
+The playable preview applies opacity to tiles, sprites, and particle effects,
+and shifts their collision bodies and joint anchors. Zero opacity only hides
+visuals; collision stays enabled. Use layer visibility or collision settings to
+remove collision. Each appearance change supports Undo/Redo and is preserved
+in project exports; older projects default to 100% opacity and zero offsets.

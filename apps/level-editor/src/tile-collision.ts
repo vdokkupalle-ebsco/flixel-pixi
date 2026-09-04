@@ -141,6 +141,18 @@ export function layerTileColliders(
   return [...mergeTileCollisions(fullCells, bounds), ...custom].map(
     (rectangle) => ({
       ...rectangle,
+      x: rectangle.x + (layer.offsetX ?? 0),
+      y: rectangle.y + (layer.offsetY ?? 0),
+      ...('points' in rectangle
+        ? {
+            points: (
+              rectangle as CollisionRectangle & { points: ShapePoint[] }
+            ).points.map((point) => ({
+              x: point.x + (layer.offsetX ?? 0),
+              y: point.y + (layer.offsetY ?? 0),
+            })),
+          }
+        : {}),
       layerId: layer.id,
       friction:
         layer.tileCollision?.friction ?? DEFAULT_TILE_COLLISION.friction,

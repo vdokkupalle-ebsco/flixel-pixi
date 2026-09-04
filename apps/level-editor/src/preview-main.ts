@@ -108,7 +108,19 @@ class LevelPreviewState extends FlxState {
             numeric(a.properties?.zIndex, 0) - numeric(b.properties?.zIndex, 0),
         );
       for (const entity of [...tiles, ...objects]) {
-        const sprite = this.#addEntity(entity, runtimeDocument, assets);
+        const positioned = {
+          ...entity,
+          position: {
+            x: entity.position.x + (layer.offsetX ?? 0),
+            y: entity.position.y + (layer.offsetY ?? 0),
+          },
+        };
+        const sprite = this.#addEntity(
+          positioned,
+          runtimeDocument,
+          assets,
+          layer.opacity ?? 1,
+        );
         if (sprite !== undefined) sprites.set(entity.id, sprite);
       }
     }
@@ -137,7 +149,33 @@ class LevelPreviewState extends FlxState {
         const bodyA = bodies.get(documentJoint.bodyA);
         const bodyB = bodies.get(documentJoint.bodyB);
         if (bodyA === undefined || bodyB === undefined) continue;
-        world.addJoint({ ...documentJoint, bodyA, bodyB });
+        const entityA = scene.entities.find(
+          (e) =>
+            e.id ===
+            settings.physics.bodies.find((b) => b.id === documentJoint.bodyA)
+              ?.entityId,
+        );
+        const entityB = scene.entities.find(
+          (e) =>
+            e.id ===
+            settings.physics.bodies.find((b) => b.id === documentJoint.bodyB)
+              ?.entityId,
+        );
+        const layerA = entityA ? layerFor(entityA) : undefined,
+          layerB = entityB ? layerFor(entityB) : undefined;
+        const shift = (p: { x: number; y: number }, layer: typeof layerA) => ({
+          x: p.x + (layer?.offsetX ?? 0),
+          y: p.y + (layer?.offsetY ?? 0),
+        });
+        const positionedJoint =
+          documentJoint.type === 'distance'
+            ? {
+                ...documentJoint,
+                anchorA: shift(documentJoint.anchorA, layerA),
+                anchorB: shift(documentJoint.anchorB, layerB),
+              }
+            : { ...documentJoint, anchor: shift(documentJoint.anchor, layerA) };
+        world.addJoint({ ...positionedJoint, bodyA, bodyB });
       }
     }
   }
@@ -146,6 +184,7 @@ class LevelPreviewState extends FlxState {
     entity: EntityDefinition,
     document: ProjectDocumentV1,
     assets: FlxAssets | undefined,
+    opacity = 1,
   ): FlxSprite | undefined {
     if (isGameplayObject(entity)) return undefined;
     const properties = entity.properties ?? {};
@@ -155,6 +194,22 @@ class LevelPreviewState extends FlxState {
     const asset = document.assets.find((candidate) => candidate.id === assetId);
     if (entity.type === 'particle-effect' && asset !== undefined) {
       const effectDocument = parseParticleEffect(decodeDataJson(asset.src));
+      for (const emitter of effectDocument.emitters) {
+        const appearance = emitter.preset.appearance;
+        const alpha = appearance.alpha ?? {
+          stops: [
+            { time: 0, value: 1 },
+            { time: 1, value: 1 },
+          ],
+        };
+        appearance.alpha = {
+          ...alpha,
+          stops: alpha.stops.map((stop) => ({
+            ...stop,
+            value: stop.value * opacity,
+          })),
+        };
+      }
       const effect = FlxParticleEffect.fromAssets(effectDocument, {
         autoStart: true,
         x: entity.position.x,
@@ -231,6 +286,7 @@ class LevelPreviewState extends FlxState {
       sprite.angle = properties.tileRotation * 90;
       if (properties.tileFlipX === true) sprite.scale.x *= -1;
     }
+    sprite.alpha = opacity;
     this.add(sprite);
     return sprite;
   }

@@ -1,3 +1,4 @@
+import { worldEntity } from './layer-appearance';
 import { intersectsMarquee, type SelectionPoint } from './object-selection';
 import { effectiveActiveLayer } from './model';
 import { effectiveLayer, effectiveLayers } from './layer-groups';
@@ -251,6 +252,9 @@ export class SceneViewport {
         tileColliders.push(
           ...layerTileColliders(layer, settings, map, snapshot.document.assets),
         );
+      context.save();
+      context.translate(layer.offsetX ?? 0, layer.offsetY ?? 0);
+      context.globalAlpha = layer.opacity ?? 1;
       if (map)
         for (const [key, tile] of Object.entries(map.cells)) {
           const [x = 0, y = 0] = key.split(',').map(Number);
@@ -274,11 +278,20 @@ export class SceneViewport {
           snapshot,
         );
       }
+      context.restore();
     }
+    context.save();
+    const gridLayer = effectiveActiveLayer(snapshot);
+    if (isTileTool(snapshot.tool))
+      context.translate(gridLayer.offsetX ?? 0, gridLayer.offsetY ?? 0);
     this.#drawGrid(snapshot);
+    context.restore();
     this.#drawTileCollisions(tileColliders, activeLayerId);
+    context.save();
+    context.translate(gridLayer.offsetX ?? 0, gridLayer.offsetY ?? 0);
     this.#drawTileSelection();
     this.#drawTileCursor();
+    context.restore();
     this.#drawPhysics(snapshot);
     const marquee = this.#interaction;
     if (marquee?.kind === 'marquee') {
@@ -371,7 +384,7 @@ export class SceneViewport {
         layer.tilemap?.tileSize ??
         Math.min(1024, Math.max(1, Math.round(settings.gridSize)));
       const point = this.#pointerPosition
-        ? this.#worldPoint(this.#pointerPosition)
+        ? this.#tilePoint(this.#pointerPosition)
         : undefined;
       const outside =
         point &&
@@ -396,7 +409,13 @@ export class SceneViewport {
       const entity = point ? this.#hitTest(point.x, point.y) : undefined;
       cursor =
         entity && point
-          ? TOOL_CURSORS[this.#interactionKind(entity, point.x, point.y)]
+          ? TOOL_CURSORS[
+              this.#interactionKind(
+                worldEntity(this.#status.snapshot, entity),
+                point.x,
+                point.y,
+              )
+            ]
           : point && this.#hitTest(point.x, point.y, true)
             ? 'not-allowed'
             : TOOL_CURSORS[snapshot.tool];
@@ -703,7 +722,7 @@ export class SceneViewport {
     const size =
       layer.tilemap?.tileSize ??
       Math.min(1024, Math.max(1, Math.round(settings.gridSize)));
-    const point = this.#worldPoint(event),
+    const point = this.#tilePoint(event),
       cell = { x: Math.floor(point.x / size), y: Math.floor(point.y / size) };
     const bounds = tileBounds(settings.width, settings.height, size);
     if (layer.kind !== undefined) {
@@ -1099,6 +1118,7 @@ export class SceneViewport {
     }
 
     if (snapshot.selectedEntityIds.includes(entity.id)) {
+      context.globalAlpha = 1;
       const scale = this.#viewTransform(snapshot).scale;
       context.strokeStyle = '#1de8f1';
       context.lineWidth = 2 / scale;
@@ -1162,7 +1182,9 @@ export class SceneViewport {
     const entityByBodyId = new Map(
       world.bodies.map((body) => [
         body.id,
-        scene.entities.find((entity) => entity.id === body.entityId),
+        scene.entities
+          .filter((entity) => entity.id === body.entityId)
+          .map((entity) => worldEntity(snapshot, entity))[0],
       ]),
     );
     const lineWidth = 1.5 / this.#viewTransform(snapshot).scale;
@@ -1184,7 +1206,8 @@ export class SceneViewport {
       )
         continue;
       context.save();
-      context.translate(entity.position.x, entity.position.y);
+      const positioned = worldEntity(snapshot, entity);
+      context.translate(positioned.position.x, positioned.position.y);
       context.rotate(entity.rotation ?? 0);
       for (const shape of body.shapes) {
         const offset = shape.offset ?? { x: 0, y: 0 };
@@ -1233,13 +1256,28 @@ export class SceneViewport {
       context.moveTo(entityA.position.x, entityA.position.y);
       context.lineTo(entityB.position.x, entityB.position.y);
       context.stroke();
+      const layerA = layerForEntity(snapshot, entityA),
+        layerB = layerForEntity(snapshot, entityB);
       const anchor =
         joint.type === 'distance'
           ? {
-              x: (joint.anchorA.x + joint.anchorB.x) / 2,
-              y: (joint.anchorA.y + joint.anchorB.y) / 2,
+              x:
+                (joint.anchorA.x +
+                  joint.anchorB.x +
+                  (layerA.offsetX ?? 0) +
+                  (layerB.offsetX ?? 0)) /
+                2,
+              y:
+                (joint.anchorA.y +
+                  joint.anchorB.y +
+                  (layerA.offsetY ?? 0) +
+                  (layerB.offsetY ?? 0)) /
+                2,
             }
-          : joint.anchor;
+          : {
+              x: joint.anchor.x + (layerA.offsetX ?? 0),
+              y: joint.anchor.y + (layerA.offsetY ?? 0),
+            };
       context.beginPath();
       context.arc(
         anchor.x,
@@ -1276,6 +1314,15 @@ export class SceneViewport {
     };
   }
 
+  #tilePoint(event: Pick<PointerEvent, 'clientX' | 'clientY'>) {
+    const point = this.#worldPoint(event),
+      layer = effectiveActiveLayer(this.#status.snapshot);
+    return {
+      x: point.x - (layer.offsetX ?? 0),
+      y: point.y - (layer.offsetY ?? 0),
+    };
+  }
+
   #hitTest(
     x: number,
     y: number,
@@ -1302,8 +1349,8 @@ export class SceneViewport {
         )
           return false;
         const { width, height } = this.#visual(entity);
-        const dx = x - entity.position.x;
-        const dy = y - entity.position.y;
+        const dx = x - entity.position.x - (layer.offsetX ?? 0);
+        const dy = y - entity.position.y - (layer.offsetY ?? 0);
         const angle = -(entity.rotation ?? 0);
         const localX = dx * Math.cos(angle) - dy * Math.sin(angle);
         const localY = dx * Math.sin(angle) + dy * Math.cos(angle);
@@ -1418,11 +1465,17 @@ export class SceneViewport {
     );
     this.#interaction = {
       entityId: entity.id,
-      kind: this.#interactionKind(entity, point.x, point.y),
+      kind: this.#interactionKind(
+        worldEntity(this.#status.snapshot, entity),
+        point.x,
+        point.y,
+      ),
       original: cloneEntity(entity),
       pointerId: event.pointerId,
-      startWorldX: point.x,
-      startWorldY: point.y,
+      startWorldX:
+        point.x - (layerForEntity(this.#status.snapshot, entity).offsetX ?? 0),
+      startWorldY:
+        point.y - (layerForEntity(this.#status.snapshot, entity).offsetY ?? 0),
     };
     this.#previewEntity = cloneEntity(entity);
     this.#updateCursor();
@@ -1437,9 +1490,10 @@ export class SceneViewport {
       effectiveActiveLayer(this.#status.snapshot).tilemap?.tileSize ??
       activeSceneSettings(this.#status.snapshot).gridSize;
     const world = this.#worldPoint(event);
+    const tilePoint = this.#tilePoint(event);
     this.#hoverCell = {
-      x: Math.floor(world.x / tileSize),
-      y: Math.floor(world.y / tileSize),
+      x: Math.floor(tilePoint.x / tileSize),
+      y: Math.floor(tilePoint.y / tileSize),
     };
     this.#canvas.dispatchEvent(
       new CustomEvent('tile-hover', { detail: this.#hoverCell }),
@@ -1466,6 +1520,12 @@ export class SceneViewport {
       return;
     }
     const point = this.#worldPoint(event);
+    const entityLayer = layerForEntity(
+      this.#status.snapshot,
+      interaction.original,
+    );
+    point.x -= entityLayer.offsetX ?? 0;
+    point.y -= entityLayer.offsetY ?? 0;
     const preview = cloneEntity(interaction.original);
     const dx = point.x - interaction.startWorldX;
     const dy = point.y - interaction.startWorldY;
@@ -1546,7 +1606,7 @@ export class SceneViewport {
                 properties.visible !== false &&
                 properties.locked !== true &&
                 intersectsMarquee(
-                  entity,
+                  worldEntity(this.#status.snapshot, entity),
                   visual.width,
                   visual.height,
                   interaction.start,
@@ -1575,7 +1635,7 @@ export class SceneViewport {
       interaction?.kind === 'tiles' &&
       interaction.pointerId === event.pointerId
     ) {
-      const point = this.#worldPoint(event);
+      const point = this.#tilePoint(event);
       this.#updateTiles(interaction, {
         x: Math.floor(point.x / interaction.map.tileSize),
         y: Math.floor(point.y / interaction.map.tileSize),

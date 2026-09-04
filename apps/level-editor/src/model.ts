@@ -34,6 +34,9 @@ export type LayerPurpose =
   'background' | 'gameplay' | 'collision' | 'foreground' | 'ui';
 
 export interface SceneLayerDefinition {
+  opacity?: number;
+  offsetX?: number;
+  offsetY?: number;
   kind?: 'objects' | 'group';
   parentId?: string;
   tilemap?: TileMap;

@@ -1,3 +1,4 @@
+import { worldEntity } from './layer-appearance';
 import type { EntityDefinition } from '@flixel-pixi/schemas';
 import type { LevelEditorStore } from './editor-store';
 import { objectEditable } from './gameplay-objects';
@@ -79,7 +80,7 @@ export function alignObjects(
     return false;
   const entries = selected.map((entity) => ({
     entity,
-    bounds: objectBounds(entity),
+    bounds: objectBounds(worldEntity(snapshot, entity)),
   }));
   const moves = new Map<string, { x: number; y: number }>();
   if (distribution) {

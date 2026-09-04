@@ -765,3 +765,56 @@ it('marquee selects visible unlocked objects in either direction, supports Shift
   send('pointerup', 400, 400);
   expect(store.status.snapshot.selectedEntityIds).toEqual([]);
 });
+
+it('paints in layer-local cells after applying a layer offset', () => {
+  const { store, pointer, cells } = editor();
+  store.update('Offset', (draft) => {
+    activeLayer(draft).offsetX = 32;
+    activeLayer(draft).offsetY = 48;
+  });
+  pointer('pointerdown', 4, 6);
+  pointer('pointerup', 4, 6);
+  expect(Object.keys(cells())).toEqual(['2,3']);
+  store.undo();
+  expect(cells()).toEqual({});
+});
+it('hit-tests, moves and marquee-selects objects at their offset positions', () => {
+  const { store, canvas } = editor();
+  store.update('Offset object', (draft) => {
+    draft.tool = 'select';
+    draft.snapToGrid = false;
+    activeLayer(draft).offsetX = 200;
+    activeLayer(draft).offsetY = 100;
+    const entity = createSpriteEntity('asset-flixel-mark', 1);
+    entity.position = { x: 100, y: 100 };
+    entity.properties = {
+      ...entity.properties,
+      width: 32,
+      height: 32,
+      layerId: activeLayer(draft).id,
+    };
+    activeScene(draft).entities = [entity];
+  });
+  const send = (type: string, x: number, y: number) =>
+    canvas.dispatchEvent(
+      new PointerEvent(type, {
+        pointerId: 1,
+        button: 0,
+        clientX: x + 48,
+        clientY: y + 48,
+      }),
+    );
+  send('pointerdown', 300, 200);
+  send('pointermove', 320, 220);
+  send('pointerup', 320, 220);
+  expect(activeScene(store.status.snapshot).entities[0]?.position).toEqual({
+    x: 120,
+    y: 120,
+  });
+  send('pointerdown', 50, 50);
+  send('pointerup', 150, 150);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([]);
+  send('pointerdown', 280, 180);
+  send('pointerup', 360, 260);
+  expect(store.status.snapshot.selectedEntityIds).toHaveLength(1);
+});

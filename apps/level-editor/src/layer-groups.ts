@@ -7,6 +7,21 @@ export function validateLayerGroups(layers: SceneLayerDefinition[]): void {
   if (!layers.some((l) => l.kind !== 'group'))
     throw new Error('Keep at least one content layer.');
   for (const layer of layers) {
+    if (
+      layer.opacity !== undefined &&
+      (!Number.isFinite(layer.opacity) ||
+        layer.opacity < 0 ||
+        layer.opacity > 1)
+    )
+      throw new Error('Layer opacity must be between 0 and 1.');
+    for (const offset of [layer.offsetX, layer.offsetY])
+      if (
+        offset !== undefined &&
+        (!Number.isFinite(offset) || Math.abs(offset) > 1000000)
+      )
+        throw new Error(
+          'Layer offsets must be finite and within ±1,000,000 pixels.',
+        );
     if (layer.kind === 'group' && (layer.tilemap || layer.tileCollision))
       throw new Error('Groups cannot contain tiles or collision settings.');
     const visited = new Set([layer.id]);
@@ -70,6 +85,18 @@ export function effectiveLayer(
   const ancestors = layerAncestors(layer, layers);
   return {
     ...layer,
+    opacity: ancestors.reduce(
+      (value, parent) => value * (parent.opacity ?? 1),
+      layer.opacity ?? 1,
+    ),
+    offsetX: ancestors.reduce(
+      (value, parent) => value + (parent.offsetX ?? 0),
+      layer.offsetX ?? 0,
+    ),
+    offsetY: ancestors.reduce(
+      (value, parent) => value + (parent.offsetY ?? 0),
+      layer.offsetY ?? 0,
+    ),
     visible: layer.visible && ancestors.every((l) => l.visible),
     locked: layer.locked || ancestors.some((l) => l.locked),
     order:

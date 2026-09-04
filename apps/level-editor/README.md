@@ -100,3 +100,11 @@ bounds. With three or more objects, distribute their centers horizontally or
 vertically between the outermost objects. Bounds account for rotation, scale,
 and origin; spawn points use their positions. All selected objects and their
 layers must be unlocked. Every arrangement is one undo step and retains selection.
+
+Select a layer or group to edit **Layer appearance** in the Inspector: opacity
+(0–100%) and X/Y offsets in pixels. Nested offsets add and opacity multiplies.
+Tile cells and object positions remain local; canvas picking, painting, selection,
+and alignment account for the resulting scene positions. Preview applies the
+same appearance to tiles, sprites, and particles, and offsets collision bodies.
+Opacity does not disable collisions; use visibility or collision controls for that.
+Appearance is saved with the project and supports Undo/Redo.

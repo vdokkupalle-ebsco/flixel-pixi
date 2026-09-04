@@ -1,3 +1,4 @@
+import { layerAppearanceControls } from './layer-appearance';
 import {
   alignmentActions,
   alignmentControls,
@@ -978,12 +979,13 @@ export function mountEditor(
     if (entity === undefined) {
       const settings = activeSceneSettings(status.snapshot);
       const layer = effectiveActiveLayer(status.snapshot);
+      const appearance = layerAppearanceControls(status.snapshot);
       if (layer.kind === 'group') {
-        container.innerHTML = `<fieldset><legend>Layer group</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}" ${layer.locked ? 'disabled' : ''}/></label><p class="field-help">Choose a layer and use its Group menu to move it here. Group visibility and locking apply to all descendants. Duplicate and delete include all nested layers.</p></fieldset>`;
+        container.innerHTML = `<fieldset><legend>Layer group</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}" ${layer.locked ? 'disabled' : ''}/></label><p class="field-help">Choose a layer and use its Group menu to move it here. Group visibility and locking apply to all descendants. Duplicate and delete include all nested layers.</p></fieldset>${appearance}`;
         return;
       }
       if (layer.kind === 'objects') {
-        container.innerHTML = `<fieldset><legend>Object layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}" ${layer.locked ? 'disabled' : ''}/></label><p class="field-help">Use Spawn point, Trigger region, or Region above the hierarchy. Object layers hold objects, not painted tiles.</p></fieldset>`;
+        container.innerHTML = `<fieldset><legend>Object layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}" ${layer.locked ? 'disabled' : ''}/></label><p class="field-help">Use Spawn point, Trigger region, or Region above the hierarchy. Object layers hold objects, not painted tiles.</p></fieldset>${appearance}`;
         return;
       }
       const purposeOptions = layerPurposes
@@ -992,7 +994,7 @@ export function mountEditor(
             `<option value="${purpose}"${purpose === layer.purpose ? ' selected' : ''}>${purpose}</option>`,
         )
         .join('');
-      container.innerHTML = `<div class="empty-inspector">${icon('select')}<strong>Select an object</strong><p>Choose an object to edit it, or configure the active layer below.</p></div><fieldset ${layer.locked ? 'disabled' : ''}><legend>Active layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}"/></label><label>Purpose<select data-layer-field="purpose">${purposeOptions}</select></label><p class="field-help">Tiles and objects are added to this layer.</p><label>Tile cell size<input data-layer-field="tileSize" type="number" min="1" max="1024" step="1" value="${layer.tilemap?.tileSize ?? settings.gridSize}" ${Object.keys(layer.tilemap?.cells ?? {}).length ? 'disabled' : ''}/></label><p class="field-help">${Object.keys(layer.tilemap?.cells ?? {}).length ? 'Cell size is fixed while this layer has tiles. Source tiles are scaled to fit.' : 'Set the cell size before painting. Source tiles are scaled to fit.'}</p></fieldset>${tileCollisionControls(layer, settings, status.snapshot.document.assets)}<fieldset><legend>Scene</legend><label>Canvas size<span><input data-scene-field="width" type="number" min="64" value="${settings.width}"/><b>×</b><input data-scene-field="height" type="number" min="64" value="${settings.height}"/></span></label><label>Grid size<input data-scene-field="gridSize" type="number" min="1" value="${settings.gridSize}"/></label><label>Background<input data-scene-field="background" type="color" value="${escapeHtml(settings.background)}"/></label></fieldset>`;
+      container.innerHTML = `<div class="empty-inspector">${icon('select')}<strong>Select an object</strong><p>Choose an object to edit it, or configure the active layer below.</p></div><fieldset ${layer.locked ? 'disabled' : ''}><legend>Active layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}"/></label><label>Purpose<select data-layer-field="purpose">${purposeOptions}</select></label><p class="field-help">Tiles and objects are added to this layer.</p><label>Tile cell size<input data-layer-field="tileSize" type="number" min="1" max="1024" step="1" value="${layer.tilemap?.tileSize ?? settings.gridSize}" ${Object.keys(layer.tilemap?.cells ?? {}).length ? 'disabled' : ''}/></label><p class="field-help">${Object.keys(layer.tilemap?.cells ?? {}).length ? 'Cell size is fixed while this layer has tiles. Source tiles are scaled to fit.' : 'Set the cell size before painting. Source tiles are scaled to fit.'}</p></fieldset>${appearance}${tileCollisionControls(layer, settings, status.snapshot.document.assets)}<fieldset><legend>Scene</legend><label>Canvas size<span><input data-scene-field="width" type="number" min="64" value="${settings.width}"/><b>×</b><input data-scene-field="height" type="number" min="64" value="${settings.height}"/></span></label><label>Grid size<input data-scene-field="gridSize" type="number" min="1" value="${settings.gridSize}"/></label><label>Background<input data-scene-field="background" type="color" value="${escapeHtml(settings.background)}"/></label></fieldset>`;
       return;
     }
     if (isGameplayObject(entity)) {
@@ -1611,7 +1613,14 @@ export function mountEditor(
           (candidate) => candidate.id === activeLayer(draft).id,
         );
         if (layer === undefined || effectiveLayer(layer, layers).locked) return;
-        if (field === 'tileSize') {
+        if (field === 'opacity' || field === 'offsetX' || field === 'offsetY') {
+          const value = Number(target.value);
+          if (!target.value.trim() || !Number.isFinite(value)) return;
+          if (field === 'opacity' && value >= 0 && value <= 100)
+            layer.opacity = value / 100;
+          else if (field !== 'opacity' && Math.abs(value) <= 1000000)
+            layer[field] = value;
+        } else if (field === 'tileSize') {
           const size = Number(target.value);
           if (
             Number.isInteger(size) &&
