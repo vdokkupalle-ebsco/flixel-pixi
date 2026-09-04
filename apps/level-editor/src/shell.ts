@@ -1,4 +1,16 @@
 import {
+  addGameplayObject,
+  addObjectLayer,
+  isGameplayObject,
+  objectEditable,
+  type GameplayObjectKind,
+} from './gameplay-objects';
+import {
+  gameplayInspector,
+  customPropertyInspector,
+  mountCustomProperties,
+} from './gameplay-inspector';
+import {
   parseParticleEffect,
   serializeProjectDocument,
   type AssetDefinition,
@@ -215,6 +227,7 @@ export function mountEditor(
           </div>
           <section class="panel-view" data-panel="scene" aria-label="Scene hierarchy">
             <div class="panel-heading"><div><small>Hierarchy</small><strong data-scene-name>Main scene</strong></div><div class="heading-actions"><button class="small-icon" type="button" data-action="add-layer" aria-label="Add layer" title="Add layer">${icon('layers')}</button><button class="small-icon" type="button" data-action="add-sprite" aria-label="Add sprite">${icon('add')}</button></div></div>
+            <div class="gameplay-tools" role="group" aria-label="Add gameplay objects"><button type="button" data-action="add-object-layer">Object layer</button><button type="button" data-gameplay-add="spawn-point">Spawn point</button><button type="button" data-gameplay-add="trigger">Trigger region</button><button type="button" data-gameplay-add="region">Region</button></div>
             <div class="hierarchy" data-hierarchy role="tree" aria-label="Scene objects"></div>
           </section>
           <section class="panel-view" data-panel="assets" aria-label="Asset library" hidden>
@@ -445,7 +458,14 @@ export function mountEditor(
   }
 
   function duplicateSelected(): void {
-    const selectedIds = store.status.snapshot.selectedEntityIds;
+    const snapshot = store.status.snapshot;
+    const selectedIds = activeScene(snapshot)
+      .entities.filter(
+        (e) =>
+          snapshot.selectedEntityIds.includes(e.id) &&
+          objectEditable(snapshot, e),
+      )
+      .map((e) => e.id);
     if (selectedIds.length === 0) return;
     store.update('Duplicated selection', (draft) => {
       const scene = activeScene(draft);
@@ -454,10 +474,15 @@ export function mountEditor(
       const bodyIds = new Map<string, string>();
       const offset = activeSceneSettings(draft).gridSize;
       const copies = scene.entities.flatMap((entity) => {
-        if (!selectedIds.includes(entity.id)) return [];
+        if (!selectedIds.includes(entity.id) || !objectEditable(draft, entity))
+          return [];
         const copy = structuredClone(entity);
         const nextId = createId(
-          entity.type === 'particle-effect' ? 'particle' : 'sprite',
+          isGameplayObject(entity)
+            ? entity.type
+            : entity.type === 'particle-effect'
+              ? 'particle'
+              : 'sprite',
         );
         entityIds.set(entity.id, nextId);
         copy.id = nextId;
@@ -495,10 +520,23 @@ export function mountEditor(
   }
 
   function deleteSelected(): void {
-    const count = store.status.snapshot.selectedEntityIds.length;
+    const snapshot = store.status.snapshot;
+    const count = activeScene(snapshot).entities.filter(
+      (e) =>
+        snapshot.selectedEntityIds.includes(e.id) &&
+        objectEditable(snapshot, e),
+    ).length;
     if (count === 0) return;
     store.update('Deleted selection', (draft) => {
-      const selected = new Set(draft.selectedEntityIds);
+      const selected = new Set(
+        activeScene(draft)
+          .entities.filter(
+            (e) =>
+              draft.selectedEntityIds.includes(e.id) &&
+              objectEditable(draft, e),
+          )
+          .map((e) => e.id),
+      );
       const scene = activeScene(draft);
       const world = activeSceneSettings(draft).physics;
       for (const body of [...world.bodies]) {
@@ -681,12 +719,28 @@ export function mountEditor(
         (candidate) => candidate.id === entityId,
       );
       if (entity === undefined) return;
+      if (!objectEditable(draft, entity)) return;
+      if (
+        isGameplayObject(entity) &&
+        ['width', 'height', 'scaleX', 'scaleY'].includes(field) &&
+        (!value.trim() || !Number.isFinite(Number(value)) || Number(value) <= 0)
+      ) {
+        announce('Enter a positive size or scale.');
+        return;
+      }
+      if (
+        entity.type === 'spawn-point' &&
+        ['width', 'height', 'rotation', 'scaleX', 'scaleY'].includes(field)
+      )
+        return;
       const properties = entityProperties(entity);
       const numeric = Number(value);
       if (field === 'name') entity.name = value;
+      else if (field === 'gameplayClass')
+        properties.gameplayClass = value.slice(0, 80);
       else if (
         field === 'layerId' &&
-        sceneLayers(draft).some((layer) => layer.id === value)
+        sceneLayers(draft).some((layer) => layer.id === value && !layer.locked)
       )
         properties.layerId = value;
       else if (field === 'x' && Number.isFinite(numeric))
@@ -781,7 +835,7 @@ export function mountEditor(
         </div>`;
             })
             .join('');
-          return `<section class="layer-group${layer.id === activeLayerId ? ' active' : ''}" data-layer-id="${escapeHtml(layer.id)}"><div class="layer-row"><button type="button" class="layer-main" data-action="select-layer" data-layer-id="${escapeHtml(layer.id)}" aria-pressed="${layer.id === activeLayerId}">${icon('layers')}<span><strong>${escapeHtml(layer.name)}</strong><small>${escapeHtml(layer.purpose)} · ${Object.keys(layer.tilemap?.cells ?? {}).length} tiles · ${layerEntities.length} objects${layer.tileCollision?.enabled ? ' · solid' : ''}</small></span></button><button class="row-icon" type="button" data-action="toggle-layer-visible" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.visible ? 'Hide' : 'Show'} ${escapeHtml(layer.name)}">${icon(layer.visible ? 'visible' : 'hide')}</button><button class="row-icon" type="button" data-action="toggle-layer-locked" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.locked ? 'Unlock' : 'Lock'} ${escapeHtml(layer.name)}">${icon(layer.locked ? 'lock' : 'unlock')}</button></div>${rows || (Object.keys(layer.tilemap?.cells ?? {}).length ? '' : '<p class="layer-empty">Empty layer</p>')}</section>`;
+          return `<section class="layer-group${layer.id === activeLayerId ? ' active' : ''}" data-layer-id="${escapeHtml(layer.id)}"><div class="layer-row"><button type="button" class="layer-main" data-action="select-layer" data-layer-id="${escapeHtml(layer.id)}" aria-pressed="${layer.id === activeLayerId}">${icon('layers')}<span><strong>${escapeHtml(layer.name)}</strong><small>${layer.kind === 'objects' ? 'objects' : escapeHtml(layer.purpose)} · ${Object.keys(layer.tilemap?.cells ?? {}).length} tiles · ${layerEntities.length} objects${layer.tileCollision?.enabled ? ' · solid' : ''}</small></span></button><button class="row-icon" type="button" data-action="toggle-layer-visible" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.visible ? 'Hide' : 'Show'} ${escapeHtml(layer.name)}">${icon(layer.visible ? 'visible' : 'hide')}</button><button class="row-icon" type="button" data-action="toggle-layer-locked" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.locked ? 'Unlock' : 'Lock'} ${escapeHtml(layer.name)}">${icon(layer.locked ? 'lock' : 'unlock')}</button></div>${rows || (Object.keys(layer.tilemap?.cells ?? {}).length ? '' : '<p class="layer-empty">Empty layer</p>')}</section>`;
         })
         .join('');
   }
@@ -826,6 +880,10 @@ export function mountEditor(
     if (entity === undefined) {
       const settings = activeSceneSettings(status.snapshot);
       const layer = activeLayer(status.snapshot);
+      if (layer.kind === 'objects') {
+        container.innerHTML = `<fieldset><legend>Object layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}" ${layer.locked ? 'disabled' : ''}/></label><p class="field-help">Use Spawn point, Trigger region, or Region above the hierarchy. Object layers hold objects, not painted tiles.</p></fieldset>`;
+        return;
+      }
       const purposeOptions = layerPurposes
         .map(
           (purpose) =>
@@ -833,6 +891,10 @@ export function mountEditor(
         )
         .join('');
       container.innerHTML = `<div class="empty-inspector">${icon('select')}<strong>Select an object</strong><p>Choose an object to edit it, or configure the active layer below.</p></div><fieldset><legend>Active layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}"/></label><label>Purpose<select data-layer-field="purpose">${purposeOptions}</select></label><p class="field-help">Tiles and objects are added to this layer.</p><label>Tile cell size<input data-layer-field="tileSize" type="number" min="1" max="1024" step="1" value="${layer.tilemap?.tileSize ?? settings.gridSize}" ${Object.keys(layer.tilemap?.cells ?? {}).length ? 'disabled' : ''}/></label><p class="field-help">${Object.keys(layer.tilemap?.cells ?? {}).length ? 'Cell size is fixed while this layer has tiles. Source tiles are scaled to fit.' : 'Set the cell size before painting. Source tiles are scaled to fit.'}</p></fieldset>${tileCollisionControls(layer, settings, status.snapshot.document.assets)}<fieldset><legend>Scene</legend><label>Canvas size<span><input data-scene-field="width" type="number" min="64" value="${settings.width}"/><b>×</b><input data-scene-field="height" type="number" min="64" value="${settings.height}"/></span></label><label>Grid size<input data-scene-field="gridSize" type="number" min="1" value="${settings.gridSize}"/></label><label>Background<input data-scene-field="background" type="color" value="${escapeHtml(settings.background)}"/></label></fieldset>`;
+      return;
+    }
+    if (isGameplayObject(entity)) {
+      container.innerHTML = gameplayInspector(status.snapshot, entity);
       return;
     }
     const properties = entityProperties(entity);
@@ -868,7 +930,7 @@ export function mountEditor(
     container.innerHTML = `<fieldset><legend>Object</legend><label>Name<input data-entity-field="name" value="${escapeHtml(entity.name ?? '')}"/></label><label>Purpose layer<select data-entity-field="layerId">${layerOptions}</select></label><div class="segmented"><button type="button" data-action="toggle-visible" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.visible !== false}">Visible</button><button type="button" data-action="toggle-locked" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.locked === true}">Locked</button></div><button class="button full ghost" type="button" data-action="duplicate">${icon('duplicate')} Duplicate</button></fieldset>
       <fieldset><legend>Transform</legend><div class="field-pair"><label><span>X</span><input data-entity-field="x" type="number" step="1" value="${entity.position.x.toFixed(1)}"/></label><label><span>Y</span><input data-entity-field="y" type="number" step="1" value="${entity.position.y.toFixed(1)}"/></label></div><label>Rotation <span class="unit-field"><input data-entity-field="rotation" type="number" step="1" value="${(((entity.rotation ?? 0) * 180) / Math.PI).toFixed(1)}"/><b>°</b></span></label><div class="field-pair"><label><span>Scale X</span><input data-entity-field="scaleX" type="number" min="0.05" step="0.05" value="${(entity.scale?.x ?? 1).toFixed(2)}"/></label><label><span>Scale Y</span><input data-entity-field="scaleY" type="number" min="0.05" step="0.05" value="${(entity.scale?.y ?? 1).toFixed(2)}"/></label></div></fieldset>
       <fieldset><legend>Sprite</legend><div class="field-pair"><label><span>Width</span><input data-entity-field="width" type="number" min="1" value="${Number(properties.width ?? 64)}"/></label><label><span>Height</span><input data-entity-field="height" type="number" min="1" value="${Number(properties.height ?? 64)}"/></label></div><div class="field-pair"><label><span>Origin X</span><input data-entity-field="originX" type="number" min="0" max="1" step="0.05" value="${Number(properties.originX ?? 0.5)}"/></label><label><span>Origin Y</span><input data-entity-field="originY" type="number" min="0" max="1" step="0.05" value="${Number(properties.originY ?? 0.5)}"/></label></div><label>Order within layer<input data-entity-field="zIndex" type="number" step="1" value="${Number(properties.zIndex ?? 0)}"/></label>${entity.type === 'sprite' ? `<details class="texture-region" open><summary>Texture region</summary><div class="field-pair"><label><span>Frame width</span><input data-entity-field="frameWidth" type="number" min="0" step="1" value="${Number(properties.frameWidth ?? 0)}"/></label><label><span>Frame height</span><input data-entity-field="frameHeight" type="number" min="0" step="1" value="${Number(properties.frameHeight ?? 0)}"/></label></div>${properties.frameX !== undefined || properties.frameY !== undefined ? `<div class="field-pair"><label><span>Pixel X</span><input data-entity-field="frameX" type="number" min="0" step="1" value="${Number(properties.frameX ?? 0)}"/></label><label><span>Pixel Y</span><input data-entity-field="frameY" type="number" min="0" step="1" value="${Number(properties.frameY ?? 0)}"/></label></div><p class="field-help">This exact region came from the imported atlas XML.</p>` : `<div class="field-pair"><label><span>Column</span><input data-entity-field="frameColumn" type="number" min="0" step="1" value="${Number(properties.frameColumn ?? 0)}"/></label><label><span>Row</span><input data-entity-field="frameRow" type="number" min="0" step="1" value="${Number(properties.frameRow ?? 0)}"/></label></div><p class="field-help">Manual grid regions use zero-based columns and rows. Use 0 × 0 frame size for the full image.</p>`}</details>` : ''}</fieldset>
-      <fieldset><legend>Physics</legend>${bodyMarkup}</fieldset><fieldset><legend>Joints</legend>${jointMarkup}${joints}</fieldset>`;
+      <fieldset><legend>Physics</legend>${bodyMarkup}</fieldset><fieldset><legend>Joints</legend>${jointMarkup}${joints}</fieldset>${customPropertyInspector(status.snapshot, entity)}`;
   }
 
   function render(status: LevelEditorStatus): void {
@@ -1001,6 +1063,7 @@ export function mountEditor(
         ? `Cell ${cell.x}, ${cell.y}`
         : '';
   });
+  const unmountCustomProperties = mountCustomProperties(host, store, announce);
   const unsubscribe = store.subscribe((status) => {
     render(status);
     if (!runtimeDialog.open || !previewReady) return;
@@ -1010,7 +1073,7 @@ export function mountEditor(
 
   host.addEventListener('click', (event) => {
     const target = (event.target as HTMLElement).closest<HTMLElement>(
-      '[data-action], [data-tool], [data-panel-tab]',
+      '[data-action], [data-tool], [data-panel-tab], [data-gameplay-add]',
     );
     if (target === null) return;
     const panelTab = target.dataset.panelTab;
@@ -1032,6 +1095,18 @@ export function mountEditor(
     if (tool !== undefined) {
       setTool(tool);
       canvas.focus();
+      return;
+    }
+    if (target.dataset.gameplayAdd) {
+      try {
+        addGameplayObject(
+          store,
+          target.dataset.gameplayAdd as GameplayObjectKind,
+        );
+        announce('Object added. Drag it on the canvas to position it.');
+      } catch (error) {
+        announce(error instanceof Error ? error.message : String(error));
+      }
       return;
     }
     const action = target.dataset.action;
@@ -1078,6 +1153,8 @@ export function mountEditor(
     else if (action === 'redo') store.redo();
     else if (action === 'duplicate') duplicateSelected();
     else if (action === 'add-layer') addLayer();
+    else if (action === 'add-object-layer')
+      store.update('Added object layer', addObjectLayer);
     else if (action === 'add-sprite') addSprite();
     else if (action === 'delete') deleteSelected();
     else if (action === 'upload-asset') assetInput.click();
@@ -1220,7 +1297,10 @@ export function mountEditor(
         const entity = selectedEntity(draft);
         if (entity === undefined) return;
         const world = activeSceneSettings(draft).physics;
-        if (bodyForEntity(world, entity.id) === undefined)
+        if (
+          !isGameplayObject(entity) &&
+          bodyForEntity(world, entity.id) === undefined
+        )
           world.bodies.push(createBodyForEntity(entity));
       });
       announce('Physics body added.');
@@ -1284,9 +1364,10 @@ export function mountEditor(
       void importAssets(target.files);
     else if (target === projectInput && target.files?.[0] !== undefined)
       void importProject(target.files[0]);
-    else if (target.matches('[data-entity-field]'))
+    else if (target.matches('[data-entity-field]')) {
       updateEntityField(target.dataset.entityField ?? '', target.value);
-    else if (target.matches('[data-tile-collision]')) {
+      renderInspector(store.status);
+    } else if (target.matches('[data-tile-collision]')) {
       try {
         updateTileCollision(
           store,
@@ -1307,7 +1388,7 @@ export function mountEditor(
         const layer = layers.find(
           (candidate) => candidate.id === activeLayer(draft).id,
         );
-        if (layer === undefined) return;
+        if (layer === undefined || layer.locked) return;
         if (field === 'tileSize') {
           const size = Number(target.value);
           if (
@@ -1460,10 +1541,7 @@ export function mountEditor(
     store.update('Moved selection with keyboard', (draft) => {
       const selected = new Set(draft.selectedEntityIds);
       activeScene(draft).entities.forEach((entity) => {
-        if (
-          selected.has(entity.id) &&
-          entityProperties(entity).locked !== true
-        ) {
+        if (selected.has(entity.id) && objectEditable(draft, entity)) {
           entity.position.x += dx;
           entity.position.y += dy;
         }
@@ -1522,6 +1600,7 @@ export function mountEditor(
     host.removeEventListener('keydown', onEditorKeyDown);
     document.removeEventListener('keydown', onDocumentKeyDown);
     unsubscribe();
+    unmountCustomProperties();
     disposePalette();
     viewport.destroy();
     previewPeer?.destroy();

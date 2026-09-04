@@ -498,3 +498,106 @@ describe('object cursor feedback', () => {
     expect(store.status.canUndo).toBe(false);
   });
 });
+
+describe('gameplay object canvas behavior', () => {
+  it('renders a point marker, moves it without rotation, and protects object layers from painting', async () => {
+    const { addGameplayObject } = await import('../src/gameplay-objects');
+    const { store, canvas, pointer, cells, context, viewport } = editor();
+    addGameplayObject(store, 'spawn-point');
+    store.update(
+      'Position point',
+      (draft) => {
+        const e = activeScene(draft).entities[0];
+        if (e) e.position = { x: 104, y: 104 };
+        draft.tool = 'rotate';
+      },
+      false,
+    );
+    viewport.render();
+    expect(context.fillText).toHaveBeenCalledWith('Spawn point', -10, -17);
+    pointer('pointermove', 6, 6);
+    expect(canvas.style.cursor).toBe('move');
+    pointer('pointerdown', 6, 6);
+    pointer('pointermove', 7, 8);
+    pointer('pointerup', 7, 8);
+    expect(activeScene(store.status.snapshot).entities[0]).toMatchObject({
+      position: { x: 128, y: 144 },
+      rotation: 0,
+    });
+    store.undo();
+    expect(activeScene(store.status.snapshot).entities[0]?.position).toEqual({
+      x: 104,
+      y: 104,
+    });
+    store.update(
+      'Brush',
+      (draft) => {
+        draft.tool = 'brush';
+      },
+      false,
+    );
+    pointer('pointermove', 1, 1);
+    expect(canvas.style.cursor).toBe('not-allowed');
+    pointer('pointerdown', 1, 1);
+    pointer('pointerup', 1, 1);
+    expect(cells()).toEqual({});
+  });
+  it('resizes regions and prevents interactions with locked or hidden object layers', async () => {
+    const { addGameplayObject } = await import('../src/gameplay-objects');
+    const { store, pointer, canvas, viewport, context } = editor();
+    addGameplayObject(store, 'trigger');
+    store.update(
+      'Position region',
+      (draft) => {
+        const e = activeScene(draft).entities[0];
+        if (e) e.position = { x: 104, y: 104 };
+      },
+      false,
+    );
+    pointer('pointermove', 10, 8);
+    expect(canvas.style.cursor).toBe('nwse-resize');
+    pointer('pointerdown', 10, 8);
+    pointer('pointermove', 14, 12);
+    pointer('pointerup', 14, 12);
+    expect(
+      activeScene(store.status.snapshot).entities[0]?.scale?.x,
+    ).toBeGreaterThan(1.5);
+    store.undo();
+    store.update(
+      'Lock',
+      (draft) => {
+        activeLayer(draft).locked = true;
+      },
+      false,
+    );
+    pointer('pointermove', 6, 6);
+    expect(canvas.style.cursor).toBe('not-allowed');
+    pointer('pointerdown', 6, 6);
+    pointer('pointerup', 7, 7);
+    expect(activeScene(store.status.snapshot).entities[0]?.position).toEqual({
+      x: 104,
+      y: 104,
+    });
+    store.update(
+      'Hide',
+      (draft) => {
+        activeLayer(draft).visible = false;
+      },
+      false,
+    );
+    vi.mocked(context.fillText).mockClear();
+    viewport.render();
+    expect(context.fillText).not.toHaveBeenCalled();
+  });
+});
+
+it('selects the last drawn object when gameplay regions overlap at the same order', async () => {
+  const { addGameplayObject } = await import('../src/gameplay-objects');
+  const { store, pointer } = editor();
+  addGameplayObject(store, 'spawn-point');
+  addGameplayObject(store, 'trigger');
+  const id = store.status.snapshot.selectedEntityIds[0];
+  pointer('pointerdown', 29.5, 16.5);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([id]);
+  pointer('pointercancel', 29.5, 16.5);
+});

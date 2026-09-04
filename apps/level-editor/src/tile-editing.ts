@@ -53,8 +53,8 @@ export class TileEditing {
       this.announce('Select a tile area first (R).');
       return;
     }
-    if (cut && (layer.locked || !layer.visible)) {
-      this.announce('Unlock and show the active layer to cut tiles.');
+    if (cut && (layer.kind === 'objects' || layer.locked || !layer.visible)) {
+      this.announce('Choose an unlocked, visible tile layer to cut tiles.');
       return;
     }
     try {
@@ -87,8 +87,8 @@ export class TileEditing {
     }
     const snapshot = this.store.status.snapshot,
       layer = activeLayer(snapshot);
-    if (layer.locked || !layer.visible) {
-      this.announce('Unlock and show the active layer to paste tiles.');
+    if (layer.kind === 'objects' || layer.locked || !layer.visible) {
+      this.announce('Choose an unlocked, visible tile layer to paste tiles.');
       return;
     }
     const assets = new Map(
@@ -125,8 +125,8 @@ export class TileEditing {
       selection = activeTileSelection(snapshot),
       layer = activeLayer(snapshot);
     if (!selection) return;
-    if (layer.locked || !layer.visible) {
-      this.announce('Unlock and show the active layer to delete tiles.');
+    if (layer.kind === 'objects' || layer.locked || !layer.visible) {
+      this.announce('Choose an unlocked, visible tile layer to delete tiles.');
       return;
     }
     this.store.update('Deleted selected tiles', (draft) => {

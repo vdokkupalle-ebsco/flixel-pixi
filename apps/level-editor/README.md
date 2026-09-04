@@ -55,3 +55,9 @@ polygons, slopes, or explicit passable tiles. Apply saves one undoable change;
 source shapes follow flips and rotations on collision-enabled layers. See the
 [level editor guide](../../docs/guide/level-editor.md#source-tile-collision-shapes)
 for authoring and runtime metadata details.
+
+Use the controls above the hierarchy to add object layers, spawn points, trigger
+regions, and generic regions. Move markers on the canvas and edit geometry,
+classes, and typed custom properties in the Inspector. Gameplay metadata saves
+with scene entities and supports undo/redo. Preview omits authoring markers;
+your game implements spawn/trigger behaviors from the exported data.

@@ -308,3 +308,41 @@ by source rectangle. Coordinates are normalized to the source tile. Export/impor
 preserves it; changing tileset slicing does not remap existing source regions.
 Game integrations must pass image assets along with scene settings when generating
 colliders. This is editor metadata, not Tiled TMX/TSX interchange support.
+
+## Gameplay objects and custom properties
+
+The controls above the hierarchy add an **Object layer**, **Spawn point**,
+**Trigger region**, or **Region**. Adding a gameplay object uses the active object
+layer, otherwise an existing visible, unlocked object layer or a new one. The
+new object starts near the scene center; drag it into place or edit X and Y.
+Locked or hidden active layers must be unlocked/shown before adding objects.
+Object layers accept objects, including sprites, but cannot contain painted tiles.
+Older mixed layers continue to work unchanged.
+
+Spawn points display as green crosshair markers and represent a location only.
+They can move but do not rotate or scale. Trigger regions display as amber boxes;
+generic regions are violet. Regions use center coordinates and support width,
+height, rotation, scale, and the existing bottom-right resize target. Names appear
+on the canvas. Hidden objects/layers hide their markers, and locks protect edits.
+Select from the hierarchy or canvas; arrow keys move by one pixel, Shift+arrows
+by one grid cell. Duplicate, delete, and undo/redo work with gameplay objects.
+
+The Inspector has a **Class** label for gameplay objects and a **Custom properties**
+section for all objects. Give each property a unique name and choose String,
+Number, Boolean, or Color. Add it, then edit its value; numbers must be finite and
+colors use `#RRGGBB`. Names can be renamed and properties removed. Each successful
+edit is undoable. Failed validation leaves saved data unchanged. To change a
+property's type, remove it and add it again with the desired type.
+
+Export/import preserves gameplay objects as ordinary scene entities with types
+`spawn-point`, `trigger`, and `region`. Their `properties` include `layerId`,
+`gameplayClass`, and a `customProperties` array of `{ name, type, value }` records.
+Region dimensions are in `properties.width` and `properties.height`; position is
+the center, rotation is radians, and scale is stored on the entity. Object layers
+use `kind: "objects"` in the editor extension.
+
+These objects describe gameplay; they do not execute scripts. Preview omits their
+authoring markers and does not spawn players or activate triggers. Your game
+loads the entity data and implements those behaviors. Trigger regions are not
+physics sensors automatically. Object references, polygon regions, and shared
+class templates are future additions.

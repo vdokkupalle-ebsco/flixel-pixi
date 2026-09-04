@@ -1,3 +1,4 @@
+import { isGameplayObject } from './gameplay-objects';
 import { TOOL_CURSORS } from './tool-cursors';
 
 import type { EntityDefinition } from '@flixel-pixi/schemas';
@@ -354,6 +355,7 @@ export class SceneViewport {
         ? !selectedTerrain(snapshot.document.assets, snapshot.terrain)
         : tool !== 'eraser' && !snapshot.tileStamp;
       cursor =
+        layer.kind === 'objects' ||
         outside ||
         (editing && (layer.locked || !layer.visible || missingSource))
           ? 'not-allowed'
@@ -417,6 +419,10 @@ export class SceneViewport {
   }
 
   #visual(entity: EntityDefinition): EntityVisual {
+    if (entity.type === 'spawn-point') {
+      const size = 20 / this.#viewTransform(this.#status.snapshot).scale;
+      return { entity, width: size, height: size };
+    }
     const properties = entityProperties(entity);
     const scale = entity.scale ?? { x: 1, y: 1 };
     return {
@@ -503,7 +509,7 @@ export class SceneViewport {
       return;
     const layer = activeLayer(snapshot),
       settings = activeSceneSettings(snapshot);
-    if (layer.locked || !layer.visible) return;
+    if (layer.kind === 'objects' || layer.locked || !layer.visible) return;
     const original = layer.tilemap ?? {
       tileSize: settings.gridSize,
       cells: {},
@@ -513,6 +519,12 @@ export class SceneViewport {
       settings.height,
       original.tileSize,
     );
+    if (layer.kind === 'objects') {
+      this.#tileMessage(
+        'Choose a tile layer to paint. This is an object layer.',
+      );
+      return;
+    }
     if (!inBounds(cell, bounds)) return;
     const terrain = selectedTerrain(snapshot.document.assets, snapshot.terrain);
     if (!terrain) {
@@ -565,6 +577,12 @@ export class SceneViewport {
     const size = layer.tilemap?.tileSize ?? settings.gridSize;
     const cell = this.#hoverCell,
       bounds = tileBounds(settings.width, settings.height, size);
+    if (layer.kind === 'objects') {
+      this.#tileMessage(
+        'Choose a tile layer to paint. This is an object layer.',
+      );
+      return;
+    }
     if (!inBounds(cell, bounds)) return;
     const context = this.#context,
       interaction = this.#interaction;
@@ -584,7 +602,8 @@ export class SceneViewport {
       stamp &&
       (snapshot.tool === 'brush' || snapshot.tool === 'paste') &&
       layer.visible &&
-      !layer.locked
+      !layer.locked &&
+      layer.kind !== 'objects'
     ) {
       context.globalAlpha = 0.55;
       stamp.tiles.forEach((tile, index) => {
@@ -610,6 +629,7 @@ export class SceneViewport {
     }
     context.strokeStyle =
       this.#terrainPreviewBlocked ||
+      layer.kind === 'objects' ||
       layer.locked ||
       !layer.visible ||
       snapshot.tool === 'eraser' ||
@@ -657,6 +677,12 @@ export class SceneViewport {
     const point = this.#worldPoint(event),
       cell = { x: Math.floor(point.x / size), y: Math.floor(point.y / size) };
     const bounds = tileBounds(settings.width, settings.height, size);
+    if (layer.kind === 'objects') {
+      this.#tileMessage(
+        'Choose a tile layer to paint. This is an object layer.',
+      );
+      return;
+    }
     if (!inBounds(cell, bounds)) return;
     this.#hoverCell = cell;
     const tool =
@@ -949,7 +975,38 @@ export class SceneViewport {
     const asset = snapshot.document.assets.find(
       (candidate) => candidate.id === assetId,
     );
-    if (entity.type === 'particle-effect') {
+    if (isGameplayObject(entity)) {
+      const zoom = this.#viewTransform(snapshot).scale;
+      const color =
+        entity.type === 'spawn-point'
+          ? '#73e2a7'
+          : entity.type === 'trigger'
+            ? '#ffbd66'
+            : '#b39dff';
+      context.strokeStyle = color;
+      context.lineWidth = 2 / zoom;
+      context.fillStyle =
+        entity.type === 'trigger'
+          ? 'rgba(255,189,102,0.12)'
+          : 'rgba(179,157,255,0.12)';
+      if (entity.type === 'spawn-point') {
+        context.beginPath();
+        context.arc(0, 0, width / 2, 0, Math.PI * 2);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(-width / 2, 0);
+        context.lineTo(width / 2, 0);
+        context.moveTo(0, -height / 2);
+        context.lineTo(0, height / 2);
+        context.stroke();
+      } else {
+        context.fillRect(left, top, width, height);
+        context.strokeRect(left, top, width, height);
+      }
+      context.fillStyle = color;
+      context.font = `${12 / zoom}px sans-serif`;
+      context.fillText(entity.name ?? entity.type, left, top - 7 / zoom);
+    } else if (entity.type === 'particle-effect') {
       const gradient = context.createRadialGradient(0, 0, 2, 0, 0, width / 2);
       gradient.addColorStop(0, 'rgba(255, 225, 120, 0.95)');
       gradient.addColorStop(0.35, 'rgba(255, 57, 126, 0.75)');
@@ -1013,6 +1070,10 @@ export class SceneViewport {
       context.setLineDash([7 / scale, 4 / scale]);
       context.strokeRect(left, top, width, height);
       context.setLineDash([]);
+      if (entity.type === 'spawn-point') {
+        context.restore();
+        return;
+      }
       const handle = 8 / scale;
       context.fillStyle = '#f7f9fc';
       context.strokeStyle = '#087f8c';
@@ -1187,10 +1248,13 @@ export class SceneViewport {
   ): EntityDefinition | undefined {
     const scene = activeScene(this.#status.snapshot);
     return [...scene.entities]
+      .reverse()
       .sort(
         (a, b) =>
+          layerForEntity(this.#status.snapshot, b).order -
+            layerForEntity(this.#status.snapshot, a).order ||
           numberProperty(entityProperties(b), 'zIndex', 0) -
-          numberProperty(entityProperties(a), 'zIndex', 0),
+            numberProperty(entityProperties(a), 'zIndex', 0),
       )
       .find((entity) => {
         const properties = entityProperties(entity);
@@ -1224,13 +1288,26 @@ export class SceneViewport {
     x: number,
     y: number,
   ): EntityPointerInteraction['kind'] {
+    if (entity.type === 'spawn-point') return 'move';
     const tool = this.#status.snapshot.tool;
     if (tool === 'rotate') return 'rotate';
     if (tool === 'scale') return 'scale';
     const visual = this.#visual(entity);
+    const properties = entityProperties(entity);
+    const cornerX =
+      visual.width * (1 - numberProperty(properties, 'originX', 0.5));
+    const cornerY =
+      visual.height * (1 - numberProperty(properties, 'originY', 0.5));
+    const angle = entity.rotation ?? 0;
     const distanceFromCorner = Math.hypot(
-      x - (entity.position.x + visual.width / 2),
-      y - (entity.position.y + visual.height / 2),
+      x -
+        (entity.position.x +
+          cornerX * Math.cos(angle) -
+          cornerY * Math.sin(angle)),
+      y -
+        (entity.position.y +
+          cornerX * Math.sin(angle) +
+          cornerY * Math.cos(angle)),
     );
     if (
       distanceFromCorner <

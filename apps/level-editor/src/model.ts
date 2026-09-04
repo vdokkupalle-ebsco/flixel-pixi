@@ -1,3 +1,4 @@
+import { validateGameplayObjects } from './gameplay-objects';
 import { validateTileShapes } from './tile-shapes';
 import {
   parsePhysicsWorld,
@@ -32,6 +33,7 @@ export type LayerPurpose =
   'background' | 'gameplay' | 'collision' | 'foreground' | 'ui';
 
 export interface SceneLayerDefinition {
+  kind?: 'objects';
   tilemap?: TileMap;
   tileCollision?: TileCollisionSettings;
   id: string;
@@ -320,6 +322,14 @@ export function getEditorExtension(
           throw new Error(`Layer settings for ${sceneId} are invalid.`);
       }
       for (const layer of settings.layers) {
+        if (layer.kind !== undefined && layer.kind !== 'objects')
+          throw new Error('Invalid layer kind.');
+        if (
+          layer.kind === 'objects' &&
+          layer.tilemap &&
+          Object.keys(layer.tilemap.cells ?? {}).length
+        )
+          throw new Error('Object layers cannot contain tiles.');
         if (layer.tilemap !== undefined)
           validateTileMap(layer.tilemap, document.assets);
         if (layer.tileCollision !== undefined)
@@ -335,6 +345,7 @@ export function parseLevelProject(value: unknown): ProjectDocumentV1 {
   const document = parseProjectDocument(value);
   validateTerrains(document.assets);
   validateTileShapes(document.assets);
+  validateGameplayObjects(document);
   const extension = getEditorExtension(document);
   if (!document.scenes.some((scene) => scene.id === extension.activeSceneId)) {
     throw new Error('The active scene does not exist.');

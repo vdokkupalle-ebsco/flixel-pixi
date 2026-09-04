@@ -1,3 +1,4 @@
+import { isGameplayObject } from './gameplay-objects';
 import {
   createProtocolPeer,
   EDITOR_PROTOCOL_VERSION,
@@ -142,6 +143,7 @@ class LevelPreviewState extends FlxState {
     document: ProjectDocumentV1,
     assets: FlxAssets | undefined,
   ): FlxSprite | undefined {
+    if (isGameplayObject(entity)) return undefined;
     const properties = entity.properties ?? {};
     if (properties.visible === false) return;
     const assetId =

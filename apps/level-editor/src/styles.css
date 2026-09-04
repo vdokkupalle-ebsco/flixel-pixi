@@ -1784,3 +1784,44 @@ select:focus-visible {
     max-height: 350px;
   }
 }
+
+.gameplay-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+.gameplay-tools button {
+  padding: 7px 5px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.gameplay-tools button:hover {
+  background: var(--hover, #263340);
+}
+.custom-property-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px;
+  gap: 6px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+.custom-property-row button {
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.custom-properties label {
+  min-width: 0;
+}
+.custom-properties input {
+  min-width: 0;
+  width: 100%;
+}

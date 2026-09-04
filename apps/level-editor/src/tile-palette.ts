@@ -489,6 +489,8 @@ export function tileContext(status: LevelEditorStatus): string {
     layer = activeLayer(snapshot);
   const size =
     layer.tilemap?.tileSize ?? activeSceneSettings(snapshot).gridSize;
+  if (layer.kind === 'objects')
+    return 'Object layer · Select a tile layer to paint, or use the object tools above the hierarchy';
   if (snapshot.tool === 'tile-select')
     return 'Drag to select a rectangular area · Copy, cut, paste or delete tiles';
   if (snapshot.tool === 'paste')
