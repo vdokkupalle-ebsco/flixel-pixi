@@ -601,3 +601,29 @@ it('selects the last drawn object when gameplay regions overlap at the same orde
   expect(store.status.snapshot.selectedEntityIds).toEqual([id]);
   pointer('pointercancel', 29.5, 16.5);
 });
+
+it('updates canvas drawing and hit order after reordering layers', async () => {
+  const { addGameplayObject, addObjectLayer } =
+    await import('../src/gameplay-objects');
+  const { moveLayer } = await import('../src/layer-editing');
+  const { store, pointer, viewport, context } = editor();
+  addGameplayObject(store, 'region');
+  const regionId = store.status.snapshot.selectedEntityIds[0];
+  store.update('New object layer', addObjectLayer);
+  addGameplayObject(store, 'spawn-point');
+  const upperLayer = activeLayer(store.status.snapshot).id;
+  vi.mocked(context.fillText).mockClear();
+  viewport.render();
+  expect(vi.mocked(context.fillText).mock.calls.map((call) => call[0])).toEqual(
+    ['Region', 'Spawn point'],
+  );
+  moveLayer(store, upperLayer, 'down');
+  vi.mocked(context.fillText).mockClear();
+  viewport.render();
+  expect(vi.mocked(context.fillText).mock.calls.map((call) => call[0])).toEqual(
+    ['Spawn point', 'Region'],
+  );
+  pointer('pointerdown', 29.5, 16.5);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([regionId]);
+  pointer('pointercancel', 29.5, 16.5);
+});

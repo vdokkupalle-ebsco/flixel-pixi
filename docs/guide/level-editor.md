@@ -346,3 +346,39 @@ authoring markers and does not spawn players or activate triggers. Your game
 loads the entity data and implements those behaviors. Trigger regions are not
 physics sensors automatically. Object references, polygon regions, and shared
 class templates are future additions.
+
+## Reordering and duplicating layers
+
+Select a layer in the hierarchy. The separate **Selected layer** toolbar above
+the tree provides **Move layer up**, **Move layer down**, **Duplicate**, and
+**Delete**. Higher layers draw above lower
+layers in both the editor and Preview. Each arrow moves one position; buttons
+are disabled at the top/bottom or while the selected layer is locked. Reordering
+preserves object positions, layer membership, and the current selection.
+
+**Duplicate layer** creates an independent copy directly above the original and
+selects the copy. It preserves tiles, object positions and transforms, custom
+properties, collision settings, layer kind, visibility, and locks. Copied objects
+receive new IDs; image assets and their source tile collision definitions remain
+shared. Names use “copy”, then “copy 2”, and so on to avoid existing layer names.
+Hidden and locked layers can be duplicated without modifying the original;
+unlock/show the copy before editing it.
+
+Physics bodies are copied with new IDs. Joints between two objects in the copied
+layer connect the new bodies. Joints that connect to another layer are not copied;
+the status message reports how many were omitted. The originals keep every joint.
+Copies stay at the same coordinates, so copied collision-enabled layers and
+physics objects overlap until you move or hide them as appropriate.
+
+Each reorder or duplicate is one undo/redo step and survives export/import. A
+pending paint gesture is cancelled when the operation runs. Duplication clears
+the tile selection and pending paste so it cannot accidentally paint the new layer.
+
+**Delete** opens a confirmation naming the selected layer and listing its tiles,
+objects, physics bodies, and connected joints. Cancel or Escape leaves the scene
+unchanged. Confirming removes the layer, its objects and bodies, and all joints
+attached to those bodies (including connections to other layers). Shared image
+assets remain available. The nearest remaining layer becomes active. The entire
+deletion is one undo/redo step. Locked layers and the last remaining layer cannot
+be deleted. If the scene changes while confirmation is open, reopen the dialog
+to review the current contents before deleting.

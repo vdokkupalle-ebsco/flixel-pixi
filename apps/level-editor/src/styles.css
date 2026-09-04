@@ -1825,3 +1825,107 @@ select:focus-visible {
   min-width: 0;
   width: 100%;
 }
+
+.layer-actions {
+  display: flex;
+  gap: 5px;
+  padding: 3px 8px 8px 30px;
+}
+.layer-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  background: transparent;
+  font-size: 11px;
+  cursor: pointer;
+}
+.layer-actions button svg {
+  width: 12px;
+  height: 12px;
+}
+.layer-actions button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.layer-actions button:not(:disabled):hover {
+  background: var(--hover, #263340);
+}
+
+.layer-toolbar {
+  margin: 0 10px 10px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel, #141b26);
+}
+.layer-toolbar-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  margin-bottom: 7px;
+}
+.layer-toolbar-heading span {
+  color: var(--muted);
+  font-size: 10px;
+}
+.layer-toolbar-heading strong {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.layer-toolbar .layer-actions {
+  padding: 0;
+  flex-wrap: wrap;
+}
+.layer-delete-dialog {
+  height: fit-content;
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  width: min(430px, calc(100vw - 32px));
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #141b26;
+  color: var(--text);
+}
+.layer-delete-dialog::backdrop {
+  background: #0009;
+}
+.layer-delete-dialog h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+}
+.layer-delete-dialog p {
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.layer-delete-dialog .dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.layer-delete-dialog button {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.layer-delete-dialog [data-confirm] {
+  background: #9b303f;
+  color: white;
+  border-color: #c85865;
+}
+.layer-delete-dialog [data-delete-error] {
+  color: #ff9d98;
+}

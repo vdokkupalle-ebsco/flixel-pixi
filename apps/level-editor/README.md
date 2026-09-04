@@ -61,3 +61,9 @@ regions, and generic regions. Move markers on the canvas and edit geometry,
 classes, and typed custom properties in the Inspector. Gameplay metadata saves
 with scene entities and supports undo/redo. Preview omits authoring markers;
 your game implements spawn/trigger behaviors from the exported data.
+
+Select a layer and use the separate **Selected layer** toolbar for up/down,
+**Duplicate**, and **Delete**. Deletion requires confirmation and supports Undo. Copies
+preserve tiles, objects, properties and collision settings at the same positions,
+with new object/body IDs and remapped internal joints. Cross-layer joints stay
+with the originals. Each operation supports undo/redo and project export.

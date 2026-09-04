@@ -1,3 +1,5 @@
+import { confirmLayerDeletion } from './layer-delete-dialog';
+import { moveLayer, duplicateLayer, orderedLayers } from './layer-editing';
 import {
   addGameplayObject,
   addObjectLayer,
@@ -200,6 +202,7 @@ export function mountEditor(
   host: HTMLElement,
   store: LevelEditorStore,
 ): () => void {
+  let closeLayerDelete: (() => void) | undefined;
   const previewSession = crypto.randomUUID();
   host.innerHTML = `
     <main class="editor-app" aria-label="Flixel-Pixi Level Editor">
@@ -228,6 +231,7 @@ export function mountEditor(
           <section class="panel-view" data-panel="scene" aria-label="Scene hierarchy">
             <div class="panel-heading"><div><small>Hierarchy</small><strong data-scene-name>Main scene</strong></div><div class="heading-actions"><button class="small-icon" type="button" data-action="add-layer" aria-label="Add layer" title="Add layer">${icon('layers')}</button><button class="small-icon" type="button" data-action="add-sprite" aria-label="Add sprite">${icon('add')}</button></div></div>
             <div class="gameplay-tools" role="group" aria-label="Add gameplay objects"><button type="button" data-action="add-object-layer">Object layer</button><button type="button" data-gameplay-add="spawn-point">Spawn point</button><button type="button" data-gameplay-add="trigger">Trigger region</button><button type="button" data-gameplay-add="region">Region</button></div>
+            <div class="layer-toolbar" data-layer-toolbar aria-label="Selected layer controls"></div>
             <div class="hierarchy" data-hierarchy role="tree" aria-label="Scene objects"></div>
           </section>
           <section class="panel-view" data-panel="assets" aria-label="Asset library" hidden>
@@ -804,6 +808,13 @@ export function mountEditor(
     if (container === null) return;
     const entities = sortEntities(status.snapshot);
     const activeLayerId = activeLayer(status.snapshot).id;
+    const layer = activeLayer(status.snapshot),
+      layers = orderedLayers(status.snapshot);
+    const index = layers.findIndex((l) => l.id === layer.id);
+    const toolbar = host.querySelector<HTMLElement>('[data-layer-toolbar]');
+    if (toolbar)
+      toolbar.innerHTML = `<div class="layer-toolbar-heading"><span>Selected layer</span><strong>${escapeHtml(layer.name)}</strong></div><div class="layer-actions" role="toolbar" aria-label="Layer actions"><button type="button" data-action="layer-up" data-layer-id="${escapeHtml(layer.id)}" aria-label="Move layer ${escapeHtml(layer.name)} up" title="Move layer up" ${layer.locked || index === 0 ? 'disabled' : ''}>${icon('arrowUp')}</button><button type="button" data-action="layer-down" data-layer-id="${escapeHtml(layer.id)}" aria-label="Move layer ${escapeHtml(layer.name)} down" title="Move layer down" ${layer.locked || index === layers.length - 1 ? 'disabled' : ''}>${icon('arrowDown')}</button><button type="button" data-action="layer-duplicate" data-layer-id="${escapeHtml(layer.id)}" aria-label="Duplicate layer ${escapeHtml(layer.name)}" title="Duplicate layer">${icon('duplicate')}</button><button type="button" data-action="layer-delete" data-layer-id="${escapeHtml(layer.id)}" aria-label="Delete layer ${escapeHtml(layer.name)}" title="${layer.locked ? 'Unlock this layer to delete it' : layers.length === 1 ? 'Keep at least one layer' : 'Delete layer'}" ${layer.locked || layers.length === 1 ? 'disabled' : ''}>${icon('delete')}</button></div>`;
+
     const emptyMarkup =
       entities.length === 0 &&
       !sceneLayers(status.snapshot).some(
@@ -813,8 +824,7 @@ export function mountEditor(
         : '';
     container.innerHTML =
       emptyMarkup +
-      [...sceneLayers(status.snapshot)]
-        .sort((a, b) => b.order - a.order)
+      orderedLayers(status.snapshot)
         .map((layer) => {
           const layerEntities = entities.filter(
             (entity) => layerForEntity(status.snapshot, entity).id === layer.id,
@@ -1110,6 +1120,51 @@ export function mountEditor(
       return;
     }
     const action = target.dataset.action;
+    if (
+      action === 'layer-up' ||
+      action === 'layer-down' ||
+      action === 'layer-duplicate' ||
+      action === 'layer-delete'
+    ) {
+      const id = target.dataset.layerId;
+      if (!id) return;
+      if (action === 'layer-delete') {
+        closeLayerDelete?.();
+        closeLayerDelete = confirmLayerDeletion(store, id, announce, () => {
+          const button = host.querySelector<HTMLButtonElement>(
+            '[data-action="layer-delete"]',
+          );
+          if (button && !button.disabled) button.focus();
+          else
+            host
+              .querySelector<HTMLButtonElement>(
+                '[data-action="layer-duplicate"]',
+              )
+              ?.focus();
+        });
+        return;
+      }
+      let focusId = id;
+      if (action === 'layer-duplicate') {
+        const result = duplicateLayer(store, id);
+        if (result) {
+          focusId = result.layerId;
+          announce(
+            `Layer duplicated above the original.${result.omittedJoints ? ` ${result.omittedJoints} joint(s) connected to other layers were not copied.` : ''}`,
+          );
+        }
+      } else if (moveLayer(store, id, action === 'layer-up' ? 'up' : 'down'))
+        announce(`Layer moved ${action === 'layer-up' ? 'up' : 'down'}.`);
+      const row = [...host.querySelectorAll<HTMLElement>('.layer-group')].find(
+        (node) => node.dataset.layerId === focusId,
+      );
+      const button = host.querySelector<HTMLButtonElement>(
+        `[data-action="${action}"]`,
+      );
+      if (button && !button.disabled) button.focus();
+      else row?.querySelector<HTMLButtonElement>('.layer-main')?.focus();
+      return;
+    }
     if (action?.startsWith('tile-')) {
       if (action === 'tile-copy') tileEditing.copy();
       else if (action === 'tile-cut') tileEditing.copy(true);
@@ -1557,7 +1612,9 @@ export function mountEditor(
       event.target instanceof HTMLInputElement ||
       event.target instanceof HTMLTextAreaElement ||
       event.target instanceof HTMLSelectElement ||
-      runtimeDialog.open
+      runtimeDialog.open ||
+      (event.target instanceof Element &&
+        event.target.closest('dialog') !== null)
     )
       return;
     const key = event.key.toLowerCase();
@@ -1601,6 +1658,7 @@ export function mountEditor(
     document.removeEventListener('keydown', onDocumentKeyDown);
     unsubscribe();
     unmountCustomProperties();
+    closeLayerDelete?.();
     disposePalette();
     viewport.destroy();
     previewPeer?.destroy();
