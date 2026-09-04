@@ -382,3 +382,47 @@ assets remain available. The nearest remaining layer becomes active. The entire
 deletion is one undo/redo step. Locked layers and the last remaining layer cannot
 be deleted. If the scene changes while confirmation is open, reopen the dialog
 to review the current contents before deleting.
+
+## Layer groups
+
+Choose **Group** in the Selected layer toolbar to create a group at the scene
+root. Select any layer and use the **Group** menu to move it into a group or back
+to **Scene root**. Groups can contain other groups; the menu excludes the selected
+group and its descendants to prevent cycles. **Add layer** and **Object layer**
+create children when an unlocked group is selected. Groups organize layers and
+do not directly hold painted tiles or objects.
+
+The hierarchy indents children. Use the plus/minus control to expand or collapse
+a group. Up/down arrows reorder siblings; moving a group moves its entire
+subtree. A group's position controls its children's rendering order relative to
+other groups and layers in both the canvas and Preview.
+
+Hide or lock a group to apply that state to all descendants. Individual child
+flags are preserved, so showing or unlocking the parent restores each child's
+own state. A child row indicates inherited hiding or locking. Hidden groups omit
+all child content and tile collision in Preview. Locked groups protect child
+editing and reparenting while keeping their content visible and collidable.
+
+Duplicating a group copies every nested layer, tile, object, and physics body.
+Joints between copied children are remapped to the copied bodies; connections
+outside the subtree remain only on the originals. Deleting a group requires
+confirmation with nested-layer and total content counts. Locked descendants and
+the last content layer are protected, even if empty groups remain. Creation,
+reparenting, reordering, duplication, deletion, visibility, and locking support
+undo/redo and persist in exported projects. Existing flat projects still import.
+
+Drag a layer's name to reorder or change its group. A separate placeholder row opens above or below a
+layer to show the sibling position. Drop in the middle of a group row to move inside;
+an indented placeholder marks the new child position, and the group expands after the drop. Drag to **Drop here to move to scene root** to
+remove the layer from its group without deleting it. A group moves with all its
+children. Locked sources and destinations, cycles, and unchanged positions are
+ignored. Each drop is one undo step. The arrow buttons and Group menu remain
+available for keyboard use.
+
+Layer dragging uses `@dnd-kit/dom`: a short movement threshold separates clicks
+from drags, a floating preview follows the pointer, and the list scrolls near its
+edges. The scene-root target stays in place so rows do not jump when dragging
+starts. The preview describes the pending move and animates into place on drop;
+reduced-motion preferences disable that animation. Focus a layer name and press
+Space or Enter to start keyboard dragging, use arrow keys to navigate, then press
+Space or Enter to drop or Escape to cancel.

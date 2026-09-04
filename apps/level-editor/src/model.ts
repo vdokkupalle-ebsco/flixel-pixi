@@ -1,3 +1,4 @@
+import { effectiveLayer, validateLayerGroups } from './layer-groups';
 import { validateGameplayObjects } from './gameplay-objects';
 import { validateTileShapes } from './tile-shapes';
 import {
@@ -33,7 +34,8 @@ export type LayerPurpose =
   'background' | 'gameplay' | 'collision' | 'foreground' | 'ui';
 
 export interface SceneLayerDefinition {
-  kind?: 'objects';
+  kind?: 'objects' | 'group';
+  parentId?: string;
   tilemap?: TileMap;
   tileCollision?: TileCollisionSettings;
   id: string;
@@ -321,8 +323,22 @@ export function getEditorExtension(
         )
           throw new Error(`Layer settings for ${sceneId} are invalid.`);
       }
+      validateLayerGroups(settings.layers as SceneLayerDefinition[]);
+      for (const entity of document.scenes.find((s) => s.id === sceneId)
+        ?.entities ?? []) {
+        if (
+          settings.layers.some(
+            (l) => l.kind === 'group' && l.id === entity.properties?.layerId,
+          )
+        )
+          throw new Error('Entities must belong to content layers.');
+      }
       for (const layer of settings.layers) {
-        if (layer.kind !== undefined && layer.kind !== 'objects')
+        if (
+          layer.kind !== undefined &&
+          layer.kind !== 'objects' &&
+          layer.kind !== 'group'
+        )
           throw new Error('Invalid layer kind.');
         if (
           layer.kind === 'objects' &&
@@ -405,13 +421,20 @@ export function layerForEntity(
   entity: EntityDefinition,
 ): SceneLayerDefinition {
   const layerId = entityProperties(entity).layerId;
-  const layers = sceneLayers(snapshot);
-  return (
+  const layers = sceneLayers(snapshot).filter((l) => l.kind !== 'group');
+  return effectiveLayer(
     layers.find((layer) => layer.id === layerId) ??
-    layers.find((layer) => layer.purpose === 'gameplay') ??
-    layers[0] ??
-    fallbackLayer
+      layers.find((layer) => layer.purpose === 'gameplay') ??
+      layers[0] ??
+      fallbackLayer,
+    sceneLayers(snapshot),
   );
+}
+
+export function effectiveActiveLayer(
+  snapshot: LevelEditorSnapshot,
+): SceneLayerDefinition {
+  return effectiveLayer(activeLayer(snapshot), sceneLayers(snapshot));
 }
 
 export function entityProperties(

@@ -1,3 +1,5 @@
+import { effectiveActiveLayer } from './model';
+import { effectiveLayer, effectiveLayers } from './layer-groups';
 import { isGameplayObject } from './gameplay-objects';
 import { TOOL_CURSORS } from './tool-cursors';
 
@@ -5,7 +7,6 @@ import type { EntityDefinition } from '@flixel-pixi/schemas';
 
 import type { LevelEditorStatus, LevelEditorStore } from './editor-store';
 import {
-  activeLayer,
   sceneLayers,
   activeScene,
   activeSceneSettings,
@@ -145,8 +146,8 @@ export class SceneViewport {
     this.#unsubscribe = store.subscribe((status) => {
       this.#cancelInteraction();
       if (
-        activeLayer(this.#status.snapshot).id !==
-          activeLayer(status.snapshot).id ||
+        effectiveActiveLayer(this.#status.snapshot).id !==
+          effectiveActiveLayer(status.snapshot).id ||
         this.#status.snapshot.document.project.id !==
           status.snapshot.document.project.id
       )
@@ -221,9 +222,9 @@ export class SceneViewport {
             numberProperty(entityProperties(b), 'zIndex', 0),
       );
     const terrainPreview = this.#terrainHoverPreview();
-    const activeLayerId = activeLayer(snapshot).id;
+    const activeLayerId = effectiveActiveLayer(snapshot).id;
     const tileColliders: TileCollider[] = [];
-    for (const layer of [...sceneLayers(snapshot)].sort(
+    for (const layer of effectiveLayers(sceneLayers(snapshot)).sort(
       (a, b) => a.order - b.order,
     )) {
       if (!layer.visible) continue;
@@ -336,7 +337,7 @@ export class SceneViewport {
       cursor = 'grab';
     } else if (isTileTool(snapshot.tool)) {
       const tool = this.#altPressed ? 'eyedropper' : snapshot.tool;
-      const layer = activeLayer(snapshot);
+      const layer = effectiveActiveLayer(snapshot);
       const settings = activeSceneSettings(snapshot);
       const size =
         layer.tilemap?.tileSize ??
@@ -355,7 +356,7 @@ export class SceneViewport {
         ? !selectedTerrain(snapshot.document.assets, snapshot.terrain)
         : tool !== 'eraser' && !snapshot.tileStamp;
       cursor =
-        layer.kind === 'objects' ||
+        layer.kind !== undefined ||
         outside ||
         (editing && (layer.locked || !layer.visible || missingSource))
           ? 'not-allowed'
@@ -401,7 +402,7 @@ export class SceneViewport {
     if (snapshot.showGrid === false) return;
     const settings = activeSceneSettings(snapshot);
     const gridSize = isTileTool(snapshot.tool)
-      ? (activeLayer(snapshot).tilemap?.tileSize ?? settings.gridSize)
+      ? (effectiveActiveLayer(snapshot).tilemap?.tileSize ?? settings.gridSize)
       : settings.gridSize;
     const context = this.#context;
     context.beginPath();
@@ -464,7 +465,7 @@ export class SceneViewport {
       selection = activeTileSelection(snapshot);
     if (!selection || !isTileTool(snapshot.tool)) return;
     const size =
-      activeLayer(snapshot).tilemap?.tileSize ??
+      effectiveActiveLayer(snapshot).tilemap?.tileSize ??
       activeSceneSettings(snapshot).gridSize;
     const context = this.#context,
       scale = this.#viewTransform(snapshot).scale;
@@ -507,9 +508,9 @@ export class SceneViewport {
       !snapshot.tool.startsWith('terrain')
     )
       return;
-    const layer = activeLayer(snapshot),
+    const layer = effectiveActiveLayer(snapshot),
       settings = activeSceneSettings(snapshot);
-    if (layer.kind === 'objects' || layer.locked || !layer.visible) return;
+    if (layer.kind !== undefined || layer.locked || !layer.visible) return;
     const original = layer.tilemap ?? {
       tileSize: settings.gridSize,
       cells: {},
@@ -519,9 +520,9 @@ export class SceneViewport {
       settings.height,
       original.tileSize,
     );
-    if (layer.kind === 'objects') {
+    if (layer.kind !== undefined) {
       this.#tileMessage(
-        'Choose a tile layer to paint. This is an object layer.',
+        'Choose a tile layer to paint. Groups and object layers do not hold tiles.',
       );
       return;
     }
@@ -572,14 +573,14 @@ export class SceneViewport {
     const snapshot = this.#status.snapshot;
     if (!isTileTool(snapshot.tool) || !this.#hoverCell || this.#spacePressed)
       return;
-    const layer = activeLayer(snapshot),
+    const layer = effectiveActiveLayer(snapshot),
       settings = activeSceneSettings(snapshot);
     const size = layer.tilemap?.tileSize ?? settings.gridSize;
     const cell = this.#hoverCell,
       bounds = tileBounds(settings.width, settings.height, size);
-    if (layer.kind === 'objects') {
+    if (layer.kind !== undefined) {
       this.#tileMessage(
-        'Choose a tile layer to paint. This is an object layer.',
+        'Choose a tile layer to paint. Groups and object layers do not hold tiles.',
       );
       return;
     }
@@ -603,7 +604,7 @@ export class SceneViewport {
       (snapshot.tool === 'brush' || snapshot.tool === 'paste') &&
       layer.visible &&
       !layer.locked &&
-      layer.kind !== 'objects'
+      layer.kind === undefined
     ) {
       context.globalAlpha = 0.55;
       stamp.tiles.forEach((tile, index) => {
@@ -629,7 +630,7 @@ export class SceneViewport {
     }
     context.strokeStyle =
       this.#terrainPreviewBlocked ||
-      layer.kind === 'objects' ||
+      layer.kind !== undefined ||
       layer.locked ||
       !layer.visible ||
       snapshot.tool === 'eraser' ||
@@ -669,7 +670,7 @@ export class SceneViewport {
     if (event.button !== 0 && event.button !== 2) return;
     event.preventDefault();
     const snapshot = this.#status.snapshot,
-      layer = activeLayer(snapshot),
+      layer = effectiveActiveLayer(snapshot),
       settings = activeSceneSettings(snapshot);
     const size =
       layer.tilemap?.tileSize ??
@@ -677,9 +678,9 @@ export class SceneViewport {
     const point = this.#worldPoint(event),
       cell = { x: Math.floor(point.x / size), y: Math.floor(point.y / size) };
     const bounds = tileBounds(settings.width, settings.height, size);
-    if (layer.kind === 'objects') {
+    if (layer.kind !== undefined) {
       this.#tileMessage(
-        'Choose a tile layer to paint. This is an object layer.',
+        'Choose a tile layer to paint. Groups and object layers do not hold tiles.',
       );
       return;
     }
@@ -920,7 +921,13 @@ export class SceneViewport {
         const layer = settings.layers.find(
           (layer) => layer.id === interaction.layerId,
         );
-        if (!layer || layer.locked || !layer.visible) return;
+        if (
+          !layer ||
+          effectiveLayer(layer, settings.layers).locked ||
+          !effectiveLayer(layer, settings.layers).visible ||
+          layer.kind !== undefined
+        )
+          return;
         layer.tilemap = interaction.map;
         if (interaction.tool === 'paste' && interaction.stamp) {
           draft.tileSelection = {
@@ -1386,7 +1393,7 @@ export class SceneViewport {
     this.#altPressed = event.altKey;
     this.#updateCursor();
     const tileSize =
-      activeLayer(this.#status.snapshot).tilemap?.tileSize ??
+      effectiveActiveLayer(this.#status.snapshot).tilemap?.tileSize ??
       activeSceneSettings(this.#status.snapshot).gridSize;
     const world = this.#worldPoint(event);
     this.#hoverCell = {

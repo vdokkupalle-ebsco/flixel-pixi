@@ -1,3 +1,4 @@
+import { effectiveActiveLayer } from './model';
 import type { AssetDefinition } from '@flixel-pixi/schemas';
 import type { LevelEditorStore } from './editor-store';
 import {
@@ -35,7 +36,9 @@ export function updateTileCollision(
   value: string | boolean,
 ): void {
   if (!['enabled', 'friction', 'restitution'].includes(field)) return;
-  if (activeLayer(store.status.snapshot).locked)
+  if (effectiveActiveLayer(store.status.snapshot).kind !== undefined)
+    throw new Error('Select a tile layer to change collision settings.');
+  if (effectiveActiveLayer(store.status.snapshot).locked)
     throw new Error('Unlock this layer to change collision settings.');
   if (
     field === 'enabled'

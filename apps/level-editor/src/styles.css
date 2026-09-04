@@ -788,18 +788,36 @@ svg {
 .inspector fieldset {
   min-width: 0;
   margin: 0;
-  padding: 12px;
+  padding: 16px 12px;
   border: 0;
   border-bottom: 1px solid var(--border-soft);
 }
 .inspector legend {
+  float: left;
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  padding: 0;
   color: var(--muted);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
+}
+.inspector legend + * {
+  clear: both;
+}
+.inspector fieldset > :last-child {
+  margin-bottom: 0;
+}
+.inspector .segmented + .button,
+.inspector .field-help + * {
+  margin-top: 12px;
+}
+.inspector .texture-region summary {
+  padding: 4px 0;
+}
+.inspector .texture-region[open] summary {
+  margin-bottom: 8px;
 }
 .inspector label {
   display: grid;
@@ -1216,7 +1234,7 @@ dialog iframe {
   min-height: 50px;
 }
 .tileset-content {
-  padding: 0 12px 14px;
+  padding: 12px 12px 16px;
 }
 .tileset-label,
 .tileset-settings label {
@@ -1511,6 +1529,10 @@ select:focus-visible {
   gap: 6px;
   margin-bottom: 10px;
 }
+.tileset-modes {
+  gap: 8px;
+  margin-bottom: 14px;
+}
 .tileset-modes button,
 .terrain-tools button {
   flex: 1;
@@ -1788,8 +1810,8 @@ select:focus-visible {
 .gameplay-tools {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 0 12px 12px;
+  gap: 8px;
+  padding: 12px 12px 16px;
 }
 .gameplay-tools button {
   padding: 7px 5px;
@@ -1928,4 +1950,131 @@ select:focus-visible {
 }
 .layer-delete-dialog [data-delete-error] {
   color: #ff9d98;
+}
+
+.layer-parent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.layer-parent select {
+  flex: 1;
+  min-width: 0;
+}
+.layer-parent select {
+  height: 30px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  background: var(--surface-2);
+}
+.layer-parent {
+  margin-top: 8px;
+}
+.layer-group[aria-expanded] > .layer-row {
+  grid-template-columns: 24px minmax(0, 1fr) 28px 28px;
+}
+
+.layer-main[data-layer-draggable='true'] {
+  cursor: grab;
+}
+.dragging-layer .layer-main[data-layer-draggable='true'] {
+  cursor: grabbing;
+}
+.layer-row {
+  position: relative;
+}
+/* Reserve the root target so starting a drag never moves the rows. */
+.layer-root-drop {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 9px 12px;
+  margin: 0 6px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+.dragging-layer .layer-root-drop {
+  border-color: var(--cyan);
+  color: var(--text);
+}
+.layer-drop-placeholder {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  margin: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(29, 232, 241, 0.12);
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(29, 232, 241, 0.45);
+}
+.layer-drag-source {
+  opacity: 0.3;
+}
+.layer-drag-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  pointer-events: none;
+  will-change: transform;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: 0 12px 32px #0009;
+  overflow: visible;
+}
+.layer-drag-overlay .row-icon {
+  display: none;
+}
+.layer-drag-overlay .layer-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+.layer-drag-hint {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  border-radius: 0 0 5px 5px;
+  padding: 5px 10px;
+  font-size: 10px;
+  color: var(--cyan);
+  background: var(--surface-1, #141b26);
+}
+
+.layer-main[data-layer-draggable='true'] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Draw the preview frame above its children and inside dnd-kit's measured box. */
+.layer-drag-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px var(--cyan);
+  pointer-events: none;
+}
+.layer-drag-overlay .layer-row {
+  border-radius: 7px;
+}
+.layer-drag-overlay .layer-main {
+  padding: 8px 10px;
 }

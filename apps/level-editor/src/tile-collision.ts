@@ -1,3 +1,4 @@
+import { effectiveLayers } from './layer-groups';
 import type { AssetDefinition } from '@flixel-pixi/schemas';
 import {
   sourceShapeEntry,
@@ -153,7 +154,7 @@ export function sceneTileColliders(
   settings: SceneEditorSettings,
   assets: readonly AssetDefinition[] = [],
 ): TileCollider[] {
-  return (settings.layers ?? []).flatMap((layer) =>
+  return effectiveLayers(settings.layers ?? []).flatMap((layer) =>
     layerTileColliders(layer, settings, layer.tilemap, assets),
   );
 }

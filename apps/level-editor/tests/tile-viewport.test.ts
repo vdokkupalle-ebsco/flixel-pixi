@@ -627,3 +627,82 @@ it('updates canvas drawing and hit order after reordering layers', async () => {
   expect(store.status.snapshot.selectedEntityIds).toEqual([regionId]);
   pointer('pointercancel', 29.5, 16.5);
 });
+
+it('blocks painting through parent locks and visibility, and on groups themselves', async () => {
+  const { createLayerGroup, moveLayerToGroup } =
+    await import('../src/layer-editing');
+  const { activeSceneSettings, sceneLayers } = await import('../src/model');
+  const { store, pointer, cells, canvas } = editor();
+  const group = createLayerGroup(store);
+  moveLayerToGroup(store, 'layer-gameplay', group);
+  store.update('Choose child', (draft) => {
+    activeSceneSettings(draft).activeLayerId = 'layer-gameplay';
+  });
+  for (const flag of ['locked', 'visible'] as const) {
+    store.update('Protect parent', (draft) => {
+      const parent = sceneLayers(draft).find((l) => l.id === group);
+      if (parent) {
+        parent.locked = flag === 'locked';
+        parent.visible = flag !== 'visible';
+      }
+    });
+    pointer('pointermove', 2, 3);
+    expect(canvas.style.cursor).toBe('not-allowed');
+    pointer('pointerdown', 2, 3);
+    pointer('pointerup', 2, 3);
+    expect(cells()).toEqual({});
+  }
+  store.update('Select group', (draft) => {
+    activeSceneSettings(draft).activeLayerId = group;
+  });
+  pointer('pointerdown', 2, 3);
+  pointer('pointerup', 2, 3);
+  expect(cells()).toEqual({});
+});
+
+it('applies group order, visibility and locking to object rendering and hit tests', async () => {
+  const { addGameplayObject, addObjectLayer } =
+    await import('../src/gameplay-objects');
+  const { createLayerGroup, moveLayerToGroup, moveLayer } =
+    await import('../src/layer-editing');
+  const { sceneLayers } = await import('../src/model');
+  const { store, pointer, context, viewport } = editor();
+  addGameplayObject(store, 'region');
+  const regionId = store.status.snapshot.selectedEntityIds[0],
+    regionLayer = activeLayer(store.status.snapshot).id;
+  store.update('New layer', addObjectLayer);
+  addGameplayObject(store, 'spawn-point');
+  const spawnId = store.status.snapshot.selectedEntityIds[0];
+  const group = createLayerGroup(store);
+  moveLayerToGroup(store, regionLayer, group);
+  const drawn = () => {
+    vi.mocked(context.fillText).mockClear();
+    viewport.render();
+    return vi.mocked(context.fillText).mock.calls.map((c) => c[0]);
+  };
+  expect(drawn()).toEqual(['Spawn point', 'Region']);
+  pointer('pointerdown', 29.5, 16.5);
+  pointer('pointercancel', 29.5, 16.5);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([regionId]);
+  store.update('Lock group', (draft) => {
+    const l = sceneLayers(draft).find((l) => l.id === group);
+    if (l) l.locked = true;
+  });
+  pointer('pointerdown', 29.5, 16.5);
+  pointer('pointercancel', 29.5, 16.5);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([spawnId]);
+  store.update('Hide group', (draft) => {
+    const l = sceneLayers(draft).find((l) => l.id === group);
+    if (l) {
+      l.visible = false;
+      l.locked = false;
+    }
+  });
+  expect(drawn()).toEqual(['Spawn point']);
+  store.update('Show group', (draft) => {
+    const l = sceneLayers(draft).find((l) => l.id === group);
+    if (l) l.visible = true;
+  });
+  moveLayer(store, group, 'down');
+  expect(drawn()).toEqual(['Region', 'Spawn point']);
+});

@@ -1,3 +1,4 @@
+import { effectiveLayers } from './layer-groups';
 import type { EntityDefinition } from '@flixel-pixi/schemas';
 import type { LevelEditorStore } from './editor-store';
 import {
@@ -45,9 +46,10 @@ export function gameplayInspector(
     locked = !objectEditable(snapshot, entity);
   const field = (label: string, key: string, value: unknown, type = 'number') =>
     `<label>${label}<input aria-label="${label}" data-entity-field="${key}" type="${type}" value="${esc(value)}"/></label>`;
-  return `<fieldset ${locked ? 'disabled' : ''}><legend>${point ? 'Spawn point' : entity.type === 'trigger' ? 'Trigger region' : 'Region'}</legend>${field('Name', 'name', entity.name ?? '', 'text')}${field('Class', 'gameplayClass', p.gameplayClass ?? '', 'text')}<label>Object layer<select data-entity-field="layerId">${sceneLayers(
-    snapshot,
+  return `<fieldset ${locked ? 'disabled' : ''}><legend>${point ? 'Spawn point' : entity.type === 'trigger' ? 'Trigger region' : 'Region'}</legend>${field('Name', 'name', entity.name ?? '', 'text')}${field('Class', 'gameplayClass', p.gameplayClass ?? '', 'text')}<label>Object layer<select data-entity-field="layerId">${effectiveLayers(
+    sceneLayers(snapshot),
   )
+    .filter((l) => l.kind !== 'group')
     .map(
       (l) =>
         `<option value="${esc(l.id)}" ${l.id === layerForEntity(snapshot, entity).id ? 'selected' : ''} ${l.locked ? 'disabled' : ''}>${esc(l.name)}</option>`,

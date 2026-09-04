@@ -1,7 +1,8 @@
+import { effectiveActiveLayer } from './model';
 import { openTileShapeEditor } from './tile-shape-editor';
 import type { AssetDefinition } from '@flixel-pixi/schemas';
 import type { LevelEditorStatus, LevelEditorStore } from './editor-store';
-import { activeLayer, activeSceneSettings, createId } from './model';
+import { activeSceneSettings, createId } from './model';
 import { atlasFramesForAsset } from './atlas-assets';
 import { activeTileSelection } from './tile-editing';
 import { icon } from './icons';
@@ -486,10 +487,12 @@ export function mountTilePalette(
 
 export function tileContext(status: LevelEditorStatus): string {
   const snapshot = status.snapshot,
-    layer = activeLayer(snapshot);
+    layer = effectiveActiveLayer(snapshot);
   const size =
     layer.tilemap?.tileSize ?? activeSceneSettings(snapshot).gridSize;
-  if (layer.kind === 'objects')
+  if (layer.kind === 'group')
+    return 'Layer group · Select a child tile layer to paint';
+  if (layer.kind !== undefined)
     return 'Object layer · Select a tile layer to paint, or use the object tools above the hierarchy';
   if (snapshot.tool === 'tile-select')
     return 'Drag to select a rectangular area · Copy, cut, paste or delete tiles';

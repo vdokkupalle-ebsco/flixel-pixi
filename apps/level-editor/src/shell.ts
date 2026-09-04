@@ -1,3 +1,12 @@
+import { mountLayerDrag } from './layer-drag';
+import {
+  createLayerGroup,
+  moveLayerToGroup,
+  canDeleteLayer,
+} from './layer-editing';
+import { layerAncestors, layerSubtree } from './layer-groups';
+import { effectiveActiveLayer } from './model';
+import { effectiveLayer, effectiveLayers } from './layer-groups';
 import { confirmLayerDeletion } from './layer-delete-dialog';
 import { moveLayer, duplicateLayer, orderedLayers } from './layer-editing';
 import {
@@ -277,10 +286,10 @@ export function mountEditor(
             <button type="button" data-action="tile-deselect" title="Clear selection (Escape)">Deselect</button>
           </div>
           <div class="stage-toolbar" role="toolbar" aria-label="Canvas controls">
-            <button class="toolbar-toggle" type="button" data-action="toggle-grid" aria-pressed="true">${icon('grid')} Snap <kbd>⌘'</kbd></button>
+            <button class="toolbar-toggle" type="button" data-action="toggle-grid" aria-pressed="true" title="Snap to grid (⌘')">${icon('snap')} Snap <kbd>⌘'</kbd></button>
             <button class="toolbar-toggle" type="button" data-action="show-grid" aria-label="Show grid" aria-pressed="true" title="Show grid">${icon('grid')}</button>
             <span class="toolbar-separator"></span>
-            <button class="toolbar-toggle" type="button" data-action="show-tile-collisions" aria-label="Show tile collisions" aria-pressed="true" title="Show tile collision outlines">${icon('rectangle')}</button>
+            <button class="toolbar-toggle" type="button" data-action="show-tile-collisions" aria-label="Show tile collisions" aria-pressed="true" title="Show tile collision outlines">${icon('collisions')}</button>
             ${button('zoom-out', 'Zoom out', 'zoomOut')}
             <output data-zoom aria-live="polite">100%</output>
             ${button('zoom-in', 'Zoom in', 'zoomIn')}
@@ -418,6 +427,14 @@ export function mountEditor(
 
   function addSprite(assetId?: string, atlasFrame?: AtlasFrameItem): void {
     const snapshot = store.status.snapshot;
+    if (
+      effectiveActiveLayer(snapshot).kind === 'group' ||
+      effectiveActiveLayer(snapshot).locked ||
+      !effectiveActiveLayer(snapshot).visible
+    ) {
+      announce('Select a visible, unlocked content layer first.');
+      return;
+    }
     const resolvedAssetId = assetId ?? snapshot.document.assets[0]?.id;
     if (resolvedAssetId === undefined) {
       announce('Upload an image asset first.', true);
@@ -560,7 +577,7 @@ export function mountEditor(
       (draft) => {
         const entities = activeScene(draft).entities;
         const entity = entities.find((candidate) => candidate.id === entityId);
-        if (entity === undefined) return;
+        if (entity === undefined || !objectEditable(draft, entity)) return;
         const properties = entityProperties(entity);
         properties.zIndex = Number(properties.zIndex ?? 0) + direction;
       },
@@ -568,10 +585,19 @@ export function mountEditor(
   }
 
   function addLayer(): void {
+    const parent = effectiveActiveLayer(store.status.snapshot);
+    if (parent.kind === 'group' && parent.locked) {
+      announce('Unlock the group before adding layers.');
+      return;
+    }
     store.update('Added layer', (draft) => {
       const settings = activeSceneSettings(draft);
       const layers = (settings.layers ??= [...sceneLayers(draft)]);
+      const parent = effectiveActiveLayer(draft);
       const layer = {
+        ...(parent.kind === 'group' && !parent.locked
+          ? { parentId: parent.id }
+          : {}),
         id: createId('layer'),
         locked: false,
         name: `Layer ${layers.length + 1}`,
@@ -582,6 +608,9 @@ export function mountEditor(
       };
       layers.push(layer);
       settings.activeLayerId = layer.id;
+      draft.selectedEntityIds = [];
+      delete draft.tileSelection;
+      if (draft.tool === 'paste') draft.tool = 'tile-select';
     });
     announce('Layer added and selected for new objects.');
   }
@@ -744,7 +773,10 @@ export function mountEditor(
         properties.gameplayClass = value.slice(0, 80);
       else if (
         field === 'layerId' &&
-        sceneLayers(draft).some((layer) => layer.id === value && !layer.locked)
+        effectiveLayers(sceneLayers(draft)).some(
+          (layer) =>
+            layer.id === value && layer.kind !== 'group' && !layer.locked,
+        )
       )
         properties.layerId = value;
       else if (field === 'x' && Number.isFinite(numeric))
@@ -803,17 +835,49 @@ export function mountEditor(
     });
   }
 
+  const collapsedGroups = new Set<string>();
+  const layerDrag = mountLayerDrag(host, store, (id, drop) => {
+    const layers = sceneLayers(store.status.snapshot),
+      layer = layers.find((l) => l.id === id);
+    if (layer)
+      for (const parent of layerAncestors(layer, layers))
+        collapsedGroups.delete(parent.id);
+    renderHierarchy(store.status);
+    host
+      .querySelector<HTMLButtonElement>(
+        `.layer-main[data-layer-id="${CSS.escape(id)}"]`,
+      )
+      ?.focus();
+    announce(
+      drop.position === 'inside'
+        ? 'Layer moved into group.'
+        : drop.position === 'root'
+          ? 'Layer moved to scene root.'
+          : 'Layer order updated.',
+    );
+  });
   function renderHierarchy(status: LevelEditorStatus): void {
     const container = host.querySelector<HTMLElement>('[data-hierarchy]');
     if (container === null) return;
     const entities = sortEntities(status.snapshot);
-    const activeLayerId = activeLayer(status.snapshot).id;
-    const layer = activeLayer(status.snapshot),
+    const activeLayerId = effectiveActiveLayer(status.snapshot).id;
+    const layer = effectiveActiveLayer(status.snapshot),
       layers = orderedLayers(status.snapshot);
-    const index = layers.findIndex((l) => l.id === layer.id);
+    const siblings = layers.filter((l) => l.parentId === layer.parentId);
+    const index = siblings.findIndex((l) => l.id === layer.id);
+    const subtree = layerSubtree(layer.id, layers);
+    const groupOptions =
+      '<option value="">Scene root</option>' +
+      layers
+        .filter((l) => l.kind === 'group' && !subtree.has(l.id))
+        .map(
+          (l) =>
+            `<option value="${escapeHtml(l.id)}" ${layer.parentId === l.id ? 'selected' : ''} ${effectiveLayer(l, layers).locked ? 'disabled' : ''}>${escapeHtml(l.name)}</option>`,
+        )
+        .join('');
     const toolbar = host.querySelector<HTMLElement>('[data-layer-toolbar]');
     if (toolbar)
-      toolbar.innerHTML = `<div class="layer-toolbar-heading"><span>Selected layer</span><strong>${escapeHtml(layer.name)}</strong></div><div class="layer-actions" role="toolbar" aria-label="Layer actions"><button type="button" data-action="layer-up" data-layer-id="${escapeHtml(layer.id)}" aria-label="Move layer ${escapeHtml(layer.name)} up" title="Move layer up" ${layer.locked || index === 0 ? 'disabled' : ''}>${icon('arrowUp')}</button><button type="button" data-action="layer-down" data-layer-id="${escapeHtml(layer.id)}" aria-label="Move layer ${escapeHtml(layer.name)} down" title="Move layer down" ${layer.locked || index === layers.length - 1 ? 'disabled' : ''}>${icon('arrowDown')}</button><button type="button" data-action="layer-duplicate" data-layer-id="${escapeHtml(layer.id)}" aria-label="Duplicate layer ${escapeHtml(layer.name)}" title="Duplicate layer">${icon('duplicate')}</button><button type="button" data-action="layer-delete" data-layer-id="${escapeHtml(layer.id)}" aria-label="Delete layer ${escapeHtml(layer.name)}" title="${layer.locked ? 'Unlock this layer to delete it' : layers.length === 1 ? 'Keep at least one layer' : 'Delete layer'}" ${layer.locked || layers.length === 1 ? 'disabled' : ''}>${icon('delete')}</button></div>`;
+      toolbar.innerHTML = `<div class="layer-toolbar-heading"><span>Selected layer</span><strong>${escapeHtml(layer.name)}</strong></div><div class="layer-actions" role="toolbar" aria-label="Layer actions"><button type="button" data-action="layer-up" data-layer-id="${escapeHtml(layer.id)}" aria-label="Move layer ${escapeHtml(layer.name)} up" title="Move layer up" ${layer.locked || index === 0 ? 'disabled' : ''}>${icon('arrowUp')}</button><button type="button" data-action="layer-down" data-layer-id="${escapeHtml(layer.id)}" aria-label="Move layer ${escapeHtml(layer.name)} down" title="Move layer down" ${layer.locked || index === siblings.length - 1 ? 'disabled' : ''}>${icon('arrowDown')}</button><button type="button" data-action="layer-duplicate" data-layer-id="${escapeHtml(layer.id)}" aria-label="Duplicate layer ${escapeHtml(layer.name)}" title="Duplicate layer">${icon('duplicate')}</button><button type="button" data-action="layer-delete" data-layer-id="${escapeHtml(layer.id)}" aria-label="Delete layer ${escapeHtml(layer.name)}" title="${layer.locked ? 'Unlock this layer to delete it' : !canDeleteLayer(status.snapshot, layer.id) ? 'Keep one content layer and unlock nested layers' : 'Delete layer'}" ${!canDeleteLayer(status.snapshot, layer.id) ? 'disabled' : ''}>${icon('delete')}</button><button type="button" data-action="add-group" title="Add layer group">${icon('add')} Group</button></div><label class="layer-parent">Group<select data-layer-parent aria-label="Parent group" ${layer.locked ? 'disabled' : ''}>${groupOptions}</select></label>`;
 
     const emptyMarkup =
       entities.length === 0 &&
@@ -823,9 +887,16 @@ export function mountEditor(
         ? `<div class="empty-state compact-empty">${icon('select')}<strong>Your scene is empty</strong><span>Choose starter tiles in Tilesets to paint, or add a sprite.</span><button class="button primary compact" type="button" data-action="add-sprite">Add first sprite</button></div>`
         : '';
     container.innerHTML =
+      `<div class="layer-root-drop" data-layer-root-drop>Drop here to move to scene root</div>` +
       emptyMarkup +
       orderedLayers(status.snapshot)
+        .filter(
+          (l) =>
+            !layerAncestors(l, layers).some((p) => collapsedGroups.has(p.id)),
+        )
         .map((layer) => {
+          const inherited = effectiveLayer(layer, layers);
+          const depth = layerAncestors(layer, layers).length;
           const layerEntities = entities.filter(
             (entity) => layerForEntity(status.snapshot, entity).id === layer.id,
           );
@@ -835,7 +906,7 @@ export function mountEditor(
               const selected = status.snapshot.selectedEntityIds.includes(
                 entity.id,
               );
-              return `<div class="tree-row${selected ? ' selected' : ''}" role="treeitem" aria-selected="${selected}" data-entity-id="${escapeHtml(entity.id)}" tabindex="${selected ? 0 : -1}">
+              return `<div class="tree-row${selected ? ' selected' : ''}" role="treeitem" aria-level="${depth + 2}" aria-selected="${selected}" data-entity-id="${escapeHtml(entity.id)}" tabindex="${selected ? 0 : -1}">
           <button class="tree-main" type="button" data-action="select-entity" data-entity-id="${escapeHtml(entity.id)}">
             <span class="object-icon ${entity.type === 'particle-effect' ? 'particle' : ''}" aria-hidden="true">${entity.type === 'particle-effect' ? icon('particle') : icon('assets')}</span>
             <span><strong>${escapeHtml(entity.name ?? entity.id)}</strong><small>${escapeHtml(entity.type)}</small></span>
@@ -845,9 +916,10 @@ export function mountEditor(
         </div>`;
             })
             .join('');
-          return `<section class="layer-group${layer.id === activeLayerId ? ' active' : ''}" data-layer-id="${escapeHtml(layer.id)}"><div class="layer-row"><button type="button" class="layer-main" data-action="select-layer" data-layer-id="${escapeHtml(layer.id)}" aria-pressed="${layer.id === activeLayerId}">${icon('layers')}<span><strong>${escapeHtml(layer.name)}</strong><small>${layer.kind === 'objects' ? 'objects' : escapeHtml(layer.purpose)} · ${Object.keys(layer.tilemap?.cells ?? {}).length} tiles · ${layerEntities.length} objects${layer.tileCollision?.enabled ? ' · solid' : ''}</small></span></button><button class="row-icon" type="button" data-action="toggle-layer-visible" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.visible ? 'Hide' : 'Show'} ${escapeHtml(layer.name)}">${icon(layer.visible ? 'visible' : 'hide')}</button><button class="row-icon" type="button" data-action="toggle-layer-locked" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.locked ? 'Unlock' : 'Lock'} ${escapeHtml(layer.name)}">${icon(layer.locked ? 'lock' : 'unlock')}</button></div>${rows || (Object.keys(layer.tilemap?.cells ?? {}).length ? '' : '<p class="layer-empty">Empty layer</p>')}</section>`;
+          return `<section class="layer-group${layer.id === activeLayerId ? ' active' : ''}" data-layer-id="${escapeHtml(layer.id)}" role="treeitem" aria-level="${depth + 1}" aria-label="${escapeHtml(layer.name)}" aria-selected="${layer.id === activeLayerId}" ${layer.kind === 'group' ? `aria-expanded="${!collapsedGroups.has(layer.id)}"` : ''} style="margin-left:${depth * 16}px"><div class="layer-row">${layer.kind === 'group' ? `<button type="button" class="row-icon" data-action="collapse-group" data-layer-id="${escapeHtml(layer.id)}" aria-label="${collapsedGroups.has(layer.id) ? 'Expand' : 'Collapse'} ${escapeHtml(layer.name)}" aria-expanded="${!collapsedGroups.has(layer.id)}">${collapsedGroups.has(layer.id) ? '+' : '−'}</button>` : ''}<button type="button" class="layer-main" draggable="false" data-layer-draggable="${!inherited.locked}" title="${inherited.locked ? 'Unlock the layer and its groups to drag' : 'Drag to reorder; drop on a group to move inside'}" data-action="select-layer" data-layer-id="${escapeHtml(layer.id)}" aria-pressed="${layer.id === activeLayerId}">${icon('layers')}<span><strong>${escapeHtml(layer.name)}</strong><small>${layer.kind === 'group' ? `group · ${layerSubtree(layer.id, layers).size - 1} nested layer${layerSubtree(layer.id, layers).size === 2 ? '' : 's'}` : layer.kind === 'objects' ? 'objects' : escapeHtml(layer.purpose)}${inherited.locked && !layer.locked ? ' · locked by group' : ''}${!inherited.visible && layer.visible ? ' · hidden by group' : ''}${layer.kind === 'group' ? '' : ` · ${Object.keys(layer.tilemap?.cells ?? {}).length} tiles · ${layerEntities.length} objects${layer.tileCollision?.enabled ? ' · solid' : ''}`}</small></span></button><button class="row-icon" type="button" data-action="toggle-layer-visible" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.visible ? 'Hide' : 'Show'} ${escapeHtml(layer.name)}">${icon(layer.visible ? 'visible' : 'hide')}</button><button class="row-icon" type="button" data-action="toggle-layer-locked" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.locked ? 'Unlock' : 'Lock'} ${escapeHtml(layer.name)}">${icon(layer.locked ? 'lock' : 'unlock')}</button></div>${rows || (layer.kind === 'group' || Object.keys(layer.tilemap?.cells ?? {}).length ? '' : '<p class="layer-empty">Empty layer</p>')}</section>`;
         })
         .join('');
+    layerDrag.refresh();
   }
 
   function renderAssets(status: LevelEditorStatus): void {
@@ -889,7 +961,11 @@ export function mountEditor(
     const entity = selectedEntity(status.snapshot);
     if (entity === undefined) {
       const settings = activeSceneSettings(status.snapshot);
-      const layer = activeLayer(status.snapshot);
+      const layer = effectiveActiveLayer(status.snapshot);
+      if (layer.kind === 'group') {
+        container.innerHTML = `<fieldset><legend>Layer group</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}" ${layer.locked ? 'disabled' : ''}/></label><p class="field-help">Choose a layer and use its Group menu to move it here. Group visibility and locking apply to all descendants. Duplicate and delete include all nested layers.</p></fieldset>`;
+        return;
+      }
       if (layer.kind === 'objects') {
         container.innerHTML = `<fieldset><legend>Object layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}" ${layer.locked ? 'disabled' : ''}/></label><p class="field-help">Use Spawn point, Trigger region, or Region above the hierarchy. Object layers hold objects, not painted tiles.</p></fieldset>`;
         return;
@@ -900,7 +976,7 @@ export function mountEditor(
             `<option value="${purpose}"${purpose === layer.purpose ? ' selected' : ''}>${purpose}</option>`,
         )
         .join('');
-      container.innerHTML = `<div class="empty-inspector">${icon('select')}<strong>Select an object</strong><p>Choose an object to edit it, or configure the active layer below.</p></div><fieldset><legend>Active layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}"/></label><label>Purpose<select data-layer-field="purpose">${purposeOptions}</select></label><p class="field-help">Tiles and objects are added to this layer.</p><label>Tile cell size<input data-layer-field="tileSize" type="number" min="1" max="1024" step="1" value="${layer.tilemap?.tileSize ?? settings.gridSize}" ${Object.keys(layer.tilemap?.cells ?? {}).length ? 'disabled' : ''}/></label><p class="field-help">${Object.keys(layer.tilemap?.cells ?? {}).length ? 'Cell size is fixed while this layer has tiles. Source tiles are scaled to fit.' : 'Set the cell size before painting. Source tiles are scaled to fit.'}</p></fieldset>${tileCollisionControls(layer, settings, status.snapshot.document.assets)}<fieldset><legend>Scene</legend><label>Canvas size<span><input data-scene-field="width" type="number" min="64" value="${settings.width}"/><b>×</b><input data-scene-field="height" type="number" min="64" value="${settings.height}"/></span></label><label>Grid size<input data-scene-field="gridSize" type="number" min="1" value="${settings.gridSize}"/></label><label>Background<input data-scene-field="background" type="color" value="${escapeHtml(settings.background)}"/></label></fieldset>`;
+      container.innerHTML = `<div class="empty-inspector">${icon('select')}<strong>Select an object</strong><p>Choose an object to edit it, or configure the active layer below.</p></div><fieldset ${layer.locked ? 'disabled' : ''}><legend>Active layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}"/></label><label>Purpose<select data-layer-field="purpose">${purposeOptions}</select></label><p class="field-help">Tiles and objects are added to this layer.</p><label>Tile cell size<input data-layer-field="tileSize" type="number" min="1" max="1024" step="1" value="${layer.tilemap?.tileSize ?? settings.gridSize}" ${Object.keys(layer.tilemap?.cells ?? {}).length ? 'disabled' : ''}/></label><p class="field-help">${Object.keys(layer.tilemap?.cells ?? {}).length ? 'Cell size is fixed while this layer has tiles. Source tiles are scaled to fit.' : 'Set the cell size before painting. Source tiles are scaled to fit.'}</p></fieldset>${tileCollisionControls(layer, settings, status.snapshot.document.assets)}<fieldset><legend>Scene</legend><label>Canvas size<span><input data-scene-field="width" type="number" min="64" value="${settings.width}"/><b>×</b><input data-scene-field="height" type="number" min="64" value="${settings.height}"/></span></label><label>Grid size<input data-scene-field="gridSize" type="number" min="1" value="${settings.gridSize}"/></label><label>Background<input data-scene-field="background" type="color" value="${escapeHtml(settings.background)}"/></label></fieldset>`;
       return;
     }
     if (isGameplayObject(entity)) {
@@ -930,23 +1006,28 @@ export function mountEditor(
           `<div class="joint-row"><span><strong>${escapeHtml(joint.type)}</strong><small>${escapeHtml(joint.id.slice(0, 14))}</small></span><button type="button" data-action="delete-joint" data-joint-id="${escapeHtml(joint.id)}" aria-label="Delete ${escapeHtml(joint.type)} joint">${icon('close')}</button></div>`,
       )
       .join('');
-    const layerOptions = [...sceneLayers(status.snapshot)]
+    const layerOptions = effectiveLayers(sceneLayers(status.snapshot))
+      .filter((l) => l.kind !== 'group')
       .sort((a, b) => a.order - b.order)
       .map(
         (layer) =>
-          `<option value="${escapeHtml(layer.id)}"${layer.id === layerForEntity(status.snapshot, entity).id ? ' selected' : ''}>${escapeHtml(layer.name)} · ${escapeHtml(layer.purpose)}</option>`,
+          `<option value="${escapeHtml(layer.id)}" ${layer.locked ? 'disabled' : ''}${layer.id === layerForEntity(status.snapshot, entity).id ? ' selected' : ''}>${escapeHtml(layer.name)} · ${escapeHtml(layer.purpose)}</option>`,
       )
       .join('');
     container.innerHTML = `<fieldset><legend>Object</legend><label>Name<input data-entity-field="name" value="${escapeHtml(entity.name ?? '')}"/></label><label>Purpose layer<select data-entity-field="layerId">${layerOptions}</select></label><div class="segmented"><button type="button" data-action="toggle-visible" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.visible !== false}">Visible</button><button type="button" data-action="toggle-locked" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.locked === true}">Locked</button></div><button class="button full ghost" type="button" data-action="duplicate">${icon('duplicate')} Duplicate</button></fieldset>
       <fieldset><legend>Transform</legend><div class="field-pair"><label><span>X</span><input data-entity-field="x" type="number" step="1" value="${entity.position.x.toFixed(1)}"/></label><label><span>Y</span><input data-entity-field="y" type="number" step="1" value="${entity.position.y.toFixed(1)}"/></label></div><label>Rotation <span class="unit-field"><input data-entity-field="rotation" type="number" step="1" value="${(((entity.rotation ?? 0) * 180) / Math.PI).toFixed(1)}"/><b>°</b></span></label><div class="field-pair"><label><span>Scale X</span><input data-entity-field="scaleX" type="number" min="0.05" step="0.05" value="${(entity.scale?.x ?? 1).toFixed(2)}"/></label><label><span>Scale Y</span><input data-entity-field="scaleY" type="number" min="0.05" step="0.05" value="${(entity.scale?.y ?? 1).toFixed(2)}"/></label></div></fieldset>
       <fieldset><legend>Sprite</legend><div class="field-pair"><label><span>Width</span><input data-entity-field="width" type="number" min="1" value="${Number(properties.width ?? 64)}"/></label><label><span>Height</span><input data-entity-field="height" type="number" min="1" value="${Number(properties.height ?? 64)}"/></label></div><div class="field-pair"><label><span>Origin X</span><input data-entity-field="originX" type="number" min="0" max="1" step="0.05" value="${Number(properties.originX ?? 0.5)}"/></label><label><span>Origin Y</span><input data-entity-field="originY" type="number" min="0" max="1" step="0.05" value="${Number(properties.originY ?? 0.5)}"/></label></div><label>Order within layer<input data-entity-field="zIndex" type="number" step="1" value="${Number(properties.zIndex ?? 0)}"/></label>${entity.type === 'sprite' ? `<details class="texture-region" open><summary>Texture region</summary><div class="field-pair"><label><span>Frame width</span><input data-entity-field="frameWidth" type="number" min="0" step="1" value="${Number(properties.frameWidth ?? 0)}"/></label><label><span>Frame height</span><input data-entity-field="frameHeight" type="number" min="0" step="1" value="${Number(properties.frameHeight ?? 0)}"/></label></div>${properties.frameX !== undefined || properties.frameY !== undefined ? `<div class="field-pair"><label><span>Pixel X</span><input data-entity-field="frameX" type="number" min="0" step="1" value="${Number(properties.frameX ?? 0)}"/></label><label><span>Pixel Y</span><input data-entity-field="frameY" type="number" min="0" step="1" value="${Number(properties.frameY ?? 0)}"/></label></div><p class="field-help">This exact region came from the imported atlas XML.</p>` : `<div class="field-pair"><label><span>Column</span><input data-entity-field="frameColumn" type="number" min="0" step="1" value="${Number(properties.frameColumn ?? 0)}"/></label><label><span>Row</span><input data-entity-field="frameRow" type="number" min="0" step="1" value="${Number(properties.frameRow ?? 0)}"/></label></div><p class="field-help">Manual grid regions use zero-based columns and rows. Use 0 × 0 frame size for the full image.</p>`}</details>` : ''}</fieldset>
       <fieldset><legend>Physics</legend>${bodyMarkup}</fieldset><fieldset><legend>Joints</legend>${jointMarkup}${joints}</fieldset>${customPropertyInspector(status.snapshot, entity)}`;
+    if (layerForEntity(status.snapshot, entity).locked)
+      container.querySelectorAll('fieldset').forEach((field) => {
+        field.disabled = true;
+      });
   }
 
   function render(status: LevelEditorStatus): void {
     const tileMode = isTileTool(status.snapshot.tool);
     const selection = activeTileSelection(status.snapshot),
-      layer = activeLayer(status.snapshot);
+      layer = effectiveActiveLayer(status.snapshot);
     const selectionBar = host.querySelector<HTMLElement>(
       '[data-selection-actions]',
     );
@@ -975,7 +1056,10 @@ export function mountEditor(
     );
     if (pasteButton)
       pasteButton.disabled =
-        !tileEditing.canPaste || layer.locked || !layer.visible;
+        !tileEditing.canPaste ||
+        layer.kind !== undefined ||
+        layer.locked ||
+        !layer.visible;
     host.querySelector('.stage')?.classList.toggle('tile-mode', tileMode);
     const contextNode = host.querySelector<HTMLElement>('[data-tile-context]');
     if (contextNode) {
@@ -1120,6 +1204,25 @@ export function mountEditor(
       return;
     }
     const action = target.dataset.action;
+    if (action === 'add-group') {
+      createLayerGroup(store);
+      announce('Layer group created. Use the Group menu to add layers.');
+      return;
+    }
+    if (action === 'collapse-group') {
+      const id = target.dataset.layerId;
+      if (id) {
+        if (collapsedGroups.has(id)) collapsedGroups.delete(id);
+        else collapsedGroups.add(id);
+        renderHierarchy(store.status);
+        host
+          .querySelector<HTMLButtonElement>(
+            `[data-action="collapse-group"][data-layer-id="${CSS.escape(id)}"]`,
+          )
+          ?.focus();
+      }
+      return;
+    }
     if (
       action === 'layer-up' ||
       action === 'layer-down' ||
@@ -1208,9 +1311,13 @@ export function mountEditor(
     else if (action === 'redo') store.redo();
     else if (action === 'duplicate') duplicateSelected();
     else if (action === 'add-layer') addLayer();
-    else if (action === 'add-object-layer')
-      store.update('Added object layer', addObjectLayer);
-    else if (action === 'add-sprite') addSprite();
+    else if (action === 'add-object-layer') {
+      try {
+        store.update('Added object layer', addObjectLayer);
+      } catch (error) {
+        announce(error instanceof Error ? error.message : String(error));
+      }
+    } else if (action === 'add-sprite') addSprite();
     else if (action === 'delete') deleteSelected();
     else if (action === 'upload-asset') assetInput.click();
     else if (action === 'place-asset' && assetId !== undefined) {
@@ -1223,6 +1330,12 @@ export function mountEditor(
           const entity = createSpriteEntity(assetId, scene.entities.length + 1);
           entity.type = 'particle-effect';
           entity.name = String(asset.metadata?.effectName ?? 'Particle effect');
+          if (
+            effectiveActiveLayer(draft).kind === 'group' ||
+            effectiveActiveLayer(draft).locked ||
+            !effectiveActiveLayer(draft).visible
+          )
+            return;
           entityProperties(entity).layerId = activeLayer(draft).id;
           scene.entities.push(entity);
           draft.selectedEntityIds = [entity.id];
@@ -1318,7 +1431,7 @@ export function mountEditor(
         const entity = activeScene(draft).entities.find(
           (candidate) => candidate.id === entityId,
         );
-        if (entity !== undefined)
+        if (entity !== undefined && !layerForEntity(draft, entity).locked)
           entityProperties(entity)[key] =
             entityProperties(entity)[key] !== true;
       });
@@ -1350,7 +1463,7 @@ export function mountEditor(
     else if (action === 'add-physics') {
       store.update('Added physics body', (draft) => {
         const entity = selectedEntity(draft);
-        if (entity === undefined) return;
+        if (entity === undefined || !objectEditable(draft, entity)) return;
         const world = activeSceneSettings(draft).physics;
         if (
           !isGameplayObject(entity) &&
@@ -1362,7 +1475,7 @@ export function mountEditor(
     } else if (action === 'remove-physics') {
       store.update('Removed physics body', (draft) => {
         const entity = selectedEntity(draft);
-        if (entity === undefined) return;
+        if (entity === undefined || !objectEditable(draft, entity)) return;
         const world = activeSceneSettings(draft).physics;
         const body = bodyForEntity(world, entity.id);
         if (body !== undefined) removeBody(world, body.id);
@@ -1381,7 +1494,13 @@ export function mountEditor(
         const entityB = scene.entities.find(
           (candidate) => candidate.id === idB,
         );
-        if (entityA === undefined || entityB === undefined) return;
+        if (
+          entityA === undefined ||
+          entityB === undefined ||
+          !objectEditable(draft, entityA) ||
+          !objectEditable(draft, entityB)
+        )
+          return;
         const world = activeSceneSettings(draft).physics;
         const bodyA = bodyForEntity(world, idA);
         const bodyB = bodyForEntity(world, idB);
@@ -1396,6 +1515,17 @@ export function mountEditor(
       if (jointId === undefined) return;
       store.update('Deleted joint', (draft) => {
         const world = activeSceneSettings(draft).physics;
+        const joint = world.joints?.find((j) => j.id === jointId);
+        if (!joint) return;
+        const bodyEntities = world.bodies
+          .filter((b) => b.id === joint.bodyA || b.id === joint.bodyB)
+          .map((b) => b.entityId);
+        if (
+          activeScene(draft).entities.some(
+            (e) => bodyEntities.includes(e.id) && !objectEditable(draft, e),
+          )
+        )
+          return;
         world.joints = (world.joints ?? []).filter(
           (joint) => joint.id !== jointId,
         );
@@ -1415,7 +1545,13 @@ export function mountEditor(
 
   host.addEventListener('change', (event) => {
     const target = event.target as HTMLInputElement;
-    if (target === assetInput && target.files !== null)
+    if (target.matches('[data-layer-parent]')) {
+      const id = activeLayer(store.status.snapshot).id;
+      if (moveLayerToGroup(store, id, target.value || undefined))
+        announce('Layer group changed.');
+      renderHierarchy(store.status);
+      host.querySelector<HTMLSelectElement>('[data-layer-parent]')?.focus();
+    } else if (target === assetInput && target.files !== null)
       void importAssets(target.files);
     else if (target === projectInput && target.files?.[0] !== undefined)
       void importProject(target.files[0]);
@@ -1443,7 +1579,7 @@ export function mountEditor(
         const layer = layers.find(
           (candidate) => candidate.id === activeLayer(draft).id,
         );
-        if (layer === undefined || layer.locked) return;
+        if (layer === undefined || effectiveLayer(layer, layers).locked) return;
         if (field === 'tileSize') {
           const size = Number(target.value);
           if (
@@ -1465,7 +1601,7 @@ export function mountEditor(
       const field = target.dataset.bodyField ?? '';
       store.update(`Changed physics ${field}`, (draft) => {
         const entity = selectedEntity(draft);
-        if (entity === undefined) return;
+        if (entity === undefined || !objectEditable(draft, entity)) return;
         const body = bodyForEntity(
           activeSceneSettings(draft).physics,
           entity.id,
@@ -1654,6 +1790,7 @@ export function mountEditor(
   document.addEventListener('keydown', onDocumentKeyDown);
 
   return () => {
+    layerDrag.destroy();
     host.removeEventListener('keydown', onEditorKeyDown);
     document.removeEventListener('keydown', onDocumentKeyDown);
     unsubscribe();

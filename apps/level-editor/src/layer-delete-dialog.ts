@@ -21,7 +21,7 @@ export function confirmLayerDeletion(
   const confirm = dialog.querySelector<HTMLButtonElement>('[data-confirm]');
   if (!description || !cancel || !confirm)
     throw new Error('Missing delete dialog controls.');
-  description.textContent = `Delete “${summary.name}” and its ${summary.tiles} tiles, ${summary.objects} objects, ${summary.bodies} physics bodies, and ${summary.joints} connected joints?`;
+  description.textContent = `Delete “${summary.name}” and its ${summary.layers > 1 ? `${summary.layers - 1} nested layer${summary.layers === 2 ? '' : 's'}, ` : ''}${summary.tiles} tiles, ${summary.objects} objects, ${summary.bodies} physics bodies, and ${summary.joints} connected joints?`;
   let closed = false;
   const close = () => {
     if (closed) return;

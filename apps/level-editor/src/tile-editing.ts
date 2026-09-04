@@ -1,3 +1,4 @@
+import { effectiveActiveLayer } from './model';
 import type { LevelEditorStore } from './editor-store';
 import {
   activeLayer,
@@ -21,12 +22,13 @@ export function activeTileSelection(
   const selection = snapshot.tileSelection;
   if (
     !selection ||
-    selection.layerId !== activeLayer(snapshot).id ||
+    selection.layerId !== effectiveActiveLayer(snapshot).id ||
     selection.sceneId !== activeScene(snapshot).id
   )
     return undefined;
   const settings = activeSceneSettings(snapshot),
-    size = activeLayer(snapshot).tilemap?.tileSize ?? settings.gridSize;
+    size =
+      effectiveActiveLayer(snapshot).tilemap?.tileSize ?? settings.gridSize;
   const bounds = tileBounds(settings.width, settings.height, size);
   const width = Math.min(selection.width, bounds.columns - selection.x),
     height = Math.min(selection.height, bounds.rows - selection.y);
@@ -48,12 +50,12 @@ export class TileEditing {
   copy(cut = false): void {
     const snapshot = this.store.status.snapshot,
       selection = activeTileSelection(snapshot),
-      layer = activeLayer(snapshot);
+      layer = effectiveActiveLayer(snapshot);
     if (!selection) {
       this.announce('Select a tile area first (R).');
       return;
     }
-    if (cut && (layer.kind === 'objects' || layer.locked || !layer.visible)) {
+    if (cut && (layer.kind !== undefined || layer.locked || !layer.visible)) {
       this.announce('Choose an unlocked, visible tile layer to cut tiles.');
       return;
     }
@@ -86,8 +88,8 @@ export class TileEditing {
       return;
     }
     const snapshot = this.store.status.snapshot,
-      layer = activeLayer(snapshot);
-    if (layer.kind === 'objects' || layer.locked || !layer.visible) {
+      layer = effectiveActiveLayer(snapshot);
+    if (layer.kind !== undefined || layer.locked || !layer.visible) {
       this.announce('Choose an unlocked, visible tile layer to paste tiles.');
       return;
     }
@@ -123,9 +125,9 @@ export class TileEditing {
   deleteSelection(): void {
     const snapshot = this.store.status.snapshot,
       selection = activeTileSelection(snapshot),
-      layer = activeLayer(snapshot);
+      layer = effectiveActiveLayer(snapshot);
     if (!selection) return;
-    if (layer.kind === 'objects' || layer.locked || !layer.visible) {
+    if (layer.kind !== undefined || layer.locked || !layer.visible) {
       this.announce('Choose an unlocked, visible tile layer to delete tiles.');
       return;
     }

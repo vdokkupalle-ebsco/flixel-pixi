@@ -1,3 +1,4 @@
+import { effectiveLayers } from './layer-groups';
 import { isGameplayObject } from './gameplay-objects';
 import {
   createProtocolPeer,
@@ -82,9 +83,12 @@ class LevelPreviewState extends FlxState {
       Number.parseInt(settings.background.slice(1), 16) | 0xff000000;
     const assets = FlxAssets.fromContext(FlxG.context);
     const sprites = new Map<string, FlxSprite>();
-    const layers = layersForScene(settings);
+    const layers = effectiveLayers(layersForScene(settings)).filter(
+      (l) => l.kind !== 'group',
+    );
     const layerFor = (entity: EntityDefinition) =>
       layers.find((layer) => layer.id === entity.properties?.layerId) ??
+      layers.find((l) => l.purpose === 'gameplay') ??
       layers[0];
     for (const layer of [...layers].sort((a, b) => a.order - b.order)) {
       if (!layer.visible) continue;

@@ -1,3 +1,5 @@
+import { effectiveActiveLayer } from './model';
+import { effectiveLayer } from './layer-groups';
 import type { EntityDefinition, ProjectDocumentV1 } from '@flixel-pixi/schemas';
 import type { LevelEditorStore } from './editor-store';
 import {
@@ -99,7 +101,13 @@ export function addObjectLayer(
 ): SceneLayerDefinition {
   const settings = activeSceneSettings(snapshot);
   const layers = (settings.layers ??= [...sceneLayers(snapshot)]);
+  const parent = effectiveActiveLayer(snapshot);
+  if (parent.kind === 'group' && parent.locked)
+    throw new Error('Unlock the group before adding layers.');
   const layer: SceneLayerDefinition = {
+    ...(parent.kind === 'group' && !parent.locked
+      ? { parentId: parent.id }
+      : {}),
     id: createId('objects'),
     kind: 'objects',
     name: `Objects ${layers.filter((l) => l.kind === 'objects').length + 1}`,
@@ -118,15 +126,19 @@ export function addGameplayObject(
   store: LevelEditorStore,
   kind: GameplayObjectKind,
 ): void {
-  const current = activeLayer(store.status.snapshot);
+  const current = effectiveActiveLayer(store.status.snapshot);
   if (current.locked || !current.visible)
     throw new Error('Unlock and show the active layer before adding objects.');
   store.update(`Added ${kind}`, (draft) => {
     let layer = activeLayer(draft);
-    if (layer.kind !== 'objects')
+    if (layer.kind === 'group') layer = addObjectLayer(draft);
+    else if (layer.kind !== 'objects')
       layer =
         sceneLayers(draft).find(
-          (l) => l.kind === 'objects' && !l.locked && l.visible,
+          (l) =>
+            l.kind === 'objects' &&
+            !effectiveLayer(l, sceneLayers(draft)).locked &&
+            effectiveLayer(l, sceneLayers(draft)).visible,
         ) ?? addObjectLayer(draft);
     activeSceneSettings(draft).activeLayerId = layer.id;
     const settings = activeSceneSettings(draft);

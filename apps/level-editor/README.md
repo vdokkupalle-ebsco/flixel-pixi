@@ -67,3 +67,16 @@ Select a layer and use the separate **Selected layer** toolbar for up/down,
 preserve tiles, objects, properties and collision settings at the same positions,
 with new object/body IDs and remapped internal joints. Cross-layer joints stay
 with the originals. Each operation supports undo/redo and project export.
+
+Use **Group** in the Selected layer toolbar to create a layer group. The **Group**
+menu moves the selected layer or group under another group, or back to **Scene
+root**. Groups nest, collapse, and move as a unit. Hiding or locking a group
+applies to every descendant without changing their individual flags. Hidden
+children are also omitted from Preview and tile collision. Group duplication
+copies the entire subtree and remaps joints across its children; group deletion
+confirms all nested contents and remains one undo step.
+
+Drag layer names to reorder them. Drop above/below a row to place a sibling, in
+the middle of a group to move inside, or on the scene-root drop area to move out.
+A separate placeholder row previews the destination. Dragging groups preserves their children;
+locks and cycle checks apply, and each move is undoable.
