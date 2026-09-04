@@ -65,6 +65,7 @@ interface PanPointerInteraction {
 
 interface TileInteraction {
   terrain?: TerrainSet;
+  terrainIndex?: number;
   selection: TileSelection | undefined;
   kind: 'tiles';
   pointerId: number;
@@ -591,6 +592,7 @@ export class SceneViewport {
         bounds,
         snapshot.tool === 'terrain-erase',
         activeTileSelection(snapshot),
+        snapshot.terrain?.terrainIndex ?? 1,
       );
       for (
         let y = Math.max(0, cell.y - 1);
@@ -793,7 +795,9 @@ export class SceneViewport {
       last: cell,
       bounds,
       stamp: snapshot.tileStamp,
-      ...(terrain ? { terrain } : {}),
+      ...(terrain
+        ? { terrain, terrainIndex: snapshot.terrain?.terrainIndex ?? 1 }
+        : {}),
     };
     this.#interaction = interaction;
     this.#canvas.setPointerCapture(event.pointerId);
@@ -833,6 +837,7 @@ export class SceneViewport {
           interaction.bounds,
           interaction.tool === 'terrain-erase',
           interaction.selection,
+          interaction.terrainIndex ?? 1,
         );
       } catch (error) {
         this.#tileMessage(

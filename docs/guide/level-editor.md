@@ -169,10 +169,9 @@ Terrain tiles remain ordinary sparse tile cells. Copy/paste and stamp transforms
 continue to work, and terrain editing recognizes flipped and rotated artwork.
 The playable preview uses the already resolved tiles.
 
-This phase supports up to 64 sets per image, with **one terrain transitioning to
-empty per set**. It does not yet implement transitions between different terrain
-types, edge/mixed sets, automatic tile rotation to fill missing
-rules, or Tiled file interchange.
+This phase supports up to 64 sets per image, with up to three terrain types plus
+empty in each corner set. Edge/mixed sets, automatic tile rotation to fill missing
+rules, and Tiled file interchange are not yet implemented.
 
 ## Tile collision layers
 
@@ -523,3 +522,24 @@ repaint to resolve a cell again. Variant tiles remain compatible with collision
 shapes, transformed stamps, and project export/import. Removing or reassigning
 source artwork preserves existing painted cells, but those cells may no longer
 be recognized as part of the terrain set. Rule edits remain undoable.
+
+
+### Multiple terrain types
+
+Choose **Add grass and dirt sample**, then switch **Terrain to paint** between
+Grass and Dirt and paint on the same layer. Shared corners automatically resolve
+to a tile combining those materials. Erase terrain clears the targeted corners
+regardless of their material, updating neighboring transitions.
+
+For your own sheet, create a set and choose **Add terrain type** in Terrain rules.
+A set supports up to three named, colored types plus empty. Click each corner to
+cycle through empty and the materials, then assign the corresponding source tile.
+Weighted variants work on mixed patterns too. The pattern table contains 15, 80,
+or 255 nonempty combinations for one, two, or three types. You only need artwork
+for combinations you paint; a missing rule cancels the stroke with its pattern
+number. Keep the materials that should connect in the same set.
+
+Adding a type preserves and remaps existing rule assignments, including variants.
+Pattern numbers encode four clockwise values in base (terrain count + 1), so
+legacy single-terrain pattern numbers are unchanged. Set types, rules, and resolved
+tile artwork persist through project export/import and support undo/redo.

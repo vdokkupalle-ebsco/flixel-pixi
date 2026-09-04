@@ -10,7 +10,13 @@ import { SceneViewport } from '../src/viewport';
 import { paletteTiles } from '../src/tile-palette';
 import { TileEditing } from '../src/tile-editing';
 import { starterTileset } from '../src/tiles';
-import { starterTerrainTileset } from '../src/terrain';
+import {
+  starterTerrainTileset,
+  multiTerrainTileset,
+  terrainSets,
+  terrainMask,
+  patternValues,
+} from '../src/terrain';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
@@ -817,4 +823,28 @@ it('hit-tests, moves and marquee-selects objects at their offset positions', () 
   send('pointerdown', 280, 180);
   send('pointerup', 360, 260);
   expect(store.status.snapshot.selectedEntityIds).toHaveLength(1);
+});
+
+it('commits the selected terrain type and restores the stroke with undo/redo', () => {
+  const { store, pointer, cells } = editor();
+  const asset = multiTerrainTileset();
+  const set = asset.metadata?.terrainSets;
+  expect(set).toBeDefined();
+  store.update('Multi terrain', (draft) => {
+    draft.document.assets.push(asset);
+    draft.terrain = { assetId: asset.id, setId: 'landscape', terrainIndex: 2 };
+    draft.tool = 'terrain';
+  });
+  pointer('pointerdown', 3, 3);
+  pointer('pointerup', 3, 3);
+  const terrain = terrainSets(asset)[0];
+  if (!terrain) throw new Error('Missing terrain');
+  expect(
+    patternValues(terrain, terrainMask(terrain, cells()['3,3']) ?? 0),
+  ).toEqual([2, 2, 2, 2]);
+  const after = structuredClone(cells());
+  store.undo();
+  expect(cells()).toEqual({});
+  store.redo();
+  expect(cells()).toEqual(after);
 });

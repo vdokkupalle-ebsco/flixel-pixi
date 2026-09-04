@@ -10,6 +10,12 @@ import { isTileTool, sameTile, starterTileset, type TileRegion } from './tiles';
 import { terrainPanel } from './terrain-panel';
 import {
   terrainSets,
+  terrainTypes,
+  terrainPatternCount,
+  patternValues,
+  patternCode,
+  addTerrainType,
+  multiTerrainTileset,
   assignTerrainTile,
   setTerrainSets,
   starterTerrainTileset,
@@ -228,15 +234,21 @@ export function mountTilePalette(
       );
       return;
     }
-    if (target.hasAttribute('data-terrain-sample')) {
-      const starter = starterTerrainTileset(createId('terrain'));
+    if (
+      target.hasAttribute('data-terrain-sample') ||
+      target.hasAttribute('data-terrain-multi-sample')
+    ) {
+      const multi = target.hasAttribute('data-terrain-multi-sample');
+      const starter = multi
+        ? multiTerrainTileset(createId('terrain'))
+        : starterTerrainTileset(createId('terrain'));
       assetId = starter.id;
-      ruleTileIndex = 18;
-      ruleMask = 15;
+      ruleTileIndex = multi ? 40 : 18;
+      ruleMask = multi ? 40 : 15;
       editingRules = false;
       store.update('Added sample terrain', (draft) => {
         draft.document.assets.push(starter);
-        draft.terrain = { assetId, setId: 'grass' };
+        draft.terrain = { assetId, setId: multi ? 'landscape' : 'grass' };
         draft.tool = 'terrain';
         draft.selectedEntityIds = [];
       });
@@ -263,15 +275,31 @@ export function mountTilePalette(
       });
       return;
     }
+    if (target.hasAttribute('data-terrain-type-add')) {
+      editingRules = true;
+      updateSet('Added terrain type', (set) => {
+        const values = patternValues(set, ruleMask);
+        addTerrainType(set);
+        ruleMask = patternCode(set, values);
+      });
+      return;
+    }
     if (
       target.dataset.terrainCorner !== undefined ||
       target.dataset.terrainPattern !== undefined
     ) {
       editingRules = true;
-      ruleMask =
-        target.dataset.terrainCorner !== undefined
-          ? ruleMask ^ (1 << Number(target.dataset.terrainCorner))
-          : Number(target.dataset.terrainPattern);
+      const set = selectedTerrain(
+        store.status.snapshot.document.assets,
+        store.status.snapshot.terrain,
+      );
+      if (target.dataset.terrainCorner !== undefined && set) {
+        const values = patternValues(set, ruleMask),
+          index = Number(target.dataset.terrainCorner);
+        values[index] =
+          ((values[index] ?? 0) + 1) % (terrainTypes(set).length + 1);
+        ruleMask = patternCode(set, values);
+      } else ruleMask = Number(target.dataset.terrainPattern);
       render(store.status);
       host
         .querySelector<HTMLButtonElement>(
@@ -433,6 +461,32 @@ export function mountTilePalette(
         },
         false,
       );
+    } else if (target.hasAttribute('data-terrain-brush')) {
+      store.update(
+        'Selected terrain type',
+        (draft) => {
+          if (draft.terrain) draft.terrain.terrainIndex = Number(target.value);
+        },
+        false,
+      );
+    } else if (
+      target.dataset.terrainTypeName !== undefined ||
+      target.dataset.terrainTypeColor !== undefined
+    ) {
+      editingRules = true;
+      updateSet('Edited terrain type', (set) => {
+        set.terrains ??= terrainTypes(set).map((type) => ({ ...type }));
+        const type =
+          set.terrains[
+            Number(
+              target.dataset.terrainTypeName ?? target.dataset.terrainTypeColor,
+            )
+          ];
+        if (!type) return;
+        if (target.dataset.terrainTypeName !== undefined)
+          type.name = target.value.trim().slice(0, 80) || type.name;
+        else type.color = target.value;
+      });
     } else if (target.dataset.terrainWeight !== undefined) {
       const value = Number(target.value);
       if (
@@ -551,7 +605,7 @@ function tileContextDetail(status: LevelEditorStatus): string {
   if (snapshot.tool.startsWith('terrain')) {
     const terrain = selectedTerrain(snapshot.document.assets, snapshot.terrain);
     return terrain
-      ? `${terrain.name} · ${terrain.rules.length}/15 patterns · ${snapshot.tool === 'terrain-erase' ? 'Erase' : 'Paint'} terrain and update neighbors`
+      ? `${terrainTypes(terrain)[(snapshot.terrain?.terrainIndex ?? 1) - 1]?.name ?? terrain.name} · ${terrain.rules.length}/${terrainPatternCount(terrain) - 1} patterns · ${snapshot.tool === 'terrain-erase' ? 'Erase' : 'Paint'} terrain and update neighbors`
       : 'Choose a terrain set in Tilesets, or add the sample terrain';
   }
   if (!snapshot.tileStamp && !['eraser', 'eyedropper'].includes(snapshot.tool))

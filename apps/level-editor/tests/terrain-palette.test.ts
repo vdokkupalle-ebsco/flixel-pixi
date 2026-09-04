@@ -169,3 +169,38 @@ it('names the active layer for painting, terrain erasing, selection and blocked 
   });
   expect(tileContext(store.status)).toContain('Layer: Gameplay · Locked');
 });
+
+it('adds a multi-terrain sample and switches the painting material', () => {
+  const store = new LevelEditorStore({
+    document: createInitialProject(),
+    selectedEntityIds: [],
+    tool: 'terrain',
+    snapToGrid: true,
+  });
+  const host = document.createElement('section');
+  document.body.append(host);
+  cleanup = mountTilePalette(host, store, vi.fn());
+  required(
+    host.querySelector<HTMLButtonElement>('[data-terrain-multi-sample]'),
+  ).click();
+  const select = required(
+    host.querySelector<HTMLSelectElement>('[data-terrain-brush]'),
+  );
+  expect([...select.options].map((o) => o.textContent)).toEqual([
+    'Grass',
+    'Dirt',
+  ]);
+  select.value = '2';
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(store.status.snapshot.terrain?.terrainIndex).toBe(2);
+  expect(tileContext(store.status)).toContain('Dirt');
+  const before = store.status.snapshot;
+  required(
+    host.querySelector<HTMLButtonElement>('[data-terrain-type-add]'),
+  ).click();
+  expect(
+    host.querySelector<HTMLSelectElement>('[data-terrain-brush]')?.options,
+  ).toHaveLength(3);
+  store.undo();
+  expect(store.status.snapshot).toEqual(before);
+});

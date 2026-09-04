@@ -31,12 +31,48 @@ export interface TerrainSet {
   id: string;
   name: string;
   kind: 'corner';
+  terrains?: { name: string; color: string }[];
   color: string;
   rules: TerrainRule[];
 }
 export interface TerrainChoice {
+  terrainIndex?: number;
   assetId: string;
   setId: string;
+}
+
+export function terrainTypes(set: TerrainSet) {
+  return set.terrains ?? [{ name: set.name, color: set.color }];
+}
+export function terrainPatternCount(set: TerrainSet): number {
+  return (terrainTypes(set).length + 1) ** 4;
+}
+export function patternValues(set: TerrainSet, mask: number): number[] {
+  const base = terrainTypes(set).length + 1;
+  return [0, 1, 2, 3].map((i) => Math.floor(mask / base ** i) % base);
+}
+export function patternCode(
+  set: TerrainSet,
+  values: readonly number[],
+): number {
+  const base = terrainTypes(set).length + 1;
+  return values.reduce((mask, value, i) => mask + value * base ** i, 0);
+}
+export function addTerrainType(set: TerrainSet): void {
+  const types = terrainTypes(set);
+  if (types.length >= 3) return;
+  const old = set.rules.map((rule) => ({
+    rule,
+    values: patternValues(set, rule.mask),
+  }));
+  set.terrains = [
+    ...types.map((type) => ({ ...type })),
+    {
+      name: `Terrain ${types.length + 1}`,
+      color: types.length === 1 ? '#ad7953' : '#5799bd',
+    },
+  ];
+  for (const { rule, values } of old) rule.mask = patternCode(set, values);
 }
 
 export function terrainSets(asset: AssetDefinition): TerrainSet[] {
@@ -79,9 +115,27 @@ export function validateTerrains(assets: readonly AssetDefinition[]): void {
         typeof set.color !== 'string' ||
         !/^#[0-9a-f]{6}$/i.test(set.color) ||
         !Array.isArray(set.rules) ||
-        set.rules.length > 15
+        set.rules.length > 255
       )
         throw new Error('Invalid corner terrain set.');
+      if (
+        set.terrains !== undefined &&
+        (!Array.isArray(set.terrains) ||
+          set.terrains.length < 1 ||
+          set.terrains.length > 3 ||
+          set.terrains.some(
+            (type) =>
+              !type ||
+              typeof type.name !== 'string' ||
+              !type.name.trim() ||
+              type.name.length > 80 ||
+              typeof type.color !== 'string' ||
+              !/^#[0-9a-f]{6}$/i.test(type.color),
+          ))
+      )
+        throw new Error('Use 1 to 3 named terrain types with valid colors.');
+      if (set.rules.length >= terrainPatternCount(set))
+        throw new Error('Too many terrain patterns.');
       ids.add(set.id);
       const masks = new Set<number>(),
         regions = new Set<string>();
@@ -90,7 +144,7 @@ export function validateTerrains(assets: readonly AssetDefinition[]): void {
           !rule ||
           !Number.isInteger(rule.mask) ||
           rule.mask < 1 ||
-          rule.mask > 15 ||
+          rule.mask >= terrainPatternCount(set) ||
           masks.has(rule.mask) ||
           !rule.tile ||
           rule.tile.assetId !== asset.id ||
@@ -157,18 +211,19 @@ export function terrainMask(
     ),
   );
   if (!rule) return undefined;
-  let mask = 0;
+  const values = patternValues(set, rule.mask),
+    transformed = [0, 0, 0, 0];
   TERRAIN_CORNERS.forEach(([x, y], index) => {
-    if (!(rule.mask & (1 << index))) return;
+    if (!values[index]) return;
     let tx = tile.flipX ? 1 - x : x,
       ty: number = y;
     for (let r = 0; r < (tile.rotation ?? 0); r++) [tx, ty] = [1 - ty, tx];
     const next = TERRAIN_CORNERS.findIndex(
       ([cx, cy]) => cx === tx && cy === ty,
     );
-    mask |= 1 << next;
+    transformed[next] = values[index] ?? 0;
   });
-  return mask;
+  return patternCode(set, transformed);
 }
 
 /** Stable per-cell choice keeps previews, stroke segmentation and undo deterministic. */
@@ -206,7 +261,8 @@ export function assignTerrainTile(
   asVariant = false,
 ): void {
   const target = set.rules.find((rule) => rule.mask === mask);
-  if (mask < 1 || mask > 15 || (asVariant && !target)) return;
+  if (mask < 1 || mask >= terrainPatternCount(set) || (asVariant && !target))
+    return;
   if (
     asVariant &&
     target &&
@@ -241,7 +297,14 @@ export function paintTerrain(
   bounds: TileBounds,
   erase = false,
   selection?: TileSelection,
+  terrainIndex = 1,
 ): void {
+  if (
+    !Number.isInteger(terrainIndex) ||
+    terrainIndex < 1 ||
+    terrainIndex > terrainTypes(set).length
+  )
+    throw new Error('Choose a terrain type to paint.');
   const vertices = new Set<string>();
   for (const cell of cells) {
     if (!inBounds(cell, bounds) || !insideSelection(cell, selection)) continue;
@@ -264,11 +327,12 @@ export function paintTerrain(
       throw new Error(
         'Terrain touches tiles outside this set. Use an empty area or a separate layer.',
       );
-    let mask = oldMask;
+    const values = patternValues(set, oldMask);
     TERRAIN_CORNERS.forEach(([dx, dy], index) => {
       if (vertices.has(cellKey({ x: cell.x + dx, y: cell.y + dy })))
-        mask = erase ? mask & ~(1 << index) : mask | (1 << index);
+        values[index] = erase ? 0 : terrainIndex;
     });
+    const mask = patternCode(set, values);
     if (mask === oldMask) continue;
     if (!insideSelection(cell, selection))
       throw new Error(
@@ -356,5 +420,55 @@ export function starterTerrainTileset(id = 'terrain-starter'): AssetDefinition {
       }),
     },
   ]);
+  return asset;
+}
+
+/** Complete two-material corner atlas for trying connected terrain types. */
+export function multiTerrainTileset(
+  id = 'multi-terrain-starter',
+): AssetDefinition {
+  const set: TerrainSet = {
+    id: 'landscape',
+    name: 'Grass and dirt',
+    color: '#72a854',
+    kind: 'corner',
+    terrains: [
+      { name: 'Grass', color: '#72a854' },
+      { name: 'Dirt', color: '#ad7953' },
+    ],
+    rules: [],
+  };
+  const count = terrainPatternCount(set),
+    columns = 9,
+    size = 32;
+  const cells = Array.from({ length: count }, (_, mask) => {
+    const x = (mask % columns) * size,
+      y = Math.floor(mask / columns) * size;
+    if (mask)
+      set.rules.push({
+        mask,
+        tile: { assetId: id, x, y, width: size, height: size },
+      });
+    return `<g transform="translate(${x} ${y})">${patternValues(set, mask)
+      .map((value, i) =>
+        value
+          ? `<rect x="${i === 1 || i === 2 ? 16 : 0}" y="${i >= 2 ? 16 : 0}" width="16" height="16" fill="${terrainTypes(set)[value - 1]?.color}"/>`
+          : '',
+      )
+      .join('')}</g>`;
+  });
+  const asset: AssetDefinition = {
+    id,
+    kind: 'image',
+    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" shape-rendering="crispEdges">${cells.join('')}</svg>`)}`,
+    metadata: {
+      fileName: 'Grass and dirt transitions',
+      width: 288,
+      height: 288,
+      tileWidth: 32,
+      tileHeight: 32,
+    },
+  };
+  setTerrainSets(asset, [set]);
   return asset;
 }

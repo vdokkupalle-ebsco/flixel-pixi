@@ -3,6 +3,11 @@ import { createInitialProject, parseLevelProject } from '../src/model';
 import {
   paintTerrain,
   terrainTile,
+  multiTerrainTileset,
+  patternValues,
+  patternCode,
+  addTerrainType,
+  terrainTypes,
   assignTerrainTile,
   starterTerrainTileset,
   terrainMask,
@@ -263,5 +268,72 @@ describe('weighted terrain variants', () => {
     ).toEqual(
       required(terrainSets(a)[0]?.rules.find((r) => r.mask === 15)).tile,
     );
+  });
+});
+
+describe('multiple terrain types', () => {
+  it('joins grass to dirt with matching shared corners and erases all types in the target', () => {
+    const asset = multiTerrainTileset();
+    const set = required(terrainSets(asset)[0]);
+    const map = empty();
+    paintTerrain(map, set, [{ x: 3, y: 3 }], bounds);
+    paintTerrain(map, set, [{ x: 4, y: 3 }], bounds, false, undefined, 2);
+    expect(
+      patternValues(set, required(terrainMask(set, map.cells['3,3']))),
+    ).toEqual([1, 2, 2, 1]);
+    expect(
+      patternValues(set, required(terrainMask(set, map.cells['4,3']))),
+    ).toEqual([2, 2, 2, 2]);
+    paintTerrain(map, set, [{ x: 4, y: 3 }], bounds, true, undefined, 2);
+    expect(map.cells['4,3']).toBeUndefined();
+    expect(
+      patternValues(set, required(terrainMask(set, map.cells['3,3']))),
+    ).toEqual([1, 0, 0, 1]);
+    expect(() => validateTerrains([asset])).not.toThrow();
+  });
+  it('remaps legacy patterns and variants without changing their artwork when adding a type', () => {
+    const copy = structuredClone(set),
+      original = copy.rules.map((r) => ({
+        tile: r.tile,
+        values: patternValues(copy, r.mask),
+        variants: r.variants,
+      }));
+    addTerrainType(copy);
+    expect(terrainTypes(copy)).toHaveLength(2);
+    original.forEach((r) => {
+      const code = required(terrainMask(copy, r.tile));
+      expect(patternValues(copy, code)).toEqual(r.values);
+      expect(copy.rules.find((rule) => rule.mask === code)?.variants).toEqual(
+        r.variants,
+      );
+    });
+    const a = structuredClone(asset);
+    setTerrainSets(a, [copy]);
+    const document = createInitialProject();
+    document.assets.push(a);
+    expect(() =>
+      parseLevelProject(JSON.parse(JSON.stringify(document))),
+    ).not.toThrow();
+  });
+  it('rotates multi-material assignments and rejects missing mixed transitions atomically', () => {
+    const a = multiTerrainTileset(),
+      s = required(terrainSets(a)[0]);
+    const mixed = patternCode(s, [1, 2, 2, 1]),
+      tile = required(s.rules.find((r) => r.mask === mixed)).tile;
+    const transformed = required(
+      transformStamp({ width: 1, height: 1, tiles: [tile] }, 'rotate-cw')
+        .tiles[0],
+    );
+    expect(patternValues(s, required(terrainMask(s, transformed)))).toEqual([
+      1, 1, 2, 2,
+    ]);
+    const map = empty();
+    paintTerrain(map, s, [{ x: 3, y: 3 }], bounds);
+    const before = structuredClone(map);
+    s.rules = s.rules.filter((r) => r.mask !== mixed);
+    expect(() =>
+      paintTerrain(map, s, [{ x: 4, y: 3 }], bounds, false, undefined, 2),
+    ).toThrow('Missing terrain pattern');
+    expect(map).toEqual(before);
   });
 });

@@ -38,8 +38,8 @@ for a complete grass-to-empty corner set, then paint with **T** or choose
 stroke is one undo step. In **Terrain rules**, choose a source tile, mark its
 four corners, and assign it to a pattern. Missing patterns are shown explicitly.
 Rules save with the image asset; copied and transformed terrain tiles remain
-recognizable. This phase supports one terrain transitioning to empty per corner
-set; edge/mixed sets and multiple interacting terrains are future work.
+recognizable. Corner sets support up to three terrain types plus empty, with shared transition
+rules. Edge and mixed sets are future work.
 
 Select a layer and enable **Tile collision** in the Inspector to make its painted
 cells solid. Adjacent cells merge into static boxes without filling gaps. Set
@@ -115,3 +115,11 @@ weight to control its relative frequency; the displayed percentages update
 accordingly. The sample grass set includes three decorative variants. Choices
 are stable by cell, so previews match painting and unchanged terrain does not
 shuffle. Variant edits support undo/redo and project export.
+
+
+Choose **Add grass and dirt sample** to try a complete two-terrain atlas. Use
+**Terrain to paint** to switch materials within the same set. For custom artwork,
+open Terrain rules, use **Add terrain type**, name/color each material, and click
+corner markers to cycle their material before assigning a tile. Adding a type
+preserves existing artwork and remaps pattern numbers. Missing combinations block
+painting atomically; all rule edits and terrain strokes remain undoable.
