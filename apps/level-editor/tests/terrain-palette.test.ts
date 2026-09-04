@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LevelEditorStore } from '../src/editor-store';
-import { createInitialProject } from '../src/model';
-import { mountTilePalette } from '../src/tile-palette';
+import { createInitialProject, activeLayer } from '../src/model';
+import { mountTilePalette, tileContext } from '../src/tile-palette';
 import { terrainSets } from '../src/terrain';
 
 function required<T>(value: T | null | undefined): T {
@@ -145,4 +145,27 @@ it('edits variant weights, removes and re-adds a variant with undo/redo', () => 
   expect(rule().variants).toHaveLength(3);
   store.undo();
   expect(rule().variants).toHaveLength(2);
+});
+
+it('names the active layer for painting, terrain erasing, selection and blocked layers', () => {
+  const store = new LevelEditorStore({
+    document: createInitialProject(),
+    selectedEntityIds: [],
+    tool: 'terrain-erase',
+    snapToGrid: true,
+  });
+  expect(tileContext(store.status)).toContain('Layer: Gameplay');
+  store.update(
+    'Select',
+    (draft) => {
+      draft.tool = 'tile-select';
+    },
+    false,
+  );
+  expect(tileContext(store.status)).toContain('Layer: Gameplay');
+  store.update('Lock', (draft) => {
+    draft.tool = 'terrain';
+    activeLayer(draft).locked = true;
+  });
+  expect(tileContext(store.status)).toContain('Layer: Gameplay · Locked');
 });

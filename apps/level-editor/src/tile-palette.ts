@@ -527,6 +527,12 @@ export function mountTilePalette(
 export function tileContext(status: LevelEditorStatus): string {
   const snapshot = status.snapshot,
     layer = effectiveActiveLayer(snapshot);
+  return `Layer: ${layer.name} · ${tileContextDetail(status)}`;
+}
+
+function tileContextDetail(status: LevelEditorStatus): string {
+  const snapshot = status.snapshot,
+    layer = effectiveActiveLayer(snapshot);
   const size =
     layer.tilemap?.tileSize ?? activeSceneSettings(snapshot).gridSize;
   if (layer.kind === 'group')
@@ -537,11 +543,11 @@ export function tileContext(status: LevelEditorStatus): string {
     return 'Drag to select a rectangular area · Copy, cut, paste or delete tiles';
   if (snapshot.tool === 'paste')
     return 'Click to place copied tiles · Empty cells replace destination tiles · Escape cancels';
+  if (layer.locked) return 'Locked · unlock it to paint';
+  if (!layer.visible) return 'Hidden · show it to paint';
   const selection = activeTileSelection(snapshot);
   if (selection)
-    return `${layer.name} · Editing inside ${selection.width} × ${selection.height} selection · Escape clears`;
-  if (layer.locked) return `${layer.name} is locked · unlock it to paint`;
-  if (!layer.visible) return `${layer.name} is hidden · show it to paint`;
+    return `Editing inside ${selection.width} × ${selection.height} selection · Escape clears`;
   if (snapshot.tool.startsWith('terrain')) {
     const terrain = selectedTerrain(snapshot.document.assets, snapshot.terrain);
     return terrain
@@ -550,5 +556,5 @@ export function tileContext(status: LevelEditorStatus): string {
   }
   if (!snapshot.tileStamp && !['eraser', 'eyedropper'].includes(snapshot.tool))
     return 'Choose a tile in Tilesets to start painting';
-  return `${layer.name} · ${size} px cells · ${snapshot.tileStamp?.width ?? 1} × ${snapshot.tileStamp?.height ?? 1} stamp`;
+  return `${size} px cells · ${snapshot.tileStamp?.width ?? 1} × ${snapshot.tileStamp?.height ?? 1} stamp`;
 }
