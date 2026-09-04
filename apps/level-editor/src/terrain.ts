@@ -19,12 +19,20 @@ export const TERRAIN_CORNERS = [
   [1, 1],
   [0, 1],
 ] as const;
+export interface TerrainVariant {
+  tile: TileRegion;
+  weight?: number;
+}
+export interface TerrainRule extends TerrainVariant {
+  mask: number;
+  variants?: TerrainVariant[];
+}
 export interface TerrainSet {
   id: string;
   name: string;
   kind: 'corner';
   color: string;
-  rules: { mask: number; tile: TileRegion }[];
+  rules: TerrainRule[];
 }
 export interface TerrainChoice {
   assetId: string;
@@ -90,14 +98,38 @@ export function validateTerrains(assets: readonly AssetDefinition[]): void {
           rule.tile.flipX
         )
           throw new Error(`Invalid terrain rule in ${set.name}.`);
-        validateTileMap({ tileSize: 16, cells: { '0,0': rule.tile } }, assets);
-        const key = regionKey(rule.tile);
-        if (regions.has(key))
-          throw new Error(
-            'Assign each source tile to only one terrain pattern per set.',
+        if (
+          rule.variants !== undefined &&
+          (!Array.isArray(rule.variants) || rule.variants.length > 15)
+        )
+          throw new Error('Use up to 16 tiles per terrain pattern.');
+        for (const variant of [rule, ...(rule.variants ?? [])]) {
+          if (
+            !variant ||
+            !variant.tile ||
+            variant.tile.assetId !== asset.id ||
+            (variant.tile.rotation ?? 0) !== 0 ||
+            variant.tile.flipX ||
+            (variant.weight !== undefined &&
+              (!Number.isFinite(variant.weight) ||
+                variant.weight < 0.01 ||
+                variant.weight > 1000))
+          )
+            throw new Error(
+              'Invalid terrain variant. Weights must be between 0.01 and 1000.',
+            );
+          validateTileMap(
+            { tileSize: 16, cells: { '0,0': variant.tile } },
+            assets,
           );
+          const key = regionKey(variant.tile);
+          if (regions.has(key))
+            throw new Error(
+              'Assign each source tile to only one terrain pattern per set.',
+            );
+          regions.add(key);
+        }
         masks.add(rule.mask);
-        regions.add(key);
       }
     }
   }
@@ -119,8 +151,10 @@ export function terrainMask(
   tile?: TileRegion,
 ): number | undefined {
   if (!tile) return 0;
-  const rule = set.rules.find(
-    (rule) => regionKey(rule.tile) === regionKey(tile),
+  const rule = set.rules.find((rule) =>
+    [rule, ...(rule.variants ?? [])].some(
+      (variant) => regionKey(variant.tile) === regionKey(tile),
+    ),
   );
   if (!rule) return undefined;
   let mask = 0;
@@ -135,6 +169,68 @@ export function terrainMask(
     mask |= 1 << next;
   });
   return mask;
+}
+
+/** Stable per-cell choice keeps previews, stroke segmentation and undo deterministic. */
+export function terrainTile(
+  set: TerrainSet,
+  mask: number,
+  cell: Cell,
+): TileRegion | undefined {
+  const rule = set.rules.find((rule) => rule.mask === mask);
+  if (!rule) return undefined;
+  const choices = [rule, ...(rule.variants ?? [])];
+  if (choices.length === 1) return rule.tile;
+  let hash = 2166136261;
+  for (const char of `${set.id}:${mask}:${cell.x}:${cell.y}`)
+    hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x7feb352d);
+  hash ^= hash >>> 15;
+  hash = Math.imul(hash, 0x846ca68b);
+  hash ^= hash >>> 16;
+  const total = choices.reduce((sum, choice) => sum + (choice.weight ?? 1), 0);
+  let choice = ((hash >>> 0) / 4294967296) * total;
+  for (const variant of choices) {
+    choice -= variant.weight ?? 1;
+    if (choice < 0) return variant.tile;
+  }
+  return choices.at(-1)?.tile;
+}
+
+/** Each source region has a single corner meaning within a set. */
+export function assignTerrainTile(
+  set: TerrainSet,
+  mask: number,
+  tile: TileRegion,
+  asVariant = false,
+): void {
+  const target = set.rules.find((rule) => rule.mask === mask);
+  if (mask < 1 || mask > 15 || (asVariant && !target)) return;
+  if (
+    asVariant &&
+    target &&
+    [target, ...(target.variants ?? [])].some((v) => sameTile(v.tile, tile))
+  )
+    return;
+  if (asVariant && (target?.variants?.length ?? 0) >= 15) return;
+  for (const rule of set.rules) {
+    rule.variants = (rule.variants ?? []).filter(
+      (v) => !sameTile(v.tile, tile),
+    );
+    if (rule.mask !== mask && sameTile(rule.tile, tile)) {
+      const replacement = rule.variants.shift();
+      if (replacement) {
+        rule.tile = replacement.tile;
+        rule.weight = replacement.weight ?? 1;
+      } else set.rules = set.rules.filter((candidate) => candidate !== rule);
+    }
+  }
+  if (asVariant && target)
+    (target.variants ??= []).push({ tile: { ...tile }, weight: 1 });
+  else if (target) target.tile = { ...tile };
+  else set.rules.push({ mask, tile: { ...tile } });
+  set.rules.sort((a, b) => a.mask - b.mask);
 }
 
 /** Build a small patch first, then apply it atomically. Unmapped artwork is protected. */
@@ -178,7 +274,7 @@ export function paintTerrain(
       throw new Error(
         'Expand the selection to include the neighboring terrain transitions.',
       );
-    const tile = set.rules.find((rule) => rule.mask === mask)?.tile;
+    const tile = terrainTile(set, mask, cell);
     if (mask !== 0 && !tile)
       throw new Error(
         `Missing terrain pattern ${mask}. Assign a tile in Terrain rules before painting here.`,
@@ -211,14 +307,14 @@ export function starterTerrainTileset(id = 'terrain-starter'): AssetDefinition {
     'M16 0H32V32H0V16Z',
     'M0 0H32V32H0Z',
   ];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" shape-rendering="crispEdges">${paths.map((d, mask) => `<g transform="translate(${(mask % 4) * 32} ${Math.floor(mask / 4) * 32})"><path fill="#72a854" d="${d}"/></g>`).join('')}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="128" shape-rendering="crispEdges">${paths.map((d, mask) => `<g transform="translate(${(mask % 4) * 32} ${Math.floor(mask / 4) * 32})"><path fill="#72a854" d="${d}"/></g>`).join('')}${[0, 1, 2].map((i) => `<g transform="translate(128 ${i * 32})"><path fill="#72a854" d="M0 0H32V32H0Z"/><path fill="${['#8dbb67', '#5b8e43', '#a1c876'][i]}" d="M${5 + i * 3} 8h4v4h-4zM19 21h3v3h-3z"/></g>`).join('')}</svg>`;
   const asset: AssetDefinition = {
     id,
     kind: 'image',
     src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
     metadata: {
       fileName: 'Grass corners',
-      width: 128,
+      width: 160,
       height: 128,
       tileWidth: 32,
       tileHeight: 32,
@@ -234,6 +330,21 @@ export function starterTerrainTileset(id = 'terrain-starter'): AssetDefinition {
         const mask = index + 1;
         return {
           mask,
+          ...(mask === 15
+            ? {
+                weight: 3,
+                variants: [0, 1, 2].map((i) => ({
+                  weight: 1,
+                  tile: {
+                    assetId: id,
+                    x: 128,
+                    y: i * 32,
+                    width: 32,
+                    height: 32,
+                  },
+                })),
+              }
+            : {}),
           tile: {
             assetId: id,
             x: (mask % 4) * 32,

@@ -39,8 +39,7 @@ stroke is one undo step. In **Terrain rules**, choose a source tile, mark its
 four corners, and assign it to a pattern. Missing patterns are shown explicitly.
 Rules save with the image asset; copied and transformed terrain tiles remain
 recognizable. This phase supports one terrain transitioning to empty per corner
-set; edge/mixed sets, multiple interacting terrains and weighted variants are
-future work.
+set; edge/mixed sets and multiple interacting terrains are future work.
 
 Select a layer and enable **Tile collision** in the Inspector to make its painted
 cells solid. Adjacent cells merge into static boxes without filling gaps. Set
@@ -108,3 +107,11 @@ and alignment account for the resulting scene positions. Preview applies the
 same appearance to tiles, sprites, and particles, and offsets collision bodies.
 Opacity does not disable collisions; use visibility or collision controls for that.
 Appearance is saved with the project and supports Undo/Redo.
+
+
+Terrain patterns support up to 16 weighted tile choices. In **Terrain rules**,
+select a source tile and a pattern, then choose **Add variant**. Adjust each
+weight to control its relative frequency; the displayed percentages update
+accordingly. The sample grass set includes three decorative variants. Choices
+are stable by cell, so previews match painting and unchanged terrain does not
+shuffle. Variant edits support undo/redo and project export.

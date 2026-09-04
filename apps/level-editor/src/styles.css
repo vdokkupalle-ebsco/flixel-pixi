@@ -2115,3 +2115,38 @@ select:focus-visible {
 .selection-arrange .field-help {
   margin-top: 12px;
 }
+
+.terrain-variants {
+  margin: 14px 0;
+}
+.terrain-variant-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 28px;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+.terrain-variant-preview {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.terrain-variant-row label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px;
+}
+.terrain-variant-row input {
+  grid-column: 1 / -1;
+}
+.terrain-variant-row small,
+.terrain-variant-row > span:last-child {
+  color: var(--muted);
+  font-size: 10px;
+}
+.terrain-rule-editor .button + .button {
+  margin-top: 8px;
+}

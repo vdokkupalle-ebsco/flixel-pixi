@@ -102,3 +102,47 @@ describe('terrain rules dock', () => {
     expect(store.status.snapshot.tool).toBe('brush');
   });
 });
+
+it('edits variant weights, removes and re-adds a variant with undo/redo', () => {
+  const store = new LevelEditorStore({
+    document: createInitialProject(),
+    selectedEntityIds: [],
+    tool: 'terrain',
+    snapToGrid: true,
+  });
+  const host = document.createElement('section');
+  document.body.append(host);
+  cleanup = mountTilePalette(host, store, vi.fn());
+  const click = (selector: string) =>
+    required(host.querySelector<HTMLButtonElement>(selector)).click();
+  click('[data-terrain-sample]');
+  click('[data-terrain-pattern="15"]');
+  const rule = () =>
+    required(
+      terrainSets(
+        required(
+          store.status.snapshot.document.assets.find(
+            (a) => a.id === store.status.snapshot.terrain?.assetId,
+          ),
+        ),
+      )[0]?.rules.find((r) => r.mask === 15),
+    );
+  const weight = required(
+    host.querySelector<HTMLInputElement>('[data-terrain-weight="1"]'),
+  );
+  weight.value = '5';
+  weight.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(rule().variants?.[0]?.weight).toBe(5);
+  store.undo();
+  expect(rule().variants?.[0]?.weight).toBe(1);
+  store.redo();
+  expect(rule().variants?.[0]?.weight).toBe(5);
+  click('[data-terrain-variant-remove="0"]');
+  expect(rule().variants).toHaveLength(2);
+  click('[data-tile-index="4"]');
+  click('[data-terrain-pattern="15"]');
+  click('[data-terrain-variant-add]');
+  expect(rule().variants).toHaveLength(3);
+  store.undo();
+  expect(rule().variants).toHaveLength(2);
+});

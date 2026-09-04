@@ -162,7 +162,7 @@ it again moves it from the previous pattern. Rule edits and set removal support
 undo. Removing a set preserves the painted artwork.
 
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
-`kind: "corner"`, name, color and `{ mask, tile }` rules. They use exact source
+`kind: "corner"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
 regions, so grid sheets and atlas images both work. Export/import validates and
 preserves the definitions without changing the version 1 document contract.
 Terrain tiles remain ordinary sparse tile cells. Copy/paste and stamp transforms
@@ -171,7 +171,7 @@ The playable preview uses the already resolved tiles.
 
 This phase supports up to 64 sets per image, with **one terrain transitioning to
 empty per set**. It does not yet implement transitions between different terrain
-types, edge/mixed sets, random variants, automatic tile rotation to fill missing
+types, edge/mixed sets, automatic tile rotation to fill missing
 rules, or Tiled file interchange.
 
 ## Tile collision layers
@@ -500,3 +500,26 @@ and shifts their collision bodies and joint anchors. Zero opacity only hides
 visuals; collision stays enabled. Use layer visibility or collision settings to
 remove collision. Each appearance change supports Undo/Redo and is preserved
 in project exports; older projects default to 100% opacity and zero offsets.
+
+
+### Weighted terrain variants
+
+A corner pattern can contain a primary tile plus up to 15 alternative tiles.
+To add one, open **Terrain rules**, choose a source tile, select its matching
+corner pattern, and click **Add variant**. **Assign tile** replaces the primary
+artwork; **Add variant** keeps it and adds another choice. A source region can
+have only one corner pattern within each terrain set.
+
+Each tile has a relative weight from 0.01 to 1000 (default 1). For example,
+weights of 3 and 1 produce approximately 75% and 25% usage over many cells.
+Percentages beside the controls show each choice's share. Use the trash icon
+to remove an alternative; **Clear pattern** removes all choices for that pattern.
+The sample grass terrain includes a base tile and three decorative alternatives.
+
+Choices are deterministic for a terrain set, pattern, and cell. Live previews,
+committed strokes, and undo/redo agree. Weight changes affect newly resolved
+cells; repainting unchanged terrain does not shuffle its artwork. Erase and
+repaint to resolve a cell again. Variant tiles remain compatible with collision
+shapes, transformed stamps, and project export/import. Removing or reassigning
+source artwork preserves existing painted cells, but those cells may no longer
+be recognized as part of the terrain set. Rule edits remain undoable.

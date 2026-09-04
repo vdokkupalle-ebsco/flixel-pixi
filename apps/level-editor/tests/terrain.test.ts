@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { createInitialProject, parseLevelProject } from '../src/model';
 import {
   paintTerrain,
+  terrainTile,
+  assignTerrainTile,
   starterTerrainTileset,
   terrainMask,
   terrainSets,
+  setTerrainSets,
   validateTerrains,
   type TerrainSet,
 } from '../src/terrain';
@@ -194,5 +197,71 @@ describe('terrain persistence and validation', () => {
     const invalid = structuredClone(asset);
     mutate(required(terrainSets(invalid)[0]));
     expect(() => validateTerrains([invalid])).toThrow();
+  });
+});
+
+describe('weighted terrain variants', () => {
+  it('chooses stable variants in proportion to their weights', () => {
+    const counts = new Map<string, number>();
+    for (let x = 0; x < 8192; x++) {
+      const tile = required(terrainTile(set, 15, { x, y: 4 }));
+      expect(terrainTile(set, 15, { x, y: 4 })).toEqual(tile);
+      expect(terrainMask(set, tile)).toBe(15);
+      const key = `${tile.x},${tile.y}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    expect(counts.size).toBe(4);
+    const primary = required(set.rules.find((r) => r.mask === 15)).tile;
+    const frequency = (counts.get(`${primary.x},${primary.y}`) ?? 0) / 8192;
+    expect(frequency).toBeGreaterThan(0.45);
+    expect(frequency).toBeLessThan(0.55);
+  });
+  it('preserves existing variants and matches independently computed previews', () => {
+    const map = empty(),
+      preview = empty();
+    const cells = [
+      { x: 2, y: 2 },
+      { x: 3, y: 2 },
+      { x: 4, y: 2 },
+    ];
+    paintTerrain(map, set, cells, bounds);
+    paintTerrain(preview, set, cells, bounds);
+    expect(map).toEqual(preview);
+    const before = structuredClone(map);
+    paintTerrain(map, set, cells, bounds);
+    expect(map).toEqual(before);
+  });
+  it('moves source assignments without creating ambiguous variants', () => {
+    const copy = structuredClone(set),
+      rule = required(copy.rules.find((r) => r.mask === 15));
+    const variant = required(rule.variants?.[0]);
+    assignTerrainTile(copy, 1, variant.tile, true);
+    expect(terrainMask(copy, variant.tile)).toBe(1);
+    expect(rule.variants).toHaveLength(2);
+    const a = structuredClone(asset);
+    setTerrainSets(a, [copy]);
+    expect(() => validateTerrains([a])).not.toThrow();
+  });
+  it.each([0, -1, NaN, Infinity, 1001])(
+    'rejects invalid weight %s',
+    (weight) => {
+      const a = structuredClone(asset);
+      const r = required(terrainSets(a)[0]?.rules.find((r) => r.mask === 15));
+      required(r.variants?.[0]).weight = weight;
+      expect(() => validateTerrains([a])).toThrow(/weight/i);
+    },
+  );
+  it('accepts legacy rules without variants or weights', () => {
+    const a = structuredClone(asset);
+    for (const r of required(terrainSets(a)[0]).rules) {
+      delete r.variants;
+      delete r.weight;
+    }
+    expect(() => validateTerrains([a])).not.toThrow();
+    expect(
+      terrainTile(required(terrainSets(a)[0]), 15, { x: 99, y: 99 }),
+    ).toEqual(
+      required(terrainSets(a)[0]?.rules.find((r) => r.mask === 15)).tile,
+    );
   });
 });

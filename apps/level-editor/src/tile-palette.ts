@@ -10,6 +10,7 @@ import { isTileTool, sameTile, starterTileset, type TileRegion } from './tiles';
 import { terrainPanel } from './terrain-panel';
 import {
   terrainSets,
+  assignTerrainTile,
   setTerrainSets,
   starterTerrainTileset,
   selectedTerrain,
@@ -230,7 +231,8 @@ export function mountTilePalette(
     if (target.hasAttribute('data-terrain-sample')) {
       const starter = starterTerrainTileset(createId('terrain'));
       assetId = starter.id;
-      ruleTileIndex = 15;
+      ruleTileIndex = 18;
+      ruleMask = 15;
       editingRules = false;
       store.update('Added sample terrain', (draft) => {
         draft.document.assets.push(starter);
@@ -280,7 +282,10 @@ export function mountTilePalette(
         ?.focus();
       return;
     }
-    if (target.hasAttribute('data-terrain-assign')) {
+    if (
+      target.hasAttribute('data-terrain-assign') ||
+      target.hasAttribute('data-terrain-variant-add')
+    ) {
       editingRules = true;
       const asset = store.status.snapshot.document.assets.find(
         (asset) => asset.id === assetId,
@@ -288,12 +293,21 @@ export function mountTilePalette(
       const tile = asset && paletteTiles(asset).tiles[ruleTileIndex];
       if (tile && ruleMask > 0)
         updateSet('Assigned terrain pattern', (set) => {
-          set.rules = set.rules.filter(
-            (rule) => rule.mask !== ruleMask && !sameTile(rule.tile, tile),
+          assignTerrainTile(
+            set,
+            ruleMask,
+            tile,
+            target.hasAttribute('data-terrain-variant-add'),
           );
-          set.rules.push({ mask: ruleMask, tile });
-          set.rules.sort((a, b) => a.mask - b.mask);
         });
+      return;
+    }
+    if (target.dataset.terrainVariantRemove !== undefined) {
+      editingRules = true;
+      updateSet('Removed terrain variant', (set) => {
+        const rule = set.rules.find((rule) => rule.mask === ruleMask);
+        rule?.variants?.splice(Number(target.dataset.terrainVariantRemove), 1);
+      });
       return;
     }
     if (target.hasAttribute('data-terrain-clear')) {
@@ -356,7 +370,11 @@ export function mountTilePalette(
         store.status.snapshot.document.assets,
         store.status.snapshot.terrain,
       );
-      const rule = set?.rules.find((rule) => sameTile(rule.tile, tiles[index]));
+      const rule = set?.rules.find((rule) =>
+        [rule, ...(rule.variants ?? [])].some((v) =>
+          sameTile(v.tile, tiles[index]),
+        ),
+      );
       if (rule) ruleMask = rule.mask;
       render(store.status);
       host
@@ -415,6 +433,27 @@ export function mountTilePalette(
         },
         false,
       );
+    } else if (target.dataset.terrainWeight !== undefined) {
+      const value = Number(target.value);
+      if (
+        !target.value.trim() ||
+        !Number.isFinite(value) ||
+        value < 0.01 ||
+        value > 1000
+      ) {
+        renderKey = '';
+        render(store.status);
+        return;
+      }
+      editingRules = true;
+      updateSet('Changed terrain variant weight', (set) => {
+        const rule = set.rules.find((rule) => rule.mask === ruleMask);
+        if (!rule) return;
+        const variant = [rule, ...(rule.variants ?? [])][
+          Number(target.dataset.terrainWeight)
+        ];
+        if (variant) variant.weight = value;
+      });
     } else if (target.hasAttribute('data-terrain-name')) {
       editingRules = true;
       updateSet('Renamed terrain', (set) => {
