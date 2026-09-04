@@ -29,6 +29,8 @@ import {
   type SceneLayerDefinition,
 } from './model';
 import { tileEntities } from './tiles';
+import { sceneTileColliders } from './tile-collision';
+import { addTileCollisionBodies } from './tile-collision-runtime';
 import { createWindowTransport } from './protocol-transport';
 
 let runtimeDocument: ProjectDocumentV1 | undefined;
@@ -105,7 +107,8 @@ class LevelPreviewState extends FlxState {
         if (sprite !== undefined) sprites.set(entity.id, sprite);
       }
     }
-    if (settings.physics.bodies.length > 0) {
+    const tileColliders = sceneTileColliders(settings);
+    if (settings.physics.bodies.length > 0 || tileColliders.length > 0) {
       if (createPhysicsBackend === undefined)
         throw new Error('The physics adapter has not loaded.');
       const world = new FlxPhysicsWorld(createPhysicsBackend(), {
@@ -123,6 +126,8 @@ class LevelPreviewState extends FlxState {
         Reflect.deleteProperty(definition, 'schemaVersion');
         bodies.set(documentBody.id, world.addBody(sprite, definition));
       }
+      for (const object of addTileCollisionBodies(world, tileColliders))
+        this.add(object);
       for (const documentJoint of settings.physics.joints ?? []) {
         const bodyA = bodies.get(documentJoint.bodyA);
         const bodyB = bodies.get(documentJoint.bodyB);
@@ -254,7 +259,8 @@ async function loadProject(serializedProject: string): Promise<void> {
   const settings = extension.scenes[scene.id];
   if (settings === undefined) throw new Error('Scene settings not found.');
   if (
-    settings.physics.bodies.length > 0 &&
+    (settings.physics.bodies.length > 0 ||
+      sceneTileColliders(settings).length > 0) &&
     createPhysicsBackend === undefined
   ) {
     ({ createPlanckPhysicsBackend: createPhysicsBackend } =
@@ -280,7 +286,8 @@ async function loadProject(serializedProject: string): Promise<void> {
     (sum, layer) => sum + Object.keys(layer.tilemap?.cells ?? {}).length,
     0,
   );
-  previewStatus.textContent = `${scene.name} · ${tileCount} tiles · ${scene.entities.length} objects`;
+  const colliderCount = sceneTileColliders(settings).length;
+  previewStatus.textContent = `${scene.name} · ${tileCount} tiles · ${scene.entities.length} objects${colliderCount ? ` · ${colliderCount} tile collider${colliderCount === 1 ? '' : 's'}` : ''}`;
 }
 
 peer.onMessage((message) => {

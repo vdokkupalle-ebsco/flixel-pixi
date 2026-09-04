@@ -1,3 +1,5 @@
+import { TOOL_CURSORS } from './tool-cursors';
+
 import type { EntityDefinition } from '@flixel-pixi/schemas';
 
 import type { LevelEditorStatus, LevelEditorStore } from './editor-store';
@@ -29,6 +31,7 @@ import {
 } from './tiles';
 import { activeTileSelection } from './tile-editing';
 import { paintTerrain, selectedTerrain, type TerrainSet } from './terrain';
+import { layerTileColliders, type TileCollider } from './tile-collision';
 import { insideSelection, type TileSelection } from './tiles';
 import { bodyForEntity, updateBodyShape } from './physics-authoring';
 
@@ -113,6 +116,8 @@ export class SceneViewport {
   #panX = 0;
   #panY = 0;
   #spacePressed = false;
+  #altPressed = false;
+  #pointerPosition: { clientX: number; clientY: number } | undefined;
   #animationFrame = 0;
   #resizeFrame = 0;
 
@@ -125,6 +130,7 @@ export class SceneViewport {
     this.#status = store.status;
     this.#resizeObserver = new ResizeObserver(() => this.#scheduleResize());
     this.#resizeObserver.observe(canvas);
+    canvas.addEventListener('blur', this.#onWindowBlur);
     canvas.addEventListener('pointerdown', this.#onPointerDown);
     canvas.addEventListener('pointermove', this.#onPointerMove);
     canvas.addEventListener('pointerup', this.#onPointerUp);
@@ -152,6 +158,8 @@ export class SceneViewport {
 
   destroy(): void {
     this.#unsubscribe();
+    this.#canvas.removeEventListener('blur', this.#onWindowBlur);
+    this.#canvas.style.removeProperty('cursor');
     this.#resizeObserver.disconnect();
     this.#canvas.removeEventListener('pointerleave', this.#onPointerLeave);
     this.#canvas.removeEventListener('contextmenu', this.#onContextMenu);
@@ -213,6 +221,7 @@ export class SceneViewport {
       );
     const terrainPreview = this.#terrainHoverPreview();
     const activeLayerId = activeLayer(snapshot).id;
+    const tileColliders: TileCollider[] = [];
     for (const layer of [...sceneLayers(snapshot)].sort(
       (a, b) => a.order - b.order,
     )) {
@@ -224,6 +233,8 @@ export class SceneViewport {
           : layer.id === activeLayerId && terrainPreview
             ? terrainPreview
             : layer.tilemap;
+      if (snapshot.showTileCollisions !== false)
+        tileColliders.push(...layerTileColliders(layer, settings, map));
       if (map)
         for (const [key, tile] of Object.entries(map.cells)) {
           const [x = 0, y = 0] = key.split(',').map(Number);
@@ -249,9 +260,34 @@ export class SceneViewport {
       }
     }
     this.#drawGrid(snapshot);
+    this.#drawTileCollisions(tileColliders, activeLayerId);
     this.#drawTileSelection();
     this.#drawTileCursor();
     this.#drawPhysics(snapshot);
+    context.restore();
+  }
+
+  #drawTileCollisions(
+    colliders: readonly TileCollider[],
+    activeLayerId: string,
+  ): void {
+    const context = this.#context;
+    const scale = this.#viewTransform(this.#status.snapshot).scale;
+    context.save();
+    context.lineWidth = 1.5 / scale;
+    context.setLineDash([6 / scale, 3 / scale]);
+    for (const collider of colliders) {
+      context.strokeStyle =
+        collider.layerId === activeLayerId ? '#ffbd66' : '#b38752';
+      context.fillStyle = 'rgba(255, 189, 102, 0.08)';
+      context.fillRect(collider.x, collider.y, collider.width, collider.height);
+      context.strokeRect(
+        collider.x,
+        collider.y,
+        collider.width,
+        collider.height,
+      );
+    }
     context.restore();
   }
 
@@ -272,7 +308,61 @@ export class SceneViewport {
     this.#resizeFrame = requestAnimationFrame(() => this.#resize());
   }
 
+  #updateCursor(): void {
+    const snapshot = this.#status.snapshot;
+    const interaction = this.#interaction;
+    let cursor: string;
+    if (interaction) {
+      cursor =
+        interaction.kind === 'pan'
+          ? 'grabbing'
+          : TOOL_CURSORS[
+              interaction.kind === 'tiles' ? interaction.tool : interaction.kind
+            ];
+    } else if (this.#spacePressed || snapshot.tool === 'pan') {
+      cursor = 'grab';
+    } else if (isTileTool(snapshot.tool)) {
+      const tool = this.#altPressed ? 'eyedropper' : snapshot.tool;
+      const layer = activeLayer(snapshot);
+      const settings = activeSceneSettings(snapshot);
+      const size =
+        layer.tilemap?.tileSize ??
+        Math.min(1024, Math.max(1, Math.round(settings.gridSize)));
+      const point = this.#pointerPosition
+        ? this.#worldPoint(this.#pointerPosition)
+        : undefined;
+      const outside =
+        point &&
+        !inBounds(
+          { x: Math.floor(point.x / size), y: Math.floor(point.y / size) },
+          tileBounds(settings.width, settings.height, size),
+        );
+      const editing = tool !== 'eyedropper' && tool !== 'tile-select';
+      const missingSource = tool.startsWith('terrain')
+        ? !selectedTerrain(snapshot.document.assets, snapshot.terrain)
+        : tool !== 'eraser' && !snapshot.tileStamp;
+      cursor =
+        outside ||
+        (editing && (layer.locked || !layer.visible || missingSource))
+          ? 'not-allowed'
+          : TOOL_CURSORS[tool];
+    } else {
+      const point = this.#pointerPosition
+        ? this.#worldPoint(this.#pointerPosition)
+        : undefined;
+      const entity = point ? this.#hitTest(point.x, point.y) : undefined;
+      cursor =
+        entity && point
+          ? TOOL_CURSORS[this.#interactionKind(entity, point.x, point.y)]
+          : point && this.#hitTest(point.x, point.y, true)
+            ? 'not-allowed'
+            : TOOL_CURSORS[snapshot.tool];
+    }
+    this.#canvas.style.cursor = cursor;
+  }
+
   #queueRender(): void {
+    this.#updateCursor();
     cancelAnimationFrame(this.#animationFrame);
     this.#animationFrame = requestAnimationFrame(() => this.render());
   }
@@ -822,6 +912,7 @@ export class SceneViewport {
   }
   #onPointerLeave = (): void => {
     this.#hoverCell = undefined;
+    this.#pointerPosition = undefined;
     this.#queueRender();
   };
   #onContextMenu = (event: Event): void => {
@@ -1065,7 +1156,10 @@ export class SceneViewport {
     return image;
   }
 
-  #worldPoint(event: PointerEvent): { x: number; y: number } {
+  #worldPoint(event: Pick<PointerEvent, 'clientX' | 'clientY'>): {
+    x: number;
+    y: number;
+  } {
     const rect = this.#canvas.getBoundingClientRect();
     const transform = this.#viewTransform(this.#status.snapshot);
     return {
@@ -1074,7 +1168,11 @@ export class SceneViewport {
     };
   }
 
-  #hitTest(x: number, y: number): EntityDefinition | undefined {
+  #hitTest(
+    x: number,
+    y: number,
+    includeLocked = false,
+  ): EntityDefinition | undefined {
     const scene = activeScene(this.#status.snapshot);
     return [...scene.entities]
       .sort(
@@ -1087,9 +1185,9 @@ export class SceneViewport {
         const layer = layerForEntity(this.#status.snapshot, entity);
         if (
           properties.visible === false ||
-          properties.locked === true ||
+          (!includeLocked && properties.locked === true) ||
           !layer.visible ||
-          layer.locked
+          (!includeLocked && layer.locked)
         )
           return false;
         const { width, height } = this.#visual(entity);
@@ -1132,6 +1230,8 @@ export class SceneViewport {
 
   #onPointerDown = (event: PointerEvent): void => {
     if (this.#interaction) return;
+    this.#pointerPosition = { clientX: event.clientX, clientY: event.clientY };
+    this.#altPressed = event.altKey;
     this.#canvas.focus();
     const shouldPan =
       event.button === 1 ||
@@ -1147,12 +1247,13 @@ export class SceneViewport {
         startPanX: this.#panX,
         startPanY: this.#panY,
       };
-      this.#canvas.classList.add('is-panning');
+      this.#updateCursor();
       this.#canvas.setPointerCapture(event.pointerId);
       return;
     }
     if (isTileTool(this.#status.snapshot.tool)) {
       this.#beginTiles(event);
+      this.#updateCursor();
       return;
     }
     if (event.button !== 0) return;
@@ -1187,10 +1288,14 @@ export class SceneViewport {
       startWorldY: point.y,
     };
     this.#previewEntity = cloneEntity(entity);
+    this.#updateCursor();
     this.#canvas.setPointerCapture(event.pointerId);
   };
 
   #onPointerMove = (event: PointerEvent): void => {
+    this.#pointerPosition = { clientX: event.clientX, clientY: event.clientY };
+    this.#altPressed = event.altKey;
+    this.#updateCursor();
     const tileSize =
       activeLayer(this.#status.snapshot).tilemap?.tileSize ??
       activeSceneSettings(this.#status.snapshot).gridSize;
@@ -1292,8 +1397,8 @@ export class SceneViewport {
       interaction.pointerId === event.pointerId
     ) {
       this.#canvas.releasePointerCapture(event.pointerId);
-      this.#canvas.classList.remove('is-panning');
       this.#interaction = undefined;
+      this.#updateCursor();
       return;
     }
     const preview = this.#previewEntity;
@@ -1345,7 +1450,6 @@ export class SceneViewport {
       this.#canvas.hasPointerCapture(this.#interaction.pointerId)
     )
       this.#canvas.releasePointerCapture(this.#interaction.pointerId);
-    this.#canvas.classList.remove('is-panning');
     this.#interaction = undefined;
     this.#previewEntity = undefined;
     this.#queueRender();
@@ -1365,6 +1469,10 @@ export class SceneViewport {
   #onWindowKeyDown = (event: KeyboardEvent): void => {
     if (event.target instanceof Element && event.target.closest('dialog'))
       return;
+    if (event.key === 'Alt' && event.target === this.#canvas) {
+      this.#altPressed = true;
+      this.#updateCursor();
+    }
     if (event.key === 'Escape') {
       const interacting = this.#interaction !== undefined;
       this.#cancelInteraction();
@@ -1394,18 +1502,18 @@ export class SceneViewport {
     )
       return;
     this.#spacePressed = true;
-    this.#canvas.classList.add('can-pan');
+    this.#updateCursor();
   };
 
   #onWindowBlur = (): void => {
     this.#spacePressed = false;
-    this.#canvas.classList.remove('can-pan');
+    this.#altPressed = false;
     this.#cancelInteraction();
   };
 
   #onWindowKeyUp = (event: KeyboardEvent): void => {
-    if (event.code !== 'Space') return;
-    this.#spacePressed = false;
-    this.#canvas.classList.remove('can-pan');
+    if (event.key === 'Alt') this.#altPressed = false;
+    if (event.code === 'Space') this.#spacePressed = false;
+    this.#updateCursor();
   };
 }

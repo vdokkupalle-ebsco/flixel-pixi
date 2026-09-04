@@ -16,7 +16,7 @@ npm run build --workspace @flixel-pixi/level-editor
 ```
 
 The production preview uses public `flixel-pixi` APIs and loads the Planck
-adapter only for projects that contain physics bodies.
+adapter only for scenes with physics bodies or enabled tile colliders.
 
 Tile painting uses the **Tilesets** dock and a dedicated tool strip inspired by
 Tiled. Choose **Use starter tiles** or import a sheet, select a tile (Shift-click
@@ -41,3 +41,11 @@ Rules save with the image asset; copied and transformed terrain tiles remain
 recognizable. This phase supports one terrain transitioning to empty per corner
 set; edge/mixed sets, multiple interacting terrains and weighted variants are
 future work.
+
+Select a layer and enable **Tile collision** in the Inspector to make its painted
+cells solid. Adjacent cells merge into static boxes without filling gaps. Set
+layer friction and bounce, and toggle amber outlines with **Show tile collisions**
+in the canvas toolbar. Outlines follow painting previews. Hidden layers have no
+preview collision; locked layers still collide. Full cells are solid regardless
+of tile transparency or terrain shape. Collision settings save with the layer,
+while the merged bodies are generated for Preview and stay out of the hierarchy.

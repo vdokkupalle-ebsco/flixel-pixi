@@ -16,6 +16,10 @@ import {
   type TileTool,
 } from './tiles';
 import { validateTerrains, type TerrainChoice } from './terrain';
+import {
+  validateTileCollision,
+  type TileCollisionSettings,
+} from './tile-collision';
 
 export const LEVEL_EDITOR_EXTENSION = 'flixelPixiLevelEditor';
 export const LEVEL_EDITOR_VERSION = 1 as const;
@@ -28,6 +32,7 @@ export type LayerPurpose =
 
 export interface SceneLayerDefinition {
   tilemap?: TileMap;
+  tileCollision?: TileCollisionSettings;
   id: string;
   locked: boolean;
   name: string;
@@ -60,6 +65,7 @@ export interface LevelEditorSnapshot {
   tileSelection?: TileSelection;
   terrain?: TerrainChoice;
   showGrid?: boolean;
+  showTileCollisions?: boolean;
   tool: EditorTool;
 }
 
@@ -315,6 +321,8 @@ export function getEditorExtension(
       for (const layer of settings.layers) {
         if (layer.tilemap !== undefined)
           validateTileMap(layer.tilemap, document.assets);
+        if (layer.tileCollision !== undefined)
+          validateTileCollision(layer.tileCollision);
       }
     }
     parsePhysicsWorld(settings.physics);

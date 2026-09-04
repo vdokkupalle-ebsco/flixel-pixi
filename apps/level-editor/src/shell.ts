@@ -36,6 +36,10 @@ import {
   type SupportedJointType,
 } from './physics-authoring';
 import { SceneViewport } from './viewport';
+import {
+  tileCollisionControls,
+  updateTileCollision,
+} from './tile-collision-controls';
 import { createWindowTransport } from './protocol-transport';
 import {
   atlasFramesForAsset,
@@ -259,6 +263,7 @@ export function mountEditor(
             <button class="toolbar-toggle" type="button" data-action="toggle-grid" aria-pressed="true">${icon('grid')} Snap <kbd>⌘'</kbd></button>
             <button class="toolbar-toggle" type="button" data-action="show-grid" aria-label="Show grid" aria-pressed="true" title="Show grid">${icon('grid')}</button>
             <span class="toolbar-separator"></span>
+            <button class="toolbar-toggle" type="button" data-action="show-tile-collisions" aria-label="Show tile collisions" aria-pressed="true" title="Show tile collision outlines">${icon('rectangle')}</button>
             ${button('zoom-out', 'Zoom out', 'zoomOut')}
             <output data-zoom aria-live="polite">100%</output>
             ${button('zoom-in', 'Zoom in', 'zoomIn')}
@@ -361,6 +366,8 @@ export function mountEditor(
             supportedProtocolVersions: [EDITOR_PROTOCOL_VERSION],
           });
           sendProjectToPreview();
+        } else if (message.type === 'project.loaded' && runtimeDialog.open) {
+          runtimeFrame.focus();
         } else if (message.type === 'project.rejected') {
           announce(
             message.payload.diagnostics
@@ -774,7 +781,7 @@ export function mountEditor(
         </div>`;
             })
             .join('');
-          return `<section class="layer-group${layer.id === activeLayerId ? ' active' : ''}" data-layer-id="${escapeHtml(layer.id)}"><div class="layer-row"><button type="button" class="layer-main" data-action="select-layer" data-layer-id="${escapeHtml(layer.id)}" aria-pressed="${layer.id === activeLayerId}">${icon('layers')}<span><strong>${escapeHtml(layer.name)}</strong><small>${escapeHtml(layer.purpose)} · ${Object.keys(layer.tilemap?.cells ?? {}).length} tiles · ${layerEntities.length} objects</small></span></button><button class="row-icon" type="button" data-action="toggle-layer-visible" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.visible ? 'Hide' : 'Show'} ${escapeHtml(layer.name)}">${icon(layer.visible ? 'visible' : 'hide')}</button><button class="row-icon" type="button" data-action="toggle-layer-locked" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.locked ? 'Unlock' : 'Lock'} ${escapeHtml(layer.name)}">${icon(layer.locked ? 'lock' : 'unlock')}</button></div>${rows || (Object.keys(layer.tilemap?.cells ?? {}).length ? '' : '<p class="layer-empty">Empty layer</p>')}</section>`;
+          return `<section class="layer-group${layer.id === activeLayerId ? ' active' : ''}" data-layer-id="${escapeHtml(layer.id)}"><div class="layer-row"><button type="button" class="layer-main" data-action="select-layer" data-layer-id="${escapeHtml(layer.id)}" aria-pressed="${layer.id === activeLayerId}">${icon('layers')}<span><strong>${escapeHtml(layer.name)}</strong><small>${escapeHtml(layer.purpose)} · ${Object.keys(layer.tilemap?.cells ?? {}).length} tiles · ${layerEntities.length} objects${layer.tileCollision?.enabled ? ' · solid' : ''}</small></span></button><button class="row-icon" type="button" data-action="toggle-layer-visible" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.visible ? 'Hide' : 'Show'} ${escapeHtml(layer.name)}">${icon(layer.visible ? 'visible' : 'hide')}</button><button class="row-icon" type="button" data-action="toggle-layer-locked" data-layer-id="${escapeHtml(layer.id)}" aria-label="${layer.locked ? 'Unlock' : 'Lock'} ${escapeHtml(layer.name)}">${icon(layer.locked ? 'lock' : 'unlock')}</button></div>${rows || (Object.keys(layer.tilemap?.cells ?? {}).length ? '' : '<p class="layer-empty">Empty layer</p>')}</section>`;
         })
         .join('');
   }
@@ -825,7 +832,7 @@ export function mountEditor(
             `<option value="${purpose}"${purpose === layer.purpose ? ' selected' : ''}>${purpose}</option>`,
         )
         .join('');
-      container.innerHTML = `<div class="empty-inspector">${icon('select')}<strong>Select an object</strong><p>Choose an object to edit it, or configure the active layer below.</p></div><fieldset><legend>Active layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}"/></label><label>Purpose<select data-layer-field="purpose">${purposeOptions}</select></label><p class="field-help">Tiles and objects are added to this layer.</p><label>Tile cell size<input data-layer-field="tileSize" type="number" min="1" max="1024" step="1" value="${layer.tilemap?.tileSize ?? settings.gridSize}" ${Object.keys(layer.tilemap?.cells ?? {}).length ? 'disabled' : ''}/></label><p class="field-help">${Object.keys(layer.tilemap?.cells ?? {}).length ? 'Cell size is fixed while this layer has tiles. Source tiles are scaled to fit.' : 'Set the cell size before painting. Source tiles are scaled to fit.'}</p></fieldset><fieldset><legend>Scene</legend><label>Canvas size<span><input data-scene-field="width" type="number" min="64" value="${settings.width}"/><b>×</b><input data-scene-field="height" type="number" min="64" value="${settings.height}"/></span></label><label>Grid size<input data-scene-field="gridSize" type="number" min="1" value="${settings.gridSize}"/></label><label>Background<input data-scene-field="background" type="color" value="${escapeHtml(settings.background)}"/></label></fieldset>`;
+      container.innerHTML = `<div class="empty-inspector">${icon('select')}<strong>Select an object</strong><p>Choose an object to edit it, or configure the active layer below.</p></div><fieldset><legend>Active layer</legend><label>Name<input data-layer-field="name" value="${escapeHtml(layer.name)}"/></label><label>Purpose<select data-layer-field="purpose">${purposeOptions}</select></label><p class="field-help">Tiles and objects are added to this layer.</p><label>Tile cell size<input data-layer-field="tileSize" type="number" min="1" max="1024" step="1" value="${layer.tilemap?.tileSize ?? settings.gridSize}" ${Object.keys(layer.tilemap?.cells ?? {}).length ? 'disabled' : ''}/></label><p class="field-help">${Object.keys(layer.tilemap?.cells ?? {}).length ? 'Cell size is fixed while this layer has tiles. Source tiles are scaled to fit.' : 'Set the cell size before painting. Source tiles are scaled to fit.'}</p></fieldset>${tileCollisionControls(layer, settings)}<fieldset><legend>Scene</legend><label>Canvas size<span><input data-scene-field="width" type="number" min="64" value="${settings.width}"/><b>×</b><input data-scene-field="height" type="number" min="64" value="${settings.height}"/></span></label><label>Grid size<input data-scene-field="gridSize" type="number" min="1" value="${settings.gridSize}"/></label><label>Background<input data-scene-field="background" type="color" value="${escapeHtml(settings.background)}"/></label></fieldset>`;
       return;
     }
     const properties = entityProperties(entity);
@@ -922,6 +929,12 @@ export function mountEditor(
       ?.setAttribute(
         'aria-pressed',
         String(status.snapshot.showGrid !== false),
+      );
+    host
+      .querySelector('[data-action="show-tile-collisions"]')
+      ?.setAttribute(
+        'aria-pressed',
+        String(status.snapshot.showTileCollisions !== false),
       );
     renderHierarchy(status);
     renderAssets(status);
@@ -1037,6 +1050,16 @@ export function mountEditor(
         tileEditing.transform('rotate-ccw');
       render(store.status);
       canvas.focus();
+      return;
+    }
+    if (action === 'show-tile-collisions') {
+      store.update(
+        'Toggled tile collision outlines',
+        (draft) => {
+          draft.showTileCollisions = draft.showTileCollisions === false;
+        },
+        false,
+      );
       return;
     }
     if (action === 'show-grid') {
@@ -1249,8 +1272,10 @@ export function mountEditor(
     const command = (event.target as HTMLElement).closest<HTMLElement>(
       '[data-preview-command]',
     )?.dataset.previewCommand;
-    if (command === 'pause' || command === 'resume' || command === 'reset')
+    if (command === 'pause' || command === 'resume' || command === 'reset') {
       previewPeer?.send('preview.command', { command });
+      if (command === 'resume') runtimeFrame.focus();
+    }
   });
 
   host.addEventListener('change', (event) => {
@@ -1261,7 +1286,18 @@ export function mountEditor(
       void importProject(target.files[0]);
     else if (target.matches('[data-entity-field]'))
       updateEntityField(target.dataset.entityField ?? '', target.value);
-    else if (target.matches('[data-layer-field]')) {
+    else if (target.matches('[data-tile-collision]')) {
+      try {
+        updateTileCollision(
+          store,
+          target.dataset.tileCollision ?? '',
+          target.type === 'checkbox' ? target.checked : target.value,
+        );
+      } catch (error) {
+        announce(error instanceof Error ? error.message : String(error));
+        renderInspector(store.status);
+      }
+    } else if (target.matches('[data-layer-field]')) {
       const field = target.dataset.layerField;
       store.update(`Changed layer ${field ?? ''}`, (draft) => {
         const settings = activeSceneSettings(draft);

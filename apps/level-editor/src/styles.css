@@ -673,13 +673,6 @@ svg {
   cursor: default;
   touch-action: none;
 }
-#editor-canvas.can-pan,
-.stage:has([data-tool='pan'][aria-pressed='true']) #editor-canvas {
-  cursor: grab;
-}
-#editor-canvas.is-panning {
-  cursor: grabbing;
-}
 .toolrail {
   position: absolute;
   left: 12px;
@@ -1209,15 +1202,6 @@ dialog iframe {
   color: var(--muted);
   pointer-events: none;
 }
-.tile-mode #editor-canvas {
-  cursor: crosshair;
-}
-.tile-mode #editor-canvas.can-pan {
-  cursor: grab;
-}
-.tile-mode #editor-canvas.is-panning {
-  cursor: grabbing;
-}
 .canvas-hint {
   width: max-content;
   max-width: calc(100% - 100px);
@@ -1678,4 +1662,26 @@ select:focus-visible {
 }
 .terrain-sample {
   margin-top: 12px;
+}
+
+.inspector .collision-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 32px;
+  color: var(--text);
+  cursor: pointer;
+}
+.inspector .collision-checkbox input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: #ffbd66;
+}
+.collision-summary {
+  margin: 8px 0 0;
+  color: #ffbd66;
+  font-size: 11px;
+  line-height: 1.5;
 }

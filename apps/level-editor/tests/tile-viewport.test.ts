@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LevelEditorStore } from '../src/editor-store';
-import { activeLayer, createInitialProject } from '../src/model';
+import {
+  activeLayer,
+  activeScene,
+  createSpriteEntity,
+  createInitialProject,
+} from '../src/model';
 import { SceneViewport } from '../src/viewport';
 import { paletteTiles } from '../src/tile-palette';
 import { TileEditing } from '../src/tile-editing';
@@ -29,9 +34,15 @@ function editor() {
     },
   });
   const canvas = window.document.createElement('canvas');
+  const methods = new Map<PropertyKey, ReturnType<typeof vi.fn>>();
   const context = new Proxy(
     {},
-    { get: () => vi.fn() },
+    {
+      get: (_target, key) => {
+        if (!methods.has(key)) methods.set(key, vi.fn());
+        return methods.get(key);
+      },
+    },
   ) as CanvasRenderingContext2D;
   Object.defineProperty(canvas, 'getContext', { value: () => context });
   vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(
@@ -57,7 +68,7 @@ function editor() {
       }),
     );
   const cells = () => activeLayer(store.status.snapshot).tilemap?.cells ?? {};
-  return { store, canvas, pointer, cells, captures };
+  return { store, canvas, pointer, cells, captures, context, viewport };
 }
 
 describe('tile viewport interactions', () => {
@@ -275,5 +286,215 @@ describe('terrain viewport interactions', () => {
     expect(store.status.canUndo).toBe(false);
     expect(captures.size).toBe(0);
     expect(messages.at(-1)).toContain('outside this set');
+  });
+});
+
+describe('tile collision outlines', () => {
+  it('follows the live stroke and disappears on cancellation or when outlines are turned off', () => {
+    const { store, pointer, cells, context, viewport } = editor();
+    store.update(
+      'Enable collision',
+      (draft) => {
+        activeLayer(draft).tileCollision = {
+          enabled: true,
+          friction: 0.4,
+          restitution: 0,
+        };
+      },
+      false,
+    );
+    pointer('pointerdown', 2, 3);
+    pointer('pointermove', 12, 3);
+    viewport.render();
+    expect(cells()).toEqual({});
+    expect(context.strokeRect).toHaveBeenCalledWith(32, 48, 176, 16);
+    vi.mocked(context.strokeRect).mockClear();
+    pointer('pointercancel', 12, 3);
+    viewport.render();
+    expect(context.strokeRect).not.toHaveBeenCalledWith(32, 48, 176, 16);
+    pointer('pointerdown', 2, 3);
+    pointer('pointerup', 12, 3);
+    const before = structuredClone(cells());
+    store.update(
+      'Hide collision overlay',
+      (draft) => {
+        draft.showTileCollisions = false;
+      },
+      false,
+    );
+    vi.mocked(context.strokeRect).mockClear();
+    viewport.render();
+    expect(context.strokeRect).not.toHaveBeenCalledWith(32, 48, 176, 16);
+    expect(cells()).toEqual(before);
+    expect(activeLayer(store.status.snapshot).tileCollision?.enabled).toBe(
+      true,
+    );
+  });
+});
+
+describe('tool cursor feedback', () => {
+  it('updates immediately on tool and layer changes without adding history', () => {
+    const { store, canvas, pointer } = editor();
+    pointer('pointermove', 2, 3);
+    const brush = canvas.style.cursor;
+    expect(brush).toContain('data:image/svg+xml');
+    store.update(
+      'Eraser',
+      (draft) => {
+        draft.tool = 'eraser';
+      },
+      false,
+    );
+    expect(canvas.style.cursor).not.toBe(brush);
+    store.update(
+      'Lock',
+      (draft) => {
+        activeLayer(draft).locked = true;
+      },
+      false,
+    );
+    expect(canvas.style.cursor).toBe('not-allowed');
+    store.update(
+      'Pick',
+      (draft) => {
+        draft.tool = 'eyedropper';
+      },
+      false,
+    );
+    expect(canvas.style.cursor).toContain('data:image/svg+xml');
+    store.update(
+      'Select',
+      (draft) => {
+        draft.tool = 'tile-select';
+      },
+      false,
+    );
+    expect(canvas.style.cursor).toContain('data:image/svg+xml');
+    expect(store.status.canUndo).toBe(false);
+  });
+
+  it('shows blocked outside the map or with a missing painting source', () => {
+    const { store, canvas, pointer } = editor();
+    pointer('pointermove', -1, 0);
+    expect(canvas.style.cursor).toBe('not-allowed');
+    pointer('pointermove', 1, 1);
+    expect(canvas.style.cursor).not.toBe('not-allowed');
+    store.update(
+      'No stamp',
+      (draft) => {
+        delete draft.tileStamp;
+      },
+      false,
+    );
+    expect(canvas.style.cursor).toBe('not-allowed');
+    store.update(
+      'Terrain',
+      (draft) => {
+        draft.tool = 'terrain';
+      },
+      false,
+    );
+    expect(canvas.style.cursor).toBe('not-allowed');
+    store.update(
+      'Eraser',
+      (draft) => {
+        draft.tool = 'eraser';
+      },
+      false,
+    );
+    expect(canvas.style.cursor).not.toBe('not-allowed');
+  });
+
+  it('restores cursors after temporary modifiers, pan drags, cancellation and focus loss', () => {
+    const { canvas, pointer, store } = editor();
+    window.document.body.append(canvas);
+    canvas.tabIndex = 0;
+    canvas.focus();
+    cleanups.push(() => canvas.remove());
+    pointer('pointermove', 2, 3);
+    const brush = canvas.style.cursor;
+    canvas.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Alt', bubbles: true }),
+    );
+    expect(canvas.style.cursor).not.toBe(brush);
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }));
+    expect(canvas.style.cursor).toBe(brush);
+    canvas.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Space', bubbles: true }),
+    );
+    expect(canvas.style.cursor).toBe('grab');
+    pointer('pointerdown', 2, 3);
+    expect(canvas.style.cursor).toBe('grabbing');
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' }));
+    expect(canvas.style.cursor).toBe('grabbing');
+    pointer('pointerup', 2, 3);
+    expect(canvas.style.cursor).toBe(brush);
+    pointer('pointerdown', 2, 3, 1);
+    expect(canvas.style.cursor).toBe('grabbing');
+    pointer('pointercancel', 2, 3);
+    expect(canvas.style.cursor).toBe(brush);
+    canvas.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Alt', bubbles: true }),
+    );
+    window.dispatchEvent(new Event('blur'));
+    expect(canvas.style.cursor).toBe(brush);
+    expect(store.status.canUndo).toBe(false);
+  });
+
+  it('keeps a capture cursor until right-drag ends', () => {
+    const { canvas, pointer } = editor();
+    const brush = canvas.style.cursor;
+    pointer('pointerdown', 2, 3, 2);
+    const capture = canvas.style.cursor;
+    expect(capture).not.toBe(brush);
+    pointer('pointermove', 3, 3);
+    expect(canvas.style.cursor).toBe(capture);
+    pointer('pointerup', 3, 3, 2);
+    expect(canvas.style.cursor).toBe(brush);
+  });
+});
+
+describe('object cursor feedback', () => {
+  it('matches transform hit testing and stays stable throughout a drag', () => {
+    const { store, canvas, pointer } = editor();
+    store.update(
+      'Object',
+      (draft) => {
+        const entity = createSpriteEntity('asset-flixel-mark', 1);
+        entity.position = { x: 104, y: 104 };
+        activeScene(draft).entities.push(entity);
+        draft.tool = 'select';
+      },
+      false,
+    );
+    pointer('pointermove', 6, 6);
+    expect(canvas.style.cursor).toBe('move');
+    pointer('pointermove', 9, 9);
+    expect(canvas.style.cursor).toBe('nwse-resize');
+    pointer('pointerdown', 9, 9);
+    pointer('pointermove', 20, 20);
+    expect(canvas.style.cursor).toBe('nwse-resize');
+    pointer('pointercancel', 20, 20);
+    expect(canvas.style.cursor).toBe('default');
+    store.update(
+      'Rotate',
+      (draft) => {
+        draft.tool = 'rotate';
+      },
+      false,
+    );
+    pointer('pointermove', 6, 6);
+    expect(canvas.style.cursor).toContain('data:image/svg+xml');
+    store.update(
+      'Lock',
+      (draft) => {
+        activeLayer(draft).locked = true;
+      },
+      false,
+    );
+    expect(canvas.style.cursor).toBe('not-allowed');
+    pointer('pointerdown', 6, 6);
+    expect(store.status.snapshot.selectedEntityIds).toEqual([]);
+    expect(store.status.canUndo).toBe(false);
   });
 });

@@ -85,7 +85,7 @@ it is enlarged; tools operate only on full cells within the current canvas.
 
 This pass supports finite orthogonal maps, up to 4,096 source tiles or cells in a
 stamp, and up to 262,144 cells per fill operation. Preview currently uses sprites
-for tile rendering. Optimized tilemap rendering and Tiled file interchange are follow-up work. A collision layer’s purpose label does not generate tile collision bodies.
+for tile rendering. Optimized tilemap rendering and Tiled file interchange are follow-up work. A collision layer’s purpose label alone does not generate bodies; enable **Tile collision** in its Inspector.
 
 ### Selections, clipboard, and stamp transforms
 
@@ -174,6 +174,45 @@ empty per set**. It does not yet implement transitions between different terrain
 types, edge/mixed sets, random variants, automatic tile rotation to fill missing
 rules, or Tiled file interchange.
 
+## Tile collision layers
+
+Select a layer in the Hierarchy, then check **Enable collision** in the
+Inspector’s **Tile collision** section. Collision can be enabled on any layer;
+the **Collision** purpose label is organizational and does not enable it
+implicitly. Existing projects remain non-colliding until you opt in.
+
+- **Every occupied cell is solid.** Source-image transparency, terrain corners,
+  rotation and flips do not change the full-cell box. Use a separate tile layer
+  to author collision independently from decorative terrain when needed.
+- **Adjacent cells merge.** Horizontal runs with the same span on consecutive
+  rows become one static rectangle. Holes and gaps are preserved. The Inspector
+  reports the number of merged colliders that Preview will generate.
+- **Friction** controls sliding resistance and **Bounce** controls restitution;
+  both accept values from 0 to 1. Defaults are 0.4 friction and no bounce.
+- **Show tile collisions** in the canvas toolbar toggles amber outlines. The
+  outlines follow brush, terrain, paste and erase previews. Hiding the overlay
+  does not disable physics or change the saved project.
+- **Hidden layers** do not render or collide in Preview. Locking a layer protects
+  its tiles and collision settings from editing but leaves its collision active.
+- Only full cells inside the current canvas produce colliders. Tiles retained
+  outside a resized canvas become collidable again when the canvas is enlarged.
+
+To test a floor, paint a row of tiles, enable its collision, add a sprite above
+it, and choose **Add physics body** for that sprite. Open **Preview**: the dynamic
+sprite falls under gravity and lands on the tiles. Preview and Resume focus the
+playable scene automatically. Pause and Reset remain available in the dialog.
+
+Painting, erasing and collision settings participate in undo/redo. Export/import
+preserves optional `tileCollision: { enabled, friction, restitution }` settings
+on each layer in the version 1 editor extension, with validation on import.
+Merged bodies are derived from the current grid when Preview starts; they do
+not become editable objects or saved entries in the physics-body list. Game
+integrations consuming editor exports must generate equivalent full-cell bodies
+from these settings; the base project schema does not do this automatically.
+
+This phase covers static full-cell boxes. Slopes, per-tile collision polygons,
+one-way platforms, sensors and collision filters remain future work.
+
 ## Physics bodies and joints
 
 Select a sprite and choose **Add physics body**. The editor supports static,
@@ -187,7 +226,7 @@ wheel/suspension joint. Joint connectors and selected collider outlines appear
 on the editor canvas. Deleting a body also removes joints that reference it.
 
 Physics data uses the versioned portable Flixel-Pixi schemas. The playable
-preview loads the Planck adapter only when the scene contains a body.
+preview loads the Planck adapter when the scene contains a sprite body or an enabled, visible tile collider.
 
 ## Particle Editor effects
 
@@ -204,7 +243,7 @@ that demonstrates the pipeline.
 **Export** downloads deterministic JSON built on `ProjectDocumentV1`. Image
 assets and particle documents are embedded as data URLs, while the
 `flixelPixiLevelEditor` extension stores scene canvas, semantic layers, and
-physics settings, and sparse tile grids.
+physics settings, sparse tile grids, and tile collision settings.
 **Import** rejects malformed projects, unsupported extension versions, missing
 active scenes, and invalid physics documents with a visible diagnostic.
 
@@ -219,3 +258,22 @@ The first release deliberately excludes soft bodies, collaborative editing,
 user scripts, animation timelines, edge/mixed terrain sets, and Tiled TMX/JSON interchange. It focuses on a
 stable asset-to-scene-to-preview loop that future editor features can extend
 without changing the version `1` document contract.
+
+### Tool cursors
+
+The canvas cursor follows the active tool, with distinct icons for painting,
+erasing, filling, picking, tile selection, paste, terrain, and stamp capture.
+The small cross on tile-tool icons marks the exact pointer position. Icons have
+a light outline for contrast over dark and light tiles; browsers that cannot
+load custom cursors fall back to a crosshair.
+
+Hold Alt with a tile tool to see the picker cursor. Hold Space while the canvas
+is focused for a grab cursor; dragging shows a grabbing hand. Middle-drag also
+pans. Releasing the modifier, cancelling a gesture, or leaving canvas focus
+restores the current tool cursor. During a gesture, the cursor reflects the
+operation that started it.
+
+Object tools show move, rotate, or resize feedback, including the existing
+bottom-right resize target. A blocked cursor indicates locked objects, painting
+on locked or hidden layers, missing tile/terrain sources, or cells outside the
+map. Tile selection and picking remain available on locked layers.
