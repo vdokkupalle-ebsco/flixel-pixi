@@ -1,3 +1,4 @@
+import { stepObjectOrder } from './object-layer-editing';
 import { mountLayerDrag } from './layer-drag';
 import {
   createLayerGroup,
@@ -112,12 +113,14 @@ function selectedEntity(
 }
 
 function sortEntities(snapshot: LevelEditorSnapshot): EntityDefinition[] {
-  return [...activeScene(snapshot).entities].sort(
-    (a, b) =>
-      layerForEntity(snapshot, b).order - layerForEntity(snapshot, a).order ||
-      Number(entityProperties(b).zIndex ?? 0) -
-        Number(entityProperties(a).zIndex ?? 0),
-  );
+  return [...activeScene(snapshot).entities]
+    .reverse()
+    .sort(
+      (a, b) =>
+        layerForEntity(snapshot, b).order - layerForEntity(snapshot, a).order ||
+        Number(entityProperties(b).zIndex ?? 0) -
+          Number(entityProperties(a).zIndex ?? 0),
+    );
 }
 
 const layerPurposes: readonly LayerPurpose[] = [
@@ -572,16 +575,7 @@ export function mountEditor(
   }
 
   function reorder(entityId: string, direction: -1 | 1): void {
-    store.update(
-      direction > 0 ? 'Moved object forward' : 'Moved object backward',
-      (draft) => {
-        const entities = activeScene(draft).entities;
-        const entity = entities.find((candidate) => candidate.id === entityId);
-        if (entity === undefined || !objectEditable(draft, entity)) return;
-        const properties = entityProperties(entity);
-        properties.zIndex = Number(properties.zIndex ?? 0) + direction;
-      },
-    );
+    stepObjectOrder(store, entityId, direction);
   }
 
   function addLayer(): void {
@@ -836,26 +830,42 @@ export function mountEditor(
   }
 
   const collapsedGroups = new Set<string>();
-  const layerDrag = mountLayerDrag(host, store, (id, drop) => {
-    const layers = sceneLayers(store.status.snapshot),
-      layer = layers.find((l) => l.id === id);
-    if (layer)
-      for (const parent of layerAncestors(layer, layers))
-        collapsedGroups.delete(parent.id);
-    renderHierarchy(store.status);
-    host
-      .querySelector<HTMLButtonElement>(
-        `.layer-main[data-layer-id="${CSS.escape(id)}"]`,
-      )
-      ?.focus();
-    announce(
-      drop.position === 'inside'
-        ? 'Layer moved into group.'
-        : drop.position === 'root'
-          ? 'Layer moved to scene root.'
-          : 'Layer order updated.',
-    );
-  });
+  const layerDrag = mountLayerDrag(
+    host,
+    store,
+    (id, drop) => {
+      const layers = sceneLayers(store.status.snapshot),
+        layer = layers.find((l) => l.id === id);
+      if (layer)
+        for (const parent of layerAncestors(layer, layers))
+          collapsedGroups.delete(parent.id);
+      renderHierarchy(store.status);
+      host
+        .querySelector<HTMLButtonElement>(
+          `.layer-main[data-layer-id="${CSS.escape(id)}"]`,
+        )
+        ?.focus();
+      announce(
+        drop.position === 'inside'
+          ? 'Layer moved into group.'
+          : drop.position === 'root'
+            ? 'Layer moved to scene root.'
+            : 'Layer order updated.',
+      );
+    },
+    (id, layerId) => {
+      renderHierarchy(store.status);
+      host
+        .querySelector<HTMLButtonElement>(
+          `.tree-main[data-entity-id="${CSS.escape(id)}"]`,
+        )
+        ?.focus();
+      const name =
+        sceneLayers(store.status.snapshot).find((layer) => layer.id === layerId)
+          ?.name ?? 'layer';
+      announce(`Object moved to ${name}.`);
+    },
+  );
   function renderHierarchy(status: LevelEditorStatus): void {
     const container = host.querySelector<HTMLElement>('[data-hierarchy]');
     if (container === null) return;
@@ -907,7 +917,7 @@ export function mountEditor(
                 entity.id,
               );
               return `<div class="tree-row${selected ? ' selected' : ''}" role="treeitem" aria-level="${depth + 2}" aria-selected="${selected}" data-entity-id="${escapeHtml(entity.id)}" tabindex="${selected ? 0 : -1}">
-          <button class="tree-main" type="button" data-action="select-entity" data-entity-id="${escapeHtml(entity.id)}">
+          <button class="tree-main" type="button" draggable="false" data-object-draggable="${objectEditable(status.snapshot, entity)}" title="${objectEditable(status.snapshot, entity) ? 'Drag to move to another layer' : 'Unlock the object and its layer to drag'}" data-action="select-entity" data-entity-id="${escapeHtml(entity.id)}">
             <span class="object-icon ${entity.type === 'particle-effect' ? 'particle' : ''}" aria-hidden="true">${entity.type === 'particle-effect' ? icon('particle') : icon('assets')}</span>
             <span><strong>${escapeHtml(entity.name ?? entity.id)}</strong><small>${escapeHtml(entity.type)}</small></span>
           </button>

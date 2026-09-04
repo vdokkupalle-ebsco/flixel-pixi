@@ -3,6 +3,7 @@ import { LevelEditorStore } from '../src/editor-store';
 import {
   createInitialProject,
   activeLayer,
+  activeScene,
   activeSceneSettings,
   sceneLayers,
 } from '../src/model';
@@ -61,6 +62,7 @@ vi.mock('@dnd-kit/dom', () => ({
   },
 }));
 import { mountLayerDrag } from '../src/layer-drag';
+import { addGameplayObject } from '../src/gameplay-objects';
 const editor = () =>
   new LevelEditorStore({
     document: createInitialProject(),
@@ -248,3 +250,70 @@ it('bridges dnd-kit events to one undoable move and cleans up visual feedback', 
   vi.restoreAllMocks();
   expect(document.querySelector('.layer-drag-overlay')).toBeNull();
 });
+
+it('previews object destinations, drops through the placeholder, and cancels without mutation', async () => {
+  const store = editor();
+  addGameplayObject(store, 'spawn-point');
+  const id = required(activeScene(store.status.snapshot).entities[0]).id;
+  const host = document.createElement('div');
+  host.innerHTML = `<div class="tree-row" data-entity-id="${id}"><button class="tree-main" data-object-draggable="true"><strong>Spawn</strong></button></div><section class="layer-group" data-layer-id="layer-background" aria-label="Background"><div class="layer-row"><button class="layer-main">Background</button></div></section>`;
+  document.body.append(host);
+  const moved = vi.fn();
+  const controller = mountLayerDrag(host, store, vi.fn(), moved);
+  const operation = {
+    source: {
+      id: `object:${id}`,
+      element: required(host.querySelector<HTMLElement>('.tree-row')),
+    },
+    target: {
+      id: 'layer-background',
+      element: required(host.querySelector<HTMLElement>('.layer-group')),
+    },
+    position: { current: { x: 40, y: 20 } },
+  };
+  const before = store.status.snapshot;
+  dnd.events.get('dragstart')?.({ operation });
+  const placeholder = required(
+    host.querySelector<HTMLElement>('.layer-drop-placeholder'),
+  );
+  expect(placeholder.textContent).toContain('Move to Background');
+  expect(placeholder.parentElement).toBe(operation.target.element);
+  dnd.events.get('dragend')?.({ operation, canceled: true });
+  await Promise.resolve();
+  expect(store.status.snapshot).toEqual(before);
+  expect(host.querySelector('.layer-drop-placeholder')).toBeNull();
+  dnd.events.get('dragstart')?.({ operation });
+  const slot = required(
+    host.querySelector<HTMLElement>('.layer-drop-placeholder'),
+  );
+  const drop = {
+    ...operation,
+    target: { id: 'layer-insertion-placeholder', element: slot },
+  };
+  dnd.events.get('dragover')?.({ operation: drop });
+  expect(host.querySelector('.layer-drop-placeholder')).toBe(slot);
+  dnd.events.get('dragend')?.({ operation: drop });
+  await Promise.resolve();
+  expect(moved).toHaveBeenCalledWith(id, 'layer-background');
+  expect(
+    required(activeScene(store.status.snapshot).entities[0]).properties
+      ?.layerId,
+  ).toBe('layer-background');
+  store.undo();
+  expect(store.status.snapshot).toEqual(before);
+  dnd.events.get('dragstart')?.({ operation });
+  store.update('Other edit', (draft) => {
+    activeSceneSettings(draft).background = '#112233';
+  });
+  dnd.events.get('dragend')?.({ operation });
+  await Promise.resolve();
+  expect(moved).toHaveBeenCalledTimes(1);
+  controller.destroy();
+  host.remove();
+  expect(document.querySelector('.layer-drag-overlay')).toBeNull();
+});
+
+function required<T>(value: T | null | undefined): T {
+  if (value == null) throw new Error('Missing test fixture');
+  return value;
+}

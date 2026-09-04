@@ -11,12 +11,19 @@ import type { LevelEditorStore } from './editor-store';
 import { dropLayer, layerDropPlan, type LayerDrop } from './layer-editing';
 import { sceneLayers, type LevelEditorSnapshot } from './model';
 import { layerSubtree } from './layer-groups';
+import {
+  canMoveObjectToLayer,
+  objectsInLayer,
+  reorderObject,
+  moveObjectToLayer,
+} from './object-layer-editing';
 
 /** dnd-kit owns sensors, collision tracking, keyboard control and auto-scrolling. */
 export function mountLayerDrag(
   host: HTMLElement,
   store: LevelEditorStore,
   onMoved: (id: string, drop: LayerDrop) => void,
+  onObjectMoved?: (id: string, layerId: string) => void,
 ) {
   const manager = new DragDropManager({
     sensors: (defaults) => [
@@ -40,6 +47,9 @@ export function mountLayerDrag(
   let sourceElement: HTMLElement | undefined;
   let lastKey = '';
   let selectedDrop: LayerDrop | undefined;
+  let objectId: string | undefined;
+  let objectLayerId: string | undefined;
+  let objectOrder: { id: string; position: 'before' | 'after' } | undefined;
   let placeholder: HTMLElement | undefined;
   let placeholderTarget: Droppable | undefined;
   let destroyed = false;
@@ -53,8 +63,11 @@ export function mountLayerDrag(
     placeholder = undefined;
     sourceElement?.classList.remove('layer-drag-source');
     sourceElement = undefined;
-    host.classList.remove('dragging-layer');
+    host.classList.remove('dragging-layer', 'dragging-object');
     selectedDrop = undefined;
+    objectId = undefined;
+    objectLayerId = undefined;
+    objectOrder = undefined;
     lastKey = '';
     snapshot = undefined;
   };
@@ -66,6 +79,82 @@ export function mountLayerDrag(
     let drop: LayerDrop | undefined;
     let element: HTMLElement | undefined;
     if (target?.id === 'layer-insertion-placeholder') return;
+    if (objectId) {
+      const element = target?.element;
+      const layerId =
+        element instanceof HTMLElement ? element.dataset.layerId : undefined;
+      const sameLayer =
+        layerId &&
+        objectsInLayer(snapshot, layerId).some((e) => e.id === objectId);
+      const rows =
+        sameLayer && element instanceof HTMLElement
+          ? [...element.querySelectorAll<HTMLElement>('.tree-row')].filter(
+              (row) => row.dataset.entityId !== objectId,
+            )
+          : [];
+      const row =
+        rows.find((row) => point.y < row.getBoundingClientRect().bottom) ??
+        rows.at(-1);
+      const position =
+        row &&
+        point.y <
+          row.getBoundingClientRect().top +
+            row.getBoundingClientRect().height / 2
+          ? 'before'
+          : 'after';
+      const order = row?.dataset.entityId
+        ? ({ id: row.dataset.entityId, position } as const)
+        : undefined;
+      const siblings = layerId
+        ? objectsInLayer(snapshot, layerId).map((e) => e.id)
+        : [];
+      const sourceIndex = siblings.indexOf(objectId);
+      const targetIndex = order ? siblings.indexOf(order.id) : -1;
+      const changesOrder =
+        order &&
+        (order.position === 'before'
+          ? sourceIndex !== targetIndex - 1
+          : sourceIndex !== targetIndex + 1);
+      const valid =
+        layerId &&
+        (canMoveObjectToLayer(snapshot, objectId, layerId) || changesOrder);
+      const key = valid
+        ? `object:${layerId}:${order?.id ?? ''}:${order?.position ?? ''}`
+        : '';
+      if (key === lastKey) return;
+      lastKey = key;
+      placeholderTarget?.destroy();
+      placeholderTarget = undefined;
+      placeholder?.remove();
+      placeholder = undefined;
+      objectLayerId = valid ? layerId : undefined;
+      objectOrder = order;
+      if (objectLayerId && element instanceof HTMLElement) {
+        const name =
+          sourceElement?.querySelector('strong')?.textContent ?? 'Object';
+        const layerName = element.getAttribute('aria-label') ?? 'layer';
+        placeholder = document.createElement('div');
+        placeholder.className = 'layer-drop-placeholder';
+        placeholder.setAttribute('aria-hidden', 'true');
+        placeholder.textContent = `${name} · Move to ${layerName}`;
+        if (row && order) {
+          placeholder.textContent = `${name} · Place ${position === 'before' ? 'above' : 'below'}`;
+          if (position === 'before') row.before(placeholder);
+          else row.after(placeholder);
+        } else element.querySelector('.layer-row')?.after(placeholder);
+        placeholderTarget = new Droppable(
+          {
+            id: 'layer-insertion-placeholder',
+            element: placeholder,
+            collisionPriority: 2,
+          },
+          manager,
+        );
+        if (hint) hint.textContent = `Move to ${layerName}`;
+      } else if (hint)
+        hint.textContent = 'Choose an unlocked content layer · Esc to cancel';
+      return;
+    }
     if (target?.id === 'scene-root-drop') {
       drop = { position: 'root' };
       element = target.element as HTMLElement;
@@ -152,6 +241,7 @@ export function mountLayerDrag(
     snapshot = store.status.snapshot;
     revision = store.status.revision;
     sourceElement = element;
+    objectId = element.dataset.entityId;
     const rect = element.getBoundingClientRect();
     overlay = document.createElement('div');
     overlay.className = 'layer-drag-overlay';
@@ -171,7 +261,7 @@ export function mountLayerDrag(
     if (feedback) feedback.overlay = overlay;
     floating.add(overlay);
     sourceElement.classList.add('layer-drag-source');
-    host.classList.add('dragging-layer');
+    host.classList.add(objectId ? 'dragging-object' : 'dragging-layer');
     update(operation);
   });
   manager.monitor.addEventListener('dragmove', ({ operation }) =>
@@ -184,6 +274,9 @@ export function mountLayerDrag(
     update(operation);
     const id = operation.source?.id,
       drop = selectedDrop,
+      movedObjectId = objectId,
+      destinationLayerId = objectLayerId,
+      destinationOrder = objectOrder,
       ghost = overlay,
       oldElement = sourceElement;
     const ghostRect = ghost?.getBoundingClientRect();
@@ -204,11 +297,31 @@ export function mountLayerDrag(
         ghost?.remove();
         return;
       }
+      const objectMoved =
+        valid &&
+        movedObjectId &&
+        destinationLayerId &&
+        (destinationOrder
+          ? reorderObject(
+              store,
+              movedObjectId,
+              destinationOrder.id,
+              destinationOrder.position,
+            )
+          : moveObjectToLayer(store, movedObjectId, destinationLayerId));
+      if (objectMoved) onObjectMoved?.(movedObjectId, destinationLayerId);
       const moved =
-        id !== undefined && drop && valid && dropLayer(store, String(id), drop);
+        !movedObjectId &&
+        id !== undefined &&
+        drop &&
+        valid &&
+        dropLayer(store, String(id), drop);
       if (moved && drop) onMoved(String(id), drop);
-      const destination =
-        id !== undefined
+      const destination = movedObjectId
+        ? host.querySelector<HTMLElement>(
+            `.tree-row[data-entity-id="${CSS.escape(movedObjectId)}"]`,
+          )
+        : id !== undefined
           ? host.querySelector<HTMLElement>(
               `.layer-group[data-layer-id="${CSS.escape(String(id))}"]`,
             )
@@ -267,6 +380,13 @@ export function mountLayerDrag(
             element,
             accept: (source) => {
               const current = snapshot ?? store.status.snapshot;
+              const entityId = source.data.entityId as string | undefined;
+              if (entityId)
+                return (
+                  canMoveObjectToLayer(current, entityId, id) ||
+                  (objectsInLayer(current, id).length > 1 &&
+                    objectsInLayer(current, id).some((e) => e.id === entityId))
+                );
               return (['before', 'after', 'inside'] as const).some((position) =>
                 layerDropPlan(current, String(source.id), {
                   targetId: id,
@@ -274,6 +394,24 @@ export function mountLayerDrag(
                 }),
               );
             },
+          },
+          manager,
+        ),
+      );
+    }
+    for (const element of host.querySelectorAll<HTMLElement>(
+      '.tree-row[data-entity-id]',
+    )) {
+      const handle = element.querySelector<HTMLElement>('.tree-main');
+      if (!handle) continue;
+      entities.push(
+        new Draggable(
+          {
+            id: `object:${element.dataset.entityId}`,
+            data: { entityId: element.dataset.entityId },
+            element,
+            handle,
+            disabled: handle.dataset.objectDraggable !== 'true',
           },
           manager,
         ),
@@ -287,6 +425,7 @@ export function mountLayerDrag(
             id: 'scene-root-drop',
             element: root,
             accept: (source) =>
+              !source.data.entityId &&
               !!layerDropPlan(
                 snapshot ?? store.status.snapshot,
                 String(source.id),

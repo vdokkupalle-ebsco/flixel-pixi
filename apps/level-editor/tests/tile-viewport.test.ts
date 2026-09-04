@@ -706,3 +706,62 @@ it('applies group order, visibility and locking to object rendering and hit test
   moveLayer(store, group, 'down');
   expect(drawn()).toEqual(['Region', 'Spawn point']);
 });
+
+it('marquee selects visible unlocked objects in either direction, supports Shift and cancellation', () => {
+  const { store, canvas } = editor();
+  store.update('Objects', (draft) => {
+    draft.tool = 'select';
+    activeScene(draft).entities = [0, 1, 2, 3].map((i) => {
+      const e = createSpriteEntity('asset-flixel-mark', i + 1);
+      e.id = `object-${i}`;
+      e.position = { x: 100 + i * 70, y: 100 };
+      e.properties = {
+        ...e.properties,
+        width: 32,
+        height: 32,
+        visible: i !== 2,
+        locked: i === 3,
+      };
+      return e;
+    });
+  });
+  const send = (type: string, x: number, y: number, shiftKey = false) =>
+    canvas.dispatchEvent(
+      new PointerEvent(type, {
+        pointerId: 1,
+        button: 0,
+        clientX: 48 + x,
+        clientY: 48 + y,
+        shiftKey,
+      }),
+    );
+  const document = structuredClone(store.status.snapshot.document);
+  send('pointerdown', 50, 50);
+  send('pointermove', 350, 150);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([]);
+  send('pointerup', 350, 150);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([
+    'object-0',
+    'object-1',
+  ]);
+  send('pointerdown', 140, 140);
+  send('pointerup', 60, 60);
+  expect(store.status.snapshot.selectedEntityIds).toEqual(['object-0']);
+  send('pointerdown', 145, 60, true);
+  send('pointerup', 200, 140, true);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([
+    'object-0',
+    'object-1',
+  ]);
+  send('pointerdown', 400, 400);
+  send('pointermove', 500, 500);
+  send('pointercancel', 500, 500);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([
+    'object-0',
+    'object-1',
+  ]);
+  expect(store.status.snapshot.document).toEqual(document);
+  send('pointerdown', 400, 400);
+  send('pointerup', 400, 400);
+  expect(store.status.snapshot.selectedEntityIds).toEqual([]);
+});

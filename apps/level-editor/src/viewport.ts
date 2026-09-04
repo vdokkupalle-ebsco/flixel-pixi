@@ -1,3 +1,4 @@
+import { intersectsMarquee, type SelectionPoint } from './object-selection';
 import { effectiveActiveLayer } from './model';
 import { effectiveLayer, effectiveLayers } from './layer-groups';
 import { isGameplayObject } from './gameplay-objects';
@@ -75,8 +76,19 @@ interface TileInteraction {
   bounds: TileBounds;
   stamp: TileStamp | undefined;
 }
+interface MarqueeInteraction {
+  kind: 'marquee';
+  pointerId: number;
+  start: SelectionPoint;
+  end: SelectionPoint;
+  initial: string[];
+  additive: boolean;
+}
 type PointerInteraction =
-  EntityPointerInteraction | PanPointerInteraction | TileInteraction;
+  | EntityPointerInteraction
+  | PanPointerInteraction
+  | TileInteraction
+  | MarqueeInteraction;
 
 interface EntityVisual {
   entity: EntityDefinition;
@@ -268,6 +280,18 @@ export class SceneViewport {
     this.#drawTileSelection();
     this.#drawTileCursor();
     this.#drawPhysics(snapshot);
+    const marquee = this.#interaction;
+    if (marquee?.kind === 'marquee') {
+      context.fillStyle = 'rgba(29, 232, 241, 0.12)';
+      context.strokeStyle = '#1de8f1';
+      context.lineWidth = 1 / this.#viewTransform(snapshot).scale;
+      const x = Math.min(marquee.start.x, marquee.end.x),
+        y = Math.min(marquee.start.y, marquee.end.y);
+      const w = Math.abs(marquee.end.x - marquee.start.x),
+        h = Math.abs(marquee.end.y - marquee.start.y);
+      context.fillRect(x, y, w, h);
+      context.strokeRect(x, y, w, h);
+    }
     context.restore();
   }
 
@@ -331,7 +355,11 @@ export class SceneViewport {
         interaction.kind === 'pan'
           ? 'grabbing'
           : TOOL_CURSORS[
-              interaction.kind === 'tiles' ? interaction.tool : interaction.kind
+              interaction.kind === 'tiles'
+                ? interaction.tool
+                : interaction.kind === 'marquee'
+                  ? 'select'
+                  : interaction.kind
             ];
     } else if (this.#spacePressed || snapshot.tool === 'pan') {
       cursor = 'grab';
@@ -1356,6 +1384,19 @@ export class SceneViewport {
     const point = this.#worldPoint(event);
     const entity = this.#hitTest(point.x, point.y);
     if (entity === undefined) {
+      if (this.#status.snapshot.tool === 'select') {
+        this.#interaction = {
+          kind: 'marquee',
+          pointerId: event.pointerId,
+          start: point,
+          end: point,
+          initial: [...this.#status.snapshot.selectedEntityIds],
+          additive: event.shiftKey,
+        };
+        this.#canvas.setPointerCapture(event.pointerId);
+        this.#queueRender();
+        return;
+      }
       this.#store.update(
         'Cleared selection',
         (draft) => {
@@ -1407,6 +1448,11 @@ export class SceneViewport {
     const interaction = this.#interaction;
     if (interaction === undefined || interaction.pointerId !== event.pointerId)
       return;
+    if (interaction.kind === 'marquee') {
+      interaction.end = world;
+      this.#queueRender();
+      return;
+    }
     if (interaction.kind === 'tiles') {
       this.#updateTiles(interaction, this.#hoverCell);
       return;
@@ -1476,6 +1522,56 @@ export class SceneViewport {
   #onPointerUp = (event: PointerEvent): void => {
     const interaction = this.#interaction;
     if (
+      interaction?.kind === 'marquee' &&
+      interaction.pointerId === event.pointerId
+    ) {
+      interaction.end = this.#worldPoint(event);
+      const scale = this.#viewTransform(this.#status.snapshot).scale;
+      const dragged =
+        Math.hypot(
+          interaction.end.x - interaction.start.x,
+          interaction.end.y - interaction.start.y,
+        ) *
+          scale >=
+        4;
+      const ids = dragged
+        ? activeScene(this.#status.snapshot)
+            .entities.filter((entity) => {
+              const layer = layerForEntity(this.#status.snapshot, entity);
+              const properties = entityProperties(entity);
+              const visual = this.#visual(entity);
+              return (
+                layer.visible &&
+                !layer.locked &&
+                properties.visible !== false &&
+                properties.locked !== true &&
+                intersectsMarquee(
+                  entity,
+                  visual.width,
+                  visual.height,
+                  interaction.start,
+                  interaction.end,
+                )
+              );
+            })
+            .map((e) => e.id)
+        : [];
+      this.#cancelInteraction();
+      this.#store.update(
+        'Selected objects',
+        (draft) => {
+          draft.selectedEntityIds = [
+            ...new Set([
+              ...(interaction.additive ? interaction.initial : []),
+              ...ids,
+            ]),
+          ];
+        },
+        false,
+      );
+      return;
+    }
+    if (
       interaction?.kind === 'tiles' &&
       interaction.pointerId === event.pointerId
     ) {
@@ -1501,6 +1597,7 @@ export class SceneViewport {
     if (
       interaction === undefined ||
       interaction.kind === 'pan' ||
+      interaction.kind === 'marquee' ||
       interaction.kind === 'tiles' ||
       preview === undefined ||
       interaction.pointerId !== event.pointerId

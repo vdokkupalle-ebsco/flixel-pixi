@@ -426,3 +426,32 @@ starts. The preview describes the pending move and animates into place on drop;
 reduced-motion preferences disable that animation. Focus a layer name and press
 Space or Enter to start keyboard dragging, use arrow keys to navigate, then press
 Space or Enter to drop or Escape to cancel.
+
+### Moving objects between layers
+
+Drag an object's name in the hierarchy onto the destination layer. A floating
+preview follows the pointer and a separate placeholder names the receiving layer.
+You can drop on its heading or contents, including an empty layer. Expand a group
+first to reach its child layers; groups themselves cannot hold objects.
+
+Each drag moves one object and selects it in its destination layer. Position,
+size, rotation, custom properties, and physics references remain intact. Objects
+locked individually or by their layer/group cannot move; locked destinations do
+not accept drops. Hidden destinations are allowed and hide the object according
+to that layer's visibility. The move is saved in project exports and is one
+Undo/Redo step. Escape cancels without changing the project.
+
+For keyboard dragging, focus the object's name, press Enter or Space, use the
+arrow keys to move toward a destination, and press Enter or Space to drop.
+
+Within the same layer, drop an object above or below a sibling to reorder it.
+The forward/backward arrows move exactly one position even when objects have
+identical or widely spaced order values. Ordering supports Undo/Redo.
+
+With the Select tool (`V`), drag from empty canvas to draw a selection box.
+Objects touching the box are selected when you release, accounting for their
+rotation, scale, and origin. Hold Shift when starting the drag to add objects
+to the current selection. Hidden and locked objects are excluded, including
+inherited layer/group flags. Escape cancels the box and preserves the previous
+selection. A click on empty canvas clears selection; dragging directly on an
+object continues to manipulate that object.

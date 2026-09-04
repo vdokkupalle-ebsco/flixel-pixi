@@ -80,3 +80,16 @@ Drag layer names to reorder them. Drop above/below a row to place a sibling, in
 the middle of a group to move inside, or on the scene-root drop area to move out.
 A separate placeholder row previews the destination. Dragging groups preserves their children;
 locks and cycle checks apply, and each move is undoable.
+
+Drag an object's name onto another content layer to move it. A floating copy and
+placeholder name the destination. Object and inherited layer locks prevent moves;
+groups cannot directly hold objects. The moved object stays selected, its position
+and physics references are preserved, and Undo/Redo restores the move. With the
+object name focused, Enter/Space starts a keyboard drag, arrow keys move it,
+Enter/Space drops, and Escape cancels. Each drag moves one object.
+
+Within a layer, drag an object above or below a sibling to change drawing order,
+or use its forward/backward arrows to move exactly one position. With Select
+(`V`), drag from empty canvas to select objects intersecting the selection box.
+Shift adds to the existing selection; Escape cancels. Hidden and locked objects
+are excluded, including objects hidden or locked by a parent layer group.

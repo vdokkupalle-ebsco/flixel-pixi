@@ -1981,6 +1981,22 @@ select:focus-visible {
 .layer-main[data-layer-draggable='true'] {
   cursor: grab;
 }
+.tree-main[data-object-draggable='true'] {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dragging-object .tree-main[data-object-draggable='true'] {
+  cursor: grabbing;
+}
+.layer-drag-overlay .tree-row {
+  margin: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.layer-drag-overlay .row-reorder {
+  display: none;
+}
 .dragging-layer .layer-main[data-layer-draggable='true'] {
   cursor: grabbing;
 }
