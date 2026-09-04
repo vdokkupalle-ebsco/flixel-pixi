@@ -5,7 +5,6 @@ import {
 } from '@flixel-pixi/editor-protocol';
 import {
   parseParticleEffect,
-  parseProjectDocument,
   type EntityDefinition,
   type ProjectDocumentV1,
 } from '@flixel-pixi/schemas';
@@ -25,6 +24,7 @@ import {
 
 import {
   getEditorExtension,
+  parseLevelProject,
   type LevelEditorExtensionV1,
   type SceneLayerDefinition,
 } from './model';
@@ -107,7 +107,7 @@ class LevelPreviewState extends FlxState {
         if (sprite !== undefined) sprites.set(entity.id, sprite);
       }
     }
-    const tileColliders = sceneTileColliders(settings);
+    const tileColliders = sceneTileColliders(settings, runtimeDocument.assets);
     if (settings.physics.bodies.length > 0 || tileColliders.length > 0) {
       if (createPhysicsBackend === undefined)
         throw new Error('The physics adapter has not loaded.');
@@ -250,7 +250,7 @@ const peer = createProtocolPeer({
 let app: BrowserGameApplication | undefined;
 
 async function loadProject(serializedProject: string): Promise<void> {
-  const document = parseProjectDocument(JSON.parse(serializedProject));
+  const document = parseLevelProject(JSON.parse(serializedProject));
   const extension = getEditorExtension(document);
   const scene = document.scenes.find(
     (candidate) => candidate.id === extension.activeSceneId,
@@ -260,7 +260,7 @@ async function loadProject(serializedProject: string): Promise<void> {
   if (settings === undefined) throw new Error('Scene settings not found.');
   if (
     (settings.physics.bodies.length > 0 ||
-      sceneTileColliders(settings).length > 0) &&
+      sceneTileColliders(settings, document.assets).length > 0) &&
     createPhysicsBackend === undefined
   ) {
     ({ createPlanckPhysicsBackend: createPhysicsBackend } =
@@ -286,7 +286,7 @@ async function loadProject(serializedProject: string): Promise<void> {
     (sum, layer) => sum + Object.keys(layer.tilemap?.cells ?? {}).length,
     0,
   );
-  const colliderCount = sceneTileColliders(settings).length;
+  const colliderCount = sceneTileColliders(settings, document.assets).length;
   previewStatus.textContent = `${scene.name} · ${tileCount} tiles · ${scene.entities.length} objects${colliderCount ? ` · ${colliderCount} tile collider${colliderCount === 1 ? '' : 's'}` : ''}`;
 }
 

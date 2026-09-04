@@ -201,7 +201,7 @@ describe('tile collision settings', () => {
         activeLayer(editor.status.snapshot),
         activeSceneSettings(editor.status.snapshot),
       ),
-    ).toContain('1 merged collider in Preview');
+    ).toContain('1 collider in Preview');
     editor.update('Hide', (draft) => {
       activeLayer(draft).visible = false;
     });

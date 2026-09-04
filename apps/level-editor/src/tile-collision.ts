@@ -1,3 +1,9 @@
+import type { AssetDefinition } from '@flixel-pixi/schemas';
+import {
+  sourceShapeEntry,
+  transformedShape,
+  type ShapePoint,
+} from './tile-shapes';
 import type { SceneEditorSettings, SceneLayerDefinition } from './model';
 import { inBounds, tileBounds, type TileBounds, type TileMap } from './tiles';
 
@@ -21,6 +27,7 @@ export interface CollisionRectangle {
 }
 
 export interface TileCollider extends CollisionRectangle {
+  points?: ShapePoint[];
   layerId: string;
   friction: number;
   restitution: number;
@@ -96,24 +103,57 @@ export function layerTileColliders(
   layer: SceneLayerDefinition,
   settings: Pick<SceneEditorSettings, 'width' | 'height'>,
   map = layer.tilemap,
+  assets: readonly AssetDefinition[] = [],
 ): TileCollider[] {
   if (!layer.visible || !layer.tileCollision?.enabled || !map) return [];
-  return mergeTileCollisions(
-    map,
-    tileBounds(settings.width, settings.height, map.tileSize),
-  ).map((rectangle) => ({
-    ...rectangle,
-    layerId: layer.id,
-    friction: layer.tileCollision?.friction ?? DEFAULT_TILE_COLLISION.friction,
-    restitution:
-      layer.tileCollision?.restitution ?? DEFAULT_TILE_COLLISION.restitution,
-  }));
+  const bounds = tileBounds(settings.width, settings.height, map.tileSize);
+  const fullCells: TileMap = { tileSize: map.tileSize, cells: {} };
+  const custom: (CollisionRectangle & { points: ShapePoint[] })[] = [];
+  const sources = new Map(assets.map((asset) => [asset.id, asset]));
+  for (const [key, tile] of Object.entries(map.cells)) {
+    const [x = 0, y = 0] = key.split(',').map(Number);
+    if (!inBounds({ x, y }, bounds)) continue;
+    const entry = sourceShapeEntry(sources.get(tile.assetId), tile);
+    if (!entry) {
+      fullCells.cells[key] = tile;
+      continue;
+    }
+    for (const shape of entry.shapes) {
+      const points = transformedShape(
+        shape,
+        tile,
+        map.tileSize,
+        x * map.tileSize,
+        y * map.tileSize,
+      );
+      const left = Math.min(...points.map((p) => p.x)),
+        top = Math.min(...points.map((p) => p.y));
+      custom.push({
+        x: left,
+        y: top,
+        width: Math.max(...points.map((p) => p.x)) - left,
+        height: Math.max(...points.map((p) => p.y)) - top,
+        points,
+      });
+    }
+  }
+  return [...mergeTileCollisions(fullCells, bounds), ...custom].map(
+    (rectangle) => ({
+      ...rectangle,
+      layerId: layer.id,
+      friction:
+        layer.tileCollision?.friction ?? DEFAULT_TILE_COLLISION.friction,
+      restitution:
+        layer.tileCollision?.restitution ?? DEFAULT_TILE_COLLISION.restitution,
+    }),
+  );
 }
 
 export function sceneTileColliders(
   settings: SceneEditorSettings,
+  assets: readonly AssetDefinition[] = [],
 ): TileCollider[] {
   return (settings.layers ?? []).flatMap((layer) =>
-    layerTileColliders(layer, settings),
+    layerTileColliders(layer, settings, layer.tilemap, assets),
   );
 }

@@ -46,6 +46,12 @@ Select a layer and enable **Tile collision** in the Inspector to make its painte
 cells solid. Adjacent cells merge into static boxes without filling gaps. Set
 layer friction and bounce, and toggle amber outlines with **Show tile collisions**
 in the canvas toolbar. Outlines follow painting previews. Hidden layers have no
-preview collision; locked layers still collide. Full cells are solid regardless
+preview collision; locked layers still collide. Tiles without custom shapes use full cells regardless
 of tile transparency or terrain shape. Collision settings save with the layer,
 while the merged bodies are generated for Preview and stay out of the hierarchy.
+
+Select a tile and use **Edit tile collision shapes** for rectangles, convex
+polygons, slopes, or explicit passable tiles. Apply saves one undoable change;
+source shapes follow flips and rotations on collision-enabled layers. See the
+[level editor guide](../../docs/guide/level-editor.md#source-tile-collision-shapes)
+for authoring and runtime metadata details.

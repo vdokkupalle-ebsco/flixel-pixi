@@ -1,3 +1,4 @@
+import { openTileShapeEditor } from './tile-shape-editor';
 import type { AssetDefinition } from '@flixel-pixi/schemas';
 import type { LevelEditorStatus, LevelEditorStore } from './editor-store';
 import { activeLayer, activeSceneSettings, createId } from './model';
@@ -83,6 +84,7 @@ export function mountTilePalette(
   store: LevelEditorStore,
   upload: () => void,
 ): () => void {
+  let closeShapeEditor: (() => void) | undefined;
   let assetId = '',
     anchor = 0;
   let renderKey = '';
@@ -175,6 +177,7 @@ export function mountTilePalette(
     host.innerHTML = `<div class="panel-heading"><div><small>Tile painting</small><strong>Tilesets</strong></div><button class="small-icon" type="button" data-tile-upload aria-label="Import tileset" title="Import tileset image or image + atlas XML">${icon('add')}</button></div>
       <div class="tileset-content"><div class="tileset-modes" role="group" aria-label="Tileset mode"><button type="button" data-palette-mode="tiles" aria-pressed="${!terrainMode}">Tiles</button><button type="button" data-palette-mode="terrain" aria-pressed="${terrainMode}">Terrains</button></div><label class="tileset-label">Source image<select aria-label="Tileset" data-tileset><option value=""${!assetId ? ' selected' : ''} disabled>Choose an image…</option>${options}</select></label>${terrainMode ? '' : fields}
       ${terrainMode ? '' : paletteMarkup}
+      ${asset && palette.tiles.length ? '<button type="button" class="button full" data-edit-collision>Edit tile collision shapes</button>' : ''}
       ${terrainMode ? terrainPanel(asset, snapshot, ruleMask, palette.tiles[ruleTileIndex], editingRules, fields + paletteMarkup) : stampPreview}</div>`;
   };
   const updateSet = (
@@ -189,6 +192,22 @@ export function mountTilePalette(
   const click = (event: MouseEvent): void => {
     const target = (event.target as HTMLElement).closest<HTMLElement>('button');
     if (!target) return;
+    if (target.hasAttribute('data-edit-collision')) {
+      const asset = store.status.snapshot.document.assets.find(
+        (a) => a.id === assetId,
+      );
+      const tile = terrainMode
+        ? asset && paletteTiles(asset).tiles[ruleTileIndex]
+        : store.status.snapshot.tileStamp?.tiles.find(
+            (t) => t?.assetId === assetId,
+          );
+      const selected = tile ?? (asset && paletteTiles(asset).tiles[0]);
+      if (selected) {
+        closeShapeEditor?.();
+        closeShapeEditor = openTileShapeEditor(store, selected);
+      }
+      return;
+    }
     if (target.dataset.paletteMode) {
       store.update(
         'Changed tileset mode',
@@ -457,6 +476,7 @@ export function mountTilePalette(
   host.addEventListener('change', change);
   const unsubscribe = store.subscribe(render);
   return () => {
+    closeShapeEditor?.();
     unsubscribe();
     host.removeEventListener('toggle', toggleRules, true);
     host.removeEventListener('click', click);

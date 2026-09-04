@@ -26,7 +26,17 @@ export function addTileCollisionBodies(
         friction: collider.friction,
         restitution: collider.restitution,
       },
-      shapes: [{ kind: 'box', width: collider.width, height: collider.height }],
+      shapes: collider.points
+        ? [
+            {
+              kind: 'polygon',
+              vertices: collider.points.map((p) => ({
+                x: p.x - collider.x - collider.width / 2,
+                y: p.y - collider.y - collider.height / 2,
+              })),
+            },
+          ]
+        : [{ kind: 'box', width: collider.width, height: collider.height }],
     });
     return object;
   });

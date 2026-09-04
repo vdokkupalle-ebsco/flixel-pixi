@@ -234,7 +234,9 @@ export class SceneViewport {
             ? terrainPreview
             : layer.tilemap;
       if (snapshot.showTileCollisions !== false)
-        tileColliders.push(...layerTileColliders(layer, settings, map));
+        tileColliders.push(
+          ...layerTileColliders(layer, settings, map, snapshot.document.assets),
+        );
       if (map)
         for (const [key, tile] of Object.entries(map.cells)) {
           const [x = 0, y = 0] = key.split(',').map(Number);
@@ -280,6 +282,16 @@ export class SceneViewport {
       context.strokeStyle =
         collider.layerId === activeLayerId ? '#ffbd66' : '#b38752';
       context.fillStyle = 'rgba(255, 189, 102, 0.08)';
+      if (collider.points) {
+        context.beginPath();
+        collider.points.forEach((p, i) =>
+          i === 0 ? context.moveTo(p.x, p.y) : context.lineTo(p.x, p.y),
+        );
+        context.closePath();
+        context.fill();
+        context.stroke();
+        continue;
+      }
       context.fillRect(collider.x, collider.y, collider.width, collider.height);
       context.strokeRect(
         collider.x,

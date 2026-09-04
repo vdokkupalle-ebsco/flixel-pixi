@@ -181,12 +181,12 @@ Inspector’s **Tile collision** section. Collision can be enabled on any layer;
 the **Collision** purpose label is organizational and does not enable it
 implicitly. Existing projects remain non-colliding until you opt in.
 
-- **Every occupied cell is solid.** Source-image transparency, terrain corners,
-  rotation and flips do not change the full-cell box. Use a separate tile layer
+- **Occupied cells are solid by default.** Custom source tile shapes override
+  the full-cell box; transparency alone does not affect collision. Use a separate tile layer
   to author collision independently from decorative terrain when needed.
 - **Adjacent cells merge.** Horizontal runs with the same span on consecutive
   rows become one static rectangle. Holes and gaps are preserved. The Inspector
-  reports the number of merged colliders that Preview will generate.
+  reports the number of generated colliders that Preview will generate.
 - **Friction** controls sliding resistance and **Bounce** controls restitution;
   both accept values from 0 to 1. Defaults are 0.4 friction and no bounce.
 - **Show tile collisions** in the canvas toolbar toggles amber outlines. The
@@ -207,11 +207,11 @@ preserves optional `tileCollision: { enabled, friction, restitution }` settings
 on each layer in the version 1 editor extension, with validation on import.
 Merged bodies are derived from the current grid when Preview starts; they do
 not become editable objects or saved entries in the physics-body list. Game
-integrations consuming editor exports must generate equivalent full-cell bodies
-from these settings; the base project schema does not do this automatically.
+integrations consuming editor exports must generate equivalent bodies
+from these settings and source tile shape metadata; the base project schema does not do this automatically.
 
-This phase covers static full-cell boxes. Slopes, per-tile collision polygons,
-one-way platforms, sensors and collision filters remain future work.
+Static full cells and custom rectangles/convex polygons are supported. One-way
+platforms, sensors and collision filters remain future work.
 
 ## Physics bodies and joints
 
@@ -277,3 +277,34 @@ Object tools show move, rotate, or resize feedback, including the existing
 bottom-right resize target. A blocked cursor indicates locked objects, painting
 on locked or hidden layers, missing tile/terrain sources, or cells outside the
 map. Tile selection and picking remain available on locked layers.
+
+### Source tile collision shapes
+
+Select a source tile in **Tilesets**, then choose **Edit tile collision shapes**.
+The editor shows the untransformed source image. For a multi-tile stamp it opens
+the first non-empty source tile; choose a single palette tile to edit another.
+
+- **Rectangle:** drag across the image, then adjust x, y, width and height in source pixels.
+- **Polygon:** click 3–8 corners in order and choose **Finish polygon**. **Undo point** removes the last corner. You can also edit the x,y vertex pairs numerically.
+- **Full tile**, **Lower half**, **Slope up**, and **Slope down** add common shapes.
+- Select a shape in the dropdown to edit or delete it. Up to 16 shapes are supported.
+- **No collision** makes this source tile passable even on a collision-enabled layer.
+- **Use layer default** removes the override and restores full-cell collision.
+
+Polygons must be convex, non-crossing and inside the tile. Combine multiple
+convex shapes for concave areas. Pointer drawing snaps to source pixels; numeric
+fields accept fractional pixels. **Apply shapes** saves the draft as one undoable
+edit. **Cancel** or Escape discards it. Select either drawing tool to discard an
+unfinished polygon.
+
+Shapes are shared by every placement of that source region, across scenes and
+layers. Enable collision on a layer to activate them. They scale to the map cell
+size and follow tile flips and quarter-turn rotations. Amber outlines and Preview
+use the same transformed geometry. Only default full cells are merged; custom
+shapes remain separate fixtures and use the layer's friction and bounce.
+
+Shape metadata is stored with the image asset under `tileCollisionShapes`, keyed
+by source rectangle. Coordinates are normalized to the source tile. Export/import
+preserves it; changing tileset slicing does not remap existing source regions.
+Game integrations must pass image assets along with scene settings when generating
+colliders. This is editor metadata, not Tiled TMX/TSX interchange support.

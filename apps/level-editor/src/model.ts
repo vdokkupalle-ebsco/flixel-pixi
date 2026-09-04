@@ -1,3 +1,4 @@
+import { validateTileShapes } from './tile-shapes';
 import {
   parsePhysicsWorld,
   parseProjectDocument,
@@ -333,6 +334,7 @@ export function getEditorExtension(
 export function parseLevelProject(value: unknown): ProjectDocumentV1 {
   const document = parseProjectDocument(value);
   validateTerrains(document.assets);
+  validateTileShapes(document.assets);
   const extension = getEditorExtension(document);
   if (!document.scenes.some((scene) => scene.id === extension.activeSceneId)) {
     throw new Error('The active scene does not exist.');

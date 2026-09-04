@@ -1685,3 +1685,102 @@ select:focus-visible {
   font-size: 11px;
   line-height: 1.5;
 }
+
+.tile-shape-dialog {
+  width: min(740px, calc(100vw - 32px));
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  color: var(--text);
+  background: var(--panel, #141b26);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.tile-shape-dialog::backdrop {
+  background: #0009;
+}
+.tile-shape-dialog header,
+.tile-shape-dialog footer,
+.shape-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tile-shape-dialog header {
+  justify-content: space-between;
+}
+.tile-shape-dialog h2 {
+  margin: 4px 0;
+  font-size: 20px;
+}
+.tile-shape-dialog button {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+.tile-shape-dialog button[aria-pressed='true'] {
+  background: #2b5660;
+  color: white;
+}
+.tile-shape-dialog button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.shape-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 16px;
+  margin: 16px 0;
+}
+.shape-stage {
+  position: relative;
+  overflow: hidden;
+  align-self: start;
+  background: repeating-conic-gradient(#25303d 0% 25%, #18212d 0% 50%) 0 / 20px
+    20px;
+  border: 1px solid #617087;
+}
+.shape-stage img {
+  position: absolute;
+  max-width: none;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.shape-stage svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+.shape-properties label {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.shape-properties input,
+.shape-properties select,
+.shape-properties textarea {
+  width: 100%;
+  min-width: 0;
+}
+.tile-shape-dialog [data-error] {
+  color: #ff9d98;
+  font-size: 13px;
+}
+.tile-shape-dialog footer {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+@media (max-width: 540px) {
+  .shape-workspace {
+    grid-template-columns: 1fr;
+  }
+  .shape-stage {
+    max-height: 350px;
+  }
+}

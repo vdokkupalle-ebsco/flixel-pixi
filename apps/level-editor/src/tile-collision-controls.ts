@@ -1,3 +1,4 @@
+import type { AssetDefinition } from '@flixel-pixi/schemas';
 import type { LevelEditorStore } from './editor-store';
 import {
   activeLayer,
@@ -11,13 +12,19 @@ import { DEFAULT_TILE_COLLISION, layerTileColliders } from './tile-collision';
 export function tileCollisionControls(
   layer: SceneLayerDefinition,
   settings: SceneEditorSettings,
+  assets: readonly AssetDefinition[] = [],
 ): string {
   const collision = layer.tileCollision ?? DEFAULT_TILE_COLLISION;
-  const count = layerTileColliders(layer, settings).length;
+  const count = layerTileColliders(
+    layer,
+    settings,
+    layer.tilemap,
+    assets,
+  ).length;
   return `<fieldset class="tile-collision-settings"><legend>Tile collision</legend>
     <label class="collision-checkbox"><input type="checkbox" data-tile-collision="enabled" ${collision.enabled ? 'checked' : ''} ${layer.locked ? 'disabled' : ''}/>Enable collision</label>
-    <p class="field-help">Every painted cell is a solid box, including transparent tile edges. Adjacent cells merge; gaps stay open.</p>
-    ${collision.enabled ? `<div class="field-pair"><label>Friction<input aria-label="Tile friction" type="number" min="0" max="1" step="0.05" data-tile-collision="friction" value="${collision.friction}" ${layer.locked ? 'disabled' : ''}/></label><label>Bounce<input aria-label="Tile bounce" type="number" min="0" max="1" step="0.05" data-tile-collision="restitution" value="${collision.restitution}" ${layer.locked ? 'disabled' : ''}/></label></div><p class="collision-summary">${!layer.visible ? 'Hidden layer: collision is inactive in Preview.' : count ? `${count} merged collider${count === 1 ? '' : 's'} in Preview` : 'Paint tiles to create collision.'}</p>` : ''}
+    <p class="field-help">Source tile shapes define collision. Tiles without custom shapes use full cells; adjacent full cells merge.</p>
+    ${collision.enabled ? `<div class="field-pair"><label>Friction<input aria-label="Tile friction" type="number" min="0" max="1" step="0.05" data-tile-collision="friction" value="${collision.friction}" ${layer.locked ? 'disabled' : ''}/></label><label>Bounce<input aria-label="Tile bounce" type="number" min="0" max="1" step="0.05" data-tile-collision="restitution" value="${collision.restitution}" ${layer.locked ? 'disabled' : ''}/></label></div><p class="collision-summary">${!layer.visible ? 'Hidden layer: collision is inactive in Preview.' : count ? `${count} collider${count === 1 ? '' : 's'} in Preview` : 'No solid tile shapes on this layer.'}</p>` : ''}
     ${layer.locked ? '<p class="field-help">Unlock this layer to change collision settings.</p>' : ''}
   </fieldset>`;
 }
