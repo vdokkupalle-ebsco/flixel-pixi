@@ -455,3 +455,21 @@ to the current selection. Hidden and locked objects are excluded, including
 inherited layer/group flags. Escape cancels the box and preserves the previous
 selection. A click on empty canvas clears selection; dragging directly on an
 object continues to manipulate that object.
+
+### Aligning and distributing objects
+
+Select multiple objects with a selection box or Shift-click. The top of the
+Inspector shows arrangement controls:
+
+- **Left / Center / Right** align horizontal bounds or centers to the selection.
+- **Top / Middle / Bottom** align vertical bounds or centers to the selection.
+- **Horizontal / Vertical** distribute centers evenly between the outermost
+  objects, leaving those endpoints fixed. These require at least three objects.
+
+Alignment uses the combined bounds of the selected objects after rotation,
+scale, and origin. Spawn points align by position. Arrangement ignores grid
+snapping so edges and centers align precisely. It works across layers, but all
+selected objects and their layers/groups must be unlocked; the entire action
+is disabled otherwise. Each action is one Undo/Redo step, preserves selection,
+and saves the resulting positions in the project. Properties below the selection
+controls continue to describe the last selected object.

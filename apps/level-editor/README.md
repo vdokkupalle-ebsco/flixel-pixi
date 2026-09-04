@@ -93,3 +93,10 @@ or use its forward/backward arrows to move exactly one position. With Select
 (`V`), drag from empty canvas to select objects intersecting the selection box.
 Shift adds to the existing selection; Escape cancels. Hidden and locked objects
 are excluded, including objects hidden or locked by a parent layer group.
+
+Select two or more objects to reveal arrangement controls at the top of the
+Inspector. Align left/center/right or top/middle/bottom to the combined selection
+bounds. With three or more objects, distribute their centers horizontally or
+vertically between the outermost objects. Bounds account for rotation, scale,
+and origin; spawn points use their positions. All selected objects and their
+layers must be unlocked. Every arrangement is one undo step and retains selection.

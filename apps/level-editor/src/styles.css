@@ -2094,3 +2094,24 @@ select:focus-visible {
 .layer-drag-overlay .layer-main {
   padding: 8px 10px;
 }
+
+.alignment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.distribution-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.selection-arrange .button {
+  min-width: 0;
+  padding: 7px 4px;
+  font-size: 11px;
+}
+.selection-arrange .field-help {
+  margin-top: 12px;
+}

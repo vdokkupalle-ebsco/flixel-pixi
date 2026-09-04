@@ -1,3 +1,9 @@
+import {
+  alignmentActions,
+  alignmentControls,
+  alignObjects,
+  type AlignmentAction,
+} from './object-alignment';
 import { stepObjectOrder } from './object-layer-editing';
 import { mountLayerDrag } from './layer-drag';
 import {
@@ -990,7 +996,9 @@ export function mountEditor(
       return;
     }
     if (isGameplayObject(entity)) {
-      container.innerHTML = gameplayInspector(status.snapshot, entity);
+      container.innerHTML =
+        alignmentControls(status.snapshot) +
+        gameplayInspector(status.snapshot, entity);
       return;
     }
     const properties = entityProperties(entity);
@@ -1024,7 +1032,7 @@ export function mountEditor(
           `<option value="${escapeHtml(layer.id)}" ${layer.locked ? 'disabled' : ''}${layer.id === layerForEntity(status.snapshot, entity).id ? ' selected' : ''}>${escapeHtml(layer.name)} · ${escapeHtml(layer.purpose)}</option>`,
       )
       .join('');
-    container.innerHTML = `<fieldset><legend>Object</legend><label>Name<input data-entity-field="name" value="${escapeHtml(entity.name ?? '')}"/></label><label>Purpose layer<select data-entity-field="layerId">${layerOptions}</select></label><div class="segmented"><button type="button" data-action="toggle-visible" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.visible !== false}">Visible</button><button type="button" data-action="toggle-locked" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.locked === true}">Locked</button></div><button class="button full ghost" type="button" data-action="duplicate">${icon('duplicate')} Duplicate</button></fieldset>
+    container.innerHTML = `${alignmentControls(status.snapshot)}<fieldset><legend>Object</legend><label>Name<input data-entity-field="name" value="${escapeHtml(entity.name ?? '')}"/></label><label>Purpose layer<select data-entity-field="layerId">${layerOptions}</select></label><div class="segmented"><button type="button" data-action="toggle-visible" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.visible !== false}">Visible</button><button type="button" data-action="toggle-locked" data-entity-id="${escapeHtml(entity.id)}" aria-pressed="${properties.locked === true}">Locked</button></div><button class="button full ghost" type="button" data-action="duplicate">${icon('duplicate')} Duplicate</button></fieldset>
       <fieldset><legend>Transform</legend><div class="field-pair"><label><span>X</span><input data-entity-field="x" type="number" step="1" value="${entity.position.x.toFixed(1)}"/></label><label><span>Y</span><input data-entity-field="y" type="number" step="1" value="${entity.position.y.toFixed(1)}"/></label></div><label>Rotation <span class="unit-field"><input data-entity-field="rotation" type="number" step="1" value="${(((entity.rotation ?? 0) * 180) / Math.PI).toFixed(1)}"/><b>°</b></span></label><div class="field-pair"><label><span>Scale X</span><input data-entity-field="scaleX" type="number" min="0.05" step="0.05" value="${(entity.scale?.x ?? 1).toFixed(2)}"/></label><label><span>Scale Y</span><input data-entity-field="scaleY" type="number" min="0.05" step="0.05" value="${(entity.scale?.y ?? 1).toFixed(2)}"/></label></div></fieldset>
       <fieldset><legend>Sprite</legend><div class="field-pair"><label><span>Width</span><input data-entity-field="width" type="number" min="1" value="${Number(properties.width ?? 64)}"/></label><label><span>Height</span><input data-entity-field="height" type="number" min="1" value="${Number(properties.height ?? 64)}"/></label></div><div class="field-pair"><label><span>Origin X</span><input data-entity-field="originX" type="number" min="0" max="1" step="0.05" value="${Number(properties.originX ?? 0.5)}"/></label><label><span>Origin Y</span><input data-entity-field="originY" type="number" min="0" max="1" step="0.05" value="${Number(properties.originY ?? 0.5)}"/></label></div><label>Order within layer<input data-entity-field="zIndex" type="number" step="1" value="${Number(properties.zIndex ?? 0)}"/></label>${entity.type === 'sprite' ? `<details class="texture-region" open><summary>Texture region</summary><div class="field-pair"><label><span>Frame width</span><input data-entity-field="frameWidth" type="number" min="0" step="1" value="${Number(properties.frameWidth ?? 0)}"/></label><label><span>Frame height</span><input data-entity-field="frameHeight" type="number" min="0" step="1" value="${Number(properties.frameHeight ?? 0)}"/></label></div>${properties.frameX !== undefined || properties.frameY !== undefined ? `<div class="field-pair"><label><span>Pixel X</span><input data-entity-field="frameX" type="number" min="0" step="1" value="${Number(properties.frameX ?? 0)}"/></label><label><span>Pixel Y</span><input data-entity-field="frameY" type="number" min="0" step="1" value="${Number(properties.frameY ?? 0)}"/></label></div><p class="field-help">This exact region came from the imported atlas XML.</p>` : `<div class="field-pair"><label><span>Column</span><input data-entity-field="frameColumn" type="number" min="0" step="1" value="${Number(properties.frameColumn ?? 0)}"/></label><label><span>Row</span><input data-entity-field="frameRow" type="number" min="0" step="1" value="${Number(properties.frameRow ?? 0)}"/></label></div><p class="field-help">Manual grid regions use zero-based columns and rows. Use 0 × 0 frame size for the full image.</p>`}</details>` : ''}</fieldset>
       <fieldset><legend>Physics</legend>${bodyMarkup}</fieldset><fieldset><legend>Joints</legend>${jointMarkup}${joints}</fieldset>${customPropertyInspector(status.snapshot, entity)}`;
@@ -1214,6 +1222,19 @@ export function mountEditor(
       return;
     }
     const action = target.dataset.action;
+    if (action === 'align-objects') {
+      const alignment = target.dataset.alignment;
+      if (alignment && Object.hasOwn(alignmentActions, alignment)) {
+        const changed = alignObjects(store, alignment as AlignmentAction);
+        announce(
+          changed ? 'Selected objects arranged.' : 'No arrangement change.',
+        );
+        host
+          .querySelector<HTMLButtonElement>(`[data-alignment="${alignment}"]`)
+          ?.focus();
+      }
+      return;
+    }
     if (action === 'add-group') {
       createLayerGroup(store);
       announce('Layer group created. Use the Group menu to add layers.');
