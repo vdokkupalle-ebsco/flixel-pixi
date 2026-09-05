@@ -47,6 +47,7 @@ export type {
   FlxAtlasMeta,
   FlxAtlasPrefixOptions,
 } from './assets/flx-atlas-frame';
+export { parseTextureAtlasXml } from './assets/flx-atlas-parse';
 export { FlxContext } from './core/flx-context';
 export { FLX_CAMERA_HOST_SERVICE } from './core/flx-context';
 export type { FlxCameraHost, FlxStateRuntime } from './core/flx-context';

@@ -108,6 +108,8 @@ is unmounted.
   and responsive viewports.
 - A hosted Particle Editor for layered effects, generated or uploaded textures,
   versioned JSON exports, and ready-to-integrate bundles.
+- A hosted Level Editor for sprite scenes, transforms, layers, portable physics
+  bodies and joints, particle-effect placement, and playable previews.
 - Keyboard, pointer, touch, swipe, gamepad, virtual controls, remappable actions,
   and accessible native UI overlays.
 - Asset bundles, customizable preloaders, Web Audio, spatial sound, storage,
@@ -126,6 +128,7 @@ is unmounted.
 - [Making games](docs/guides/making-games.md)
 - [Browser support](docs/browser-support.md)
 - [Particle Editor and layered effects](docs/guide/particle-editor.md)
+- [Level Editor](docs/guide/level-editor.md)
 - [Compatibility with the AS3 baseline](docs/compatibility.md)
 - [Versioning and API stability](docs/versioning.md)
 - [Contributing](CONTRIBUTING.md)

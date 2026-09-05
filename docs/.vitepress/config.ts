@@ -196,6 +196,11 @@ export default defineConfig({
         link: `${siteUrl}/particle-editor/`,
         target: '_blank',
       },
+      {
+        text: 'Level Editor',
+        link: `${siteUrl}/level-editor/`,
+        target: '_blank',
+      },
       { text: 'API Reference', link: '/api/' },
       {
         text: 'Resources',
@@ -263,6 +268,7 @@ export default defineConfig({
               text: 'Particle Editor & Effects',
               link: '/guide/particle-editor',
             },
+            { text: 'Level Editor', link: '/guide/level-editor' },
             { text: 'Tilemaps & Level Design', link: '/guide/tilemaps' },
           ],
         },

@@ -6,8 +6,10 @@ import type { FlxAtlasFrameRect } from './flx-atlas-frame';
  * Parse a TextureAtlas XML string (Kenney / LibGDX / Shoebox format) into an
  * ordered array of frame rects.
  *
- * Supports attributes `width`/`height` **and** `w`/`h`.
- * Throws if no SubTexture elements are found.
+ * Supports Sparrow/Kenney `SubTexture` entries and TexturePacker-style
+ * `sprite` entries. Frame names may use `name` or `n`, and dimensions may use
+ * `width`/`height` or `w`/`h`.
+ * Throws if no supported frame elements are found.
  *
  * @public
  */
@@ -21,16 +23,19 @@ export function parseTextureAtlasXml(xmlText: string): FlxAtlasFrameRect[] {
     throw new Error(`XML parse error: ${parseError.textContent ?? 'unknown'}`);
   }
 
-  const subTextures = doc.querySelectorAll('SubTexture');
-  if (subTextures.length === 0) {
+  const frameElements = [...doc.getElementsByTagName('*')].filter((element) => {
+    const name = element.localName.toLowerCase();
+    return name === 'subtexture' || name === 'sprite';
+  });
+  if (frameElements.length === 0) {
     throw new Error(
-      'No SubTexture elements found in TextureAtlas XML. The atlas appears to be empty.',
+      'No SubTexture or sprite elements found in TextureAtlas XML. The atlas appears to be empty or uses an unsupported format.',
     );
   }
 
   const frames: FlxAtlasFrameRect[] = [];
-  for (const el of subTextures) {
-    const name = el.getAttribute('name') ?? '';
+  for (const el of frameElements) {
+    const name = el.getAttribute('name') ?? el.getAttribute('n') ?? '';
     const x = Number(el.getAttribute('x') ?? 0);
     const y = Number(el.getAttribute('y') ?? 0);
     // Support both width/height and w/h attribute variants

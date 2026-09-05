@@ -9,6 +9,8 @@ const gamesDist = join(rootDir, 'dist/games');
 const publicGamesDir = join(rootDir, 'docs/public/games');
 const particleEditorDist = join(rootDir, 'apps/particle-editor/dist');
 const publicParticleEditorDir = join(rootDir, 'docs/public/particle-editor');
+const levelEditorDist = join(rootDir, 'apps/level-editor/dist');
+const publicLevelEditorDir = join(rootDir, 'docs/public/level-editor');
 const particleEffectSampleDir = join(rootDir, 'examples/games/particle-effect');
 const publicParticleEffectSampleDir = join(
   rootDir,
@@ -31,6 +33,17 @@ if (existsSync(particleEditorDist)) {
 } else {
   console.log(
     'apps/particle-editor/dist does not exist yet. Run npm run build:apps first.',
+  );
+}
+
+if (existsSync(levelEditorDist)) {
+  rmSync(publicLevelEditorDir, { force: true, recursive: true });
+  mkdirSync(publicLevelEditorDir, { recursive: true });
+  cpSync(levelEditorDist, publicLevelEditorDir, { recursive: true });
+  console.log(`Copied ${levelEditorDist} to ${publicLevelEditorDir}`);
+} else {
+  console.log(
+    'apps/level-editor/dist does not exist yet. Run npm run build:apps first.',
   );
 }
 

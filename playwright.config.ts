@@ -28,6 +28,13 @@ export default defineConfig({
       timeout: 120_000,
       url: 'http://127.0.0.1:4174',
     },
+    {
+      command:
+        'npm run dev --workspace @flixel-pixi/level-editor -- --host 127.0.0.1 --port 4176',
+      reuseExistingServer: process.env.CI === undefined,
+      timeout: 120_000,
+      url: 'http://127.0.0.1:4176',
+    },
   ],
   projects: [
     {

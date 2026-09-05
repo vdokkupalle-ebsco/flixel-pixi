@@ -73,3 +73,20 @@ available from npm, so clean installs never depend on an unpublished version.
 Its production and test builds alias `flixel-pixi` to the engine source in the
 same repository, ensuring the deployed editor is verified against the exact
 runtime shipped from that commit.
+
+## Level Editor compatibility
+
+The Level Editor is a hosted application deployed with the documentation. It
+exports a standard `ProjectDocumentV1` plus a versioned
+`flixelPixiLevelEditor` extension containing canvas and portable physics-world
+settings. The editor validates both layers before opening a project.
+
+- Level Editor extension version `1` is the initial compatibility boundary.
+- Sprite and particle assets are embedded as data URLs so an exported project
+  remains self-contained.
+- Physics bodies and joints use the shared version `1` schemas and are loaded
+  through the optional Planck adapter only when the scene contains bodies.
+- Playable preview code uses package-root `flixel-pixi` APIs; editor canvas code
+  is authoring UI and is not part of the game runtime.
+- A future breaking editor-extension shape requires a new extension version and
+  migration guidance. Unknown versions are rejected rather than guessed.
