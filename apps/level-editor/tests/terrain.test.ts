@@ -49,25 +49,56 @@ describe('edge terrain editing', () => {
 
   it('connects cardinal neighbors without changing diagonal cells', () => {
     const map = empty();
-    paintTerrain(map, edgeSet, [{ x: 3, y: 3 }], bounds);
+    paintTerrain(
+      map,
+      edgeSet,
+      [
+        { x: 3, y: 3 },
+        { x: 4, y: 3 },
+      ],
+      bounds,
+    );
     expect(edgeMasks(map)).toEqual({
-      '3,2': 4,
-      '2,3': 2,
-      '3,3': 15,
+      '3,3': 2,
       '4,3': 8,
-      '3,4': 1,
     });
     expect(map.cells['2,2']).toBeUndefined();
-    paintTerrain(map, edgeSet, [{ x: 3, y: 3 }], bounds, true);
+    paintTerrain(
+      map,
+      edgeSet,
+      [
+        { x: 3, y: 3 },
+        { x: 4, y: 3 },
+      ],
+      bounds,
+      true,
+    );
     expect(map.cells).toEqual({});
   });
 
   it('joins a road stroke and resolves rotated edge artwork', () => {
     const map = empty();
-    paintTerrain(map, edgeSet, [{ x: 2, y: 3 }], bounds);
-    paintTerrain(map, edgeSet, [{ x: 3, y: 3 }], bounds);
-    expect(edgeMasks(map)['2,3']).toBe(15);
-    expect(edgeMasks(map)['3,3']).toBe(15);
+    paintTerrain(
+      map,
+      edgeSet,
+      [
+        { x: 2, y: 3 },
+        { x: 3, y: 3 },
+      ],
+      bounds,
+    );
+    paintTerrain(
+      map,
+      edgeSet,
+      [
+        { x: 3, y: 3 },
+        { x: 4, y: 3 },
+      ],
+      bounds,
+    );
+    expect(edgeMasks(map)['2,3']).toBe(2);
+    expect(edgeMasks(map)['3,3']).toBe(10);
+    expect(edgeMasks(map)['4,3']).toBe(8);
     const top = required(edgeSet.rules.find((rule) => rule.mask === 1)).tile;
     const rotated = required(
       transformStamp({ width: 1, height: 1, tiles: [top] }, 'rotate-cw')

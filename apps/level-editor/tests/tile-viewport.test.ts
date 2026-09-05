@@ -850,7 +850,7 @@ it('commits the selected terrain type and restores the stroke with undo/redo', (
   expect(cells()).toEqual(after);
 });
 
-it('paints an edge set through the viewport without touching diagonals', () => {
+it('paints a directed edge path through the viewport without perpendicular stubs', () => {
   const { store, pointer, cells } = editor();
   const asset = starterEdgeTileset();
   store.update('Road terrain', (draft) => {
@@ -859,14 +859,9 @@ it('paints an edge set through the viewport without touching diagonals', () => {
     draft.tool = 'terrain';
   });
   pointer('pointerdown', 3, 3);
-  pointer('pointerup', 3, 3);
-  expect(Object.keys(cells()).sort()).toEqual([
-    '2,3',
-    '3,2',
-    '3,3',
-    '3,4',
-    '4,3',
-  ]);
+  pointer('pointermove', 6, 3);
+  pointer('pointerup', 6, 3);
+  expect(Object.keys(cells()).sort()).toEqual(['3,3', '4,3', '5,3', '6,3']);
   expect(cells()['2,2']).toBeUndefined();
   store.undo();
   expect(cells()).toEqual({});

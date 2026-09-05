@@ -313,10 +313,32 @@ export function paintTerrain(
     throw new Error('Choose a terrain type to paint.');
   const positions = set.kind === 'edge' ? TERRAIN_EDGES : TERRAIN_CORNERS;
   const vertices = new Set<string>();
+  const path: Cell[] = [];
   for (const cell of cells) {
     if (!inBounds(cell, bounds) || !insideSelection(cell, selection)) continue;
-    for (const [dx, dy] of positions)
-      vertices.add(cellKey({ x: cell.x * 2 + dx * 2, y: cell.y * 2 + dy * 2 }));
+    const previous = path.at(-1);
+    if (
+      set.kind === 'edge' &&
+      previous &&
+      previous.x !== cell.x &&
+      previous.y !== cell.y
+    )
+      path.push({ x: cell.x, y: previous.y });
+    path.push(cell);
+  }
+  if (set.kind === 'edge' && !erase && path.length > 1) {
+    for (let index = 1; index < path.length; index++) {
+      const from = path[index - 1],
+        to = path[index];
+      if (!from || !to) continue;
+      vertices.add(cellKey({ x: from.x + to.x + 1, y: from.y + to.y + 1 }));
+    }
+  } else {
+    for (const cell of path)
+      for (const [dx, dy] of positions)
+        vertices.add(
+          cellKey({ x: cell.x * 2 + dx * 2, y: cell.y * 2 + dy * 2 }),
+        );
   }
   const affected = new Map<string, Cell>();
   for (const vertex of vertices) {

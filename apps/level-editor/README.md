@@ -40,7 +40,8 @@ four corners, and assign it to a pattern. Missing patterns are shown explicitly.
 Rules save with the image asset; copied and transformed terrain tiles remain
 recognizable. Corner sets support up to three terrain types plus empty, with shared transition
 rules. Edge sets use top, right, bottom and left connections for roads, paths and
-fences; **Add road sample** provides a complete paintable example.
+fences; dragging follows the stroke direction to select endpoints, straights,
+turns and existing junctions. **Add road sample** provides a complete example.
 
 Select a layer and enable **Tile collision** in the Inspector to make its painted
 cells solid. Adjacent cells merge into static boxes without filling gaps. Set

@@ -167,9 +167,11 @@ undo. Removing a set preserves the painted artwork.
 Choose **Add road sample** to try a complete edge set, or select an imported
 sheet and choose **+ Edge set**. Edge patterns use clockwise positions: top = 1,
 right = 2, bottom = 4 and left = 8. Painting connects only cardinal neighbors,
-so diagonal cells remain untouched. Rotation and horizontal flipping also rotate
-or reflect the edge meaning. Erase terrain disconnects the selected edge terrain
-and rebuilds its adjacent transitions in one undoable action.
+so diagonal cells remain untouched. A drag follows the stroke direction: its
+ends use endpoint tiles, middle cells use straights or turns, and crossing an
+existing stroke preserves a junction. Rotation and horizontal flipping also
+rotate or reflect the edge meaning. Erase terrain disconnects the selected edge
+terrain and rebuilds its adjacent transitions in one undoable action.
 
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
 `kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
