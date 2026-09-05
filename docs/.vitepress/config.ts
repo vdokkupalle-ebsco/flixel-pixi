@@ -6,7 +6,7 @@ let apiSidebar: DefaultTheme.SidebarItem[] = [];
 const docsBase = process.env.BASE_URL || '/flixel-pixi/';
 const siteUrl = 'https://vdokkupalle-ebsco.github.io/flixel-pixi';
 const defaultDescription =
-  'Build fast, playable 2D browser games with a code-first TypeScript engine powered by PixiJS.';
+  'Build fast 2D browser games with an open-source TypeScript HTML5 game engine powered by PixiJS.';
 const packageVersion = JSON.parse(
   readFileSync(resolve(__dirname, '../../package.json'), 'utf8'),
 ).version as string;
@@ -57,12 +57,23 @@ export default defineConfig({
   },
   sitemap: {
     hostname: `${siteUrl}/`,
+    transformItems(items) {
+      const currentPages = items.filter(
+        ({ url }) => !url.startsWith('versions/'),
+      );
+      const urls = new Set(currentPages.map(({ url }) => url));
+      for (const url of ['level-editor/', 'particle-editor/'])
+        if (!urls.has(url)) currentPages.push({ url, changefreq: 'weekly' });
+      return currentPages;
+    },
   },
   transformHead({ pageData }) {
     const path = pageData.relativePath
       .replace(/(^|\/)index\.md$/, '$1')
       .replace(/\.md$/, '');
-    const canonicalUrl = `${siteUrl}/${path}`;
+    const archivedVersion = path.match(/^versions\/[^/]+\/(.*)$/);
+    const canonicalPath = archivedVersion?.[1] ?? path;
+    const canonicalUrl = `${siteUrl}/${canonicalPath}`;
     const pageTitle = pageData.title || 'Flixel-Pixi';
     const pageDescription = pageData.description || defaultDescription;
     const socialImage = `${siteUrl}/logo.jpg`;
@@ -74,8 +85,7 @@ export default defineConfig({
         'meta',
         {
           name: 'robots',
-          content:
-            'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+          content: `${archivedVersion ? 'noindex' : 'index'}, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1`,
         },
       ],
       ['meta', { property: 'og:site_name', content: 'Flixel-Pixi' }],
@@ -116,6 +126,7 @@ export default defineConfig({
               '@id': `${siteUrl}/#software`,
               name: 'Flixel-Pixi',
               applicationCategory: 'DeveloperApplication',
+              applicationSubCategory: 'HTML5 game engine',
               operatingSystem: 'Web browser',
               description: defaultDescription,
               url: `${siteUrl}/`,
@@ -123,11 +134,19 @@ export default defineConfig({
               softwareVersion: packageVersion,
               programmingLanguage: 'TypeScript',
               runtimePlatform: 'Web browser',
+              browserRequirements:
+                'Modern browser with JavaScript and WebGL or WebGPU',
               isAccessibleForFree: true,
               downloadUrl: npmUrl,
               codeRepository: repositoryUrl,
               license: 'https://opensource.org/license/mit',
               sameAs: [repositoryUrl, npmUrl],
+              keywords:
+                'TypeScript game engine, HTML5 game engine, JavaScript game engine, 2D game engine, PixiJS game framework, browser game development',
+              audience: {
+                '@type': 'Audience',
+                audienceType: 'Web game developers',
+              },
               featureList: [
                 'Sprites and animation',
                 'Collision detection and physics',

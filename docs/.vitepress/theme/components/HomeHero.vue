@@ -235,9 +235,10 @@ async function copyInstall() {
           Make the game<br /><span>you keep thinking about.</span>
         </h1>
         <p class="hero-intro">
-          Flixel-Pixi handles the game loop, rendering, input, collisions,
-          sound, and all the fiddly browser work. You get to spend that time
-          making the game feel good.
+          Flixel-Pixi is an open-source TypeScript HTML5 game engine for fast 2D
+          browser games, powered by PixiJS. It handles the game loop, rendering,
+          input, collisions, sound, and all the fiddly browser work so you can
+          focus on making the game feel good.
         </p>
         <div class="hero-actions">
           <a :href="withBase('/guide/getting-started')" class="primary-action">

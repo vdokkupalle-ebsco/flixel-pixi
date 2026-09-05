@@ -1,8 +1,8 @@
 ---
 layout: page
-title: 'Flixel-Pixi: TypeScript 2D Game Engine for the Web'
+title: 'Flixel-Pixi: TypeScript HTML5 2D Game Engine'
 titleTemplate: false
-description: Make playful, fast 2D browser games with a TypeScript engine that takes care of the game loop, rendering, input, collision, audio, cameras, and tilemaps.
+description: Build fast 2D browser games with an open-source TypeScript HTML5 game engine powered by PixiJS, with sprites, physics, tilemaps, input, audio, and visual editors.
 ---
 
 <HomeHero />

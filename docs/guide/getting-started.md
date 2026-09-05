@@ -1,3 +1,8 @@
+---
+title: Install the Flixel-Pixi TypeScript Game Engine
+description: Install Flixel-Pixi with Vite and TypeScript, create an HTML5 canvas game, and run your first browser scene with PixiJS rendering.
+---
+
 # Installation & Quick Start
 
 Get up and running with **flixel-pixi** in minutes using Vite and TypeScript.
