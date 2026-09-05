@@ -204,3 +204,40 @@ it('adds a multi-terrain sample and switches the painting material', () => {
   store.undo();
   expect(store.status.snapshot).toEqual(before);
 });
+
+it('adds edge terrain sets and exposes cardinal road rules', () => {
+  const store = new LevelEditorStore({
+    document: createInitialProject(),
+    selectedEntityIds: [],
+    tool: 'terrain',
+    snapToGrid: true,
+  });
+  const host = document.createElement('section');
+  document.body.append(host);
+  cleanup = mountTilePalette(host, store, vi.fn());
+  required(
+    host.querySelector<HTMLButtonElement>('[data-terrain-edge-sample]'),
+  ).click();
+  const choice = required(store.status.snapshot.terrain);
+  const asset = () =>
+    required(
+      store.status.snapshot.document.assets.find(
+        (item) => item.id === choice.assetId,
+      ),
+    );
+  expect(required(terrainSets(asset())[0]).kind).toBe('edge');
+  expect(host.textContent).toContain('Road · edge');
+  expect(
+    host.querySelector('[data-terrain-corner="0"]')?.getAttribute('aria-label'),
+  ).toBe('Top terrain edge');
+  expect(host.querySelector('.terrain-panel')?.classList).toContain(
+    'terrain-edge',
+  );
+
+  required(
+    host.querySelector<HTMLButtonElement>('[data-terrain-edge-add]'),
+  ).click();
+  expect(required(terrainSets(asset()).at(-1)).kind).toBe('edge');
+  store.undo();
+  expect(terrainSets(asset())).toHaveLength(1);
+});

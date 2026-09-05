@@ -39,7 +39,8 @@ stroke is one undo step. In **Terrain rules**, choose a source tile, mark its
 four corners, and assign it to a pattern. Missing patterns are shown explicitly.
 Rules save with the image asset; copied and transformed terrain tiles remain
 recognizable. Corner sets support up to three terrain types plus empty, with shared transition
-rules. Edge and mixed sets are future work.
+rules. Edge sets use top, right, bottom and left connections for roads, paths and
+fences; **Add road sample** provides a complete paintable example.
 
 Select a layer and enable **Tile collision** in the Inspector to make its painted
 cells solid. Adjacent cells merge into static boxes without filling gaps. Set
@@ -108,14 +109,12 @@ same appearance to tiles, sprites, and particles, and offsets collision bodies.
 Opacity does not disable collisions; use visibility or collision controls for that.
 Appearance is saved with the project and supports Undo/Redo.
 
-
 Terrain patterns support up to 16 weighted tile choices. In **Terrain rules**,
 select a source tile and a pattern, then choose **Add variant**. Adjust each
 weight to control its relative frequency; the displayed percentages update
 accordingly. The sample grass set includes three decorative variants. Choices
 are stable by cell, so previews match painting and unchanged terrain does not
 shuffle. Variant edits support undo/redo and project export.
-
 
 Choose **Add grass and dirt sample** to try a complete two-terrain atlas. Use
 **Terrain to paint** to switch materials within the same set. For custom artwork,

@@ -1561,6 +1561,10 @@ select:focus-visible {
 .terrain-heading strong {
   font-size: 12px;
 }
+.terrain-heading > span {
+  display: flex;
+  gap: 6px;
+}
 .terrain-swatch {
   display: inline-block;
   width: 10px;
@@ -1648,6 +1652,26 @@ select:focus-visible {
 .corner-3 {
   bottom: 0;
   left: 0;
+}
+.terrain-edge .terrain-tile-preview > .corner-0,
+.terrain-edge .terrain-pattern > .corner-0 {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.terrain-edge .terrain-tile-preview > .corner-1,
+.terrain-edge .terrain-pattern > .corner-1 {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.terrain-edge .terrain-tile-preview > .corner-2,
+.terrain-edge .terrain-pattern > .corner-2 {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.terrain-edge .terrain-tile-preview > .corner-3,
+.terrain-edge .terrain-pattern > .corner-3 {
+  top: 50%;
+  transform: translateY(-50%);
 }
 .terrain-patterns {
   display: grid;

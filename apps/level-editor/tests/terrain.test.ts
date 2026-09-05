@@ -10,6 +10,7 @@ import {
   terrainTypes,
   assignTerrainTile,
   starterTerrainTileset,
+  starterEdgeTileset,
   terrainMask,
   terrainSets,
   setTerrainSets,
@@ -34,6 +35,56 @@ const masks = (map: TileMap) =>
       terrainMask(set, tile),
     ]),
   );
+
+describe('edge terrain editing', () => {
+  const edgeAsset = starterEdgeTileset();
+  const edgeSet = required(terrainSets(edgeAsset)[0]);
+  const edgeMasks = (map: TileMap) =>
+    Object.fromEntries(
+      Object.entries(map.cells).map(([key, tile]) => [
+        key,
+        terrainMask(edgeSet, tile),
+      ]),
+    );
+
+  it('connects cardinal neighbors without changing diagonal cells', () => {
+    const map = empty();
+    paintTerrain(map, edgeSet, [{ x: 3, y: 3 }], bounds);
+    expect(edgeMasks(map)).toEqual({
+      '3,2': 4,
+      '2,3': 2,
+      '3,3': 15,
+      '4,3': 8,
+      '3,4': 1,
+    });
+    expect(map.cells['2,2']).toBeUndefined();
+    paintTerrain(map, edgeSet, [{ x: 3, y: 3 }], bounds, true);
+    expect(map.cells).toEqual({});
+  });
+
+  it('joins a road stroke and resolves rotated edge artwork', () => {
+    const map = empty();
+    paintTerrain(map, edgeSet, [{ x: 2, y: 3 }], bounds);
+    paintTerrain(map, edgeSet, [{ x: 3, y: 3 }], bounds);
+    expect(edgeMasks(map)['2,3']).toBe(15);
+    expect(edgeMasks(map)['3,3']).toBe(15);
+    const top = required(edgeSet.rules.find((rule) => rule.mask === 1)).tile;
+    const rotated = required(
+      transformStamp({ width: 1, height: 1, tiles: [top] }, 'rotate-cw')
+        .tiles[0],
+    );
+    expect(terrainMask(edgeSet, rotated)).toBe(2);
+  });
+
+  it('validates and round-trips the complete road sample', () => {
+    expect(() => validateTerrains([edgeAsset])).not.toThrow();
+    const project = createInitialProject();
+    project.assets.push(edgeAsset);
+    expect(() => parseLevelProject(project)).not.toThrow();
+    expect(edgeSet.kind).toBe('edge');
+    expect(edgeSet.rules).toHaveLength(15);
+  });
+});
 
 describe('corner terrain editing', () => {
   it('creates exact transitions around a filled cell and erases them together', () => {

@@ -19,6 +19,13 @@ export const TERRAIN_CORNERS = [
   [1, 1],
   [0, 1],
 ] as const;
+/** Clockwise edges: top, right, bottom, left. */
+export const TERRAIN_EDGES = [
+  [0.5, 0],
+  [1, 0.5],
+  [0.5, 1],
+  [0, 0.5],
+] as const;
 export interface TerrainVariant {
   tile: TileRegion;
   weight?: number;
@@ -30,7 +37,7 @@ export interface TerrainRule extends TerrainVariant {
 export interface TerrainSet {
   id: string;
   name: string;
-  kind: 'corner';
+  kind: 'corner' | 'edge';
   terrains?: { name: string; color: string }[];
   color: string;
   rules: TerrainRule[];
@@ -111,13 +118,13 @@ export function validateTerrains(assets: readonly AssetDefinition[]): void {
         typeof set.name !== 'string' ||
         !set.name.trim() ||
         set.name.length > 80 ||
-        set.kind !== 'corner' ||
+        (set.kind !== 'corner' && set.kind !== 'edge') ||
         typeof set.color !== 'string' ||
         !/^#[0-9a-f]{6}$/i.test(set.color) ||
         !Array.isArray(set.rules) ||
         set.rules.length > 255
       )
-        throw new Error('Invalid corner terrain set.');
+        throw new Error('Invalid terrain set.');
       if (
         set.terrains !== undefined &&
         (!Array.isArray(set.terrains) ||
@@ -213,14 +220,13 @@ export function terrainMask(
   if (!rule) return undefined;
   const values = patternValues(set, rule.mask),
     transformed = [0, 0, 0, 0];
-  TERRAIN_CORNERS.forEach(([x, y], index) => {
+  const positions = set.kind === 'edge' ? TERRAIN_EDGES : TERRAIN_CORNERS;
+  positions.forEach(([x, y], index) => {
     if (!values[index]) return;
     let tx = tile.flipX ? 1 - x : x,
       ty: number = y;
     for (let r = 0; r < (tile.rotation ?? 0); r++) [tx, ty] = [1 - ty, tx];
-    const next = TERRAIN_CORNERS.findIndex(
-      ([cx, cy]) => cx === tx && cy === ty,
-    );
+    const next = positions.findIndex(([cx, cy]) => cx === tx && cy === ty);
     transformed[next] = values[index] ?? 0;
   });
   return patternCode(set, transformed);
@@ -305,18 +311,24 @@ export function paintTerrain(
     terrainIndex > terrainTypes(set).length
   )
     throw new Error('Choose a terrain type to paint.');
+  const positions = set.kind === 'edge' ? TERRAIN_EDGES : TERRAIN_CORNERS;
   const vertices = new Set<string>();
   for (const cell of cells) {
     if (!inBounds(cell, bounds) || !insideSelection(cell, selection)) continue;
-    for (const [dx, dy] of TERRAIN_CORNERS)
-      vertices.add(cellKey({ x: cell.x + dx, y: cell.y + dy }));
+    for (const [dx, dy] of positions)
+      vertices.add(cellKey({ x: cell.x * 2 + dx * 2, y: cell.y * 2 + dy * 2 }));
   }
   const affected = new Map<string, Cell>();
   for (const vertex of vertices) {
     const [x = 0, y = 0] = vertex.split(',').map(Number);
-    for (const [dx, dy] of TERRAIN_CORNERS) {
-      const cell = { x: x - dx, y: y - dy };
-      if (inBounds(cell, bounds)) affected.set(cellKey(cell), cell);
+    for (const [dx, dy] of positions) {
+      const cell = { x: (x - dx * 2) / 2, y: (y - dy * 2) / 2 };
+      if (
+        Number.isInteger(cell.x) &&
+        Number.isInteger(cell.y) &&
+        inBounds(cell, bounds)
+      )
+        affected.set(cellKey(cell), cell);
     }
   }
   const patch = new Map<string, TileRegion | undefined>();
@@ -328,8 +340,12 @@ export function paintTerrain(
         'Terrain touches tiles outside this set. Use an empty area or a separate layer.',
       );
     const values = patternValues(set, oldMask);
-    TERRAIN_CORNERS.forEach(([dx, dy], index) => {
-      if (vertices.has(cellKey({ x: cell.x + dx, y: cell.y + dy })))
+    positions.forEach(([dx, dy], index) => {
+      if (
+        vertices.has(
+          cellKey({ x: cell.x * 2 + dx * 2, y: cell.y * 2 + dy * 2 }),
+        )
+      )
         values[index] = erase ? 0 : terrainIndex;
     });
     const mask = patternCode(set, values);
@@ -470,5 +486,57 @@ export function multiTerrainTileset(
     },
   };
   setTerrainSets(asset, [set]);
+  return asset;
+}
+
+/** Complete edge set for connected roads, paths and fences. */
+export function starterEdgeTileset(
+  id = 'edge-terrain-starter',
+): AssetDefinition {
+  const size = 32;
+  const paths = Array.from({ length: 16 }, (_, mask) => {
+    const lines = [
+      [16, 16, 16, 0],
+      [16, 16, 32, 16],
+      [16, 16, 16, 32],
+      [16, 16, 0, 16],
+    ];
+    return mask
+      ? `<g transform="translate(${(mask % 4) * size} ${Math.floor(mask / 4) * size})"><circle cx="16" cy="16" r="5" fill="#c69a61"/>${lines.map(([x1, y1, x2, y2], index) => (mask & (2 ** index) ? `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#c69a61" stroke-width="10"/>` : '')).join('')}</g>`
+      : '';
+  });
+  const asset: AssetDefinition = {
+    id,
+    kind: 'image',
+    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" shape-rendering="crispEdges">${paths.join('')}</svg>`)}`,
+    metadata: {
+      fileName: 'Road edges',
+      width: 128,
+      height: 128,
+      tileWidth: size,
+      tileHeight: size,
+    },
+  };
+  setTerrainSets(asset, [
+    {
+      id: 'road',
+      name: 'Road',
+      color: '#c69a61',
+      kind: 'edge',
+      rules: Array.from({ length: 15 }, (_, index) => {
+        const mask = index + 1;
+        return {
+          mask,
+          tile: {
+            assetId: id,
+            x: (mask % 4) * size,
+            y: Math.floor(mask / 4) * size,
+            width: size,
+            height: size,
+          },
+        };
+      }),
+    },
+  ]);
   return asset;
 }

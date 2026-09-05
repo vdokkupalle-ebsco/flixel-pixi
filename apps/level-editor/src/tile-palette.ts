@@ -19,6 +19,7 @@ import {
   assignTerrainTile,
   setTerrainSets,
   starterTerrainTileset,
+  starterEdgeTileset,
   selectedTerrain,
   type TerrainSet,
 } from './terrain';
@@ -131,6 +132,7 @@ export function mountTilePalette(
     if (renderKey === key) return;
     renderKey = key;
     const palette = asset ? paletteTiles(asset) : { tiles: [], columns: 1 };
+    const terrainSet = selectedTerrain(assets, snapshot.terrain);
     const options = assets
       .map(
         (asset) =>
@@ -180,7 +182,7 @@ export function mountTilePalette(
       </div>`
       : '';
     const paletteMarkup = asset
-      ? `<div class="tile-palette-scroll"><div class="tile-palette" role="group" aria-label="Tile palette" style="grid-template-columns:repeat(${palette.columns}, 36px)">${cards}</div></div>${palette.tiles.length === 0 ? '<p class="field-help">No tiles fit these settings. Adjust the tile size, margin or spacing. Up to 4,096 tiles per sheet.</p>' : `<p class="tile-caption">${palette.tiles.length} source tiles${terrainMode ? '' : ` · ${snapshot.tileStamp?.width ?? 1} × ${snapshot.tileStamp?.height ?? 1} stamp`}</p><p class="field-help">${terrainMode ? 'Select a tile to assign its terrain corners.' : 'Shift-click selects a multi-tile stamp.'}</p>`}`
+      ? `<div class="tile-palette-scroll"><div class="tile-palette" role="group" aria-label="Tile palette" style="grid-template-columns:repeat(${palette.columns}, 36px)">${cards}</div></div>${palette.tiles.length === 0 ? '<p class="field-help">No tiles fit these settings. Adjust the tile size, margin or spacing. Up to 4,096 tiles per sheet.</p>' : `<p class="tile-caption">${palette.tiles.length} source tiles${terrainMode ? '' : ` · ${snapshot.tileStamp?.width ?? 1} × ${snapshot.tileStamp?.height ?? 1} stamp`}</p><p class="field-help">${terrainMode ? `Select a tile to assign its terrain ${terrainSet?.kind === 'edge' ? 'edges' : 'corners'}.` : 'Shift-click selects a multi-tile stamp.'}</p>`}`
       : '<div class="tile-empty"><span class="tile-empty-icon">▦</span><strong>Build your world, tile by tile</strong><p>Choose an image above, import a tileset, or try the starter terrain.</p><button class="button primary full" type="button" data-starter-tiles>Use starter tiles</button></div>';
     host.innerHTML = `<div class="panel-heading"><div><small>Tile painting</small><strong>Tilesets</strong></div><button class="small-icon" type="button" data-tile-upload aria-label="Import tileset" title="Import tileset image or image + atlas XML">${icon('add')}</button></div>
       <div class="tileset-content"><div class="tileset-modes" role="group" aria-label="Tileset mode"><button type="button" data-palette-mode="tiles" aria-pressed="${!terrainMode}">Tiles</button><button type="button" data-palette-mode="terrain" aria-pressed="${terrainMode}">Terrains</button></div><label class="tileset-label">Source image<select aria-label="Tileset" data-tileset><option value=""${!assetId ? ' selected' : ''} disabled>Choose an image…</option>${options}</select></label>${terrainMode ? '' : fields}
@@ -236,28 +238,39 @@ export function mountTilePalette(
     }
     if (
       target.hasAttribute('data-terrain-sample') ||
-      target.hasAttribute('data-terrain-multi-sample')
+      target.hasAttribute('data-terrain-multi-sample') ||
+      target.hasAttribute('data-terrain-edge-sample')
     ) {
       const multi = target.hasAttribute('data-terrain-multi-sample');
-      const starter = multi
-        ? multiTerrainTileset(createId('terrain'))
-        : starterTerrainTileset(createId('terrain'));
+      const edge = target.hasAttribute('data-terrain-edge-sample');
+      const starter = edge
+        ? starterEdgeTileset(createId('terrain'))
+        : multi
+          ? multiTerrainTileset(createId('terrain'))
+          : starterTerrainTileset(createId('terrain'));
       assetId = starter.id;
-      ruleTileIndex = multi ? 40 : 18;
+      ruleTileIndex = multi ? 40 : 15;
       ruleMask = multi ? 40 : 15;
       editingRules = false;
       store.update('Added sample terrain', (draft) => {
         draft.document.assets.push(starter);
-        draft.terrain = { assetId, setId: multi ? 'landscape' : 'grass' };
+        draft.terrain = {
+          assetId,
+          setId: edge ? 'road' : multi ? 'landscape' : 'grass',
+        };
         draft.tool = 'terrain';
         draft.selectedEntityIds = [];
       });
       host.scrollTop = 0;
       return;
     }
-    if (target.hasAttribute('data-terrain-add')) {
+    if (
+      target.hasAttribute('data-terrain-add') ||
+      target.hasAttribute('data-terrain-edge-add')
+    ) {
       editingRules = true;
-      store.update('Added corner terrain set', (draft) => {
+      const edge = target.hasAttribute('data-terrain-edge-add');
+      store.update(`Added ${edge ? 'edge' : 'corner'} terrain set`, (draft) => {
         const asset = draft.document.assets.find(
           (asset) => asset.id === assetId,
         );
@@ -265,7 +278,7 @@ export function mountTilePalette(
         const set: TerrainSet = {
           id: createId('terrain-set'),
           name: `Terrain ${terrainSets(asset).length + 1}`,
-          kind: 'corner',
+          kind: edge ? 'edge' : 'corner',
           color: '#72a854',
           rules: [],
         };

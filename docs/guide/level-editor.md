@@ -121,9 +121,10 @@ new transforms survive export/import and render in the playable preview.
 
 ## Terrain auto-tiling
 
-The terrain workflow follows [Tiled’s corner terrain sets](https://doc.mapeditor.org/en/stable/manual/terrain/).
-A corner set marks each tile’s four corners as terrain or empty. Painting changes
-the corners and chooses matching tiles for the surrounding cells automatically.
+The terrain workflow follows [Tiled’s terrain sets](https://doc.mapeditor.org/en/stable/manual/terrain/).
+A corner set marks each tile’s four corners as terrain or empty. An edge set marks
+the top, right, bottom and left connections. Painting changes those positions and
+chooses matching tiles for neighboring cells automatically.
 
 ### Try terrain painting
 
@@ -143,7 +144,7 @@ set. Use a separate layer for different terrain sets or unrelated artwork.
 
 ### Define your own corner set
 
-Select an imported sheet or atlas, open **Terrains**, and choose **+ New set**.
+Select an imported sheet or atlas, open **Terrains**, and choose **+ Corner set**.
 Expand **Terrain rules** to name the set, choose its identifying color and assign
 source regions:
 
@@ -161,8 +162,17 @@ number. Each source tile can describe only one pattern within a set; assigning
 it again moves it from the previous pattern. Rule edits and set removal support
 undo. Removing a set preserves the painted artwork.
 
+### Define roads, paths and fences
+
+Choose **Add road sample** to try a complete edge set, or select an imported
+sheet and choose **+ Edge set**. Edge patterns use clockwise positions: top = 1,
+right = 2, bottom = 4 and left = 8. Painting connects only cardinal neighbors,
+so diagonal cells remain untouched. Rotation and horizontal flipping also rotate
+or reflect the edge meaning. Erase terrain disconnects the selected edge terrain
+and rebuilds its adjacent transitions in one undoable action.
+
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
-`kind: "corner"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
+`kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
 regions, so grid sheets and atlas images both work. Export/import validates and
 preserves the definitions without changing the version 1 document contract.
 Terrain tiles remain ordinary sparse tile cells. Copy/paste and stamp transforms
@@ -170,7 +180,7 @@ continue to work, and terrain editing recognizes flipped and rotated artwork.
 The playable preview uses the already resolved tiles.
 
 This phase supports up to 64 sets per image, with up to three terrain types plus
-empty in each corner set. Edge/mixed sets, automatic tile rotation to fill missing
+empty in each corner or edge set. Mixed corner-and-edge sets, automatic tile rotation to fill missing
 rules, and Tiled file interchange are not yet implemented.
 
 ## Tile collision layers
@@ -254,7 +264,7 @@ effects with `FlxParticleEffect.fromAssets`, and runs physics through
 ## Current scope
 
 The first release deliberately excludes soft bodies, collaborative editing,
-user scripts, animation timelines, edge/mixed terrain sets, and Tiled TMX/JSON interchange. It focuses on a
+user scripts, animation timelines, mixed corner-and-edge terrain sets, and Tiled TMX/JSON interchange. It focuses on a
 stable asset-to-scene-to-preview loop that future editor features can extend
 without changing the version `1` document contract.
 
@@ -500,7 +510,6 @@ visuals; collision stays enabled. Use layer visibility or collision settings to
 remove collision. Each appearance change supports Undo/Redo and is preserved
 in project exports; older projects default to 100% opacity and zero offsets.
 
-
 ### Weighted terrain variants
 
 A corner pattern can contain a primary tile plus up to 15 alternative tiles.
@@ -522,7 +531,6 @@ repaint to resolve a cell again. Variant tiles remain compatible with collision
 shapes, transformed stamps, and project export/import. Removing or reassigning
 source artwork preserves existing painted cells, but those cells may no longer
 be recognized as part of the terrain set. Rule edits remain undoable.
-
 
 ### Multiple terrain types
 
