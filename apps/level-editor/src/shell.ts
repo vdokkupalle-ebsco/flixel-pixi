@@ -1161,8 +1161,11 @@ export function mountEditor(
 
   const tilesetHost = host.querySelector<HTMLElement>('[data-tilesets]');
   if (!tilesetHost) throw new Error('Tileset dock is missing.');
-  const disposePalette = mountTilePalette(tilesetHost, store, () =>
-    assetFileInput.click(),
+  const disposePalette = mountTilePalette(
+    tilesetHost,
+    store,
+    () => assetFileInput.click(),
+    announce,
   );
   canvas.addEventListener('tile-message', (event) =>
     announce((event as CustomEvent<string>).detail, true),

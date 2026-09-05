@@ -8,6 +8,7 @@ import { activeTileSelection } from './tile-editing';
 import { icon } from './icons';
 import { isTileTool, sameTile, starterTileset, type TileRegion } from './tiles';
 import { terrainPanel } from './terrain-panel';
+import { exportTiledTerrain, importTiledTerrain } from './tiled-terrain';
 import {
   terrainSets,
   terrainTypes,
@@ -94,6 +95,7 @@ export function mountTilePalette(
   host: HTMLElement,
   store: LevelEditorStore,
   upload: () => void,
+  announce: (message: string, error?: boolean) => void = () => undefined,
 ): () => void {
   let closeShapeEditor: (() => void) | undefined;
   let assetId = '',
@@ -104,6 +106,37 @@ export function mountTilePalette(
     ruleTileIndex = 0,
     ruleTileEnd = 0,
     editingRules = false;
+  const tiledInput = document.createElement('input');
+  tiledInput.type = 'file';
+  tiledInput.accept = '.json,application/json';
+  const importTiled = async (): Promise<void> => {
+    const file = tiledInput.files?.[0];
+    if (!file) return;
+    try {
+      const input = JSON.parse(await file.text()) as unknown;
+      store.update('Imported Tiled terrain', (draft) => {
+        const asset = draft.document.assets.find((item) => item.id === assetId);
+        if (!asset)
+          throw new Error(
+            'Choose a source image before importing Tiled terrain.',
+          );
+        const sets = importTiledTerrain(asset, input);
+        setTerrainSets(asset, sets);
+        if (sets[0]) draft.terrain = { assetId, setId: sets[0].id };
+        else delete draft.terrain;
+        draft.tool = 'terrain';
+      });
+      ruleMask = 1;
+      ruleTileIndex = ruleTileEnd = 0;
+      editingRules = true;
+      announce('Imported Tiled terrain sets');
+    } catch (error) {
+      announce(error instanceof Error ? error.message : String(error), true);
+    } finally {
+      tiledInput.value = '';
+    }
+  };
+  tiledInput.addEventListener('change', importTiled);
   const render = ({ snapshot }: LevelEditorStatus): void => {
     const assets = snapshot.document.assets.filter(
       (asset) => asset.kind === 'image' && asset.metadata?.hidden !== true,
@@ -207,6 +240,37 @@ export function mountTilePalette(
   const click = (event: MouseEvent): void => {
     const target = (event.target as HTMLElement).closest<HTMLElement>('button');
     if (!target) return;
+    if (target.hasAttribute('data-terrain-tiled-import')) {
+      tiledInput.click();
+      return;
+    }
+    if (target.hasAttribute('data-terrain-tiled-export')) {
+      const asset = store.status.snapshot.document.assets.find(
+        (item) => item.id === assetId,
+      );
+      if (!asset) return;
+      try {
+        const anchor = document.createElement('a'),
+          blob = new Blob(
+            [JSON.stringify(exportTiledTerrain(asset), null, 2)],
+            {
+              type: 'application/json',
+            },
+          ),
+          url = URL.createObjectURL(blob),
+          name = String(asset.metadata?.fileName ?? asset.id)
+            .replace(/\.[^.]+$/, '')
+            .replace(/[^a-z0-9_-]+/gi, '-');
+        anchor.href = url;
+        anchor.download = `${name || 'tileset'}.tileset.json`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        announce('Exported Tiled terrain JSON');
+      } catch (error) {
+        announce(error instanceof Error ? error.message : String(error), true);
+      }
+      return;
+    }
     if (target.hasAttribute('data-edit-collision')) {
       const asset = store.status.snapshot.document.assets.find(
         (a) => a.id === assetId,
@@ -648,6 +712,7 @@ export function mountTilePalette(
   const unsubscribe = store.subscribe(render);
   return () => {
     closeShapeEditor?.();
+    tiledInput.removeEventListener('change', importTiled);
     unsubscribe();
     host.removeEventListener('toggle', toggleRules, true);
     host.removeEventListener('click', click);

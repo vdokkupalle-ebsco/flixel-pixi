@@ -206,6 +206,23 @@ order. The operation stops at the set's last pattern, moves source regions out o
 old assignments to avoid ambiguity, and records the entire assignment as one
 undo step.
 
+### Exchange terrain sets with Tiled
+
+Choose **Export Tiled JSON** to download tileset JSON containing the selected
+image's Wang sets. Corner and edge values use Tiled's eight-position Wang ID;
+source regions become local tile IDs, variants become repeated Wang tiles, and
+tile probabilities carry variant weights. Rotation and reflection permissions
+map to Tiled's tileset transformations. Namespaced Wang-set properties preserve
+the editor's stable set IDs, per-set transform choices, and exact weights when a
+standard Tiled field is shared across the whole tileset.
+
+Choose **Import Tiled JSON** while the matching image is selected. Import reads
+the JSON tile size, margin and spacing, replaces that image's terrain definitions,
+and remains one undoable operation. The image dimensions must match. The editor
+accepts corner or edge Wang sets with up to three colors and rejects mixed sets,
+out-of-range color indexes, invalid local tile IDs, ambiguous source assignments,
+and malformed weights before changing the project.
+
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
 `kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
 regions, so grid sheets and atlas images both work. Export/import validates and

@@ -1565,6 +1565,14 @@ select:focus-visible {
   display: flex;
   gap: 6px;
 }
+.terrain-interchange {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.terrain-interchange button {
+  flex: 1;
+}
 .terrain-swatch {
   display: inline-block;
   width: 10px;
