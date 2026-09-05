@@ -188,6 +188,10 @@ need artwork. Assigning a source tile directly to a derived pattern overrides th
 generated result. Variants and their weights rotate or reflect together, and the
 choice remains stable for each painted cell. This lets a road reuse one endpoint
 for four directions and one straight for horizontal and vertical orientations.
+Use **Rotate artwork** and **Reflect artwork** under **Automatic transforms** to
+control this per terrain set. Disable either option for directional lighting,
+text, asymmetrical decoration, or artwork whose handedness must be preserved.
+Legacy sets allow both transforms until you explicitly change these controls.
 
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
 `kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source

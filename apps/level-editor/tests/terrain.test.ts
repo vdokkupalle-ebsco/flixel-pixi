@@ -123,6 +123,12 @@ describe('edge terrain editing', () => {
       flipX: false,
     });
     expect(terrainCoverage(reduced)).toBe(10);
+    reduced.allowRotation = false;
+    reduced.allowFlip = false;
+    expect(terrainCoverage(reduced)).toBe(3);
+    expect(terrainRuleMatch(reduced, 2)).toBeUndefined();
+    delete reduced.allowRotation;
+    delete reduced.allowFlip;
     const map = empty();
     paintTerrain(
       map,
@@ -331,6 +337,9 @@ describe('terrain persistence and validation', () => {
     },
     (s: TerrainSet) => {
       s.color = 'red; background:bad';
+    },
+    (s: TerrainSet) => {
+      (s as unknown as { allowRotation: string }).allowRotation = 'yes';
     },
   ])('rejects malformed rules and ambiguous source assignments', (mutate) => {
     const invalid = structuredClone(asset);

@@ -484,6 +484,16 @@ export function mountTilePalette(
         false,
       );
     } else if (
+      target.hasAttribute('data-terrain-allow-rotation') ||
+      target.hasAttribute('data-terrain-allow-flip')
+    ) {
+      editingRules = true;
+      updateSet('Changed automatic terrain transforms', (set) => {
+        if (target.hasAttribute('data-terrain-allow-rotation'))
+          set.allowRotation = target.checked;
+        else set.allowFlip = target.checked;
+      });
+    } else if (
       target.dataset.terrainTypeName !== undefined ||
       target.dataset.terrainTypeColor !== undefined
     ) {

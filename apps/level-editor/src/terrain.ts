@@ -39,6 +39,8 @@ export interface TerrainSet {
   name: string;
   kind: 'corner' | 'edge';
   terrains?: { name: string; color: string }[];
+  allowRotation?: boolean;
+  allowFlip?: boolean;
   color: string;
   rules: TerrainRule[];
 }
@@ -121,6 +123,9 @@ export function validateTerrains(assets: readonly AssetDefinition[]): void {
         (set.kind !== 'corner' && set.kind !== 'edge') ||
         typeof set.color !== 'string' ||
         !/^#[0-9a-f]{6}$/i.test(set.color) ||
+        (set.allowRotation !== undefined &&
+          typeof set.allowRotation !== 'boolean') ||
+        (set.allowFlip !== undefined && typeof set.allowFlip !== 'boolean') ||
         !Array.isArray(set.rules) ||
         set.rules.length > 255
       )
@@ -245,15 +250,15 @@ export function terrainRuleMatch(
 ): TerrainRuleMatch | undefined {
   const direct = set.rules.find((rule) => rule.mask === mask);
   if (direct) return { rule: direct, rotation: 0, flipX: false };
+  const rotations = set.allowRotation === false ? [0] : [0, 1, 2, 3];
   const transforms = [
-    { rotation: 1, flipX: false },
-    { rotation: 2, flipX: false },
-    { rotation: 3, flipX: false },
-    { rotation: 0, flipX: true },
-    { rotation: 1, flipX: true },
-    { rotation: 2, flipX: true },
-    { rotation: 3, flipX: true },
-  ] as const;
+    ...rotations
+      .filter((rotation) => rotation !== 0)
+      .map((rotation) => ({ rotation, flipX: false })),
+    ...(set.allowFlip === false
+      ? []
+      : rotations.map((rotation) => ({ rotation, flipX: true }))),
+  ] as { rotation: 0 | 1 | 2 | 3; flipX: boolean }[];
   for (const transform of transforms)
     for (const rule of set.rules)
       if (terrainMask(set, { ...rule.tile, ...transform }) === mask)

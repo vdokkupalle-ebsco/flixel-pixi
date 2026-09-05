@@ -245,6 +245,16 @@ it('adds edge terrain sets and exposes cardinal road rules', () => {
       ?.getAttribute('aria-label'),
   ).toBe('Pattern 1: derived');
   expect(host.textContent).toContain('14 assigned · 15/15 covered');
+  const rotation = required(
+    host.querySelector<HTMLInputElement>('[data-terrain-allow-rotation]'),
+  );
+  rotation.checked = false;
+  rotation.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(required(terrainSets(asset())[0]).allowRotation).toBe(false);
+  expect(host.textContent).toContain('14 assigned · 14/15 covered');
+  store.undo();
+  expect(required(terrainSets(asset())[0]).allowRotation).toBeUndefined();
+  expect(host.textContent).toContain('14 assigned · 15/15 covered');
 
   required(
     host.querySelector<HTMLButtonElement>('[data-terrain-edge-add]'),
