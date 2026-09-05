@@ -12,6 +12,7 @@ import {
   terrainSets,
   terrainTypes,
   terrainPatternCount,
+  terrainCoverage,
   patternValues,
   patternCode,
   addTerrainType,
@@ -618,7 +619,7 @@ function tileContextDetail(status: LevelEditorStatus): string {
   if (snapshot.tool.startsWith('terrain')) {
     const terrain = selectedTerrain(snapshot.document.assets, snapshot.terrain);
     return terrain
-      ? `${terrainTypes(terrain)[(snapshot.terrain?.terrainIndex ?? 1) - 1]?.name ?? terrain.name} · ${terrain.rules.length}/${terrainPatternCount(terrain) - 1} patterns · ${snapshot.tool === 'terrain-erase' ? 'Erase' : 'Paint'} terrain and update neighbors`
+      ? `${terrainTypes(terrain)[(snapshot.terrain?.terrainIndex ?? 1) - 1]?.name ?? terrain.name} · ${terrainCoverage(terrain)}/${terrainPatternCount(terrain) - 1} patterns covered · ${snapshot.tool === 'terrain-erase' ? 'Erase' : 'Paint'} terrain and update neighbors`
       : 'Choose a terrain set in Tilesets, or add the sample terrain';
   }
   if (!snapshot.tileStamp && !['eraser', 'eyedropper'].includes(snapshot.tool))

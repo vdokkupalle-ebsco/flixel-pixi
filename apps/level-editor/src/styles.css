@@ -1620,6 +1620,10 @@ select:focus-visible {
   max-width: none;
   image-rendering: pixelated;
 }
+.terrain-art-transform {
+  position: absolute;
+  inset: 0;
+}
 .terrain-corner,
 .terrain-dot {
   position: absolute;
@@ -1691,6 +1695,10 @@ select:focus-visible {
 }
 .terrain-pattern.is-missing {
   border-style: dashed;
+}
+.terrain-pattern.is-derived {
+  border-style: dotted;
+  border-color: var(--focus);
 }
 .terrain-pattern[aria-pressed='true'] {
   outline: 2px solid var(--focus);

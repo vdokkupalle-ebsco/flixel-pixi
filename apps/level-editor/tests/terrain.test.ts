@@ -12,6 +12,8 @@ import {
   starterTerrainTileset,
   starterEdgeTileset,
   terrainMask,
+  terrainCoverage,
+  terrainRuleMatch,
   terrainSets,
   setTerrainSets,
   validateTerrains,
@@ -107,6 +109,42 @@ describe('edge terrain editing', () => {
     expect(terrainMask(edgeSet, rotated)).toBe(2);
   });
 
+  it('derives missing endpoints, straights and turns from transforms', () => {
+    const reduced = structuredClone(edgeSet);
+    reduced.rules = reduced.rules.filter((rule) =>
+      [1, 3, 5].includes(rule.mask),
+    );
+    expect(terrainRuleMatch(reduced, 2)).toMatchObject({
+      rotation: 1,
+      flipX: false,
+    });
+    expect(terrainRuleMatch(reduced, 9)).toMatchObject({
+      rotation: 3,
+      flipX: false,
+    });
+    expect(terrainCoverage(reduced)).toBe(10);
+    const map = empty();
+    paintTerrain(
+      map,
+      reduced,
+      [
+        { x: 2, y: 3 },
+        { x: 3, y: 3 },
+        { x: 4, y: 3 },
+      ],
+      bounds,
+    );
+    expect(
+      ['2,3', '3,3', '4,3'].map((key) => terrainMask(reduced, map.cells[key])),
+    ).toEqual([2, 10, 8]);
+    expect(map.cells['3,3']?.rotation).toBe(1);
+
+    const explicit = required(edgeSet.rules.find((rule) => rule.mask === 2));
+    reduced.rules.push(structuredClone(explicit));
+    expect(terrainRuleMatch(reduced, 2)?.rule.mask).toBe(2);
+    expect(terrainTile(reduced, 2, { x: 0, y: 0 })).toEqual(explicit.tile);
+  });
+
   it('validates and round-trips the complete road sample', () => {
     expect(() => validateTerrains([edgeAsset])).not.toThrow();
     expect(edgeAsset.metadata).toMatchObject({
@@ -193,7 +231,7 @@ describe('corner terrain editing', () => {
     const map = empty();
     const incomplete: TerrainSet = {
       ...set,
-      rules: set.rules.filter((rule) => rule.mask !== 8),
+      rules: set.rules.filter((rule) => ![1, 2, 4, 8].includes(rule.mask)),
     };
     expect(() =>
       paintTerrain(
@@ -205,7 +243,7 @@ describe('corner terrain editing', () => {
         ],
         bounds,
       ),
-    ).toThrow('Missing terrain pattern 8');
+    ).toThrow('Missing terrain pattern');
     expect(map.cells).toEqual({});
   });
   it('protects unrelated artwork and selections, including neighboring cells', () => {
@@ -423,10 +461,23 @@ describe('multiple terrain types', () => {
     expect(patternValues(s, required(terrainMask(s, transformed)))).toEqual([
       1, 1, 2, 2,
     ]);
+    const asymmetricMask = patternCode(s, [1, 2, 0, 0]),
+      asymmetricRule = required(
+        s.rules.find((rule) => rule.mask === asymmetricMask),
+      ),
+      reflectedMask = required(
+        terrainMask(s, { ...asymmetricRule.tile, flipX: true }),
+      ),
+      reflectedSet = { ...s, rules: [asymmetricRule] };
+    expect(terrainRuleMatch(reflectedSet, reflectedMask)).toMatchObject({
+      flipX: true,
+    });
     const map = empty();
     paintTerrain(map, s, [{ x: 3, y: 3 }], bounds);
     const before = structuredClone(map);
-    s.rules = s.rules.filter((r) => r.mask !== mixed);
+    s.rules = s.rules.filter(
+      (rule) => new Set(patternValues(s, rule.mask).filter(Boolean)).size < 2,
+    );
     expect(() =>
       paintTerrain(map, s, [{ x: 4, y: 3 }], bounds, false, undefined, 2),
     ).toThrow('Missing terrain pattern');

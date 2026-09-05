@@ -233,6 +233,18 @@ it('adds edge terrain sets and exposes cardinal road rules', () => {
   expect(host.querySelector('.terrain-panel')?.classList).toContain(
     'terrain-edge',
   );
+  required(
+    host.querySelector<HTMLButtonElement>('[data-terrain-pattern="1"]'),
+  ).click();
+  required(
+    host.querySelector<HTMLButtonElement>('[data-terrain-clear]'),
+  ).click();
+  expect(
+    host
+      .querySelector('[data-terrain-pattern="1"]')
+      ?.getAttribute('aria-label'),
+  ).toBe('Pattern 1: derived');
+  expect(host.textContent).toContain('14 assigned · 15/15 covered');
 
   required(
     host.querySelector<HTMLButtonElement>('[data-terrain-edge-add]'),

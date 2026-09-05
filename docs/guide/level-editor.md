@@ -180,6 +180,15 @@ matching **Margin** and **Spacing** values in **Slice settings**. Extrude the ti
 edge colors into the gutter when visible seams must be avoided without changing
 the tile's 32 × 32 source region.
 
+### Reuse terrain artwork with transforms
+
+The rule grid derives rotational and reflected equivalents from artwork you have
+already assigned. Derived patterns use a dotted cyan border; dashed patterns still
+need artwork. Assigning a source tile directly to a derived pattern overrides the
+generated result. Variants and their weights rotate or reflect together, and the
+choice remains stable for each painted cell. This lets a road reuse one endpoint
+for four directions and one straight for horizontal and vertical orientations.
+
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
 `kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
 regions, so grid sheets and atlas images both work. Export/import validates and
@@ -189,8 +198,8 @@ continue to work, and terrain editing recognizes flipped and rotated artwork.
 The playable preview uses the already resolved tiles.
 
 This phase supports up to 64 sets per image, with up to three terrain types plus
-empty in each corner or edge set. Mixed corner-and-edge sets, automatic tile rotation to fill missing
-rules, and Tiled file interchange are not yet implemented.
+empty in each corner or edge set. Mixed corner-and-edge sets and Tiled file
+interchange are not yet implemented.
 
 ## Tile collision layers
 

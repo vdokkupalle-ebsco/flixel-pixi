@@ -42,6 +42,8 @@ recognizable. Corner sets support up to three terrain types plus empty, with sha
 rules. Edge sets use top, right, bottom and left connections for roads, paths and
 fences; dragging follows the stroke direction to select endpoints, straights,
 turns and existing junctions. **Add road sample** provides a complete example.
+Terrain rules automatically reuse equivalent artwork through quarter-turn rotation
+and reflection; an explicit pattern assignment always overrides a derived one.
 
 Select a layer and enable **Tile collision** in the Inspector to make its painted
 cells solid. Adjacent cells merge into static boxes without filling gaps. Set

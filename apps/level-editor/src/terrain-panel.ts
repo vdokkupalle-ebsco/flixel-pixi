@@ -5,6 +5,8 @@ import {
   terrainSets,
   terrainTypes,
   terrainPatternCount,
+  terrainCoverage,
+  terrainTile,
   patternValues,
 } from './terrain';
 import type { TileRegion } from './tiles';
@@ -18,7 +20,7 @@ const html = (value: unknown): string =>
     .replaceAll("'", '&#039;');
 
 function tileImage(asset: AssetDefinition, tile: TileRegion): string {
-  return `<span class="terrain-art"><img alt="" draggable="false" src="${html(asset.src)}" style="width:${(Number(asset.metadata?.width) / tile.width) * 100}%;height:${(Number(asset.metadata?.height) / tile.height) * 100}%;left:${(-tile.x / tile.width) * 100}%;top:${(-tile.y / tile.height) * 100}%"/></span>`;
+  return `<span class="terrain-art"><span class="terrain-art-transform" style="transform:rotate(${(tile.rotation ?? 0) * 90}deg) scaleX(${tile.flipX ? -1 : 1})"><img alt="" draggable="false" src="${html(asset.src)}" style="width:${(Number(asset.metadata?.width) / tile.width) * 100}%;height:${(Number(asset.metadata?.height) / tile.height) * 100}%;left:${(-tile.x / tile.width) * 100}%;top:${(-tile.y / tile.height) * 100}%"/></span></span>`;
 }
 
 export function terrainPanel(
@@ -46,6 +48,7 @@ export function terrainPanel(
       ? ['Top', 'Right', 'Bottom', 'Left']
       : ['Top left', 'Top right', 'Bottom right', 'Bottom left'];
   const positionName = set?.kind === 'edge' ? 'edge' : 'corner';
+  const coverage = set ? terrainCoverage(set) : 0;
   const totalWeight = variants.reduce(
     (total, variant) => total + (variant.weight ?? 1),
     0,
@@ -61,7 +64,7 @@ export function terrainPanel(
       set
         ? `<label class="tileset-label">Terrain to paint<select aria-label="Terrain to paint" data-terrain-brush>${types.map((type, index) => `<option value="${index + 1}" ${(snapshot.terrain?.terrainIndex ?? 1) === index + 1 ? 'selected' : ''}>${html(type.name)}</option>`).join('')}</select></label><div class="terrain-tools" role="toolbar" aria-label="Terrain tools"><button type="button" data-tool="terrain" aria-pressed="${snapshot.tool === 'terrain'}"><span class="terrain-swatch" style="background:${paintedType?.color ?? set.color}"></span>Paint ${html(paintedType?.name ?? set.name)}</button><button type="button" data-tool="terrain-erase" aria-pressed="${snapshot.tool === 'terrain-erase'}">Erase terrain</button></div>
       <p class="field-help">Paint a cell to shape its ${positionName}s and connect neighboring tiles.</p>
-      <details class="terrain-rules" ${editing ? 'open' : ''}><summary>Terrain rules <span>${set.rules.length}/${terrainPatternCount(set) - 1} patterns</span></summary>
+      <details class="terrain-rules" ${editing ? 'open' : ''}><summary>Terrain rules <span>${set.rules.length} assigned · ${coverage}/${terrainPatternCount(set) - 1} covered</span></summary>
         <div class="field-pair"><label>Name<input aria-label="Terrain name" data-terrain-name value="${html(set.name)}" maxlength="80"/></label><label>Color<input aria-label="Terrain color" data-terrain-color type="color" value="${set.color}"/></label></div>
         <div class="terrain-types">${types.map((type, index) => `<div class="field-pair"><label>Terrain ${index + 1}<input aria-label="Terrain type ${index + 1} name" data-terrain-type-name="${index}" value="${html(type.name)}" maxlength="80"/></label><label>Color<input aria-label="Terrain type ${index + 1} color" data-terrain-type-color="${index}" type="color" value="${type.color}"/></label></div>`).join('')}<button class="button ghost compact" type="button" data-terrain-type-add ${types.length >= 3 ? 'disabled' : ''}>Add terrain type</button></div>
         <p class="field-help">1. Choose a source tile.<br/>2. Click ${positionName}s to cycle through empty and terrain types.<br/>3. Assign the tile to this pattern.</p>
@@ -70,10 +73,21 @@ export function terrainPanel(
           { length: terrainPatternCount(set) },
           (_, pattern) => {
             const rule = set.rules.find((rule) => rule.mask === pattern);
-            return `<button type="button" class="terrain-pattern ${pattern !== 0 && !rule ? 'is-missing' : ''}" data-terrain-pattern="${pattern}" aria-label="Pattern ${pattern}: ${pattern === 0 ? 'empty' : rule ? 'assigned' : 'missing'}" aria-pressed="${pattern === mask}" title="Pattern ${pattern}: ${pattern === 0 ? 'empty' : rule ? 'assigned' : 'missing'}">${asset && rule ? tileImage(asset, rule.tile) : `<span class="pattern-number">${pattern}</span>`}${[0, 1, 2, 3].map((i) => `<i class="terrain-dot corner-${i} ${patternValues(set, pattern)[i] ? 'is-filled' : ''}" style="${patternValues(set, pattern)[i] ? `background:${types[(patternValues(set, pattern)[i] ?? 1) - 1]?.color}` : ''}"></i>`).join('')}</button>`;
+            const resolved = pattern
+              ? terrainTile(set, pattern, { x: 0, y: 0 })
+              : undefined;
+            const state =
+              pattern === 0
+                ? 'empty'
+                : rule
+                  ? 'assigned'
+                  : resolved
+                    ? 'derived'
+                    : 'missing';
+            return `<button type="button" class="terrain-pattern ${state === 'missing' ? 'is-missing' : ''} ${state === 'derived' ? 'is-derived' : ''}" data-terrain-pattern="${pattern}" aria-label="Pattern ${pattern}: ${state}" aria-pressed="${pattern === mask}" title="Pattern ${pattern}: ${state}">${asset && resolved ? tileImage(asset, resolved) : `<span class="pattern-number">${pattern}</span>`}${[0, 1, 2, 3].map((i) => `<i class="terrain-dot corner-${i} ${patternValues(set, pattern)[i] ? 'is-filled' : ''}" style="${patternValues(set, pattern)[i] ? `background:${types[(patternValues(set, pattern)[i] ?? 1) - 1]?.color}` : ''}"></i>`).join('')}</button>`;
           },
         ).join('')}</div>
-        <p class="field-help">Dashed patterns need a tile. Empty always clears a cell. ${set.kind === 'edge' ? 'Edges connect directly to adjacent cells.' : 'Corners can join any terrain types in this set.'} Assign tile replaces the primary tile. Add variant keeps it and adds another choice. A source tile can belong to only one pattern.</p>
+        <p class="field-help">Dashed patterns need a tile. Dotted patterns reuse assigned artwork through rotation or reflection; an explicit assignment replaces the derived result. Empty always clears a cell. ${set.kind === 'edge' ? 'Edges connect directly to adjacent cells.' : 'Corners can join any terrain types in this set.'} Assign tile replaces the primary tile. Add variant keeps it and adds another choice. A source tile can belong to only one pattern.</p>
         <div class="terrain-tools"><button type="button" data-terrain-clear ${!set.rules.some((r) => r.mask === mask) ? 'disabled' : ''}>Clear pattern ${mask}</button><button type="button" data-terrain-remove>Remove set</button></div>
       </details>`
         : ''

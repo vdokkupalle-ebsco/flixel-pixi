@@ -232,16 +232,55 @@ export function terrainMask(
   return patternCode(set, transformed);
 }
 
+export interface TerrainRuleMatch {
+  rule: TerrainRule;
+  rotation: 0 | 1 | 2 | 3;
+  flipX: boolean;
+}
+
+/** Explicit artwork wins; otherwise reuse the closest rotated or reflected rule. */
+export function terrainRuleMatch(
+  set: TerrainSet,
+  mask: number,
+): TerrainRuleMatch | undefined {
+  const direct = set.rules.find((rule) => rule.mask === mask);
+  if (direct) return { rule: direct, rotation: 0, flipX: false };
+  const transforms = [
+    { rotation: 1, flipX: false },
+    { rotation: 2, flipX: false },
+    { rotation: 3, flipX: false },
+    { rotation: 0, flipX: true },
+    { rotation: 1, flipX: true },
+    { rotation: 2, flipX: true },
+    { rotation: 3, flipX: true },
+  ] as const;
+  for (const transform of transforms)
+    for (const rule of set.rules)
+      if (terrainMask(set, { ...rule.tile, ...transform }) === mask)
+        return { rule, ...transform };
+  return undefined;
+}
+
+export function terrainCoverage(set: TerrainSet): number {
+  let count = 0;
+  for (let mask = 1; mask < terrainPatternCount(set); mask++)
+    if (terrainRuleMatch(set, mask)) count++;
+  return count;
+}
+
 /** Stable per-cell choice keeps previews, stroke segmentation and undo deterministic. */
 export function terrainTile(
   set: TerrainSet,
   mask: number,
   cell: Cell,
 ): TileRegion | undefined {
-  const rule = set.rules.find((rule) => rule.mask === mask);
-  if (!rule) return undefined;
+  const match = terrainRuleMatch(set, mask);
+  if (!match) return undefined;
+  const { rule, rotation, flipX } = match;
   const choices = [rule, ...(rule.variants ?? [])];
-  if (choices.length === 1) return rule.tile;
+  const transformed = (tile: TileRegion): TileRegion =>
+    rotation === 0 && !flipX ? tile : { ...tile, rotation, flipX };
+  if (choices.length === 1) return transformed(rule.tile);
   let hash = 2166136261;
   for (const char of `${set.id}:${mask}:${cell.x}:${cell.y}`)
     hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
@@ -254,9 +293,10 @@ export function terrainTile(
   let choice = ((hash >>> 0) / 4294967296) * total;
   for (const variant of choices) {
     choice -= variant.weight ?? 1;
-    if (choice < 0) return variant.tile;
+    if (choice < 0) return transformed(variant.tile);
   }
-  return choices.at(-1)?.tile;
+  const tile = choices.at(-1)?.tile;
+  return tile ? transformed(tile) : undefined;
 }
 
 /** Each source region has a single corner meaning within a set. */
