@@ -16,7 +16,7 @@ test.describe('Level Editor', () => {
     await page.goto(LEVEL_EDITOR_URL);
     await expect(page).toHaveTitle(/Level Editor/);
     await page.getByRole('button', { name: 'Add first sprite' }).click();
-    await expect(page.getByRole('treeitem')).toHaveCount(1);
+    await expect(page.locator('.tree-row')).toHaveCount(1);
     await expect(
       page.getByRole('textbox', { name: 'Name', exact: true }),
     ).toHaveValue('Sprite 1');
@@ -30,12 +30,12 @@ test.describe('Level Editor', () => {
     await page.getByRole('tab', { name: 'Assets' }).click();
     await page.getByRole('button', { name: /Place Neon sparks/ }).click();
     await page.getByRole('tab', { name: 'Scene' }).click();
-    await expect(page.getByRole('treeitem')).toHaveCount(2);
+    await expect(page.locator('.tree-row')).toHaveCount(2);
 
     await page.getByRole('button', { name: 'Preview' }).click();
     const preview = page.frameLocator('[data-preview-frame]');
     await expect(preview.getByRole('status')).toContainText(
-      'Main scene · 2 objects',
+      'Main scene · 0 tiles · 2 objects',
       {
         timeout: 15_000,
       },
@@ -48,6 +48,8 @@ test.describe('Level Editor', () => {
   }) => {
     await page.goto(LEVEL_EDITOR_URL);
     await page.getByRole('button', { name: 'Add first sprite' }).click();
+    await page.getByRole('button', { name: 'Add sprite' }).click();
+    await page.getByRole('button', { name: /Sprite 1 sprite/ }).click();
     const canvas = page.getByLabel(/Scene canvas/);
     await canvas.focus();
     await canvas.press('ArrowRight');
@@ -85,18 +87,20 @@ test.describe('Level Editor', () => {
     await expect(page.getByText('2 frames', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Place platform in scene' }).click();
     await page.getByRole('tab', { name: 'Scene' }).click();
-    await expect(page.getByRole('treeitem')).toHaveCount(1);
+    await expect(page.locator('.tree-row')).toHaveCount(1);
     await expect(page.getByLabel('Frame width')).toHaveValue('96');
     await expect(page.getByLabel('Pixel X')).toHaveValue('64');
     await page.getByRole('button', { name: 'Duplicate selection' }).click();
-    await expect(page.getByRole('treeitem')).toHaveCount(2);
+    await expect(page.locator('.tree-row')).toHaveCount(2);
     await expect(page.getByLabel('Purpose layer')).toHaveValue(
       'layer-gameplay',
     );
     await page.getByRole('button', { name: 'Preview' }).click();
     await expect(
       page.frameLocator('[data-preview-frame]').getByRole('status'),
-    ).toContainText('Main scene · 2 objects', { timeout: 15_000 });
+    ).toContainText('Main scene · 0 tiles · 2 objects', {
+      timeout: 15_000,
+    });
     expect(errors).toEqual([]);
   });
 
@@ -251,7 +255,7 @@ test.describe('Level Editor', () => {
       mimeType: 'application/json',
       name: 'performance-project.json',
     });
-    await expect(page.getByText('300 objects')).toBeVisible();
+    await expect(page.getByText('300 objects', { exact: true })).toBeVisible();
     expect(Date.now() - startedAt).toBeLessThan(5_000);
   });
 });
