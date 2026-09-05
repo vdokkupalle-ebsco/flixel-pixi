@@ -530,6 +530,7 @@ Data types, helper interfaces, and utility declarations.
 | [**`parseParticlePreset`**](./parseparticlepreset.md) | `Function` | Parse an unknown value or throw a [link](#). |
 | [**`parsePhysicsBody`**](./parsephysicsbody.md) | `Function` | Parse or throw for a version 1 physics body. |
 | [**`parsePhysicsWorld`**](./parsephysicsworld.md) | `Function` | Parse or throw for a version 1 physics world. |
+| [**`parseTextureAtlasXml`**](./parsetextureatlasxml.md) | `Function` | Parse a TextureAtlas XML string (Kenney / LibGDX / Shoebox format) into an ordered array of frame rects.<br><br>Supports Sparrow/Kenney `SubTexture` entries and TexturePacker-style `sprite` entries. Frame names may use `name` or `n`, and dimensions may use `width`/`height` or `w`/`h`. Throws if no supported frame elements are found. |
 | [**`ParticleAppearanceDefinition`**](./particleappearancedefinition.md) | `Interface` |  |
 | [**`ParticleBlendMode`**](./particleblendmode.md) | `TypeAlias` | Portable blend modes supported by particle presets. |
 | [**`ParticleColorStop`**](./particlecolorstop.md) | `Interface` |  |

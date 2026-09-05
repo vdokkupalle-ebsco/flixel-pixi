@@ -38,7 +38,10 @@ test('keeps the physics guide iframe usable at mobile widths', async ({
   page,
 }) => {
   await page.goto(PHYSICS_GUIDE);
-  await page.getByRole('button', { name: 'Run Interactive Game' }).click();
+  await page
+    .locator('.cabinet-card', { hasText: 'Rigid-body physics playground' })
+    .getByRole('button', { name: 'Run Interactive Game' })
+    .click();
   const frame = page.frameLocator(
     'iframe[title="Rigid-body physics playground"]',
   );
