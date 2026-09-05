@@ -85,7 +85,9 @@ it is enlarged; tools operate only on full cells within the current canvas.
 
 This pass supports finite orthogonal maps, up to 4,096 source tiles or cells in a
 stamp, and up to 262,144 cells per fill operation. Preview currently uses sprites
-for tile rendering. Optimized tilemap rendering and Tiled file interchange are follow-up work. A collision layer’s purpose label alone does not generate bodies; enable **Tile collision** in its Inspector.
+for tile rendering. Optimized tilemap rendering is follow-up work. A collision
+layer’s purpose label alone does not generate bodies; enable **Tile collision**
+in its Inspector.
 
 ### Selections, clipboard, and stamp transforms
 
@@ -247,8 +249,8 @@ continue to work, and terrain editing recognizes flipped and rotated artwork.
 The playable preview uses the already resolved tiles.
 
 This phase supports up to 64 sets per image, with up to three terrain types plus
-empty in each corner or edge set. Mixed corner-and-edge sets and Tiled file
-interchange are not yet implemented.
+empty in each corner or edge set. Mixed corner-and-edge sets are not yet
+implemented.
 
 ## Tile collision layers
 
@@ -316,6 +318,37 @@ that demonstrates the pipeline.
 
 ## Import, export, and runtime boundary
 
+### Tiled map interchange
+
+Open **Tiled** in the top bar and choose **Export map** to download the active
+scene as a Tiled JSON map (`.tmj`). Keep its referenced source images beside the
+map when opening it in Tiled. The exported map uses embedded tilesets and
+preserves layer groups, visibility, locks, opacity and offsets; tile GIDs and
+all flip/rotation combinations; object layers and supported custom properties;
+and Wang terrain sets. Namespaced `flixelPixi` properties preserve exact object,
+layer, collision, physics, asset, and scene metadata for a lossless round trip
+back into this editor.
+
+Choose **Import map…** and select one `.tmj` or `.json` map. For maps made in
+Tiled, select the referenced image files in the same file picker. Maps exported
+by this editor contain an embedded source-data fallback, so they can be imported
+without selecting the images again. Import creates a new single-scene project;
+it validates the complete result before replacing the current project and can be
+undone.
+
+Map interchange currently accepts finite, orthogonal maps with square cells,
+JSON GID arrays, embedded tilesets, group/tile/object layers, Wang sets, and up
+to 4,096 layers, 65,536 objects, and 4,194,304 cells per tile layer. It reports
+missing images, overlapping GID ranges, mismatched dimensions, unsupported
+layer types, and invalid tile references before changing the project. External
+TSJ tilesets, TMX XML, infinite chunked maps, base64/compressed layer data, and
+isometric, hexagonal, or staggered maps remain future work. See Tiled’s
+[JSON map format](https://doc.mapeditor.org/en/stable/reference/json-map-format/)
+and [global tile ID reference](https://doc.mapeditor.org/en/stable/reference/global-tile-ids/)
+for the interchange fields.
+
+### Native project files
+
 **Export** downloads deterministic JSON built on `ProjectDocumentV1`. Image
 assets and particle documents are embedded as data URLs, while the
 `flixelPixiLevelEditor` extension stores scene canvas, semantic layers, and
@@ -331,7 +364,8 @@ effects with `FlxParticleEffect.fromAssets`, and runs physics through
 ## Current scope
 
 The first release deliberately excludes soft bodies, collaborative editing,
-user scripts, animation timelines, mixed corner-and-edge terrain sets, and Tiled TMX/JSON interchange. It focuses on a
+user scripts, animation timelines, mixed corner-and-edge terrain sets, Tiled
+TMX XML, infinite/chunked Tiled maps, and external TSJ tilesets. It focuses on a
 stable asset-to-scene-to-preview loop that future editor features can extend
 without changing the version `1` document contract.
 

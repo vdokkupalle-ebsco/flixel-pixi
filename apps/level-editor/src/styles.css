@@ -179,6 +179,45 @@ svg {
   gap: 6px;
   margin-left: auto;
 }
+.interchange-menu {
+  position: relative;
+}
+.interchange-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.interchange-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.interchange-menu[open] > summary {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.interchange-menu > div {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  display: grid;
+  width: 150px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.interchange-menu > div button {
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 10px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.interchange-menu > div button:hover,
+.interchange-menu > div button:focus-visible {
+  background: var(--surface-3);
+}
 .toolbar-separator {
   display: inline-block;
   width: 1px;
@@ -1091,6 +1130,11 @@ dialog iframe {
     display: none;
   }
   .top-actions .button.ghost {
+    width: 34px;
+    padding: 6px;
+    font-size: 0;
+  }
+  .top-actions .interchange-menu > summary {
     width: 34px;
     padding: 6px;
     font-size: 0;

@@ -49,6 +49,15 @@ and reflection; an explicit pattern assignment always overrides a derived one.
 Selected image assets can import or export Tiled tileset JSON with Wang sets,
 colors, probabilities and transformation permissions.
 
+The top-bar **Tiled** menu exchanges the active scene as a finite orthogonal
+Tiled JSON map (`.tmj`). Export preserves layer groups and appearance, tile
+GIDs and transforms, object layers and custom properties, embedded tilesets,
+Wang sets, collision settings, physics, and editor-specific metadata. For an
+external map, choose its `.tmj` file and referenced source images together when
+importing. Native **Import** and **Export** remain the full multi-scene project
+format. See the [map interchange guide](../../docs/guide/level-editor.md#tiled-map-interchange)
+for supported Tiled features and current limits.
+
 Select a layer and enable **Tile collision** in the Inspector to make its painted
 cells solid. Adjacent cells merge into static boxes without filling gaps. Set
 layer friction and bounce, and toggle amber outlines with **Show tile collisions**

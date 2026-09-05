@@ -85,6 +85,11 @@ import {
   sceneLayers,
   type LayerPurpose,
 } from './model';
+import {
+  exportTiledMap,
+  importTiledMap,
+  type ImportedImage,
+} from './tiled-map';
 
 function escapeHtml(value: unknown): string {
   return String(value)
@@ -238,6 +243,7 @@ export function mountEditor(
           <span class="toolbar-separator"></span>
           <button class="button ghost" type="button" data-action="import">${icon('assets')} Import</button>
           <button class="button ghost" type="button" data-action="export">${icon('export')} Export</button>
+          <details class="interchange-menu" data-tiled-map-menu><summary class="button ghost">${icon('grid')} Tiled</summary><div><button type="button" data-action="import-tiled-map">Import map…</button><button type="button" data-action="export-tiled-map">Export map</button></div></details>
           <button class="button primary" type="button" data-action="preview">${icon('play')} Preview</button>
         </nav>
       </header>
@@ -322,6 +328,7 @@ export function mountEditor(
       </footer>
       <input type="file" data-asset-input accept="image/png,image/jpeg,image/gif,image/webp,image/avif,image/svg+xml,application/json,.json,application/xml,text/xml,.xml" hidden multiple />
       <input type="file" data-project-input accept="application/json,.json" hidden />
+      <input type="file" data-tiled-map-input accept="application/json,.json,.tmj,image/png,image/jpeg,image/gif,image/webp,image/avif,image/svg+xml" hidden multiple />
       <div class="toast" data-toast role="status" aria-live="polite"></div>
       <dialog data-preview-dialog aria-labelledby="preview-title">
         <div class="dialog-heading"><div><small>Playable build</small><h2 id="preview-title">Scene preview</h2></div><div class="preview-actions"><button class="text-button" type="button" data-preview-command="pause">Pause</button><button class="text-button" type="button" data-preview-command="resume">Resume</button><button class="text-button" type="button" data-preview-command="reset">Reset</button><button class="small-icon" type="button" data-action="close-preview" aria-label="Close preview">${icon('close')}</button></div></div>
@@ -336,6 +343,9 @@ export function mountEditor(
   const projectInput = host.querySelector<HTMLInputElement>(
     '[data-project-input]',
   );
+  const tiledMapInput = host.querySelector<HTMLInputElement>(
+    '[data-tiled-map-input]',
+  );
   const toast = host.querySelector<HTMLElement>('[data-toast]');
   const previewFrame = host.querySelector<HTMLIFrameElement>(
     '[data-preview-frame]',
@@ -346,6 +356,7 @@ export function mountEditor(
   if (
     assetInput === null ||
     projectInput === null ||
+    tiledMapInput === null ||
     toast === null ||
     previewFrame === null ||
     previewDialog === null
@@ -354,6 +365,7 @@ export function mountEditor(
   }
   const assetFileInput = assetInput;
   const projectFileInput = projectInput;
+  const tiledMapFileInput = tiledMapInput;
   const runtimeFrame = previewFrame;
   const runtimeDialog = previewDialog;
   let previewPeer: ProtocolPeer | undefined;
@@ -742,6 +754,61 @@ export function mountEditor(
       announce(error instanceof Error ? error.message : String(error), true);
     } finally {
       projectFileInput.value = '';
+    }
+  }
+
+  function exportTiledProject(): void {
+    try {
+      const map = exportTiledMap(store.status.snapshot.document);
+      const name = store.status.snapshot.document.project.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      download(
+        `${name || 'flixel-pixi-level'}.tmj`,
+        JSON.stringify(map, null, 2),
+        'application/json',
+      );
+      announce('Tiled map exported. Keep its source images beside the map.');
+    } catch (error) {
+      announce(error instanceof Error ? error.message : String(error), true);
+    }
+  }
+
+  async function importTiledProject(files: FileList): Promise<void> {
+    try {
+      const selected = [...files],
+        maps = selected.filter(
+          (file) =>
+            file.name.toLowerCase().endsWith('.tmj') ||
+            file.name.toLowerCase().endsWith('.json'),
+        );
+      if (maps.length !== 1)
+        throw new Error('Choose one Tiled .tmj map and any referenced images.');
+      const images: ImportedImage[] = [];
+      for (const file of selected.filter(
+        (candidate) => !maps.includes(candidate),
+      )) {
+        if (!file.type.startsWith('image/'))
+          throw new Error(`${file.name} is not a supported map image.`);
+        const src = await readFileDataUrl(file),
+          dimensions = await readImageDimensions(src);
+        images.push({ name: file.name, src, ...dimensions });
+      }
+      const mapFile = maps[0];
+      if (!mapFile) throw new Error('Choose a Tiled .tmj map.');
+      const document = importTiledMap(JSON.parse(await mapFile.text()), images);
+      store.replace('Imported Tiled map', {
+        document,
+        selectedEntityIds: [],
+        snapToGrid: true,
+        tool: 'select',
+      });
+      announce(`${mapFile.name} imported from Tiled.`);
+    } catch (error) {
+      announce(error instanceof Error ? error.message : String(error), true);
+    } finally {
+      tiledMapFileInput.value = '';
     }
   }
 
@@ -1494,7 +1561,17 @@ export function mountEditor(
       render(store.status);
     } else if (action === 'export') exportProject();
     else if (action === 'import') projectInput.click();
-    else if (action === 'preview') openPreview();
+    else if (action === 'export-tiled-map') {
+      exportTiledProject();
+      host
+        .querySelector<HTMLDetailsElement>('[data-tiled-map-menu]')
+        ?.removeAttribute('open');
+    } else if (action === 'import-tiled-map') {
+      tiledMapInput.click();
+      host
+        .querySelector<HTMLDetailsElement>('[data-tiled-map-menu]')
+        ?.removeAttribute('open');
+    } else if (action === 'preview') openPreview();
     else if (action === 'close-preview') runtimeDialog.close();
     else if (action === 'add-physics') {
       store.update('Added physics body', (draft) => {
@@ -1591,6 +1668,8 @@ export function mountEditor(
       void importAssets(target.files);
     else if (target === projectInput && target.files?.[0] !== undefined)
       void importProject(target.files[0]);
+    else if (target === tiledMapInput && target.files?.length)
+      void importTiledProject(target.files);
     else if (target.matches('[data-entity-field]')) {
       updateEntityField(target.dataset.entityField ?? '', target.value);
       renderInspector(store.status);
