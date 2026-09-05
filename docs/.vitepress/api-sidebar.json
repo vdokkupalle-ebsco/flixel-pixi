@@ -1760,6 +1760,10 @@
         "link": "/api/parsephysicsworld"
       },
       {
+        "text": "parseTextureAtlasXml",
+        "link": "/api/parsetextureatlasxml"
+      },
+      {
         "text": "ParticleAppearanceDefinition",
         "link": "/api/particleappearancedefinition"
       },
