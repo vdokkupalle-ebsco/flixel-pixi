@@ -515,7 +515,11 @@ export function multiTerrainTileset(
 export function starterEdgeTileset(
   id = 'edge-terrain-starter',
 ): AssetDefinition {
-  const size = 32;
+  const size = 32,
+    gutter = 2,
+    margin = 1,
+    stride = size + gutter,
+    atlasSize = margin * 2 + size * 4 + gutter * 3;
   const paths = Array.from({ length: 16 }, (_, mask) => {
     const lines = [
       [16, 16, 16, 0],
@@ -523,20 +527,24 @@ export function starterEdgeTileset(
       [16, 16, 16, 32],
       [16, 16, 0, 16],
     ];
+    const x = margin + (mask % 4) * stride,
+      y = margin + Math.floor(mask / 4) * stride;
     return mask
-      ? `<g transform="translate(${(mask % 4) * size} ${Math.floor(mask / 4) * size})"><circle cx="16" cy="16" r="5" fill="#c69a61"/>${lines.map(([x1, y1, x2, y2], index) => (mask & (2 ** index) ? `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#c69a61" stroke-width="10"/>` : '')).join('')}</g>`
+      ? `<svg x="${x}" y="${y}" width="${size}" height="${size}" overflow="hidden"><circle cx="16" cy="16" r="5" fill="#c69a61"/>${lines.map(([x1, y1, x2, y2], index) => (mask & (2 ** index) ? `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#c69a61" stroke-width="10"/>` : '')).join('')}</svg>`
       : '';
   });
   const asset: AssetDefinition = {
     id,
     kind: 'image',
-    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" shape-rendering="crispEdges">${paths.join('')}</svg>`)}`,
+    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${atlasSize}" height="${atlasSize}" shape-rendering="crispEdges">${paths.join('')}</svg>`)}`,
     metadata: {
       fileName: 'Road edges',
-      width: 128,
-      height: 128,
+      width: atlasSize,
+      height: atlasSize,
       tileWidth: size,
       tileHeight: size,
+      tileMargin: margin,
+      tileSpacing: gutter,
     },
   };
   setTerrainSets(asset, [
@@ -551,8 +559,8 @@ export function starterEdgeTileset(
           mask,
           tile: {
             assetId: id,
-            x: (mask % 4) * size,
-            y: Math.floor(mask / 4) * size,
+            x: margin + (mask % 4) * stride,
+            y: margin + Math.floor(mask / 4) * stride,
             width: size,
             height: size,
           },

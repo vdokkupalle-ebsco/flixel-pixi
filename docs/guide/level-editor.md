@@ -173,6 +173,13 @@ existing stroke preserves a junction. Rotation and horizontal flipping also
 rotate or reflect the edge meaning. Erase terrain disconnects the selected edge
 terrain and rebuilds its adjacent transitions in one undoable action.
 
+The built-in road atlas separates each source region with a transparent gutter
+to prevent adjacent artwork from bleeding into a tile during scaling. For an
+imported sheet, keep one or two transparent pixels between tiles and enter the
+matching **Margin** and **Spacing** values in **Slice settings**. Extrude the tile's
+edge colors into the gutter when visible seams must be avoided without changing
+the tile's 32 × 32 source region.
+
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
 `kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
 regions, so grid sheets and atlas images both work. Export/import validates and

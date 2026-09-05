@@ -109,6 +109,20 @@ describe('edge terrain editing', () => {
 
   it('validates and round-trips the complete road sample', () => {
     expect(() => validateTerrains([edgeAsset])).not.toThrow();
+    expect(edgeAsset.metadata).toMatchObject({
+      width: 136,
+      height: 136,
+      tileMargin: 1,
+      tileSpacing: 2,
+    });
+    expect(
+      required(edgeSet.rules.find((rule) => rule.mask === 15)).tile,
+    ).toMatchObject({
+      x: 103,
+      y: 103,
+      width: 32,
+      height: 32,
+    });
     const project = createInitialProject();
     project.assets.push(edgeAsset);
     expect(() => parseLevelProject(project)).not.toThrow();
