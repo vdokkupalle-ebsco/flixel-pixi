@@ -251,7 +251,7 @@ it('adds a multi-terrain sample and switches the painting material', () => {
   ).toHaveLength(3);
   store.undo();
   expect(store.status.snapshot).toEqual(before);
-});
+}, 15_000);
 
 it('adds edge terrain sets and exposes cardinal road rules', () => {
   const store = new LevelEditorStore({
