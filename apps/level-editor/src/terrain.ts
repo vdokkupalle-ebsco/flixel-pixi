@@ -260,9 +260,17 @@ export function terrainRuleMatch(
       : rotations.map((rotation) => ({ rotation, flipX: true }))),
   ] as { rotation: 0 | 1 | 2 | 3; flipX: boolean }[];
   for (const transform of transforms)
-    for (const rule of set.rules)
+    for (const rule of set.rules) {
+      if (
+        !Number.isInteger(rule.mask) ||
+        rule.mask < 1 ||
+        rule.mask >= terrainPatternCount(set) ||
+        !rule.tile
+      )
+        continue;
       if (terrainMask(set, { ...rule.tile, ...transform }) === mask)
         return { rule, ...transform };
+    }
   return undefined;
 }
 
@@ -271,6 +279,56 @@ export function terrainCoverage(set: TerrainSet): number {
   for (let mask = 1; mask < terrainPatternCount(set); mask++)
     if (terrainRuleMatch(set, mask)) count++;
   return count;
+}
+
+export interface TerrainDiagnostics {
+  assigned: number[];
+  derived: number[];
+  missing: number[];
+  duplicated: number[];
+  unreachable: number[];
+}
+
+/** Report authoring coverage separately from malformed imported rule data. */
+export function terrainDiagnostics(set: TerrainSet): TerrainDiagnostics {
+  const count = terrainPatternCount(set),
+    assigned: number[] = [],
+    derived: number[] = [],
+    missing: number[] = [],
+    duplicated: number[] = [],
+    unreachable: number[] = [],
+    masks = new Set<number>(),
+    regions = new Set<string>();
+  for (const rule of set.rules) {
+    if (!Number.isInteger(rule.mask) || rule.mask < 1 || rule.mask >= count) {
+      unreachable.push(rule.mask);
+      continue;
+    }
+    let duplicate = masks.has(rule.mask);
+    masks.add(rule.mask);
+    for (const variant of [rule, ...(rule.variants ?? [])]) {
+      if (!variant?.tile) {
+        unreachable.push(rule.mask);
+        continue;
+      }
+      const key = regionKey(variant.tile);
+      if (regions.has(key)) duplicate = true;
+      regions.add(key);
+    }
+    if (duplicate) duplicated.push(rule.mask);
+  }
+  for (let mask = 1; mask < count; mask++) {
+    if (set.rules.some((rule) => rule.mask === mask)) assigned.push(mask);
+    else if (terrainRuleMatch(set, mask)) derived.push(mask);
+    else missing.push(mask);
+  }
+  return {
+    assigned,
+    derived,
+    missing,
+    duplicated: [...new Set(duplicated)],
+    unreachable: [...new Set(unreachable)],
+  };
 }
 
 /** Stable per-cell choice keeps previews, stroke segmentation and undo deterministic. */

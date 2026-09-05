@@ -1609,6 +1609,31 @@ select:focus-visible {
   gap: 5px;
   color: var(--text);
 }
+.terrain-diagnostics {
+  margin: 10px 0;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(9, 18, 29, 0.45);
+}
+.terrain-diagnostics > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 7px;
+}
+.terrain-diagnostics button {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 2px;
+  font-size: 9px;
+}
+.terrain-diagnostics button span {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
 .terrain-rule-editor {
   display: flex;
   align-items: center;

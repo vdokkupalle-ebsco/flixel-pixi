@@ -14,6 +14,7 @@ import {
   terrainMask,
   terrainCoverage,
   terrainRuleMatch,
+  terrainDiagnostics,
   terrainSets,
   setTerrainSets,
   validateTerrains,
@@ -149,6 +150,27 @@ describe('edge terrain editing', () => {
     reduced.rules.push(structuredClone(explicit));
     expect(terrainRuleMatch(reduced, 2)?.rule.mask).toBe(2);
     expect(terrainTile(reduced, 2, { x: 0, y: 0 })).toEqual(explicit.tile);
+  });
+
+  it('diagnoses coverage and malformed duplicate or unreachable rules', () => {
+    const reduced = structuredClone(edgeSet);
+    reduced.rules = reduced.rules.filter((rule) => [1, 5].includes(rule.mask));
+    expect(terrainDiagnostics(reduced)).toMatchObject({
+      assigned: [1, 5],
+      derived: [2, 4, 8, 10],
+      missing: [3, 6, 7, 9, 11, 12, 13, 14, 15],
+      duplicated: [],
+      unreachable: [],
+    });
+    reduced.rules.push(structuredClone(required(reduced.rules[0])));
+    reduced.rules.push({
+      mask: 99,
+      tile: structuredClone(required(reduced.rules[1]).tile),
+    });
+    expect(terrainDiagnostics(reduced)).toMatchObject({
+      duplicated: [1],
+      unreachable: [99],
+    });
   });
 
   it('validates and round-trips the complete road sample', () => {

@@ -245,6 +245,10 @@ it('adds edge terrain sets and exposes cardinal road rules', () => {
       ?.getAttribute('aria-label'),
   ).toBe('Pattern 1: derived');
   expect(host.textContent).toContain('14 assigned · 15/15 covered');
+  expect(
+    host.querySelector<HTMLButtonElement>('[data-terrain-diagnostic="derived"]')
+      ?.textContent,
+  ).toContain('1Derived');
   const rotation = required(
     host.querySelector<HTMLInputElement>('[data-terrain-allow-rotation]'),
   );
@@ -252,6 +256,16 @@ it('adds edge terrain sets and exposes cardinal road rules', () => {
   rotation.dispatchEvent(new Event('change', { bubbles: true }));
   expect(required(terrainSets(asset())[0]).allowRotation).toBe(false);
   expect(host.textContent).toContain('14 assigned · 14/15 covered');
+  required(
+    host.querySelector<HTMLButtonElement>(
+      '[data-terrain-diagnostic="missing"]',
+    ),
+  ).click();
+  expect(
+    host
+      .querySelector('[data-terrain-pattern="1"]')
+      ?.getAttribute('aria-pressed'),
+  ).toBe('true');
   store.undo();
   expect(required(terrainSets(asset())[0]).allowRotation).toBeUndefined();
   expect(host.textContent).toContain('14 assigned · 15/15 covered');

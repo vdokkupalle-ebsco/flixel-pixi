@@ -13,6 +13,7 @@ import {
   terrainTypes,
   terrainPatternCount,
   terrainCoverage,
+  terrainDiagnostics,
   patternValues,
   patternCode,
   addTerrainType,
@@ -296,6 +297,32 @@ export function mountTilePalette(
         addTerrainType(set);
         ruleMask = patternCode(set, values);
       });
+      return;
+    }
+    if (target.dataset.terrainDiagnostic !== undefined) {
+      editingRules = true;
+      const set = selectedTerrain(
+        store.status.snapshot.document.assets,
+        store.status.snapshot.terrain,
+      );
+      const category = target.dataset.terrainDiagnostic as keyof ReturnType<
+        typeof terrainDiagnostics
+      >;
+      const masks = set
+        ? terrainDiagnostics(set)[category].filter(
+            (mask) =>
+              Number.isInteger(mask) &&
+              mask > 0 &&
+              mask < terrainPatternCount(set),
+          )
+        : [];
+      ruleMask = masks.find((mask) => mask > ruleMask) ?? masks[0] ?? ruleMask;
+      render(store.status);
+      host
+        .querySelector<HTMLButtonElement>(
+          `[data-terrain-pattern="${ruleMask}"]`,
+        )
+        ?.focus();
       return;
     }
     if (

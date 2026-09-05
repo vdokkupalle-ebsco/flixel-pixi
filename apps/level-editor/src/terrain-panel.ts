@@ -6,6 +6,7 @@ import {
   terrainTypes,
   terrainPatternCount,
   terrainCoverage,
+  terrainDiagnostics,
   terrainTile,
   patternValues,
 } from './terrain';
@@ -49,6 +50,7 @@ export function terrainPanel(
       : ['Top left', 'Top right', 'Bottom right', 'Bottom left'];
   const positionName = set?.kind === 'edge' ? 'edge' : 'corner';
   const coverage = set ? terrainCoverage(set) : 0;
+  const diagnostics = set ? terrainDiagnostics(set) : undefined;
   const totalWeight = variants.reduce(
     (total, variant) => total + (variant.weight ?? 1),
     0,
@@ -67,6 +69,22 @@ export function terrainPanel(
       <details class="terrain-rules" ${editing ? 'open' : ''}><summary>Terrain rules <span>${set.rules.length} assigned · ${coverage}/${terrainPatternCount(set) - 1} covered</span></summary>
         <div class="field-pair"><label>Name<input aria-label="Terrain name" data-terrain-name value="${html(set.name)}" maxlength="80"/></label><label>Color<input aria-label="Terrain color" data-terrain-color type="color" value="${set.color}"/></label></div>
         <fieldset class="terrain-transform-options"><legend>Automatic transforms</legend><label><input type="checkbox" data-terrain-allow-rotation ${set.allowRotation !== false ? 'checked' : ''}/> Rotate artwork</label><label><input type="checkbox" data-terrain-allow-flip ${set.allowFlip !== false ? 'checked' : ''}/> Reflect artwork</label></fieldset>
+        <div class="terrain-diagnostics"><strong>Coverage diagnostics</strong><div>${(
+          [
+            ['assigned', 'Assigned'],
+            ['derived', 'Derived'],
+            ['missing', 'Missing'],
+            ['duplicated', 'Duplicated'],
+            ['unreachable', 'Unreachable'],
+          ] as const
+        )
+          .map(([key, label]) => {
+            const masks = diagnostics?.[key] ?? [];
+            return `<button type="button" data-terrain-diagnostic="${key}" ${masks.length ? '' : 'disabled'} title="${masks.length ? `Go to ${label.toLowerCase()} pattern` : `No ${label.toLowerCase()} patterns`}"><span>${masks.length}</span>${label}</button>`;
+          })
+          .join(
+            '',
+          )}</div><p class="field-help">Choose a count to jump through its patterns. Missing rules block matching paint operations; malformed duplicate and unreachable rules are rejected during import.</p></div>
         <div class="terrain-types">${types.map((type, index) => `<div class="field-pair"><label>Terrain ${index + 1}<input aria-label="Terrain type ${index + 1} name" data-terrain-type-name="${index}" value="${html(type.name)}" maxlength="80"/></label><label>Color<input aria-label="Terrain type ${index + 1} color" data-terrain-type-color="${index}" type="color" value="${type.color}"/></label></div>`).join('')}<button class="button ghost compact" type="button" data-terrain-type-add ${types.length >= 3 ? 'disabled' : ''}>Add terrain type</button></div>
         <p class="field-help">1. Choose a source tile.<br/>2. Click ${positionName}s to cycle through empty and terrain types.<br/>3. Assign the tile to this pattern.</p>
         ${sourcePalette}<div class="terrain-rule-editor"><div class="terrain-tile-preview">${asset && tile ? tileImage(asset, tile) : '<span>Choose a tile</span>'}${positions.map((label, index) => `<button type="button" class="terrain-corner corner-${index}" data-terrain-corner="${index}" aria-label="${label} terrain ${positionName}" aria-pressed="${Boolean(values[index])}" style="${values[index] ? `background:${types[(values[index] ?? 1) - 1]?.color}` : ''}" title="${label}: ${html(types[(values[index] ?? 0) - 1]?.name ?? 'Empty')}"></button>`).join('')}</div><div><strong>Pattern ${mask}</strong><p class="field-help">${mask === 0 ? 'All empty: clears the cell.' : `${values.filter(Boolean).length} filled ${positionName}s`}</p><button class="button ghost compact" type="button" data-terrain-assign ${!tile || mask === 0 ? 'disabled' : ''}>Assign tile</button><button class="button ghost compact" type="button" data-terrain-variant-add ${!tile || !rule || variants.length >= 16 || variants.some((v) => v.tile.x === tile.x && v.tile.y === tile.y && v.tile.width === tile.width && v.tile.height === tile.height) ? 'disabled' : ''}>Add variant</button></div></div>${variantRows}

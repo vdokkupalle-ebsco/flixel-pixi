@@ -193,6 +193,12 @@ control this per terrain set. Disable either option for directional lighting,
 text, asymmetrical decoration, or artwork whose handedness must be preserved.
 Legacy sets allow both transforms until you explicitly change these controls.
 
+**Coverage diagnostics** separates explicit assignments, derived transforms and
+missing patterns. Choose any nonzero count to jump through the corresponding
+patterns. It also reports duplicated source assignments and unreachable rule
+numbers in malformed imported metadata; project import rejects those entries so
+they cannot create ambiguous painting behavior.
+
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
 `kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
 regions, so grid sheets and atlas images both work. Export/import validates and
