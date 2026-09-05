@@ -146,6 +146,9 @@ jobs:
       - name: Verify performance and resource budgets
         run: npm run verify:budgets
 
+      - name: Verify package artifact before publish
+        run: npm run check:package
+
       - name: Preview npm publication
         run: npm publish --dry-run --access public --tag next
 
