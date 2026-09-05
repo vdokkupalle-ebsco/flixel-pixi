@@ -34,7 +34,12 @@ import {
   type TileRegion,
 } from './tiles';
 import { activeTileSelection } from './tile-editing';
-import { paintTerrain, selectedTerrain, type TerrainSet } from './terrain';
+import {
+  paintTerrain,
+  selectedTerrain,
+  type EdgeBrushOptions,
+  type TerrainSet,
+} from './terrain';
 import { layerTileColliders, type TileCollider } from './tile-collision';
 import { insideSelection, type TileSelection } from './tiles';
 import { bodyForEntity, updateBodyShape } from './physics-authoring';
@@ -67,6 +72,7 @@ interface TileInteraction {
   terrain?: TerrainSet;
   terrainIndex?: number;
   terrainPath?: Cell[];
+  edgeOptions?: EdgeBrushOptions;
   selection: TileSelection | undefined;
   kind: 'tiles';
   pointerId: number;
@@ -594,6 +600,14 @@ export class SceneViewport {
         snapshot.tool === 'terrain-erase',
         activeTileSelection(snapshot),
         snapshot.terrain?.terrainIndex ?? 1,
+        terrain.kind === 'edge'
+          ? {
+              width: snapshot.terrain?.edgeWidth ?? 1,
+              straight: snapshot.terrain?.edgeStraight ?? false,
+              closed: snapshot.terrain?.edgeClosed ?? false,
+              ends: snapshot.terrain?.edgeEnds ?? 'caps',
+            }
+          : {},
       );
       for (
         let y = Math.max(0, cell.y - 1);
@@ -801,6 +815,12 @@ export class SceneViewport {
             terrain,
             terrainIndex: snapshot.terrain?.terrainIndex ?? 1,
             terrainPath: [],
+            edgeOptions: {
+              width: snapshot.terrain?.edgeWidth ?? 1,
+              straight: snapshot.terrain?.edgeStraight ?? false,
+              closed: snapshot.terrain?.edgeClosed ?? false,
+              ends: snapshot.terrain?.edgeEnds ?? 'caps',
+            },
           }
         : {}),
     };
@@ -835,10 +855,21 @@ export class SceneViewport {
     };
     if (interaction.tool.startsWith('terrain') && interaction.terrain) {
       try {
-        const segment = lineCells(interaction.last, cell);
+        let segment = lineCells(interaction.last, cell);
         if (interaction.terrain.kind === 'edge') {
-          if (interaction.terrainPath?.length) segment.shift();
-          interaction.terrainPath?.push(...segment);
+          if (interaction.edgeOptions?.straight) {
+            const dx = Math.abs(cell.x - interaction.start.x),
+              dy = Math.abs(cell.y - interaction.start.y);
+            cell =
+              dx >= dy
+                ? { x: cell.x, y: interaction.start.y }
+                : { x: interaction.start.x, y: cell.y };
+            segment = lineCells(interaction.start, cell);
+            interaction.terrainPath = segment;
+          } else {
+            if (interaction.terrainPath?.length) segment.shift();
+            interaction.terrainPath?.push(...segment);
+          }
           interaction.map = structuredClone(interaction.original);
         }
         paintTerrain(
@@ -851,6 +882,7 @@ export class SceneViewport {
           interaction.tool === 'terrain-erase',
           interaction.selection,
           interaction.terrainIndex ?? 1,
+          interaction.edgeOptions,
         );
       } catch (error) {
         this.#tileMessage(
@@ -910,6 +942,42 @@ export class SceneViewport {
   }
 
   #finishTiles(interaction: TileInteraction): void {
+    if (
+      interaction.terrain?.kind === 'edge' &&
+      interaction.edgeOptions?.closed &&
+      (interaction.terrainPath?.length ?? 0) > 2
+    ) {
+      const path = interaction.terrainPath ?? [],
+        first = path[0],
+        last = path.at(-1);
+      if (first && last) {
+        const bend = { x: first.x, y: last.y },
+          horizontal = lineCells(last, bend),
+          vertical = lineCells(bend, first);
+        horizontal.shift();
+        vertical.shift();
+        path.push(...horizontal, ...vertical);
+        interaction.map = structuredClone(interaction.original);
+        try {
+          paintTerrain(
+            interaction.map,
+            interaction.terrain,
+            path,
+            interaction.bounds,
+            interaction.tool === 'terrain-erase',
+            interaction.selection,
+            interaction.terrainIndex ?? 1,
+            interaction.edgeOptions,
+          );
+        } catch (error) {
+          this.#tileMessage(
+            error instanceof Error ? error.message : String(error),
+          );
+          this.#cancelInteraction();
+          return;
+        }
+      }
+    }
     this.#cancelInteraction();
     if (interaction.tool === 'tile-select') {
       this.#store.update(

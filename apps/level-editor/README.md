@@ -42,6 +42,8 @@ recognizable. Corner sets support up to three terrain types plus empty, with sha
 rules. Edge sets use top, right, bottom and left connections for roads, paths and
 fences; dragging follows the stroke direction to select endpoints, straights,
 turns and existing junctions. **Add road sample** provides a complete example.
+Edge brushes support 1, 3 or 5-cell widths, axis-constrained strokes, closed loops,
+and capped or four-way junction endpoints.
 Terrain rules automatically reuse equivalent artwork through quarter-turn rotation
 and reflection; an explicit pattern assignment always overrides a derived one.
 Selected image assets can import or export Tiled tileset JSON with Wang sets,

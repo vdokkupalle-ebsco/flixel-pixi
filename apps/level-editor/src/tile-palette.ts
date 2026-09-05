@@ -599,6 +599,26 @@ export function mountTilePalette(
         false,
       );
     } else if (
+      target.hasAttribute('data-terrain-edge-width') ||
+      target.hasAttribute('data-terrain-edge-straight') ||
+      target.hasAttribute('data-terrain-edge-ends') ||
+      target.hasAttribute('data-terrain-edge-closed')
+    ) {
+      store.update(
+        'Changed road brush options',
+        (draft) => {
+          if (!draft.terrain) return;
+          if (target.hasAttribute('data-terrain-edge-width'))
+            draft.terrain.edgeWidth = Number(target.value) as 1 | 3 | 5;
+          else if (target.hasAttribute('data-terrain-edge-straight'))
+            draft.terrain.edgeStraight = target.value === 'straight';
+          else if (target.hasAttribute('data-terrain-edge-ends'))
+            draft.terrain.edgeEnds = target.value as 'caps' | 'junctions';
+          else draft.terrain.edgeClosed = target.checked;
+        },
+        false,
+      );
+    } else if (
       target.hasAttribute('data-terrain-allow-rotation') ||
       target.hasAttribute('data-terrain-allow-flip')
     ) {
@@ -747,7 +767,7 @@ function tileContextDetail(status: LevelEditorStatus): string {
   if (snapshot.tool.startsWith('terrain')) {
     const terrain = selectedTerrain(snapshot.document.assets, snapshot.terrain);
     return terrain
-      ? `${terrainTypes(terrain)[(snapshot.terrain?.terrainIndex ?? 1) - 1]?.name ?? terrain.name} · ${terrainCoverage(terrain)}/${terrainPatternCount(terrain) - 1} patterns covered · ${snapshot.tool === 'terrain-erase' ? 'Erase' : 'Paint'} terrain and update neighbors`
+      ? `${terrainTypes(terrain)[(snapshot.terrain?.terrainIndex ?? 1) - 1]?.name ?? terrain.name} · ${terrainCoverage(terrain)}/${terrainPatternCount(terrain) - 1} patterns covered${terrain.kind === 'edge' ? ` · ${snapshot.terrain?.edgeWidth ?? 1}-cell ${snapshot.terrain?.edgeStraight ? 'straight' : 'freehand'}${snapshot.terrain?.edgeClosed ? ' loop' : ''} · ${(snapshot.terrain?.edgeEnds ?? 'caps') === 'junctions' ? 'junction' : 'capped'} ends` : ''} · ${snapshot.tool === 'terrain-erase' ? 'Erase' : 'Paint'} terrain and update neighbors`
       : 'Choose a terrain set in Tilesets, or add the sample terrain';
   }
   if (!snapshot.tileStamp && !['eraser', 'eyedropper'].includes(snapshot.tool))

@@ -79,6 +79,56 @@ describe('edge terrain editing', () => {
     expect(map.cells).toEqual({});
   });
 
+  it('supports wide strokes and explicit junction endpoints', () => {
+    const wide = empty();
+    paintTerrain(
+      wide,
+      edgeSet,
+      [
+        { x: 3, y: 3 },
+        { x: 5, y: 3 },
+      ],
+      bounds,
+      false,
+      undefined,
+      1,
+      { width: 3 },
+    );
+    expect(Object.keys(wide.cells)).toHaveLength(9);
+    expect(terrainMask(edgeSet, wide.cells['3,3'])).toBe(2);
+    expect(terrainMask(edgeSet, wide.cells['4,2'])).toBe(10);
+    expect(wide.cells['2,2']).toBeUndefined();
+
+    const junctions = empty();
+    paintTerrain(
+      junctions,
+      edgeSet,
+      [
+        { x: 3, y: 3 },
+        { x: 5, y: 3 },
+      ],
+      bounds,
+      false,
+      undefined,
+      1,
+      { ends: 'junctions' },
+    );
+    expect(terrainMask(edgeSet, junctions.cells['3,3'])).toBe(15);
+    expect(terrainMask(edgeSet, junctions.cells['5,3'])).toBe(15);
+    expect(() =>
+      paintTerrain(
+        empty(),
+        edgeSet,
+        [{ x: 3, y: 3 }],
+        bounds,
+        false,
+        undefined,
+        1,
+        { width: 2 as 1 },
+      ),
+    ).toThrow(/width/);
+  });
+
   it('joins a road stroke and resolves rotated edge artwork', () => {
     const map = empty();
     paintTerrain(

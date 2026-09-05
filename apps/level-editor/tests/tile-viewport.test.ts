@@ -866,3 +866,53 @@ it('paints a directed edge path through the viewport without perpendicular stubs
   store.undo();
   expect(cells()).toEqual({});
 });
+
+it('constrains straight road strokes and closes freehand loops on release', () => {
+  const straight = editor(),
+    straightAsset = starterEdgeTileset('straight-road');
+  straight.store.update('Straight road', (draft) => {
+    draft.document.assets.push(straightAsset);
+    draft.terrain = {
+      assetId: straightAsset.id,
+      setId: 'road',
+      edgeStraight: true,
+    };
+    draft.tool = 'terrain';
+  });
+  straight.pointer('pointerdown', 3, 3);
+  straight.pointer('pointermove', 6, 5);
+  straight.pointer('pointerup', 6, 5);
+  expect(Object.keys(straight.cells()).sort()).toEqual([
+    '3,3',
+    '4,3',
+    '5,3',
+    '6,3',
+  ]);
+
+  const loop = editor(),
+    loopAsset = starterEdgeTileset('loop-road');
+  loop.store.update('Loop road', (draft) => {
+    draft.document.assets.push(loopAsset);
+    draft.terrain = {
+      assetId: loopAsset.id,
+      setId: 'road',
+      edgeClosed: true,
+    };
+    draft.tool = 'terrain';
+  });
+  loop.pointer('pointerdown', 2, 2);
+  loop.pointer('pointermove', 4, 2);
+  loop.pointer('pointermove', 4, 4);
+  loop.pointer('pointerup', 4, 4);
+  expect(Object.keys(loop.cells()).sort()).toEqual([
+    '2,2',
+    '2,3',
+    '2,4',
+    '3,2',
+    '3,4',
+    '4,2',
+    '4,3',
+    '4,4',
+  ]);
+  expect(loop.cells()['3,3']).toBeUndefined();
+});

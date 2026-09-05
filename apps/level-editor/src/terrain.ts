@@ -3,6 +3,7 @@ import {
   cellKey,
   inBounds,
   insideSelection,
+  lineCells,
   sameTile,
   validateTileMap,
   type Cell,
@@ -46,8 +47,18 @@ export interface TerrainSet {
 }
 export interface TerrainChoice {
   terrainIndex?: number;
+  edgeWidth?: 1 | 3 | 5;
+  edgeStraight?: boolean;
+  edgeClosed?: boolean;
+  edgeEnds?: 'caps' | 'junctions';
   assetId: string;
   setId: string;
+}
+export interface EdgeBrushOptions {
+  width?: 1 | 3 | 5;
+  straight?: boolean;
+  closed?: boolean;
+  ends?: 'caps' | 'junctions';
 }
 
 export function terrainTypes(set: TerrainSet) {
@@ -407,6 +418,7 @@ export function paintTerrain(
   erase = false,
   selection?: TileSelection,
   terrainIndex = 1,
+  edgeOptions: EdgeBrushOptions = {},
 ): void {
   if (
     !Number.isInteger(terrainIndex) ||
@@ -419,23 +431,70 @@ export function paintTerrain(
   const path: Cell[] = [];
   for (const cell of cells) {
     if (!inBounds(cell, bounds) || !insideSelection(cell, selection)) continue;
-    const previous = path.at(-1);
-    if (
-      set.kind === 'edge' &&
-      previous &&
-      previous.x !== cell.x &&
-      previous.y !== cell.y
-    )
-      path.push({ x: cell.x, y: previous.y });
-    path.push(cell);
-  }
-  if (set.kind === 'edge' && !erase && path.length > 1) {
-    for (let index = 1; index < path.length; index++) {
-      const from = path[index - 1],
-        to = path[index];
-      if (!from || !to) continue;
-      vertices.add(cellKey({ x: from.x + to.x + 1, y: from.y + to.y + 1 }));
+    const previous = path.at(-1),
+      segment = previous ? lineCells(previous, cell).slice(1) : [cell];
+    for (const step of segment) {
+      const last = path.at(-1);
+      if (set.kind === 'edge' && last && last.x !== step.x && last.y !== step.y)
+        path.push({ x: step.x, y: last.y });
+      path.push(step);
     }
+  }
+  if (
+    set.kind === 'edge' &&
+    !erase &&
+    (path.length > 1 || (edgeOptions.width ?? 1) > 1)
+  ) {
+    const width = edgeOptions.width ?? 1;
+    if (![1, 3, 5].includes(width))
+      throw new Error('Choose a road width of 1, 3 or 5 cells.');
+    if (width === 1) {
+      for (let index = 1; index < path.length; index++) {
+        const from = path[index - 1],
+          to = path[index];
+        if (!from || !to) continue;
+        vertices.add(cellKey({ x: from.x + to.x + 1, y: from.y + to.y + 1 }));
+      }
+    } else {
+      const radius = (width - 1) / 2;
+      for (let index = 1; index < path.length; index++) {
+        const from = path[index - 1],
+          to = path[index];
+        if (!from || !to) continue;
+        const horizontal = from.y === to.y;
+        for (let offset = -radius; offset <= radius; offset++) {
+          const laneFrom = {
+              x: from.x + (horizontal ? 0 : offset),
+              y: from.y + (horizontal ? offset : 0),
+            },
+            laneTo = {
+              x: to.x + (horizontal ? 0 : offset),
+              y: to.y + (horizontal ? offset : 0),
+            };
+          if (inBounds(laneFrom, bounds) && inBounds(laneTo, bounds))
+            vertices.add(
+              cellKey({
+                x: laneFrom.x + laneTo.x + 1,
+                y: laneFrom.y + laneTo.y + 1,
+              }),
+            );
+        }
+      }
+    }
+    // A click without pointer movement retains the established four-way
+    // junction behavior, regardless of the selected brush width.
+    if (vertices.size === 0 && path[0])
+      for (const [dx, dy] of positions)
+        vertices.add(
+          cellKey({ x: path[0].x * 2 + dx * 2, y: path[0].y * 2 + dy * 2 }),
+        );
+    if (edgeOptions.ends === 'junctions' && !edgeOptions.closed)
+      for (const cell of [path[0], path.at(-1)])
+        if (cell)
+          for (const [dx, dy] of positions)
+            vertices.add(
+              cellKey({ x: cell.x * 2 + dx * 2, y: cell.y * 2 + dy * 2 }),
+            );
   } else {
     for (const cell of path)
       for (const [dx, dy] of positions)

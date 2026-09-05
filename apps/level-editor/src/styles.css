@@ -1551,6 +1551,29 @@ select:focus-visible {
   border-color: var(--focus);
   background: rgba(29, 232, 241, 0.1);
 }
+.edge-brush-options {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.edge-brush-options legend {
+  padding: 0 4px;
+  color: var(--muted);
+}
+.edge-brush-options label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+}
+.edge-brush-options .edge-option-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
 .terrain-heading {
   display: flex;
   align-items: center;

@@ -275,6 +275,28 @@ it('adds edge terrain sets and exposes cardinal road rules', () => {
     );
   expect(required(terrainSets(asset())[0]).kind).toBe('edge');
   expect(host.textContent).toContain('Road · edge');
+  const select = (selector: string, value: string) => {
+    const node = required(host.querySelector<HTMLSelectElement>(selector));
+    node.value = value;
+    node.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  select('[data-terrain-edge-width]', '3');
+  select('[data-terrain-edge-straight]', 'straight');
+  select('[data-terrain-edge-ends]', 'junctions');
+  const closed = required(
+    host.querySelector<HTMLInputElement>('[data-terrain-edge-closed]'),
+  );
+  closed.checked = true;
+  closed.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(store.status.snapshot.terrain).toMatchObject({
+    edgeWidth: 3,
+    edgeStraight: true,
+    edgeEnds: 'junctions',
+    edgeClosed: true,
+  });
+  expect(tileContext(store.status)).toContain(
+    '3-cell straight loop · junction ends',
+  );
   expect(
     host.querySelector('[data-terrain-corner="0"]')?.getAttribute('aria-label'),
   ).toBe('Top terrain edge');

@@ -173,6 +173,21 @@ existing stroke preserves a junction. Rotation and horizontal flipping also
 rotate or reflect the edge meaning. Erase terrain disconnects the selected edge
 terrain and rebuilds its adjacent transitions in one undoable action.
 
+The **Road brush** controls apply to edge terrain sets:
+
+- **Width** draws 1, 3 or 5 connected parallel lanes around the pointer path.
+- **Straight** constrains the drag to the dominant horizontal or vertical axis;
+  **Freehand** follows turns in the pointer path.
+- **Close loop on release** returns from the last cell to the first with a clean
+  horizontal-then-vertical closing path.
+- **Capped** endpoints terminate at the first and last cell. **Junctions** give
+  both endpoints four connections, which is useful when adding intersections to
+  existing paths. A single click still places a four-way junction.
+
+The options are captured when the stroke starts. Changing a control during a drag
+does not alter the in-progress result, and the complete wide or closed stroke is
+one undo step.
+
 The built-in road atlas separates each source region with a transparent gutter
 to prevent adjacent artwork from bleeding into a tile during scaling. For an
 imported sheet, keep one or two transparent pixels between tiles and enter the
