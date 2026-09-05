@@ -9,10 +9,30 @@ versioning and compatibility rules in
 Changes after the current release candidate are collected here before they are
 assigned to a version.
 
-### Changed
+## 0.1.0-rc.11 — 2026-09-05
 
-- Aligned the private Particle Editor workspace dependency with the published
-  `flixel-pixi@0.1.0-rc.10` prerelease used by clean installs.
+This release candidate restores TypeScript declaration bundling in published
+packages, hardens the npm publication pipeline with pre-publish package contract
+verification, and introduces the hosted Visual Level Editor MVP and pluggable
+Planck physics adapter ecosystem.
+
+### Fixed
+
+- Preserved `dist/index.d.ts` and `dist/tsdoc-metadata.json` during library builds
+  by disabling Vite's default output directory clearing (`emptyOutDir: false`) in
+  `vite.lib.config.ts`.
+- Added a mandatory pre-publish package verification step (`npm run check:package`)
+  to `.github/workflows/publish-npm.yml` immediately prior to publication to ensure
+  tarball integrity, type rollup presence, and clean consumer compilation.
+
+### Added
+
+- Added the hosted Visual Level Editor MVP (`apps/level-editor`) supporting Tiled
+  import/export, terrain auto-tiling, tile collision shape authoring, gameplay
+  objects, and layer ordering.
+- Added pluggable 2D physics contracts and the `@flixel-pixi/physics-planck`
+  reference adapter with joint constraints, body bindings, and interactive
+  showcase demos.
 
 ## 0.1.0-rc.10 — 2026-08-23
 

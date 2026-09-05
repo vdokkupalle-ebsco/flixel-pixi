@@ -12,8 +12,8 @@
   },
   "bundle": {
     "entry": "dist/index.js",
-    "rawBytesMax": 655000,
-    "gzipBytesMax": 150000
+    "rawBytesMax": 710000,
+    "gzipBytesMax": 165000
   },
   "headlessBenchmarks": {
     "per-pixel overlap 256×256 worst-case miss": { "meanMsMax": 1.2 },

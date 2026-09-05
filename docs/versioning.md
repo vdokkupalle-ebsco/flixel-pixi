@@ -60,7 +60,7 @@ Portable `*.effect.json` files are the compatibility boundary between the
 editor and a game. Each document carries its own format version:
 
 - Particle Editor effect-document version `1` is supported by
-  `flixel-pixi@0.1.0-rc.10` and later compatible releases.
+  `flixel-pixi@0.1.0-rc.11` and later compatible releases.
 - A breaking document-shape change requires a new document version and explicit
   migration guidance. Existing version `1` exports remain valid.
 - The runtime validates an export before constructing emitters and reports an
