@@ -1,3 +1,8 @@
+---
+title: TypeScript Tilemaps and 2D Level Design
+description: Build grid-based HTML5 game levels with FlxTilemap, CSV maps, autotiling, optimized rendering, collision, and the Flixel-Pixi visual level editor.
+---
+
 # Tilemaps & Level Design
 
 `FlxTilemap` renders grid-based tile levels and handles optimized spatial tile collision.

@@ -1,3 +1,8 @@
+---
+title: TypeScript HTML5 Game Engine Guide
+description: Learn how Flixel-Pixi brings Flixel-style states, sprites, collision, input, audio, tilemaps, and fixed-step gameplay to modern TypeScript browser games.
+---
+
 # Introduction to Flixel-Pixi
 
 **Flixel-Pixi** is an open-source, browser-native TypeScript game engine that ports AdamAtomic's legendary ActionScript 3 Flixel engine onto **PixiJS v8**.

@@ -1,3 +1,8 @@
+---
+title: Build Your First TypeScript Browser Game
+description: Build a complete 2D HTML5 platformer with Flixel-Pixi sprites, tilemaps, collision, keyboard input, collectibles, sound, and scoring.
+---
+
 # Creating Your First Game
 
 In this tutorial, you will build a complete mini platformer game called **Coin Collector**.

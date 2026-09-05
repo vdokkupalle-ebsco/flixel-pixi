@@ -1,3 +1,8 @@
+---
+title: HTML5 Game Canvas and Responsive Viewport
+description: Mount a TypeScript game in the browser and configure responsive canvas scaling, WebGL or WebGPU rendering, letterboxing, safe areas, focus, and fullscreen.
+---
+
 # Browser DX & Viewport Scaling
 
 `createBrowserGame` and `FlxBrowserViewport` handle DOM mounting, automatic canvas scaling, letterboxing, mobile safe-area insets, and browser focus management.

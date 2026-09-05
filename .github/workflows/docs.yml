@@ -56,6 +56,9 @@ jobs:
       - name: Build static documentation website
         run: npm run docs:build
 
+      - name: Verify sitemap and SEO metadata
+        run: npm run check:docs:seo
+
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
         with:
