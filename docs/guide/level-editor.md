@@ -199,6 +199,13 @@ patterns. It also reports duplicated source assignments and unreachable rule
 numbers in malformed imported metadata; project import rejects those entries so
 they cannot create ambiguous painting behavior.
 
+To assign an atlas in bulk, choose the first destination pattern, click the first
+source tile, then Shift-click the last source tile. **Assign selected tiles from
+pattern** maps that contiguous range to consecutive pattern numbers in row-major
+order. The operation stops at the set's last pattern, moves source regions out of
+old assignments to avoid ambiguity, and records the entire assignment as one
+undo step.
+
 Rules are stored in image asset metadata as `terrainSets`, with stable set IDs,
 `kind: "corner"` or `kind: "edge"`, name, color and `{ mask, tile, weight?, variants? }` rules. They use exact source
 regions, so grid sheets and atlas images both work. Export/import validates and

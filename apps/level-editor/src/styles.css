@@ -1634,6 +1634,11 @@ select:focus-visible {
   font-size: 13px;
   font-weight: 700;
 }
+.terrain-auto-assign {
+  margin: 10px 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
 .terrain-rule-editor {
   display: flex;
   align-items: center;

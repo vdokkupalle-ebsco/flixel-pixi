@@ -102,6 +102,7 @@ export function mountTilePalette(
   let terrainMode = false,
     ruleMask = 15,
     ruleTileIndex = 0,
+    ruleTileEnd = 0,
     editingRules = false;
   const render = ({ snapshot }: LevelEditorStatus): void => {
     const assets = snapshot.document.assets.filter(
@@ -129,6 +130,7 @@ export function mountTilePalette(
       snapshot.tool,
       ruleMask,
       ruleTileIndex,
+      ruleTileEnd,
       editingRules,
     ]);
     if (renderKey === key) return;
@@ -159,7 +161,8 @@ export function mountTilePalette(
     const cards = palette.tiles
       .map((tile, index) => {
         const selected = terrainMode
-          ? index === ruleTileIndex
+          ? index >= Math.min(ruleTileIndex, ruleTileEnd) &&
+            index <= Math.max(ruleTileIndex, ruleTileEnd)
           : (snapshot.tileStamp?.tiles.some((selected) =>
               sameTile(
                 selected ? { ...selected, rotation: 0, flipX: false } : null,
@@ -190,7 +193,7 @@ export function mountTilePalette(
       <div class="tileset-content"><div class="tileset-modes" role="group" aria-label="Tileset mode"><button type="button" data-palette-mode="tiles" aria-pressed="${!terrainMode}">Tiles</button><button type="button" data-palette-mode="terrain" aria-pressed="${terrainMode}">Terrains</button></div><label class="tileset-label">Source image<select aria-label="Tileset" data-tileset><option value=""${!assetId ? ' selected' : ''} disabled>Choose an image…</option>${options}</select></label>${terrainMode ? '' : fields}
       ${terrainMode ? '' : paletteMarkup}
       ${asset && palette.tiles.length ? '<button type="button" class="button full" data-edit-collision>Edit tile collision shapes</button>' : ''}
-      ${terrainMode ? terrainPanel(asset, snapshot, ruleMask, palette.tiles[ruleTileIndex], editingRules, fields + paletteMarkup) : stampPreview}</div>`;
+      ${terrainMode ? terrainPanel(asset, snapshot, ruleMask, palette.tiles[ruleTileIndex], editingRules, fields + paletteMarkup, Math.abs(ruleTileEnd - ruleTileIndex) + 1) : stampPreview}</div>`;
   };
   const updateSet = (
     label: string,
@@ -252,6 +255,7 @@ export function mountTilePalette(
           : starterTerrainTileset(createId('terrain'));
       assetId = starter.id;
       ruleTileIndex = multi ? 40 : 15;
+      ruleTileEnd = ruleTileIndex;
       ruleMask = multi ? 40 : 15;
       editingRules = false;
       store.update('Added sample terrain', (draft) => {
@@ -371,6 +375,25 @@ export function mountTilePalette(
         });
       return;
     }
+    if (target.hasAttribute('data-terrain-auto-assign')) {
+      editingRules = true;
+      const asset = store.status.snapshot.document.assets.find(
+        (asset) => asset.id === assetId,
+      );
+      if (!asset || ruleMask === 0) return;
+      const tiles = paletteTiles(asset).tiles.slice(
+        Math.min(ruleTileIndex, ruleTileEnd),
+        Math.max(ruleTileIndex, ruleTileEnd) + 1,
+      );
+      updateSet(`Assigned ${tiles.length} terrain patterns`, (set) => {
+        tiles.forEach((tile, index) => {
+          const mask = ruleMask + index;
+          if (mask < terrainPatternCount(set))
+            assignTerrainTile(set, mask, tile);
+        });
+      });
+      return;
+    }
     if (target.dataset.terrainVariantRemove !== undefined) {
       editingRules = true;
       updateSet('Removed terrain variant', (set) => {
@@ -434,7 +457,8 @@ export function mountTilePalette(
     const index = Number(target.dataset.tileIndex);
     if (terrainMode) {
       editingRules = true;
-      ruleTileIndex = index;
+      if (event.shiftKey) ruleTileEnd = index;
+      else ruleTileIndex = ruleTileEnd = index;
       const set = selectedTerrain(
         store.status.snapshot.document.assets,
         store.status.snapshot.terrain,
@@ -444,7 +468,7 @@ export function mountTilePalette(
           sameTile(v.tile, tiles[index]),
         ),
       );
-      if (rule) ruleMask = rule.mask;
+      if (rule && !event.shiftKey) ruleMask = rule.mask;
       render(store.status);
       host
         .querySelector<HTMLButtonElement>(`[data-tile-index="${index}"]`)
@@ -572,12 +596,14 @@ export function mountTilePalette(
     } else if (target.matches('[data-tileset]')) {
       assetId = target.value;
       anchor = 0;
+      ruleTileIndex = ruleTileEnd = 0;
       store.update(
         'Changed tileset',
         (draft) => {
           delete draft.tileStamp;
           delete draft.terrain;
           ruleTileIndex = 0;
+          ruleTileEnd = 0;
           const asset = draft.document.assets.find(
             (asset) => asset.id === assetId,
           );

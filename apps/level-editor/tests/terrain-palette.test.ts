@@ -101,6 +101,54 @@ describe('terrain rules dock', () => {
     click('[data-palette-mode="tiles"]');
     expect(store.status.snapshot.tool).toBe('brush');
   });
+
+  it('auto-assigns a contiguous source range to consecutive patterns', () => {
+    const store = new LevelEditorStore({
+      document: createInitialProject(),
+      selectedEntityIds: [],
+      tool: 'terrain',
+      snapToGrid: true,
+    });
+    const host = document.createElement('section');
+    document.body.append(host);
+    cleanup = mountTilePalette(host, store, vi.fn());
+    const click = (selector: string, shiftKey = false) =>
+      required(host.querySelector<HTMLButtonElement>(selector)).dispatchEvent(
+        new MouseEvent('click', { bubbles: true, shiftKey }),
+      );
+    click('[data-terrain-sample]');
+    click('[data-terrain-add]');
+    click('[data-terrain-pattern="3"]');
+    click('[data-tile-index="4"]');
+    click('[data-tile-index="6"]', true);
+    expect(
+      host.querySelector<HTMLButtonElement>('[data-terrain-auto-assign]')
+        ?.textContent,
+    ).toContain('Assign 3 selected tiles from pattern 3');
+    click('[data-terrain-auto-assign]');
+    const snapshot = store.status.snapshot,
+      terrain = required(snapshot.terrain),
+      asset = required(
+        snapshot.document.assets.find((item) => item.id === terrain.assetId),
+      ),
+      custom = required(
+        terrainSets(asset).find((set) => set.id === terrain.setId),
+      );
+    expect(custom.rules.map((rule) => rule.mask)).toEqual([3, 4, 5]);
+    expect(custom.rules.map((rule) => rule.tile.x)).toEqual([128, 0, 32]);
+    store.undo();
+    expect(
+      required(
+        terrainSets(
+          required(
+            store.status.snapshot.document.assets.find(
+              (item) => item.id === terrain.assetId,
+            ),
+          ),
+        ).find((set) => set.id === terrain.setId),
+      ).rules,
+    ).toEqual([]);
+  });
 });
 
 it('edits variant weights, removes and re-adds a variant with undo/redo', () => {
